@@ -1,0 +1,33 @@
+{
+    "players": ["Dartm", "jamesn", "pittmang"],
+    "cards": {
+        "0": {
+            "name": "Lumber Yard",
+            "cost": {},
+            "effects": [{ "type": "resource", "subtype": "wood" }],
+            "color": "brown"
+        }
+    },
+    "wonders": {
+        "Dartm": {
+            "name": "Alexandria",
+            "side": "Day",
+            "starting_effect_color": "grey",
+            "starting_effects": [{ "type": "resource", "subtype": "glass", "amount": 1 }],
+            "stages": [
+                {
+                    "cost": { "stone": 2 },
+                    "effects": [{ "type": "points", "amount": 3 }]
+                },
+                {
+                    "cost": { "ore": 2 },
+                    "effects": [{ "type": "multi_resource_unpurchasable", "subtype": "wood/stone/ore/clay" }]
+                },
+                {
+                    "cost": { "loom": 1, "press": 1 },
+                    "effects": [{ "type": "points", "amount": 7 }]
+                }
+            ]
+        }
+    }
+}

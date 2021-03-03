@@ -1,0 +1,17 @@
+{
+    "state": "NORMAL_MOVE",
+    "yourMoveState": "NOT_MOVED",
+    "discardMoveQueue": ["Dartm", "jamesn"],
+    "age": 1,
+    "turn": 4,
+    "playerData": {
+        "Dartm": {
+            "gold": 4,
+            "playedCards": [0, 10, 5],
+            "stagesBuilt": [1, 2],
+            "militaryTokens": [-1, 1],
+            "hand": [10, 9, 8, 2]
+        }
+    },
+    "discardedCards": [11]
+}
