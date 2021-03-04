@@ -71,6 +71,36 @@ var __spread = (this && this.__spread) || function () {
 };
 var API;
 (function (API) {
+    function eqMove(move1, move2) {
+        if (!move1 && !move2)
+            return true;
+        if (!move1 || !move2)
+            return false;
+        if (move1.action !== move2.action)
+            return false;
+        if (move1.card !== move2.card)
+            return false;
+        if (move1.stage !== move2.stage)
+            return false;
+        if (move1.stage !== move2.stage)
+            return false;
+        return eqPayment(move1.payment, move2.payment);
+    }
+    API.eqMove = eqMove;
+    function eqPayment(payment1, payment2) {
+        if (!payment1 && !payment2)
+            return true;
+        if (!payment1 || !payment2)
+            return false;
+        if ((payment1.pos || 0) !== (payment2.pos || 0))
+            return false;
+        if ((payment1.neg || 0) !== (payment2.neg || 0))
+            return false;
+        if ((payment1.bank || 0) !== (payment2.bank || 0))
+            return false;
+        return true;
+    }
+    API.eqPayment = eqPayment;
     function getgamedata(gameid, callback) {
         httpRequest(LAMBDA_URL + "?operation=getgamedata&gameid=" + gameid, function (responseJson, error) {
             if (error) {
@@ -93,17 +123,40 @@ var API;
         });
     }
     API.getgamestate = getgamestate;
-    function getmovehistory(gameid, player, callback) {
-        httpRequest(LAMBDA_URL + "?operation=getmovehistory&gameid=" + gameid + "&player=" + player, function (responseJson, error) {
+    function getvalidmoves(gameid, turn, player, callback) {
+        httpRequest(LAMBDA_URL + "?operation=getvalidmoves&gameid=" + gameid + "&turn=" + turn + "&player=" + player, function (responseJson, error) {
             if (error) {
                 callback(undefined, error);
             }
             else {
-                callback(responseJson, undefined);
+                callback(responseJson['validMoves'], undefined);
             }
         });
     }
-    API.getmovehistory = getmovehistory;
+    API.getvalidmoves = getvalidmoves;
+    function submitmove(gameid, turn, player, move, callback) {
+        httpRequest(LAMBDA_URL + "?operation=submitmove&gameid=" + gameid + "&turn=" + turn + "&player=" + player + "&move=" + JSON.stringify(move), function (responseJson, error) {
+            callback(error);
+        });
+    }
+    API.submitmove = submitmove;
+    function undomove(gameid, turn, player, callback) {
+        httpRequest(LAMBDA_URL + "?operation=undomove&gameid=" + gameid + "&turn=" + turn + "&player=" + player, function (responseJson, error) {
+            callback(error);
+        });
+    }
+    API.undomove = undomove;
+    function updategame(gameid, callback) {
+        httpRequest(LAMBDA_URL + "?operation=updategame&gameid=" + gameid, function (responseJson, error) {
+            if (error) {
+                callback(undefined, error);
+            }
+            else {
+                callback(responseJson['result'] === "SUCCESS", undefined);
+            }
+        });
+    }
+    API.updategame = updategame;
     function httpRequest(url, callback) {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url, true);
@@ -181,8 +234,29 @@ var ArtCommon;
             else if (effect.type === 'trading_post') {
                 return tradingPost(effect.direction);
             }
+            else if (effect.type === 'marketplace') {
+                return marketplace();
+            }
+            else if (effect.type === 'gold_for_cards') {
+                return goldForCards(effect.color);
+            }
+            else if (effect.type === 'gold_and_points_for_cards') {
+                return goldAndPointsForCards(effect.color);
+            }
+            else if (effect.type === 'gold_and_points_for_stages') {
+                return goldAndPointsForStages();
+            }
             else if (effect.type === 'points_for_cards') {
                 return pointsForCards(effect.color);
+            }
+            else if (effect.type === 'points_for_stages') {
+                return pointsForStages();
+            }
+            else if (effect.type === 'points_for_self_cards') {
+                return pointsForSelfCards(effect.color);
+            }
+            else if (effect.type === 'multi_science') {
+                return multiScience(effect.symbols.split('/'));
             }
             console.error('Effect type not found:', effect.type);
             return effectNotFound();
@@ -301,6 +375,28 @@ var ArtCommon;
         return effectNotFound();
     }
     ArtCommon.science = science;
+    function multiScience(symbols) {
+        var e_4, _a;
+        var symbolArts = symbols.map(function (s) { return science(s); });
+        for (var i = symbolArts.length - 1; i >= 1; i--) {
+            symbolArts.splice(i, 0, slash());
+        }
+        try {
+            for (var symbolArts_1 = __values(symbolArts), symbolArts_1_1 = symbolArts_1.next(); !symbolArts_1_1.done; symbolArts_1_1 = symbolArts_1.next()) {
+                var art = symbolArts_1_1.value;
+                art.scale.set(0.8);
+            }
+        }
+        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+        finally {
+            try {
+                if (symbolArts_1_1 && !symbolArts_1_1.done && (_a = symbolArts_1.return)) _a.call(symbolArts_1);
+            }
+            finally { if (e_4) throw e_4.error; }
+        }
+        return combineEffectArt(symbolArts, 4);
+    }
+    ArtCommon.multiScience = multiScience;
     function victoryPoints(points) {
         var container = new PIXI.Container();
         container.addChild(debugEffect(0xFFFFFF));
@@ -350,6 +446,59 @@ var ArtCommon;
         return container;
     }
     ArtCommon.tradingPost = tradingPost;
+    function marketplace() {
+        var container = new PIXI.Container();
+        var glassArt = glass();
+        glassArt.scale.set(0.5);
+        var loomArt = loom();
+        loomArt.scale.set(0.5);
+        var pressArt = press();
+        pressArt.scale.set(0.5);
+        container.addChild(Shapes.filledRoundedRect(-90, -30, 180, 60, 30, cardBannerForColor('grey')));
+        var resources = combineEffectArt([glassArt, loomArt, pressArt], 8);
+        container.addChild(resources);
+        var arrowR = arrowRight();
+        arrowR.scale.set(0.5);
+        arrowR.position.set(120, 0);
+        container.addChild(arrowR);
+        var arrowL = arrowLeft();
+        arrowL.scale.set(0.5);
+        arrowL.position.set(-120, 0);
+        container.addChild(arrowL);
+        return container;
+    }
+    ArtCommon.marketplace = marketplace;
+    function goldForCards(color) {
+        var container = new PIXI.Container();
+        container.addChild(Shapes.filledRoundedRect(-20, -48, 40, 60, 4, ArtCommon.cardBannerForColor(color)));
+        var arrowL = arrowLeft();
+        arrowL.scale.set(0.4);
+        arrowL.position.set(-70, 0);
+        container.addChild(arrowL);
+        var arrowR = arrowRight();
+        arrowR.scale.set(0.4);
+        arrowR.position.set(70, 0);
+        container.addChild(arrowR);
+        var arrowD = arrowDown();
+        arrowD.scale.set(0.4);
+        arrowD.position.set(0, 40);
+        container.addChild(arrowD);
+        return container;
+    }
+    ArtCommon.goldForCards = goldForCards;
+    function goldAndPointsForCards(color) {
+        var container = new PIXI.Container();
+        container.addChild(Shapes.filledRoundedRect(-25, -40, 50, 80, 8, 0xFFFFFF));
+        container.addChild(Shapes.filledRoundedRect(-21, -36, 42, 72, 4, ArtCommon.cardBannerForColor(color)));
+        return container;
+    }
+    ArtCommon.goldAndPointsForCards = goldAndPointsForCards;
+    function goldAndPointsForStages() {
+        var container = new PIXI.Container();
+        container.addChild(pyramidStages());
+        return container;
+    }
+    ArtCommon.goldAndPointsForStages = goldAndPointsForStages;
     function pointsForCards(color) {
         var container = new PIXI.Container();
         container.addChild(Shapes.filledRoundedRect(-25, -40, 50, 80, 6, ArtCommon.cardBannerForColor(color)));
@@ -364,6 +513,34 @@ var ArtCommon;
         return container;
     }
     ArtCommon.pointsForCards = pointsForCards;
+    function pointsForStages() {
+        var container = new PIXI.Container();
+        var pyramid = pyramidStages();
+        pyramid.position.set(0, -20);
+        pyramid.scale.set(0.7);
+        container.addChild(pyramid);
+        var arrowL = arrowLeft();
+        arrowL.scale.set(0.4);
+        arrowL.position.set(-70, 0);
+        container.addChild(arrowL);
+        var arrowR = arrowRight();
+        arrowR.scale.set(0.4);
+        arrowR.position.set(70, 0);
+        container.addChild(arrowR);
+        var arrowD = arrowDown();
+        arrowD.scale.set(0.4);
+        arrowD.position.set(0, 40);
+        container.addChild(arrowD);
+        return container;
+    }
+    ArtCommon.pointsForStages = pointsForStages;
+    function pointsForSelfCards(color) {
+        var container = new PIXI.Container();
+        container.addChild(Shapes.filledRoundedRect(-25, -40, 50, 80, 8, 0xFFFFFF));
+        container.addChild(Shapes.filledRoundedRect(-21, -36, 42, 72, 4, ArtCommon.cardBannerForColor(color)));
+        return container;
+    }
+    ArtCommon.pointsForSelfCards = pointsForSelfCards;
     function wood() {
         return debugEffect(0x6D9F2F);
     }
@@ -410,6 +587,24 @@ var ArtCommon;
         return graphics;
     }
     ArtCommon.compass = compass;
+    function pyramidStages() {
+        var graphics = new PIXI.Graphics();
+        graphics.beginFill(0xFFFF00, 1);
+        graphics.drawPolygon([0, -48, -16, -20, 16, -20]);
+        graphics.drawPolygon([-16, -12, 16, -12, 32, 12, -32, 12]);
+        graphics.drawPolygon([-32, 20, 32, 20, 48, 48, -48, 48]);
+        graphics.endFill();
+        return graphics;
+    }
+    ArtCommon.pyramidStages = pyramidStages;
+    function checkMark() {
+        var graphics = new PIXI.Graphics();
+        graphics.beginFill(0x00FF00, 1);
+        graphics.drawPolygon([-50, 0, -15, 50, 50, -50, -15, 20]);
+        graphics.endFill();
+        return graphics;
+    }
+    ArtCommon.checkMark = checkMark;
     function slash() {
         var graphics = new PIXI.Graphics();
         graphics.beginFill(0xFFFFFF, 1);
@@ -431,8 +626,15 @@ var ArtCommon;
         graphics.endFill();
         return graphics;
     }
+    function arrowDown() {
+        var graphics = new PIXI.Graphics();
+        graphics.beginFill(0xFFFFFF, 1);
+        graphics.drawPolygon([-50, -45, 50, -45, 0, 45]);
+        graphics.endFill();
+        return graphics;
+    }
     function combineEffectArt(arts, padding) {
-        var e_4, _a;
+        var e_5, _a;
         var totalArtWidth = sum(arts, function (art) { return art.getBounds().width; }) + padding * (arts.length - 1);
         var container = new PIXI.Container();
         var x = -totalArtWidth / 2;
@@ -445,17 +647,17 @@ var ArtCommon;
                 x += width + padding;
             }
         }
-        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
         finally {
             try {
                 if (arts_1_1 && !arts_1_1.done && (_a = arts_1.return)) _a.call(arts_1);
             }
-            finally { if (e_4) throw e_4.error; }
+            finally { if (e_5) throw e_5.error; }
         }
         return container;
     }
     function combineCostArt(arts, padding) {
-        var e_5, _a;
+        var e_6, _a;
         var container = new PIXI.Container();
         var y = 0;
         try {
@@ -467,17 +669,17 @@ var ArtCommon;
                 y += height + padding;
             }
         }
-        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+        catch (e_6_1) { e_6 = { error: e_6_1 }; }
         finally {
             try {
                 if (arts_2_1 && !arts_2_1.done && (_a = arts_2.return)) _a.call(arts_2);
             }
-            finally { if (e_5) throw e_5.error; }
+            finally { if (e_6) throw e_6.error; }
         }
         return container;
     }
     function combineStageCostArt(arts, padding) {
-        var e_6, _a;
+        var e_7, _a;
         if (arts.length >= 4) {
             if (arts.length % 2 === 0) {
                 var left = combineStageCostArt(arts.slice(0, arts.length / 2), padding);
@@ -502,12 +704,12 @@ var ArtCommon;
                 y += height + padding;
             }
         }
-        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+        catch (e_7_1) { e_7 = { error: e_7_1 }; }
         finally {
             try {
                 if (arts_3_1 && !arts_3_1.done && (_a = arts_3.return)) _a.call(arts_3);
             }
-            finally { if (e_6) throw e_6.error; }
+            finally { if (e_7) throw e_7.error; }
         }
         return container;
     }
@@ -520,15 +722,14 @@ var ArtCommon;
 })(ArtCommon || (ArtCommon = {}));
 var Card = /** @class */ (function (_super) {
     __extends(Card, _super);
-    function Card(card, handPosition, activeWonder, discardPile) {
+    function Card(cardId, card, handPosition, activeWonder, discardPile) {
         var _this = _super.call(this) || this;
+        _this.apiCardId = cardId;
         _this.apiCard = card;
-        _this.homePosition = handPosition;
+        _this.handPosition = handPosition;
         _this.activeWonder = activeWonder;
         _this.discardPile = discardPile;
-        _this.isForceEffect = false;
-        _this.isForceFlipped = false;
-        _this.state = 'full';
+        _this.state = { type: 'in_hand', visualState: 'full' };
         _this.effectT = 0;
         _this.flippedT = 0;
         _this.dragging = null;
@@ -587,91 +788,155 @@ var Card = /** @class */ (function (_super) {
         return _this;
     }
     Card.prototype.update = function () {
-        if (!Main.mouseDown && this.dragging) {
-            var position = this.dragging.data.getLocalPosition(this.parent);
-            this.dragging = null;
-            if (this.activeWonder.getMainRegion().contains(position.x, position.y)) {
-                this.select(this.activeWonder.getNewCardEffectWorldPosition(this));
-                this.setEffect(true);
-            }
-            else if (this.activeWonder.getStageRegion().contains(position.x, position.y)) {
-                this.select(this.activeWonder.getClosestStagePosition(position));
-                this.setFlipped(true);
-            }
-            else if (this.discardPile.getBounds().contains(position.x, position.y)) {
-                this.select(new PIXI.Point(this.discardPile.position.x, this.discardPile.position.y - 36 * this.scale.y));
-                this.setFlipped(true);
-            }
-        }
-        if (this.lockPosition) {
-            this.x = lerp(this.x, this.lockPosition.x, 0.25);
-            this.y = lerp(this.y, this.lockPosition.y, 0.25);
-        }
-        else if (this.dragging) {
-            var position = this.dragging.data.getLocalPosition(this.parent);
-            if (this.activeWonder.getMainRegion().contains(position.x, position.y)) {
-                this.state = 'effect';
-                this.x = position.x + lerp(this.dragging.offsetx, 0, this.effectT);
-                this.y = position.y + lerp(this.dragging.offsety, -(this.effectsRect.top + this.effectsRect.height / 2) * this.scale.y, this.effectT);
-                this.mainContainer.scale.x = lerp(1, this.activeWonder.scale.x / this.scale.x * 0.75, this.effectT);
-                this.mainContainer.scale.y = lerp(1, this.activeWonder.scale.y / this.scale.y * 0.75, this.effectT);
-                this.parent.setChildIndex(this, this.parent.children.length - 1);
-            }
-            else if (this.activeWonder.getStageRegion().contains(position.x, position.y)) {
-                this.state = 'flipped';
-                var stagePoint = this.activeWonder.getClosestStagePosition(position);
-                this.x = lerp(this.x, stagePoint.x, 0.25);
-                this.y = lerp(this.y, stagePoint.y, 0.25);
-                this.mainContainer.scale.x = lerp(1, this.activeWonder.scale.x / this.scale.x * 0.66, this.flippedT);
-                this.mainContainer.scale.y = lerp(1, this.activeWonder.scale.y / this.scale.y * 0.66, this.flippedT);
-                this.parent.setChildIndex(this, 0);
-            }
-            else if (this.discardPile.getBounds().contains(position.x, position.y)) {
-                this.state = 'flipped';
-                this.x = position.x + lerp(this.dragging.offsetx, 0, this.effectT);
-                this.y = position.y + lerp(this.dragging.offsety, -(this.effectsRect.top + this.effectsRect.height / 2) * this.scale.y, this.effectT);
-                this.mainContainer.scale.x = lerp(1, this.activeWonder.scale.x / this.scale.x * 0.75, this.effectT);
-                this.mainContainer.scale.y = lerp(1, this.activeWonder.scale.y / this.scale.y * 0.75, this.effectT);
-                this.parent.setChildIndex(this, this.parent.children.length - 1);
+        var _a;
+        var dragPosition = (_a = this.dragging) === null || _a === void 0 ? void 0 : _a.data.getLocalPosition(this.parent);
+        if (this.dragging) {
+            if (!Main.mouseDown) {
+                if (this.activeWonder.getMainRegion().contains(dragPosition.x, dragPosition.y)) {
+                    var goldCost = this.apiCard.cost ? (this.apiCard.cost.gold || 0) : 0;
+                    var move = { action: 'play', card: this.apiCardId, payment: { bank: goldCost } };
+                    this.submitMove(move);
+                    //this.select(move);
+                }
+                else if (this.activeWonder.getStageRegion().contains(dragPosition.x, dragPosition.y)) {
+                    var stage = this.activeWonder.getClosestStageId(dragPosition);
+                    var move = { action: 'wonder', card: this.apiCardId, stage: stage, payment: {} };
+                    this.submitMove(move);
+                    //this.select(move);
+                }
+                else if (this.discardPile.getBounds().contains(dragPosition.x, dragPosition.y)) {
+                    var move = { action: 'throw', card: this.apiCardId, payment: {} };
+                    this.submitMove(move);
+                    //this.select(move);
+                }
+                else {
+                    this.state = { type: 'in_hand', visualState: 'full' };
+                }
+                this.state = { type: 'in_hand', visualState: 'full' }; // todo remove this
+                this.dragging = null;
             }
             else {
-                this.state = 'full';
-                this.x = position.x + lerp(this.dragging.offsetx, 0, this.effectT);
-                this.y = position.y + lerp(this.dragging.offsety, -(this.effectsRect.top + this.effectsRect.height / 2) * this.scale.y, this.effectT);
-                this.mainContainer.scale.x = lerp(1, this.activeWonder.scale.x / this.scale.x * 0.75, this.effectT);
-                this.mainContainer.scale.y = lerp(1, this.activeWonder.scale.y / this.scale.y * 0.75, this.effectT);
-                this.parent.setChildIndex(this, this.parent.children.length - 1);
+                if (this.activeWonder.getMainRegion().contains(dragPosition.x, dragPosition.y)) {
+                    this.state = { type: 'dragging_play' };
+                }
+                else if (this.activeWonder.getStageRegion().contains(dragPosition.x, dragPosition.y)) {
+                    this.state = { type: 'dragging_wonder' };
+                }
+                else if (this.discardPile.getBounds().contains(dragPosition.x, dragPosition.y)) {
+                    this.state = { type: 'dragging_throw' };
+                }
+                else {
+                    this.state = { type: 'dragging_normal' };
+                }
             }
         }
+        if (this.state.type === 'in_hand') {
+            this.x = this.handPosition.x;
+            this.y = this.handPosition.y;
+            this.mainContainer.scale.x = 1;
+            this.mainContainer.scale.y = 1;
+            this.setInteractable(true);
+            this.visualState = this.state.visualState;
+        }
+        else if (this.state.type === 'dragging_normal') {
+            this.x = dragPosition.x + this.dragging.offsetx;
+            this.y = dragPosition.y + this.dragging.offsety;
+            this.mainContainer.scale.x = 1;
+            this.mainContainer.scale.y = 1;
+            this.parent.setChildIndex(this, this.parent.children.length - 1);
+            this.setInteractable(true);
+            this.visualState = 'full';
+        }
+        else if (this.state.type === 'dragging_play') {
+            this.x = dragPosition.x;
+            this.y = dragPosition.y;
+            this.mainContainer.scale.x = this.activeWonder.scale.x / this.scale.x * 0.75;
+            this.mainContainer.scale.y = this.activeWonder.scale.y / this.scale.y * 0.75;
+            this.parent.setChildIndex(this, this.parent.children.length - 1);
+            this.setInteractable(true);
+            this.visualState = 'effect';
+        }
+        else if (this.state.type === 'dragging_wonder') {
+            var stage = this.activeWonder.getClosestStageId(dragPosition);
+            var stagePoint = this.activeWonder.getCardPositionForStage(stage);
+            this.x = stagePoint.x;
+            this.y = stagePoint.y;
+            this.mainContainer.scale.x = this.activeWonder.scale.x / this.scale.x * 0.66;
+            this.mainContainer.scale.y = this.activeWonder.scale.y / this.scale.y * 0.66;
+            this.parent.setChildIndex(this, 0);
+            this.setInteractable(true);
+            this.visualState = 'flipped';
+        }
+        else if (this.state.type === 'dragging_throw') {
+            this.x = dragPosition.x + this.dragging.offsetx;
+            this.y = dragPosition.y + this.dragging.offsety;
+            this.mainContainer.scale.x = 1;
+            this.mainContainer.scale.y = 1;
+            this.parent.setChildIndex(this, this.parent.children.length - 1);
+            this.setInteractable(false);
+            this.visualState = 'flipped';
+        }
+        else if (this.state.type === 'locked_play') {
+            var effectPoint = this.activeWonder.getNewCardEffectWorldPosition(this);
+            this.x = effectPoint.x;
+            this.y = effectPoint.y;
+            this.mainContainer.scale.x = this.activeWonder.scale.x / this.scale.x * 0.75;
+            this.mainContainer.scale.y = this.activeWonder.scale.y / this.scale.y * 0.75;
+            this.parent.setChildIndex(this, this.parent.children.length - 1);
+            this.setInteractable(false);
+            this.visualState = 'effect';
+        }
+        else if (this.state.type === 'locked_wonder') {
+            var stagePoint = this.activeWonder.getCardPositionForStage(this.state.stage);
+            this.x = stagePoint.x;
+            this.y = stagePoint.y;
+            this.mainContainer.scale.x = this.activeWonder.scale.x / this.scale.x * 0.66;
+            this.mainContainer.scale.y = this.activeWonder.scale.y / this.scale.y * 0.66;
+            this.parent.setChildIndex(this, 0);
+            this.setInteractable(false);
+            this.visualState = 'flipped';
+        }
+        else if (this.state.type === 'locked_throw') {
+            var discardPoint = new PIXI.Point(this.discardPile.x, this.discardPile.y - 36 * this.scale.y);
+            this.x = discardPoint.x;
+            this.y = discardPoint.y;
+            this.mainContainer.scale.x = 1;
+            this.mainContainer.scale.y = 1;
+            this.parent.setChildIndex(this, this.parent.children.length - 1);
+            this.setInteractable(false);
+            this.visualState = 'flipped';
+        }
+        else if (this.state.type === 'permanent_effect') {
+            this.scale.set(0.75);
+            this.setInteractable(false);
+            this.visualState = 'effect';
+            this.effectT = 1;
+        }
+        else if (this.state.type === 'permanent_flipped') {
+            this.scale.set(0.66);
+            this.setInteractable(false);
+            this.visualState = 'flipped';
+            this.flippedT = 1;
+        }
+        this.updateVisuals();
+    };
+    Card.prototype.updateVisuals = function () {
+        if (this.visualState === 'effect') {
+            this.effectT = 1;
+        }
         else {
-            this.x = lerp(this.x, this.homePosition.x, 0.25);
-            this.y = lerp(this.y, this.homePosition.y, 0.25);
-            this.mainContainer.scale.x = lerp(this.mainContainer.scale.x, 1, 0.25);
-            this.mainContainer.scale.y = lerp(this.mainContainer.scale.y, 1, 0.25);
-            this.state = 'full';
+            this.effectT = 0;
         }
-        if (this.isForceFlipped) {
-            this.state = 'flipped';
-        }
-        else if (this.isForceEffect) {
-            this.state = 'effect';
-        }
-        if (this.state === 'effect') {
-            this.effectT += (1 - this.effectT) * 0.25;
+        if (this.visualState === 'flipped') {
+            this.flippedT = 1;
         }
         else {
-            this.effectT += (0 - this.effectT) * 0.25;
-        }
-        if (this.state === 'flipped') {
-            this.flippedT += (1 - this.flippedT) * 0.25;
-        }
-        else {
-            this.flippedT += (0 - this.flippedT) * 0.25;
+            this.flippedT = 0;
         }
         this.stateMask.position.set(lerp(this.fullCardRect.left, this.effectsRect.left, this.effectT), lerp(this.fullCardRect.top, this.effectsRect.top, this.effectT));
         this.stateMask.scale.set(lerp(this.fullCardRect.width, this.effectsRect.width, this.effectT), lerp(this.fullCardRect.height, this.effectsRect.height, this.effectT));
-        this.frontContainer.scale.x = 1 - Math.min(this.flippedT, 0.5) * 2;
-        this.backContainer.scale.x = Math.max(0.5, this.flippedT) * 2 - 1;
+        this.frontContainer.scale.x = lerp(1, 0, Math.min(this.flippedT, 0.5) * 2);
+        this.backContainer.scale.x = lerp(0, 1, Math.max(0.5, this.flippedT) * 2 - 1);
     };
     Card.prototype.getWidth = function () {
         return this.stateMask.width * this.scale.x * this.mainContainer.scale.x;
@@ -679,52 +944,51 @@ var Card = /** @class */ (function (_super) {
     Card.prototype.getHeight = function () {
         return this.stateMask.height * this.scale.y * this.mainContainer.scale.y;
     };
-    Card.prototype.select = function (lockPosition) {
-        if (Main.scene.hand.selectedCard) {
-            Main.scene.hand.selectedCard.deselect();
+    Card.prototype.submitMove = function (move) {
+        API.submitmove(Main.gameid, Main.gamestate.turn, Main.player, move, function (error) {
+            if (error) {
+                Main.error(error);
+                //this.deselect();
+                //Main.undoMove();
+                return;
+            }
+            console.log('Submitted move:', move);
+        });
+    };
+    Card.prototype.select = function (move) {
+        var lastSelectedCard = Main.scene.hand.selectedCard;
+        if (lastSelectedCard) {
+            lastSelectedCard.deselect();
         }
-        this.lockPosition = lockPosition;
+        if (move.action === 'play') {
+            this.state = { type: 'locked_play' };
+        }
+        else if (move.action === 'wonder') {
+            this.state = { type: 'locked_wonder', stage: move.stage };
+        }
+        else if (move.action === 'throw') {
+            this.state = { type: 'locked_throw' };
+        }
     };
     Card.prototype.deselect = function () {
-        this.lockPosition = null;
-        this.setFull();
+        this.state = { type: 'in_hand', visualState: 'full' };
     };
-    Card.prototype.setEffect = function (immediate) {
-        this.isForceEffect = true;
-        this.state = 'effect';
-        if (immediate)
-            this.effectT = 1;
-        this.buttonMode = false;
-        this.interactive = false;
-        this.update();
+    Card.prototype.setInteractable = function (interactable) {
+        this.buttonMode = interactable;
+        this.interactive = interactable;
     };
-    Card.prototype.setFlipped = function (immediate) {
-        this.isForceFlipped = true;
-        this.state = 'flipped';
-        if (immediate)
-            this.flippedT = 1;
-        this.buttonMode = false;
-        this.interactive = false;
-        this.update();
-    };
-    Card.prototype.setFull = function (immediate) {
-        this.isForceFlipped = false;
-        this.isForceEffect = false;
-        this.state = 'full';
-        if (immediate)
-            this.flippedT = 0;
-        if (immediate)
-            this.effectT = 0;
-        this.buttonMode = true;
-        this.interactive = true;
-        this.update();
+    Card.flippedCardForAge = function (age, activeWonder) {
+        var card = new Card(-1, { age: age, name: '', color: 'brown', effects: [] }, new PIXI.Point(), activeWonder, new PIXI.Container());
+        card.state = { type: 'permanent_flipped' };
+        card.update();
+        return card;
     };
     return Card;
 }(PIXI.Container));
 var GameStateDiffer;
 (function (GameStateDiffer) {
     function diffNonTurn(gamestate) {
-        var e_7, _a;
+        var e_8, _a;
         var result = {
             scripts: []
         };
@@ -732,52 +996,38 @@ var GameStateDiffer;
             for (var _b = __values(Main.gamedata.players), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var player = _c.value;
                 diffGold(gamestate, player, result);
+                diffCurrentMove(gamestate, player, result);
             }
         }
-        catch (e_7_1) { e_7 = { error: e_7_1 }; }
+        catch (e_8_1) { e_8 = { error: e_8_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_7) throw e_7.error; }
+            finally { if (e_8) throw e_8.error; }
         }
         return result;
     }
     GameStateDiffer.diffNonTurn = diffNonTurn;
-    function diffTurn(gamestate, movehistory) {
+    function diffTurn(gamestate) {
         var result = diffNonTurn(gamestate);
         if (gamestate.turn - Main.gamestate.turn > 1) {
             result.scripts.splice(0);
             return;
         }
-        var move = movehistory[gamestate.turn - 1][Main.player];
         result.scripts.push(function () {
             return __generator(this, function (_a) {
-                if (move.action === 'play') {
-                }
                 return [2 /*return*/];
             });
         });
-        result.scripts.push(function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        Main.scene.hand.flip();
-                        return [5 /*yield**/, __values(S.wait(0.1)())];
-                    case 1:
-                        _a.sent();
-                        Main.scene.hand.collapse();
-                        return [5 /*yield**/, __values(S.wait(0.5)())];
-                    case 2:
-                        _a.sent();
-                        Main.scene.hand.uncollapse();
-                        return [5 /*yield**/, __values(S.wait(0.5)())];
-                    case 3:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
+        // result.scripts.push(function*() {
+        //     Main.scene.hand.flip();
+        //     yield* S.wait(0.1)();
+        //     Main.scene.hand.collapse();
+        //     yield* S.wait(0.5)();
+        //     Main.scene.hand.uncollapse();
+        //     yield* S.wait(0.5)();
+        // });
         return result;
     }
     GameStateDiffer.diffTurn = diffTurn;
@@ -785,9 +1035,8 @@ var GameStateDiffer;
         var oldGold = Main.gamestate.playerData[player].gold;
         var newGold = gamestate.playerData[player].gold;
         var playeri = Main.gamedata.players.indexOf(player);
-        if (newGold === oldGold) {
+        if (newGold === oldGold)
             return;
-        }
         result.scripts.push(function () {
             var goldText;
             return __generator(this, function (_a) {
@@ -806,46 +1055,65 @@ var GameStateDiffer;
             });
         });
     }
+    function diffCurrentMove(gamestate, player, result) {
+        var oldMove = Main.gamestate.playerData[player].currentMove;
+        var newMove = gamestate.playerData[player].currentMove;
+        var playeri = Main.gamedata.players.indexOf(player);
+        // Always reflect current move.
+        if (player === Main.player) {
+            result.scripts.push(function () {
+                return __generator(this, function (_a) {
+                    Main.scene.hand.reflectMove(newMove);
+                    return [2 /*return*/];
+                });
+            });
+            return;
+        }
+        if (API.eqMove(newMove, oldMove))
+            return;
+        result.scripts.push(function () {
+            var wonder;
+            return __generator(this, function (_a) {
+                wonder = Main.scene.wonders[playeri];
+                if (!oldMove && newMove) {
+                    wonder.makeMove();
+                }
+                else {
+                    wonder.undoMove();
+                }
+                return [2 /*return*/];
+            });
+        });
+    }
 })(GameStateDiffer || (GameStateDiffer = {}));
 var Hand = /** @class */ (function () {
-    function Hand(container, cards, activeWonder, discardPile) {
-        var handY = 120;
-        var handDX = 136;
-        this.normalHandPositions = [];
-        this.homePositions = [];
-        this.collapsedPosition = new PIXI.Point(Main.width / 2, handY);
+    function Hand(container, cardIds, activeWonder, discardPile) {
         this.cards = [];
         this.collapsed = false;
-        for (var i = 0; i < cards.length; i++) {
-            var normalHandPosition = new PIXI.Point(Main.width / 2 + handDX * (i - (cards.length - 1) / 2), handY);
-            this.normalHandPositions.push(normalHandPosition);
-            var homePosition = new PIXI.Point(normalHandPosition.x, normalHandPosition.y);
-            this.homePositions.push(homePosition);
-            var card = new Card(cards[i], homePosition, activeWonder, discardPile);
-            card.position.set(homePosition.x, homePosition.y);
-            card.scale.set(2);
+        for (var i = 0; i < cardIds.length; i++) {
+            var card = new Card(cardIds[i], Main.gamedata.cards[cardIds[i]], new PIXI.Point(), activeWonder, discardPile);
             this.cards.push(card);
             container.addChild(card);
-            card.setFlipped(true);
-            card.setFull();
+            card.state = { type: 'in_hand', visualState: 'full' };
         }
+        this.adjustPositions();
     }
     Object.defineProperty(Hand.prototype, "selectedCard", {
         get: function () {
-            var e_8, _a;
+            var e_9, _a;
             try {
                 for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var card = _c.value;
-                    if (card.lockPosition)
+                    if (card.state.type.startsWith('locked'))
                         return card;
                 }
             }
-            catch (e_8_1) { e_8 = { error: e_8_1 }; }
+            catch (e_9_1) { e_9 = { error: e_9_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_8) throw e_8.error; }
+                finally { if (e_9) throw e_9.error; }
             }
             return undefined;
         },
@@ -855,56 +1123,112 @@ var Hand = /** @class */ (function () {
     Hand.prototype.update = function () {
         for (var i = 0; i < this.cards.length; i++) {
             if (this.collapsed) {
-                this.cards[i].homePosition.x = lerp(this.cards[i].homePosition.x, this.collapsedPosition.x, 0.125);
-                this.cards[i].homePosition.y = lerp(this.cards[i].homePosition.y, this.collapsedPosition.y, 0.125);
+                this.cards[i].handPosition.x = lerp(this.cards[i].handPosition.x, this.collapsedPosition.x, 0.125);
+                this.cards[i].handPosition.y = lerp(this.cards[i].handPosition.y, this.collapsedPosition.y, 0.125);
             }
             else {
-                this.cards[i].homePosition.x = lerp(this.cards[i].homePosition.x, this.normalHandPositions[i].x, 0.125);
-                this.cards[i].homePosition.y = lerp(this.cards[i].homePosition.y, this.normalHandPositions[i].y, 0.125);
+                this.cards[i].handPosition.x = lerp(this.cards[i].handPosition.x, this.normalHandPositions[i].x, 0.125);
+                this.cards[i].handPosition.y = lerp(this.cards[i].handPosition.y, this.normalHandPositions[i].y, 0.125);
             }
             this.cards[i].update();
         }
     };
+    Hand.prototype.adjustPositions = function () {
+        var handY = 120;
+        var handDX = 136;
+        this.normalHandPositions = [];
+        this.handPositions = [];
+        this.collapsedPosition = new PIXI.Point(Main.width / 2, handY);
+        for (var i = 0; i < this.cards.length; i++) {
+            var normalHandPosition = new PIXI.Point(Main.width / 2 + handDX * (i - (this.cards.length - 1) / 2), handY);
+            this.normalHandPositions.push(normalHandPosition);
+            var handPosition = new PIXI.Point(normalHandPosition.x, normalHandPosition.y);
+            this.handPositions.push(handPosition);
+            this.cards[i].handPosition = handPosition;
+            this.cards[i].position.set(handPosition.x, handPosition.y);
+            this.cards[i].scale.set(2);
+        }
+    };
+    Hand.prototype.reflectMove = function (move) {
+        var e_10, _a, e_11, _b;
+        console.log('reflect', move);
+        if (!move) {
+            try {
+                for (var _c = __values(this.cards), _d = _c.next(); !_d.done; _d = _c.next()) {
+                    var card = _d.value;
+                    card.deselect();
+                }
+            }
+            catch (e_10_1) { e_10 = { error: e_10_1 }; }
+            finally {
+                try {
+                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                }
+                finally { if (e_10) throw e_10.error; }
+            }
+            return;
+        }
+        var moved = false;
+        try {
+            for (var _e = __values(this.cards), _f = _e.next(); !_f.done; _f = _e.next()) {
+                var card = _f.value;
+                if (card.apiCardId === move.card) {
+                    card.select(move);
+                    moved = true;
+                }
+                else {
+                    card.deselect();
+                }
+            }
+        }
+        catch (e_11_1) { e_11 = { error: e_11_1 }; }
+        finally {
+            try {
+                if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+            }
+            finally { if (e_11) throw e_11.error; }
+        }
+        if (!moved)
+            console.error('Move card not found in hand:', move);
+    };
     Hand.prototype.collapse = function () {
-        console.log('collapsed');
         this.collapsed = true;
     };
     Hand.prototype.uncollapse = function () {
-        console.log('uncollapsed');
         this.collapsed = false;
     };
     Hand.prototype.flip = function () {
-        var e_9, _a;
-        console.log('flipped');
+        var e_12, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
-                card.setFlipped();
+                if (card.state.type === 'in_hand')
+                    card.state.visualState = 'flipped';
             }
         }
-        catch (e_9_1) { e_9 = { error: e_9_1 }; }
+        catch (e_12_1) { e_12 = { error: e_12_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_9) throw e_9.error; }
+            finally { if (e_12) throw e_12.error; }
         }
     };
     Hand.prototype.unflip = function () {
-        var e_10, _a;
-        console.log('unflipped');
+        var e_13, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
-                card.setFull();
+                if (card.state.type === 'in_hand')
+                    card.state.visualState = 'full';
             }
         }
-        catch (e_10_1) { e_10 = { error: e_10_1 }; }
+        catch (e_13_1) { e_13 = { error: e_13_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_10) throw e_10.error; }
+            finally { if (e_13) throw e_13.error; }
         }
     };
     return Hand;
@@ -917,13 +1241,16 @@ var Main = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    ;
     Object.defineProperty(Main, "height", {
         get: function () { return this.app.view.height; },
         enumerable: false,
         configurable: true
     });
-    ;
+    Object.defineProperty(Main, "isHost", {
+        get: function () { return this.gamedata.host === this.player; },
+        enumerable: false,
+        configurable: true
+    });
     Main.start = function () {
         var _this = this;
         this.app = new PIXI.Application({
@@ -967,65 +1294,129 @@ var Main = /** @class */ (function () {
         this.initialized = true;
         this.scene = new Scene();
         this.app.stage.addChild(this.scene.mainContainer);
-        this.render();
-        this.sendUpdateGameState();
+        this.createScene();
+        this.sendUpdate();
     };
     Main.update = function () {
         if (this.scene)
             this.scene.update();
         this.scriptManager.update();
     };
-    Main.render = function () {
+    Main.createScene = function () {
         if (!this.initialized)
             return;
-        this.scene.render();
+        this.scene.create();
+    };
+    Main.adjustPositions = function () {
+        if (!this.initialized)
+            return;
+        this.scene.adjustPositions();
     };
     Main.resize = function () {
         this.app.renderer.resize(window.innerWidth, this.height);
-        this.render();
+        this.adjustPositions();
     };
-    Main.sendUpdateGameState = function () {
+    Main.sendUpdate = function () {
         var _this = this;
-        this.scriptManager.runScript(S.chain(S.wait(1), S.call(function () { return _this.updateGameState(); })));
+        if (this.gamestate.state === 'GAME_COMPLETE')
+            return;
+        this.scriptManager.runScript(S.chain(S.wait(1), S.call(function () {
+            if (_this.isHost)
+                _this.updateAndGetGameState();
+            else
+                _this.getGameState();
+            _this.updateBotMoves();
+        })));
     };
-    Main.updateGameState = function () {
+    Main.getGameState = function () {
         var _this = this;
         API.getgamestate(this.gameid, this.player, function (gamestate, error) {
             if (error) {
                 Main.error('Failed to get game state: ' + error);
-                _this.sendUpdateGameState();
+                _this.sendUpdate();
                 return;
             }
             console.log('Refreshed gamestate:', gamestate);
             if (gamestate.turn < Main.gamestate.turn) {
                 Main.error("Error: local turn (" + Main.gamestate.turn + ") is greater than the game's (" + gamestate.turn + ")?");
-                _this.sendUpdateGameState();
+                _this.sendUpdate();
                 return;
             }
             else if (gamestate.turn === Main.gamestate.turn) {
                 var diffResult = GameStateDiffer.diffNonTurn(gamestate);
                 _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {
                     _this.gamestate = gamestate;
-                    _this.sendUpdateGameState();
+                    _this.sendUpdate();
                 })));
             }
             else {
-                API.getmovehistory(_this.gameid, _this.player, function (movehistory, error) {
-                    if (error) {
-                        Main.error('Failed to get move history: ' + error);
-                        _this.sendUpdateGameState();
-                        return;
-                    }
-                    var diffResult = GameStateDiffer.diffTurn(gamestate, movehistory);
-                    _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {
-                        _this.gamestate = gamestate;
-                        console.log('reloading');
-                        _this.render();
-                        _this.sendUpdateGameState();
-                    })));
-                });
+                var diffResult = GameStateDiffer.diffTurn(gamestate);
+                _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {
+                    _this.gamestate = gamestate;
+                    console.log('reloading');
+                    _this.createScene();
+                    _this.sendUpdate();
+                })));
             }
         });
+    };
+    Main.updateAndGetGameState = function () {
+        var _this = this;
+        API.updategame(Main.gameid, function (wasUpdate, error) {
+            if (error) {
+                Main.error(error);
+            }
+            else {
+                console.log(wasUpdate ? 'Updated game' : 'No update for game');
+            }
+            _this.getGameState();
+        });
+    };
+    Main.undoMove = function () {
+        API.undomove(this.gameid, this.gamestate.turn, this.player, function (error) {
+            if (error) {
+                Main.error(error);
+                return;
+            }
+            console.log('Undo move successful');
+        });
+    };
+    Main.updateBotMoves = function () {
+        var e_14, _a;
+        var _this = this;
+        var _loop_1 = function (player) {
+            if (player.startsWith('BOT') && !this_1.gamestate.playerData[player].currentMove) {
+                var botPlayer_1 = player;
+                API.getvalidmoves(this_1.gameid, this_1.gamestate.turn, botPlayer_1, function (validMoves, error) {
+                    if (error) {
+                        Main.error(error);
+                        return;
+                    }
+                    var move = randElement(validMoves);
+                    API.submitmove(_this.gameid, _this.gamestate.turn, botPlayer_1, move, function (error) {
+                        if (error) {
+                            Main.error(error);
+                            return;
+                        }
+                        console.log('Successfully submitted bot move:', move);
+                    });
+                });
+            }
+        };
+        var this_1 = this;
+        try {
+            for (var _b = __values(this.gamedata.players), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var player = _c.value;
+                _loop_1(player);
+            }
+        }
+        catch (e_14_1) { e_14 = { error: e_14_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_14) throw e_14.error; }
+        }
     };
     Main.stop = function () {
         this.scriptManager.reset();
@@ -1067,52 +1458,63 @@ var Scene = /** @class */ (function () {
     function Scene() {
         this.mainContainer = new PIXI.Container();
     }
-    Scene.prototype.render = function () {
+    Scene.prototype.create = function () {
         var gamedata = Main.gamedata;
         var gamestate = Main.gamestate;
         var player = Main.player;
-        var wonderStartY = 600;
-        var wonderDX = Main.width / 4;
-        var wonderDY = 400;
-        var discardY = 1000;
         var discardWidth = 250;
         var discardHeight = 300;
         this.mainContainer.removeChildren();
-        this.wonders = gamedata.players.map(function (p) { return undefined; });
+        this.discardPile = new PIXI.Container();
+        this.discardPile.addChild(Shapes.filledRoundedRect(-discardWidth / 2, -discardHeight / 2, discardWidth, discardHeight, 10, 0x888888));
+        this.discardPile.addChild(Shapes.filledRoundedRect(-discardWidth / 2 + 4, -discardHeight / 2 + 4, discardWidth - 8, discardHeight - 8, 6, 0x000000));
+        this.mainContainer.addChild(this.discardPile);
+        this.wonders = [];
+        for (var i = 0; i < gamedata.players.length; i++) {
+            var player_1 = gamedata.players[i];
+            var wonder = new Wonder(gamedata.wonders[player_1], gamestate.playerData[player_1], player_1);
+            this.mainContainer.addChild(wonder);
+            this.wonders.push(wonder);
+        }
+        var cardIds = gamestate.playerData[player].hand;
+        cardIds = __spread(cardIds).sort(function (a, b) { return a - b; });
+        this.hand = new Hand(this.mainContainer, cardIds, this.wonders[gamedata.players.indexOf(player)], this.discardPile);
+        this.hand.reflectMove(gamestate.playerData[player].currentMove);
+        this.adjustPositions();
+    };
+    Scene.prototype.adjustPositions = function () {
+        var gamedata = Main.gamedata;
+        var player = Main.player;
+        var wonderScale = 2.5;
+        var wonderStartY = 600;
+        var wonderDX = Main.width / 4;
+        var wonderDY = 500;
+        var discardY = 1000;
+        // WONDERS
         var p = gamedata.players.indexOf(player);
-        this.addWonderForPlayer(gamedata, gamestate, p, Main.width / 2, wonderStartY);
+        this.wonders[p].position.set(Main.width / 2, wonderStartY);
+        this.wonders[p].scale.set(wonderScale);
         var l = mod(p - 1, gamedata.players.length);
         var r = mod(p + 1, gamedata.players.length);
         var i;
         for (i = 1; i < gamedata.players.length / 2; i++) {
-            this.addWonderForPlayer(gamedata, gamestate, l, Main.width / 2 - wonderDX, wonderStartY + wonderDY * i);
-            this.addWonderForPlayer(gamedata, gamestate, r, Main.width / 2 + wonderDX, wonderStartY + wonderDY * i);
+            this.wonders[l].position.set(Main.width / 2 - wonderDX, wonderStartY + wonderDY * i);
+            this.wonders[l].scale.set(wonderScale);
+            this.wonders[r].position.set(Main.width / 2 + wonderDX, wonderStartY + wonderDY * i);
+            this.wonders[r].scale.set(wonderScale);
             l = mod(l - 1, gamedata.players.length);
             r = mod(r + 1, gamedata.players.length);
         }
         if (gamedata.players.length % 2 === 0) {
-            this.addWonderForPlayer(gamedata, gamestate, l, Main.width / 2, wonderStartY + wonderDY * i);
+            this.wonders[l].position.set(Main.width / 2, wonderStartY + wonderDY * i);
+            this.wonders[l].scale.set(wonderScale);
         }
-        this.discardPile = new PIXI.Container();
-        this.discardPile.addChild(Shapes.filledRoundedRect(-discardWidth / 2, -discardHeight / 2, discardWidth, discardHeight, 10, 0x888888));
-        this.discardPile.addChild(Shapes.filledRoundedRect(-discardWidth / 2 + 4, -discardHeight / 2 + 4, discardWidth - 8, discardHeight - 8, 6, 0x000000));
+        // DISCARD PILE
         this.discardPile.position.set(Main.width / 2, discardY);
-        this.mainContainer.addChild(this.discardPile);
-        var handIds = gamestate.playerData[player].hand;
-        handIds = __spread(handIds).sort(function (a, b) { return a - b; });
-        var handCards = handIds.map(function (id) { return gamedata.cards[id]; });
-        this.hand = new Hand(this.mainContainer, handCards, this.wonders[gamedata.players.indexOf(player)], this.discardPile);
+        this.hand.adjustPositions();
     };
     Scene.prototype.update = function () {
         this.hand.update();
-    };
-    Scene.prototype.addWonderForPlayer = function (gamedata, gamestate, i, x, y) {
-        var player = gamedata.players[i];
-        var wonder = new Wonder(gamedata.wonders[player], gamestate.playerData[player].playedCards.map(function (id) { return gamedata.cards[id]; }), gamestate.playerData[player].stagesBuilt, gamestate.playerData[player].gold, player);
-        wonder.position.set(x, y);
-        wonder.scale.set(2.5);
-        this.mainContainer.addChild(wonder);
-        this.wonders[i] = wonder;
     };
     return Scene;
 }());
@@ -1159,8 +1561,14 @@ function mod(n, mod) {
         n += mod;
     return n;
 }
+function randInt(min, max) {
+    return min + Math.floor(Math.random() * (max + 1 - min));
+}
+function randElement(array) {
+    return array[randInt(0, array.length - 1)];
+}
 function sum(array, key) {
-    var e_11, _a;
+    var e_15, _a;
     if (!array || array.length === 0) {
         return 0;
     }
@@ -1171,19 +1579,19 @@ function sum(array, key) {
             result += key(e);
         }
     }
-    catch (e_11_1) { e_11 = { error: e_11_1 }; }
+    catch (e_15_1) { e_15 = { error: e_15_1 }; }
     finally {
         try {
             if (array_1_1 && !array_1_1.done && (_a = array_1.return)) _a.call(array_1);
         }
-        finally { if (e_11) throw e_11.error; }
+        finally { if (e_15) throw e_15.error; }
     }
     return result;
 }
 var Wonder = /** @class */ (function (_super) {
     __extends(Wonder, _super);
-    function Wonder(wonder, playedCards, stagesBuilt, gold, player) {
-        var e_12, _a, e_13, _b;
+    function Wonder(wonder, playerData, player) {
+        var e_16, _a, e_17, _b;
         var _this = _super.call(this) || this;
         var wonderColor = 0xFFFFFF;
         var boardBase = Shapes.filledRoundedRect(-100, -50, 200, 100, 8, wonderColor);
@@ -1222,18 +1630,19 @@ var Wonder = /** @class */ (function (_super) {
         _this.scienceContainer.position.set(100 - o, 12);
         _this.addChild(_this.scienceContainer);
         try {
-            for (var playedCards_1 = __values(playedCards), playedCards_1_1 = playedCards_1.next(); !playedCards_1_1.done; playedCards_1_1 = playedCards_1.next()) {
-                var card = playedCards_1_1.value;
-                var cardArt = new Card(card, new PIXI.Point(), _this, new PIXI.Container());
+            for (var _c = __values(playerData.playedCards), _d = _c.next(); !_d.done; _d = _c.next()) {
+                var cardId = _d.value;
+                var card = Main.gamedata.cards[cardId];
+                var cardArt = new Card(cardId, card, new PIXI.Point(), _this, new PIXI.Container());
                 _this.addNewCardEffect(cardArt);
             }
         }
-        catch (e_12_1) { e_12 = { error: e_12_1 }; }
+        catch (e_16_1) { e_16 = { error: e_16_1 }; }
         finally {
             try {
-                if (playedCards_1_1 && !playedCards_1_1.done && (_a = playedCards_1.return)) _a.call(playedCards_1);
+                if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
             }
-            finally { if (e_12) throw e_12.error; }
+            finally { if (e_16) throw e_16.error; }
         }
         var stagesMiddle = wonder.stages.length === 2 ? 32 : 0;
         var stageDX = wonder.stages.length === 4 ? 49 : 64;
@@ -1266,35 +1675,51 @@ var Wonder = /** @class */ (function (_super) {
             }
         }
         try {
-            for (var stagesBuilt_1 = __values(stagesBuilt), stagesBuilt_1_1 = stagesBuilt_1.next(); !stagesBuilt_1_1.done; stagesBuilt_1_1 = stagesBuilt_1.next()) {
-                var stageBuilt = stagesBuilt_1_1.value;
-                var ageCard = { age: stageBuilt.cardAge, name: '', color: 'brown', effects: [] };
-                var cardArt = new Card(ageCard, new PIXI.Point(), _this, new PIXI.Container());
-                cardArt.setFlipped(true);
-                cardArt.scale.set(0.66);
+            for (var _e = __values(playerData.stagesBuilt), _f = _e.next(); !_f.done; _f = _e.next()) {
+                var stageBuilt = _f.value;
+                var cardArt = Card.flippedCardForAge(stageBuilt.cardAge, _this);
+                cardArt.state = { type: 'permanent_flipped' };
+                cardArt.update();
                 cardArt.position.set(_this.stageXs[stageBuilt.stage], 5);
                 _this.addChildAt(cardArt, 0);
             }
         }
-        catch (e_13_1) { e_13 = { error: e_13_1 }; }
+        catch (e_17_1) { e_17 = { error: e_17_1 }; }
         finally {
             try {
-                if (stagesBuilt_1_1 && !stagesBuilt_1_1.done && (_b = stagesBuilt_1.return)) _b.call(stagesBuilt_1);
+                if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_13) throw e_13.error; }
+            finally { if (e_17) throw e_17.error; }
         }
         var goldCoin = Shapes.filledCircle(95, -58, 5, 0xFBE317);
         _this.addChild(goldCoin);
-        _this.goldText = new PIXI.Text("" + gold, { fontFamily: 'Arial', fontSize: 70, fill: 0xFFFFFF });
+        _this.goldText = new PIXI.Text("" + playerData.gold, { fontFamily: 'Arial', fontSize: 70, fill: 0xFFFFFF });
         _this.goldText.anchor.set(1, 0.5);
         _this.goldText.scale.set(0.12);
         _this.goldText.position.set(87, -58);
         _this.addChild(_this.goldText);
-        var playerText = new PIXI.Text("" + player, { fontFamily: 'Arial', fontSize: 70, fill: 0xFFFFFF });
+        var playerText = new PIXI.Text(player, { fontFamily: 'Arial', fontSize: 70, fill: 0xFFFFFF });
         playerText.anchor.set(1, 0.5);
         playerText.scale.set(0.12);
         playerText.position.set(100, -70);
         _this.addChild(playerText);
+        if (player !== Main.player && Main.gamestate.playerData[player].handCount > 0) {
+            _this.handRepr = Card.flippedCardForAge(Main.gamestate.age, _this);
+            _this.handRepr.scale.set(0.2);
+            _this.handRepr.position.set(93, -95);
+            _this.moveRepr = Card.flippedCardForAge(Main.gamestate.age, _this);
+            _this.moveRepr.scale.set(_this.handRepr.scale.x, _this.handRepr.scale.y);
+            _this.moveRepr.position.set(_this.handRepr.x, _this.handRepr.y);
+            var checkMark = ArtCommon.checkMark();
+            checkMark.scale.set(0.5);
+            checkMark.position.set(0, 36);
+            _this.moveRepr.addChild(checkMark);
+            if (playerData.currentMove) {
+                _this.moveRepr.x -= 15;
+            }
+            _this.addChild(_this.moveRepr);
+            _this.addChild(_this.handRepr);
+        }
         return _this;
     }
     Wonder.prototype.getMainRegion = function () {
@@ -1303,14 +1728,17 @@ var Wonder = /** @class */ (function (_super) {
     Wonder.prototype.getStageRegion = function () {
         return new PIXI.Rectangle(this.x + -100 * this.scale.x, this.y + 25 * this.scale.y, 200 * this.scale.x, 50 * this.scale.y);
     };
-    Wonder.prototype.getClosestStagePosition = function (position) {
+    Wonder.prototype.getClosestStageId = function (position) {
         var minStage = 0;
         for (var i = 0; i < this.stageXs.length; i++) {
             if (Math.abs(this.x + this.stageXs[i] * this.scale.x - position.x) < Math.abs(this.x + this.stageXs[minStage] * this.scale.x - position.x)) {
                 minStage = i;
             }
         }
-        return new PIXI.Point(this.x + this.stageXs[minStage] * this.scale.x, this.y + 5 * this.scale.y);
+        return minStage;
+    };
+    Wonder.prototype.getCardPositionForStage = function (stage) {
+        return new PIXI.Point(this.x + this.stageXs[stage] * this.scale.x, this.y + 5 * this.scale.y);
     };
     Wonder.prototype.getNewCardEffectWorldPosition = function (cardArt) {
         var color = cardArt.apiCard.color;
@@ -1343,8 +1771,8 @@ var Wonder = /** @class */ (function (_super) {
         return point;
     };
     Wonder.prototype.addNewCardEffect = function (cardArt) {
-        cardArt.setEffect(true);
-        cardArt.scale.set(0.75);
+        cardArt.state = { type: 'permanent_effect' };
+        cardArt.update();
         var color = cardArt.apiCard.color;
         if (color === 'brown') {
             cardArt.position.set(this.brownResourceContainer.width + cardArt.getWidth() / 2, 0);
@@ -1379,6 +1807,18 @@ var Wonder = /** @class */ (function (_super) {
             console.error('Card color not found:', color);
         }
     };
+    Wonder.prototype.makeMove = function () {
+        var _this = this;
+        if (!this.moveRepr || !this.handRepr)
+            return;
+        Main.scriptManager.runScript(S.doOverTime(0.1, function (t) { return _this.moveRepr.x = _this.handRepr.x - 15 * t; }));
+    };
+    Wonder.prototype.undoMove = function () {
+        var _this = this;
+        if (!this.moveRepr || !this.handRepr)
+            return;
+        Main.scriptManager.runScript(S.doOverTime(0.1, function (t) { return _this.moveRepr.x = _this.handRepr.x - 15 * (1 - t); }));
+    };
     return Wonder;
 }(PIXI.Container));
 var S;
@@ -1398,8 +1838,8 @@ var S;
             scriptFunctions[_i] = arguments[_i];
         }
         return function () {
-            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_14_1;
-            var e_14, _a;
+            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_18_1;
+            var e_18, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -1418,14 +1858,14 @@ var S;
                         return [3 /*break*/, 1];
                     case 4: return [3 /*break*/, 7];
                     case 5:
-                        e_14_1 = _b.sent();
-                        e_14 = { error: e_14_1 };
+                        e_18_1 = _b.sent();
+                        e_18 = { error: e_18_1 };
                         return [3 /*break*/, 7];
                     case 6:
                         try {
                             if (scriptFunctions_1_1 && !scriptFunctions_1_1.done && (_a = scriptFunctions_1.return)) _a.call(scriptFunctions_1);
                         }
-                        finally { if (e_14) throw e_14.error; }
+                        finally { if (e_18) throw e_18.error; }
                         return [7 /*endfinally*/];
                     case 7: return [2 /*return*/];
                 }

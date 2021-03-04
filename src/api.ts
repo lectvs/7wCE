@@ -1,13 +1,13 @@
 namespace API {
     export type GameData = {
         players: string[];
+        host: string;
         cards: Dict<Card>;
         wonders: Dict<Wonder>;
     }
 
     export type GameState = {
         state: 'NORMAL_MOVE' | 'LAST_CARD_MOVE' | 'DISCARD_MOVE' | 'GAME_COMPLETE';
-        yourMoveState: 'NOT_MOVED' | 'MOVED';
         discardMoveQueue: string[];
         age: number;
         turn: number;
@@ -20,7 +20,10 @@ namespace API {
         playedCards: number[];
         stagesBuilt: StageBuilt[];
         militaryTokens: number[];
+        handCount: number;
         hand?: number[];
+        lastMove?: Move;
+        currentMove?: Move;
         pointsDistribution: Dict<number>;
     }
 
@@ -89,6 +92,25 @@ namespace API {
         bank?: number;
     }
 
+    export function eqMove(move1: Move, move2: Move) {
+        if (!move1 && !move2) return true;
+        if (!move1 || !move2) return false;
+        if (move1.action !== move2.action) return false;
+        if (move1.card !== move2.card) return false;
+        if (move1.stage !== move2.stage) return false;
+        if (move1.stage !== move2.stage) return false;
+        return eqPayment(move1.payment, move2.payment);
+    }
+
+    export function eqPayment(payment1: Payment, payment2: Payment) {
+        if (!payment1 && !payment2) return true;
+        if (!payment1 || !payment2) return false;
+        if ((payment1.pos || 0) !== (payment2.pos || 0)) return false;
+        if ((payment1.neg || 0) !== (payment2.neg || 0)) return false;
+        if ((payment1.bank || 0) !== (payment2.bank || 0)) return false;
+        return true;
+    }
+
     export function getgamedata(gameid: string, callback: (gamedata: GameData, error: string) => any) {
         httpRequest(`${LAMBDA_URL}?operation=getgamedata&gameid=${gameid}`, (responseJson: any, error: string) => {
             if (error) {
@@ -109,12 +131,34 @@ namespace API {
         });
     }
 
-    export function getmovehistory(gameid: string, player: string, callback: (movehistory: MoveHistory, error: string) => any) {
-        httpRequest(`${LAMBDA_URL}?operation=getmovehistory&gameid=${gameid}&player=${player}`, (responseJson: any, error: string) => {
+    export function getvalidmoves(gameid: string, turn: number, player: string, callback: (validMoves: Move[], error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=getvalidmoves&gameid=${gameid}&turn=${turn}&player=${player}`, (responseJson: any, error: string) => {
             if (error) {
                 callback(undefined, error);
             } else {
-                callback(responseJson, undefined);
+                callback(responseJson['validMoves'], undefined);
+            }
+        });
+    }
+
+    export function submitmove(gameid: string, turn: number, player: string, move: Move, callback: (error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=submitmove&gameid=${gameid}&turn=${turn}&player=${player}&move=${JSON.stringify(move)}`, (responseJson: any, error: string) => {
+            callback(error);
+        });
+    }
+
+    export function undomove(gameid: string, turn: number, player: string, callback: (error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=undomove&gameid=${gameid}&turn=${turn}&player=${player}`, (responseJson: any, error: string) => {
+            callback(error);
+        });
+    }
+
+    export function updategame(gameid: string, callback: (wasUpdate: boolean, error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=updategame&gameid=${gameid}`, (responseJson: any, error: string) => {
+            if (error) {
+                callback(undefined, error);
+            } else {
+                callback(responseJson['result'] === "SUCCESS", undefined);
             }
         });
     }

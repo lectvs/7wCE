@@ -10,12 +10,13 @@ namespace GameStateDiffer {
 
         for (let player of Main.gamedata.players) {
             diffGold(gamestate, player, result);
+            diffCurrentMove(gamestate, player, result);
         }
 
         return result;
     }
 
-    export function diffTurn(gamestate: API.GameState, movehistory: API.MoveHistory): DiffResult {
+    export function diffTurn(gamestate: API.GameState): DiffResult {
         let result: DiffResult = diffNonTurn(gamestate);
 
         if (gamestate.turn - Main.gamestate.turn > 1) {
@@ -23,23 +24,21 @@ namespace GameStateDiffer {
             return;
         }
 
-        let move = movehistory[gamestate.turn-1][Main.player];
-
         result.scripts.push(function*() {
-            if (move.action === 'play') {
+            // if (move.action === 'play') {
                 
-            }
+            // }
         });
 
-        result.scripts.push(function*() {
-            Main.scene.hand.flip();
-            yield* S.wait(0.1)();
-            Main.scene.hand.collapse();
-            yield* S.wait(0.5)();
+        // result.scripts.push(function*() {
+        //     Main.scene.hand.flip();
+        //     yield* S.wait(0.1)();
+        //     Main.scene.hand.collapse();
+        //     yield* S.wait(0.5)();
 
-            Main.scene.hand.uncollapse();
-            yield* S.wait(0.5)();
-        });
+        //     Main.scene.hand.uncollapse();
+        //     yield* S.wait(0.5)();
+        // });
 
         return result;
     }
@@ -49,9 +48,7 @@ namespace GameStateDiffer {
         let newGold = gamestate.playerData[player].gold;
         let playeri = Main.gamedata.players.indexOf(player);
 
-        if (newGold === oldGold) {
-            return;
-        }
+        if (newGold === oldGold) return;
 
         result.scripts.push(function*() {
             let goldText = Main.scene.wonders[playeri].goldText;
@@ -63,6 +60,31 @@ namespace GameStateDiffer {
             })();
 
             goldText.style.fill = 0xFFFFFF;
+        });
+    }
+
+    function diffCurrentMove(gamestate: API.GameState, player: string, result: DiffResult) {
+        let oldMove = Main.gamestate.playerData[player].currentMove;
+        let newMove = gamestate.playerData[player].currentMove;
+        let playeri = Main.gamedata.players.indexOf(player);
+
+        // Always reflect current move.
+        if (player === Main.player) {
+            result.scripts.push(function*() {
+                Main.scene.hand.reflectMove(newMove);
+            });
+            return;
+        }
+
+        if (API.eqMove(newMove, oldMove)) return;
+
+        result.scripts.push(function*() {
+            let wonder = Main.scene.wonders[playeri];
+            if (!oldMove && newMove) {
+                wonder.makeMove();
+            } else {
+                wonder.undoMove();
+            }
         });
     }
 }

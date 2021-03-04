@@ -1,7 +1,7 @@
 class Main {
     
-    static get width() { return this.app.view.width };
-    static get height() { return this.app.view.height };
+    static get width() { return this.app.view.width; }
+    static get height() { return this.app.view.height; }
 
     static gameid: string;
     static player: string;
@@ -18,6 +18,8 @@ class Main {
     static delta: number = 0;
 
     static scriptManager: ScriptManager;
+
+    static get isHost() { return this.gamedata.host === this.player; }
 
     static start() {
         this.app = new PIXI.Application({
@@ -71,9 +73,9 @@ class Main {
 
         this.scene = new Scene();
         this.app.stage.addChild(this.scene.mainContainer);
-        this.render();
+        this.createScene();
 
-        this.sendUpdateGameState();
+        this.sendUpdate();
     }
 
     static update() {
@@ -81,35 +83,45 @@ class Main {
         this.scriptManager.update();
     }
 
-    static render() {
+    static createScene() {
         if (!this.initialized) return;
-        this.scene.render();
+        this.scene.create();
+    }
+
+    static adjustPositions() {
+        if (!this.initialized) return;
+        this.scene.adjustPositions();
     }
 
     static resize() {
         this.app.renderer.resize(window.innerWidth, this.height);
-        this.render();
+        this.adjustPositions();
     }
 
-    static sendUpdateGameState() {
+    static sendUpdate() {
+        if (this.gamestate.state === 'GAME_COMPLETE') return;
         this.scriptManager.runScript(S.chain(
             S.wait(1),
-            S.call(() => this.updateGameState())
+            S.call(() => {
+                if (this.isHost) this.updateAndGetGameState();
+                else this.getGameState();
+                this.updateBotMoves();
+            })
         ));
     }
 
-    static updateGameState() {
+    static getGameState() {
         API.getgamestate(this.gameid, this.player, (gamestate: API.GameState, error: string) => {
             if (error) {
                 Main.error('Failed to get game state: ' + error);
-                this.sendUpdateGameState();
+                this.sendUpdate();
                 return;
             }
 
             console.log('Refreshed gamestate:', gamestate);
             if (gamestate.turn < Main.gamestate.turn) {
                 Main.error(`Error: local turn (${Main.gamestate.turn}) is greater than the game's (${gamestate.turn})?`);
-                this.sendUpdateGameState();
+                this.sendUpdate();
                 return;
             } else if (gamestate.turn === Main.gamestate.turn) {
                 let diffResult = GameStateDiffer.diffNonTurn(gamestate);
@@ -117,30 +129,66 @@ class Main {
                     S.simul(...diffResult.scripts),
                     S.call(() => {
                         this.gamestate = gamestate;
-                        this.sendUpdateGameState();
+                        this.sendUpdate();
                     })
                 ));
             } else {
-                API.getmovehistory(this.gameid, this.player, (movehistory: API.MoveHistory, error: string) => {
+                let diffResult = GameStateDiffer.diffTurn(gamestate);
+                this.scriptManager.runScript(S.chain(
+                    S.simul(...diffResult.scripts),
+                    S.call(() => {
+                        this.gamestate = gamestate;
+                        console.log('reloading')
+                        this.createScene();
+                        this.sendUpdate();
+                    })
+                ));
+            }
+        });
+    }
+
+    static updateAndGetGameState() {
+        API.updategame(Main.gameid, (wasUpdate: boolean, error: string) => {
+            if (error) {
+                Main.error(error);
+            } else {
+                console.log(wasUpdate ? 'Updated game' : 'No update for game');
+            }
+            this.getGameState();
+        });
+    }
+
+    static undoMove() {
+        API.undomove(this.gameid, this.gamestate.turn, this.player, (error: string) => {
+            if (error) {
+                Main.error(error);
+                return;
+            }
+            console.log('Undo move successful');
+        })
+    }
+
+    static updateBotMoves() {
+        for (let player of this.gamedata.players) {
+            if (player.startsWith('BOT') && !this.gamestate.playerData[player].currentMove) {
+                let botPlayer = player;
+                API.getvalidmoves(this.gameid, this.gamestate.turn, botPlayer, (validMoves: API.Move[], error: string) => {
                     if (error) {
-                        Main.error('Failed to get move history: ' + error);
-                        this.sendUpdateGameState();
+                        Main.error(error);
                         return;
                     }
 
-                    let diffResult = GameStateDiffer.diffTurn(gamestate, movehistory);
-                    this.scriptManager.runScript(S.chain(
-                        S.simul(...diffResult.scripts),
-                        S.call(() => {
-                            this.gamestate = gamestate;
-                            console.log('reloading')
-                            this.render();
-                            this.sendUpdateGameState();
-                        })
-                    ));
+                    let move = randElement(validMoves);
+                    API.submitmove(this.gameid, this.gamestate.turn, botPlayer, move, (error: string) => {
+                        if (error) {
+                            Main.error(error);
+                            return;
+                        }
+                        console.log('Successfully submitted bot move:', move);
+                    })
                 });
             }
-        });
+        }
     }
 
     static stop() {

@@ -16,6 +16,14 @@ function mod(n: number, mod: number) {
     return n;
 }
 
+function randInt(min: number, max: number) {
+    return min + Math.floor(Math.random() * (max+1 - min));
+}
+
+function randElement<T>(array: T[]) {
+    return array[randInt(0, array.length-1)];
+}
+
 function sum<T>(array: T[], key: (t: T) => number) {
     if (!array || array.length === 0) {
         return 0;

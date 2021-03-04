@@ -36,8 +36,22 @@ namespace ArtCommon {
                 return gold(effect.gold);
             } else if (effect.type === 'trading_post') {
                 return tradingPost(effect.direction);
+            } else if (effect.type === 'marketplace') {
+                return marketplace();
+            } else if (effect.type === 'gold_for_cards') {
+                return goldForCards(effect.color);
+            } else if (effect.type === 'gold_and_points_for_cards') {
+                return goldAndPointsForCards(effect.color);
+            } else if (effect.type === 'gold_and_points_for_stages') {
+                return goldAndPointsForStages();
             } else if (effect.type === 'points_for_cards') {
                 return pointsForCards(effect.color);
+            } else if (effect.type === 'points_for_stages') {
+                return pointsForStages();
+            } else if (effect.type === 'points_for_self_cards') {
+                return pointsForSelfCards(effect.color);
+            } else if (effect.type === 'multi_science') {
+                return multiScience(effect.symbols.split('/'));
             }
             console.error('Effect type not found:', effect.type);
             return effectNotFound();
@@ -122,6 +136,20 @@ namespace ArtCommon {
         return effectNotFound();
     }
 
+    export function multiScience(symbols: string[]) {
+        let symbolArts = symbols.map(s => science(s));
+
+        for (let i = symbolArts.length-1; i >= 1; i--) {
+            symbolArts.splice(i, 0, slash());
+        }
+
+        for (let art of symbolArts) {
+            art.scale.set(0.8);
+        }
+
+        return combineEffectArt(symbolArts, 4);
+    }
+
     export function victoryPoints(points: number) {
         let container = new PIXI.Container();
         container.addChild(debugEffect(0xFFFFFF));
@@ -169,6 +197,59 @@ namespace ArtCommon {
         return container;
     }
 
+    export function marketplace() {
+        let container = new PIXI.Container();
+        let glassArt = glass();
+        glassArt.scale.set(0.5);
+        let loomArt = loom();
+        loomArt.scale.set(0.5);
+        let pressArt = press();
+        pressArt.scale.set(0.5);
+        container.addChild(Shapes.filledRoundedRect(-90, -30, 180, 60, 30, cardBannerForColor('grey')));
+        let resources = combineEffectArt([glassArt, loomArt, pressArt], 8);
+        container.addChild(resources);
+        let arrowR = arrowRight();
+        arrowR.scale.set(0.5);
+        arrowR.position.set(120, 0);
+        container.addChild(arrowR);
+        let arrowL = arrowLeft();
+        arrowL.scale.set(0.5);
+        arrowL.position.set(-120, 0);
+        container.addChild(arrowL);
+        return container;
+    }
+
+    export function goldForCards(color: string) {
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledRoundedRect(-20, -48, 40, 60, 4, ArtCommon.cardBannerForColor(color)));
+        let arrowL = arrowLeft();
+        arrowL.scale.set(0.4);
+        arrowL.position.set(-70, 0);
+        container.addChild(arrowL);
+        let arrowR = arrowRight();
+        arrowR.scale.set(0.4);
+        arrowR.position.set(70, 0);
+        container.addChild(arrowR);
+        let arrowD = arrowDown();
+        arrowD.scale.set(0.4);
+        arrowD.position.set(0, 40);
+        container.addChild(arrowD);
+        return container;
+    }
+
+    export function goldAndPointsForCards(color: string) {
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledRoundedRect(-25, -40, 50, 80, 8, 0xFFFFFF));
+        container.addChild(Shapes.filledRoundedRect(-21, -36, 42, 72, 4, ArtCommon.cardBannerForColor(color)));
+        return container;
+    }
+
+    export function goldAndPointsForStages() {
+        let container = new PIXI.Container();
+        container.addChild(pyramidStages());
+        return container;
+    }
+
     export function pointsForCards(color: string) {
         let container = new PIXI.Container();
         container.addChild(Shapes.filledRoundedRect(-25, -40, 50, 80, 6, ArtCommon.cardBannerForColor(color)));
@@ -180,6 +261,34 @@ namespace ArtCommon {
         arrowR.scale.set(0.5);
         arrowR.position.set(80, 0);
         container.addChild(arrowR);
+        return container;
+    }
+
+    export function pointsForStages() {
+        let container = new PIXI.Container();
+        let pyramid = pyramidStages();
+        pyramid.position.set(0, -20);
+        pyramid.scale.set(0.7);
+        container.addChild(pyramid);
+        let arrowL = arrowLeft();
+        arrowL.scale.set(0.4);
+        arrowL.position.set(-70, 0);
+        container.addChild(arrowL);
+        let arrowR = arrowRight();
+        arrowR.scale.set(0.4);
+        arrowR.position.set(70, 0);
+        container.addChild(arrowR);
+        let arrowD = arrowDown();
+        arrowD.scale.set(0.4);
+        arrowD.position.set(0, 40);
+        container.addChild(arrowD);
+        return container;
+    }
+
+    export function pointsForSelfCards(color: string) {
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledRoundedRect(-25, -40, 50, 80, 8, 0xFFFFFF));
+        container.addChild(Shapes.filledRoundedRect(-21, -36, 42, 72, 4, ArtCommon.cardBannerForColor(color)));
         return container;
     }
 
@@ -229,6 +338,24 @@ namespace ArtCommon {
         return graphics;
     }
 
+    export function pyramidStages() {
+        let graphics = new PIXI.Graphics();
+        graphics.beginFill(0xFFFF00, 1);
+        graphics.drawPolygon([ 0, -48, -16, -20, 16, -20 ]);
+        graphics.drawPolygon([ -16, -12, 16, -12, 32, 12, -32, 12 ]);
+        graphics.drawPolygon([ -32, 20, 32, 20, 48, 48, -48, 48 ]);
+        graphics.endFill();
+        return graphics;
+    }
+
+    export function checkMark() {
+        let graphics = new PIXI.Graphics();
+        graphics.beginFill(0x00FF00, 1);
+        graphics.drawPolygon([ -50, 0, -15, 50, 50, -50, -15, 20 ]);
+        graphics.endFill();
+        return graphics;
+    }
+
     function slash() {
         let graphics = new PIXI.Graphics();
         graphics.beginFill(0xFFFFFF, 1);
@@ -249,6 +376,14 @@ namespace ArtCommon {
         let graphics = new PIXI.Graphics();
         graphics.beginFill(0xFFFFFF, 1);
         graphics.drawPolygon([ -45, -50, -45, 50, 45, 0 ]);
+        graphics.endFill();
+        return graphics;
+    }
+
+    function arrowDown() {
+        let graphics = new PIXI.Graphics();
+        graphics.beginFill(0xFFFFFF, 1);
+        graphics.drawPolygon([ -50, -45, 50, -45, 0, 45 ]);
         graphics.endFill();
         return graphics;
     }

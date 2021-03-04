@@ -15,7 +15,10 @@ class Wonder extends PIXI.Container {
     civilianContainer: PIXI.Container;
     scienceContainer: PIXI.Container;
 
-    constructor(wonder: API.Wonder, playedCards: API.Card[], stagesBuilt: API.StageBuilt[], gold: number, player: string) {
+    private moveRepr: Card;
+    private handRepr: Card;
+
+    constructor(wonder: API.Wonder, playerData: API.PlayerData, player: string) {
         super();
 
         let wonderColor = 0xFFFFFF;
@@ -68,8 +71,9 @@ class Wonder extends PIXI.Container {
         this.scienceContainer.position.set(100-o, 12);
         this.addChild(this.scienceContainer);
 
-        for (let card of playedCards) {
-            let cardArt = new Card(card, new PIXI.Point(), this, new PIXI.Container());
+        for (let cardId of playerData.playedCards) {
+            let card = Main.gamedata.cards[cardId];
+            let cardArt = new Card(cardId, card, new PIXI.Point(), this, new PIXI.Container());
             this.addNewCardEffect(cardArt);
         }
 
@@ -112,11 +116,10 @@ class Wonder extends PIXI.Container {
             }
         }
 
-        for (let stageBuilt of stagesBuilt) {
-            let ageCard: API.Card = { age: stageBuilt.cardAge, name: '', color: 'brown', effects: [] };
-            let cardArt = new Card(ageCard, new PIXI.Point(), this, new PIXI.Container());
-            cardArt.setFlipped(true);
-            cardArt.scale.set(0.66);
+        for (let stageBuilt of playerData.stagesBuilt) {
+            let cardArt = Card.flippedCardForAge(stageBuilt.cardAge, this);
+            cardArt.state = { type: 'permanent_flipped' };
+            cardArt.update();
             cardArt.position.set(this.stageXs[stageBuilt.stage], 5);
 
             this.addChildAt(cardArt, 0);
@@ -125,17 +128,39 @@ class Wonder extends PIXI.Container {
         let goldCoin = Shapes.filledCircle(95, -58, 5, 0xFBE317);
         this.addChild(goldCoin);
 
-        this.goldText = new PIXI.Text(`${gold}`, { fontFamily : 'Arial', fontSize: 70, fill : 0xFFFFFF });
+        this.goldText = new PIXI.Text(`${playerData.gold}`, { fontFamily : 'Arial', fontSize: 70, fill : 0xFFFFFF });
         this.goldText.anchor.set(1, 0.5);
         this.goldText.scale.set(0.12);
         this.goldText.position.set(87, -58);
         this.addChild(this.goldText);
 
-        let playerText = new PIXI.Text(`${player}`, { fontFamily : 'Arial', fontSize: 70, fill : 0xFFFFFF });
+        let playerText = new PIXI.Text(player, { fontFamily : 'Arial', fontSize: 70, fill : 0xFFFFFF });
         playerText.anchor.set(1, 0.5);
         playerText.scale.set(0.12);
         playerText.position.set(100, -70);
         this.addChild(playerText);
+
+        if (player !== Main.player && Main.gamestate.playerData[player].handCount > 0) {
+            this.handRepr = Card.flippedCardForAge(Main.gamestate.age, this);
+            this.handRepr.scale.set(0.2);
+            this.handRepr.position.set(93, -95);
+
+            this.moveRepr = Card.flippedCardForAge(Main.gamestate.age, this);
+            this.moveRepr.scale.set(this.handRepr.scale.x, this.handRepr.scale.y);
+            this.moveRepr.position.set(this.handRepr.x, this.handRepr.y);
+
+            let checkMark = ArtCommon.checkMark();
+            checkMark.scale.set(0.5);
+            checkMark.position.set(0, 36);
+            this.moveRepr.addChild(checkMark);
+
+            if (playerData.currentMove) {
+                this.moveRepr.x -= 15;
+            }
+
+            this.addChild(this.moveRepr);
+            this.addChild(this.handRepr);
+        }
     }
 
     getMainRegion() {
@@ -146,14 +171,18 @@ class Wonder extends PIXI.Container {
         return new PIXI.Rectangle(this.x + -100*this.scale.x, this.y + 25*this.scale.y, 200*this.scale.x, 50*this.scale.y);
     }
 
-    getClosestStagePosition(position: PIXI.Point) {
+    getClosestStageId(position: PIXI.Point) {
         let minStage = 0;
         for (let i = 0; i < this.stageXs.length; i++) {
             if (Math.abs(this.x + this.stageXs[i]*this.scale.x - position.x) < Math.abs(this.x + this.stageXs[minStage]*this.scale.x - position.x)) {
                 minStage = i;
             }
         }
-        return new PIXI.Point(this.x + this.stageXs[minStage]*this.scale.x, this.y + 5*this.scale.y);
+        return minStage;
+    }
+
+    getCardPositionForStage(stage: number) {
+        return new PIXI.Point(this.x + this.stageXs[stage]*this.scale.x, this.y + 5*this.scale.y);
     }
 
     getNewCardEffectWorldPosition(cardArt: Card) {
@@ -181,8 +210,8 @@ class Wonder extends PIXI.Container {
     }
 
     addNewCardEffect(cardArt: Card) {
-        cardArt.setEffect(true);
-        cardArt.scale.set(0.75);
+        cardArt.state = { type: 'permanent_effect' };
+        cardArt.update();
         let color = cardArt.apiCard.color;
         if (color === 'brown') {
             cardArt.position.set(this.brownResourceContainer.width + cardArt.getWidth()/2, 0);
@@ -209,5 +238,21 @@ class Wonder extends PIXI.Container {
         } else {
             console.error('Card color not found:', color);
         }
+    }
+
+    makeMove() {
+        if (!this.moveRepr || !this.handRepr) return;
+
+        Main.scriptManager.runScript(
+            S.doOverTime(0.1, t => this.moveRepr.x = this.handRepr.x - 15*t)
+        );
+    }
+
+    undoMove() {
+        if (!this.moveRepr || !this.handRepr) return;
+
+        Main.scriptManager.runScript(
+            S.doOverTime(0.1, t => this.moveRepr.x = this.handRepr.x - 15*(1-t))
+        );
     }
 }
