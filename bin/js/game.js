@@ -101,17 +101,90 @@ var API;
         return true;
     }
     API.eqPayment = eqPayment;
-    function getgamedata(gameid, callback) {
-        httpRequest(LAMBDA_URL + "?operation=getgamedata&gameid=" + gameid, function (responseJson, error) {
-            if (error) {
-                callback(undefined, error);
-            }
-            else {
-                callback(responseJson, undefined);
-            }
-        });
+    function totalNeighborPaymentAmount(payment) {
+        if (!payment)
+            return 0;
+        return (payment.pos || 0) + (payment.neg || 0);
     }
-    API.getgamedata = getgamedata;
+    API.totalNeighborPaymentAmount = totalNeighborPaymentAmount;
+    function isNeighborPaymentNecessary(move, validMoves) {
+        var e_1, _a;
+        var foundMatchingMove = false;
+        try {
+            for (var validMoves_1 = __values(validMoves), validMoves_1_1 = validMoves_1.next(); !validMoves_1_1.done; validMoves_1_1 = validMoves_1.next()) {
+                var validMove = validMoves_1_1.value;
+                if (validMove.action !== move.action)
+                    continue;
+                if (validMove.card !== move.card)
+                    continue;
+                foundMatchingMove = true;
+                var totalPayment = totalNeighborPaymentAmount(validMove.payment);
+                if (totalPayment === 0)
+                    return false;
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (validMoves_1_1 && !validMoves_1_1.done && (_a = validMoves_1.return)) _a.call(validMoves_1);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+        if (!foundMatchingMove)
+            return false;
+        return true;
+    }
+    API.isNeighborPaymentNecessary = isNeighborPaymentNecessary;
+    function getNeighbors(gamestate, player) {
+        var neg_index = gamestate.players.indexOf(player) - 1;
+        if (neg_index < 0)
+            neg_index += gamestate.players.length;
+        var pos_index = gamestate.players.indexOf(player) + 1;
+        if (pos_index >= gamestate.players.length)
+            pos_index -= gamestate.players.length;
+        return [gamestate.players[neg_index], gamestate.players[pos_index]];
+    }
+    API.getNeighbors = getNeighbors;
+    function minimalPaymentOptions(move, validMoves) {
+        var e_2, _a;
+        var options = [];
+        try {
+            for (var validMoves_2 = __values(validMoves), validMoves_2_1 = validMoves_2.next(); !validMoves_2_1.done; validMoves_2_1 = validMoves_2.next()) {
+                var validMove = validMoves_2_1.value;
+                if (validMove.action !== move.action)
+                    continue;
+                if (validMove.card !== move.card)
+                    continue;
+                if (totalNeighborPaymentAmount(validMove.payment) === 0)
+                    continue;
+                options.push(validMove.payment);
+            }
+        }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        finally {
+            try {
+                if (validMoves_2_1 && !validMoves_2_1.done && (_a = validMoves_2.return)) _a.call(validMoves_2);
+            }
+            finally { if (e_2) throw e_2.error; }
+        }
+        options.sort(function (o1, o2) { return totalNeighborPaymentAmount(o1) - totalNeighborPaymentAmount(o2); });
+        console.log(options);
+        for (var i = 0; i < options.length; i++) {
+            for (var j = i + 1; j < options.length; j++) {
+                var pos_i = options[i].pos || 0;
+                var neg_i = options[i].neg || 0;
+                var pos_j = options[j].pos || 0;
+                var neg_j = options[j].neg || 0;
+                console.log(pos_i, neg_i, pos_j, neg_j);
+                if (pos_i <= pos_j && neg_i <= neg_j) {
+                    options.splice(j, 1);
+                    j--;
+                }
+            }
+        }
+        return options;
+    }
+    API.minimalPaymentOptions = minimalPaymentOptions;
     function getgamestate(gameid, player, callback) {
         httpRequest(LAMBDA_URL + "?operation=getgamestate&gameid=" + gameid + "&player=" + player, function (responseJson, error) {
             if (error) {
@@ -252,6 +325,9 @@ var ArtCommon;
             else if (effect.type === 'points_for_stages') {
                 return pointsForStages();
             }
+            else if (effect.type === 'points_for_finished_wonder') {
+                return pointsForFinishedWonder();
+            }
             else if (effect.type === 'points_for_self_cards') {
                 return pointsForSelfCards(effect.color);
             }
@@ -265,7 +341,7 @@ var ArtCommon;
     }
     ArtCommon.getArtForEffects = getArtForEffects;
     function getArtForCost(cost) {
-        var e_1, _a;
+        var e_3, _a;
         if (!cost) {
             return undefined;
         }
@@ -276,12 +352,12 @@ var ArtCommon;
                 costArts.push(resource(r));
             }
         }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_1) throw e_1.error; }
+            finally { if (e_3) throw e_3.error; }
         }
         if (cost.gold) {
             costArts.push(gold(cost.gold));
@@ -290,7 +366,7 @@ var ArtCommon;
     }
     ArtCommon.getArtForCost = getArtForCost;
     function getArtForStageCost(cost) {
-        var e_2, _a;
+        var e_4, _a;
         if (!cost) {
             return undefined;
         }
@@ -301,12 +377,12 @@ var ArtCommon;
                 costArts.push(resource(r));
             }
         }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        catch (e_4_1) { e_4 = { error: e_4_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_2) throw e_2.error; }
+            finally { if (e_4) throw e_4.error; }
         }
         if (cost.gold) {
             costArts.push(gold(cost.gold));
@@ -334,7 +410,7 @@ var ArtCommon;
     }
     ArtCommon.resource = resource;
     function multiResource(resources) {
-        var e_3, _a;
+        var e_5, _a;
         var resourceArts = resources.map(function (r) { return resource(r); });
         for (var i = resourceArts.length - 1; i >= 1; i--) {
             resourceArts.splice(i, 0, slash());
@@ -350,12 +426,12 @@ var ArtCommon;
                 }
             }
         }
-        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
         finally {
             try {
                 if (resourceArts_1_1 && !resourceArts_1_1.done && (_a = resourceArts_1.return)) _a.call(resourceArts_1);
             }
-            finally { if (e_3) throw e_3.error; }
+            finally { if (e_5) throw e_5.error; }
         }
         return combineEffectArt(resourceArts, 4);
     }
@@ -376,7 +452,7 @@ var ArtCommon;
     }
     ArtCommon.science = science;
     function multiScience(symbols) {
-        var e_4, _a;
+        var e_6, _a;
         var symbolArts = symbols.map(function (s) { return science(s); });
         for (var i = symbolArts.length - 1; i >= 1; i--) {
             symbolArts.splice(i, 0, slash());
@@ -387,12 +463,12 @@ var ArtCommon;
                 art.scale.set(0.8);
             }
         }
-        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+        catch (e_6_1) { e_6 = { error: e_6_1 }; }
         finally {
             try {
                 if (symbolArts_1_1 && !symbolArts_1_1.done && (_a = symbolArts_1.return)) _a.call(symbolArts_1);
             }
-            finally { if (e_4) throw e_4.error; }
+            finally { if (e_6) throw e_6.error; }
         }
         return combineEffectArt(symbolArts, 4);
     }
@@ -534,6 +610,16 @@ var ArtCommon;
         return container;
     }
     ArtCommon.pointsForStages = pointsForStages;
+    function pointsForFinishedWonder() {
+        var container = new PIXI.Container();
+        var graphics = new PIXI.Graphics();
+        graphics.beginFill(0xFFFF00, 1);
+        graphics.drawPolygon([-50, 45, 50, 45, 0, -45]);
+        graphics.endFill();
+        container.addChild(graphics);
+        return container;
+    }
+    ArtCommon.pointsForFinishedWonder = pointsForFinishedWonder;
     function pointsForSelfCards(color) {
         var container = new PIXI.Container();
         container.addChild(Shapes.filledRoundedRect(-25, -40, 50, 80, 8, 0xFFFFFF));
@@ -605,6 +691,20 @@ var ArtCommon;
         return graphics;
     }
     ArtCommon.checkMark = checkMark;
+    function X() {
+        var width = 100;
+        var thickness = 10;
+        var container = new PIXI.Container();
+        var barHeight = width * Math.SQRT2;
+        var rect1 = Shapes.filledRoundedRect(-thickness / 2, -barHeight / 2, thickness, barHeight, thickness / 4, 0x000000);
+        rect1.angle = 45;
+        var rect2 = Shapes.filledRoundedRect(-thickness / 2, -barHeight / 2, thickness, barHeight, thickness / 4, 0x000000);
+        rect2.angle = -45;
+        container.addChild(rect1);
+        container.addChild(rect2);
+        return container;
+    }
+    ArtCommon.X = X;
     function slash() {
         var graphics = new PIXI.Graphics();
         graphics.beginFill(0xFFFFFF, 1);
@@ -634,7 +734,7 @@ var ArtCommon;
         return graphics;
     }
     function combineEffectArt(arts, padding) {
-        var e_5, _a;
+        var e_7, _a;
         var totalArtWidth = sum(arts, function (art) { return art.getBounds().width; }) + padding * (arts.length - 1);
         var container = new PIXI.Container();
         var x = -totalArtWidth / 2;
@@ -647,17 +747,17 @@ var ArtCommon;
                 x += width + padding;
             }
         }
-        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+        catch (e_7_1) { e_7 = { error: e_7_1 }; }
         finally {
             try {
                 if (arts_1_1 && !arts_1_1.done && (_a = arts_1.return)) _a.call(arts_1);
             }
-            finally { if (e_5) throw e_5.error; }
+            finally { if (e_7) throw e_7.error; }
         }
         return container;
     }
     function combineCostArt(arts, padding) {
-        var e_6, _a;
+        var e_8, _a;
         var container = new PIXI.Container();
         var y = 0;
         try {
@@ -669,17 +769,17 @@ var ArtCommon;
                 y += height + padding;
             }
         }
-        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+        catch (e_8_1) { e_8 = { error: e_8_1 }; }
         finally {
             try {
                 if (arts_2_1 && !arts_2_1.done && (_a = arts_2.return)) _a.call(arts_2);
             }
-            finally { if (e_6) throw e_6.error; }
+            finally { if (e_8) throw e_8.error; }
         }
         return container;
     }
     function combineStageCostArt(arts, padding) {
-        var e_7, _a;
+        var e_9, _a;
         if (arts.length >= 4) {
             if (arts.length % 2 === 0) {
                 var left = combineStageCostArt(arts.slice(0, arts.length / 2), padding);
@@ -704,12 +804,12 @@ var ArtCommon;
                 y += height + padding;
             }
         }
-        catch (e_7_1) { e_7 = { error: e_7_1 }; }
+        catch (e_9_1) { e_9 = { error: e_9_1 }; }
         finally {
             try {
                 if (arts_3_1 && !arts_3_1.done && (_a = arts_3.return)) _a.call(arts_3);
             }
-            finally { if (e_7) throw e_7.error; }
+            finally { if (e_9) throw e_9.error; }
         }
         return container;
     }
@@ -720,6 +820,25 @@ var ArtCommon;
         return Shapes.filledCircle(0, 0, 50, color);
     }
 })(ArtCommon || (ArtCommon = {}));
+var Bot;
+(function (Bot) {
+    function getMove(validMoves) {
+        var wonderMoves = validMoves.filter(function (move) { return move.action === 'wonder'; });
+        var playMoves = validMoves.filter(function (move) { return move.action === 'play'; });
+        var throwMoves = validMoves.filter(function (move) { return move.action === 'throw'; });
+        if (wonderMoves.length > 0) {
+            return randElement(wonderMoves);
+        }
+        if (playMoves.length > 0) {
+            return randElement(playMoves);
+        }
+        if (throwMoves.length > 0) {
+            return randElement(throwMoves);
+        }
+        return randElement(validMoves);
+    }
+    Bot.getMove = getMove;
+})(Bot || (Bot = {}));
 var Card = /** @class */ (function (_super) {
     __extends(Card, _super);
     function Card(cardId, card, handPosition, activeWonder, discardPile) {
@@ -788,25 +907,36 @@ var Card = /** @class */ (function (_super) {
         return _this;
     }
     Card.prototype.update = function () {
-        var _a;
+        var _a, _b, _c, _d, _e;
         var dragPosition = (_a = this.dragging) === null || _a === void 0 ? void 0 : _a.data.getLocalPosition(this.parent);
         if (this.dragging) {
             if (!Main.mouseDown) {
                 if (this.activeWonder.getMainRegion().contains(dragPosition.x, dragPosition.y)) {
-                    var goldCost = this.apiCard.cost ? (this.apiCard.cost.gold || 0) : 0;
-                    var move = { action: 'play', card: this.apiCardId, payment: { bank: goldCost } };
-                    this.submitMove(move);
+                    var move = { action: 'play', card: this.apiCardId };
+                    if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
+                        Main.scene.startPaymentDialog(move, 400, 400);
+                    }
+                    else {
+                        move.payment = { bank: (_c = (_b = this.apiCard) === null || _b === void 0 ? void 0 : _b.cost) === null || _c === void 0 ? void 0 : _c.gold };
+                        Main.submitMove(move);
+                    }
                     //this.select(move);
                 }
                 else if (this.activeWonder.getStageRegion().contains(dragPosition.x, dragPosition.y)) {
                     var stage = this.activeWonder.getClosestStageId(dragPosition);
-                    var move = { action: 'wonder', card: this.apiCardId, stage: stage, payment: {} };
-                    this.submitMove(move);
+                    var move = { action: 'wonder', card: this.apiCardId, stage: stage };
+                    if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
+                        Main.scene.startPaymentDialog(move, 400, 400);
+                    }
+                    else {
+                        move.payment = { bank: (_e = (_d = Main.gamestate.wonders[Main.player].stages[stage]) === null || _d === void 0 ? void 0 : _d.cost) === null || _e === void 0 ? void 0 : _e.gold };
+                        Main.submitMove(move);
+                    }
                     //this.select(move);
                 }
                 else if (this.discardPile.getBounds().contains(dragPosition.x, dragPosition.y)) {
                     var move = { action: 'throw', card: this.apiCardId, payment: {} };
-                    this.submitMove(move);
+                    Main.submitMove(move);
                     //this.select(move);
                 }
                 else {
@@ -835,7 +965,7 @@ var Card = /** @class */ (function (_super) {
             this.y = this.handPosition.y;
             this.mainContainer.scale.x = 1;
             this.mainContainer.scale.y = 1;
-            this.setInteractable(true);
+            this.setInteractable(this.canBeInteractable());
             this.visualState = this.state.visualState;
         }
         else if (this.state.type === 'dragging_normal') {
@@ -844,7 +974,7 @@ var Card = /** @class */ (function (_super) {
             this.mainContainer.scale.x = 1;
             this.mainContainer.scale.y = 1;
             this.parent.setChildIndex(this, this.parent.children.length - 1);
-            this.setInteractable(true);
+            this.setInteractable(this.canBeInteractable());
             this.visualState = 'full';
         }
         else if (this.state.type === 'dragging_play') {
@@ -853,7 +983,7 @@ var Card = /** @class */ (function (_super) {
             this.mainContainer.scale.x = this.activeWonder.scale.x / this.scale.x * 0.75;
             this.mainContainer.scale.y = this.activeWonder.scale.y / this.scale.y * 0.75;
             this.parent.setChildIndex(this, this.parent.children.length - 1);
-            this.setInteractable(true);
+            this.setInteractable(this.canBeInteractable());
             this.visualState = 'effect';
         }
         else if (this.state.type === 'dragging_wonder') {
@@ -864,7 +994,7 @@ var Card = /** @class */ (function (_super) {
             this.mainContainer.scale.x = this.activeWonder.scale.x / this.scale.x * 0.66;
             this.mainContainer.scale.y = this.activeWonder.scale.y / this.scale.y * 0.66;
             this.parent.setChildIndex(this, 0);
-            this.setInteractable(true);
+            this.setInteractable(this.canBeInteractable());
             this.visualState = 'flipped';
         }
         else if (this.state.type === 'dragging_throw') {
@@ -944,16 +1074,8 @@ var Card = /** @class */ (function (_super) {
     Card.prototype.getHeight = function () {
         return this.stateMask.height * this.scale.y * this.mainContainer.scale.y;
     };
-    Card.prototype.submitMove = function (move) {
-        API.submitmove(Main.gameid, Main.gamestate.turn, Main.player, move, function (error) {
-            if (error) {
-                Main.error(error);
-                //this.deselect();
-                //Main.undoMove();
-                return;
-            }
-            console.log('Submitted move:', move);
-        });
+    Card.prototype.canBeInteractable = function () {
+        return !Main.scene || !Main.scene.isPaymentMenuActive;
     };
     Card.prototype.select = function (move) {
         var lastSelectedCard = Main.scene.hand.selectedCard;
@@ -988,23 +1110,23 @@ var Card = /** @class */ (function (_super) {
 var GameStateDiffer;
 (function (GameStateDiffer) {
     function diffNonTurn(gamestate) {
-        var e_8, _a;
+        var e_10, _a;
         var result = {
             scripts: []
         };
         try {
-            for (var _b = __values(Main.gamedata.players), _c = _b.next(); !_c.done; _c = _b.next()) {
+            for (var _b = __values(Main.gamestate.players), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var player = _c.value;
                 diffGold(gamestate, player, result);
                 diffCurrentMove(gamestate, player, result);
             }
         }
-        catch (e_8_1) { e_8 = { error: e_8_1 }; }
+        catch (e_10_1) { e_10 = { error: e_10_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_8) throw e_8.error; }
+            finally { if (e_10) throw e_10.error; }
         }
         return result;
     }
@@ -1034,7 +1156,7 @@ var GameStateDiffer;
     function diffGold(gamestate, player, result) {
         var oldGold = Main.gamestate.playerData[player].gold;
         var newGold = gamestate.playerData[player].gold;
-        var playeri = Main.gamedata.players.indexOf(player);
+        var playeri = Main.gamestate.players.indexOf(player);
         if (newGold === oldGold)
             return;
         result.scripts.push(function () {
@@ -1058,7 +1180,7 @@ var GameStateDiffer;
     function diffCurrentMove(gamestate, player, result) {
         var oldMove = Main.gamestate.playerData[player].currentMove;
         var newMove = gamestate.playerData[player].currentMove;
-        var playeri = Main.gamedata.players.indexOf(player);
+        var playeri = Main.gamestate.players.indexOf(player);
         // Always reflect current move.
         if (player === Main.player) {
             result.scripts.push(function () {
@@ -1091,7 +1213,7 @@ var Hand = /** @class */ (function () {
         this.cards = [];
         this.collapsed = false;
         for (var i = 0; i < cardIds.length; i++) {
-            var card = new Card(cardIds[i], Main.gamedata.cards[cardIds[i]], new PIXI.Point(), activeWonder, discardPile);
+            var card = new Card(cardIds[i], Main.gamestate.cards[cardIds[i]], new PIXI.Point(), activeWonder, discardPile);
             this.cards.push(card);
             container.addChild(card);
             card.state = { type: 'in_hand', visualState: 'full' };
@@ -1100,7 +1222,7 @@ var Hand = /** @class */ (function () {
     }
     Object.defineProperty(Hand.prototype, "selectedCard", {
         get: function () {
-            var e_9, _a;
+            var e_11, _a;
             try {
                 for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var card = _c.value;
@@ -1108,12 +1230,12 @@ var Hand = /** @class */ (function () {
                         return card;
                 }
             }
-            catch (e_9_1) { e_9 = { error: e_9_1 }; }
+            catch (e_11_1) { e_11 = { error: e_11_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_9) throw e_9.error; }
+                finally { if (e_11) throw e_11.error; }
             }
             return undefined;
         },
@@ -1150,8 +1272,7 @@ var Hand = /** @class */ (function () {
         }
     };
     Hand.prototype.reflectMove = function (move) {
-        var e_10, _a, e_11, _b;
-        console.log('reflect', move);
+        var e_12, _a, e_13, _b;
         if (!move) {
             try {
                 for (var _c = __values(this.cards), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -1159,12 +1280,12 @@ var Hand = /** @class */ (function () {
                     card.deselect();
                 }
             }
-            catch (e_10_1) { e_10 = { error: e_10_1 }; }
+            catch (e_12_1) { e_12 = { error: e_12_1 }; }
             finally {
                 try {
                     if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                 }
-                finally { if (e_10) throw e_10.error; }
+                finally { if (e_12) throw e_12.error; }
             }
             return;
         }
@@ -1181,12 +1302,12 @@ var Hand = /** @class */ (function () {
                 }
             }
         }
-        catch (e_11_1) { e_11 = { error: e_11_1 }; }
+        catch (e_13_1) { e_13 = { error: e_13_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_11) throw e_11.error; }
+            finally { if (e_13) throw e_13.error; }
         }
         if (!moved)
             console.error('Move card not found in hand:', move);
@@ -1198,7 +1319,7 @@ var Hand = /** @class */ (function () {
         this.collapsed = false;
     };
     Hand.prototype.flip = function () {
-        var e_12, _a;
+        var e_14, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
@@ -1206,16 +1327,16 @@ var Hand = /** @class */ (function () {
                     card.state.visualState = 'flipped';
             }
         }
-        catch (e_12_1) { e_12 = { error: e_12_1 }; }
+        catch (e_14_1) { e_14 = { error: e_14_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_12) throw e_12.error; }
+            finally { if (e_14) throw e_14.error; }
         }
     };
     Hand.prototype.unflip = function () {
-        var e_13, _a;
+        var e_15, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
@@ -1223,12 +1344,12 @@ var Hand = /** @class */ (function () {
                     card.state.visualState = 'full';
             }
         }
-        catch (e_13_1) { e_13 = { error: e_13_1 }; }
+        catch (e_15_1) { e_15 = { error: e_15_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_13) throw e_13.error; }
+            finally { if (e_15) throw e_15.error; }
         }
     };
     return Hand;
@@ -1247,7 +1368,7 @@ var Main = /** @class */ (function () {
         configurable: true
     });
     Object.defineProperty(Main, "isHost", {
-        get: function () { return this.gamedata.host === this.player; },
+        get: function () { return this.gamestate.host === this.player; },
         enumerable: false,
         configurable: true
     });
@@ -1272,24 +1393,16 @@ var Main = /** @class */ (function () {
             _this.delta = delta / 60;
             _this.update();
         });
-        API.getgamedata(this.gameid, function (gamedata, error) {
+        API.getgamestate(this.gameid, this.player, function (gamestate, error) {
             if (error) {
-                Main.error('Failed to get game data: ' + error);
+                Main.error('Failed to get game state: ' + error);
                 return;
             }
-            API.getgamestate(_this.gameid, _this.player, function (gamestate, error) {
-                if (error) {
-                    Main.error('Failed to get game state: ' + error);
-                    return;
-                }
-                console.log('Got game data:', gamedata);
-                console.log('Got game state:', gamestate);
-                _this.setupGame(gamedata, gamestate);
-            });
+            console.log('Got game state:', gamestate);
+            _this.setupGame(gamestate);
         });
     };
-    Main.setupGame = function (gamedata, gamestate) {
-        this.gamedata = gamedata;
+    Main.setupGame = function (gamestate) {
         this.gamestate = gamestate;
         this.initialized = true;
         this.scene = new Scene();
@@ -1320,7 +1433,7 @@ var Main = /** @class */ (function () {
         var _this = this;
         if (this.gamestate.state === 'GAME_COMPLETE')
             return;
-        this.scriptManager.runScript(S.chain(S.wait(1), S.call(function () {
+        this.scriptManager.runScript(S.chain(S.wait(0.5), S.call(function () {
             if (_this.isHost)
                 _this.updateAndGetGameState();
             else
@@ -1336,7 +1449,7 @@ var Main = /** @class */ (function () {
                 _this.sendUpdate();
                 return;
             }
-            console.log('Refreshed gamestate:', gamestate);
+            //console.log('Refreshed gamestate:', gamestate);
             if (gamestate.turn < Main.gamestate.turn) {
                 Main.error("Error: local turn (" + Main.gamestate.turn + ") is greater than the game's (" + gamestate.turn + ")?");
                 _this.sendUpdate();
@@ -1353,7 +1466,6 @@ var Main = /** @class */ (function () {
                 var diffResult = GameStateDiffer.diffTurn(gamestate);
                 _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {
                     _this.gamestate = gamestate;
-                    console.log('reloading');
                     _this.createScene();
                     _this.sendUpdate();
                 })));
@@ -1367,9 +1479,21 @@ var Main = /** @class */ (function () {
                 Main.error(error);
             }
             else {
-                console.log(wasUpdate ? 'Updated game' : 'No update for game');
+                if (wasUpdate)
+                    console.log('Updated game');
             }
             _this.getGameState();
+        });
+    };
+    Main.submitMove = function (move) {
+        API.submitmove(Main.gameid, Main.gamestate.turn, Main.player, move, function (error) {
+            if (error) {
+                Main.error(error);
+                //this.deselect();
+                //Main.undoMove();
+                return;
+            }
+            console.log('Submitted move:', move);
         });
     };
     Main.undoMove = function () {
@@ -1382,7 +1506,7 @@ var Main = /** @class */ (function () {
         });
     };
     Main.updateBotMoves = function () {
-        var e_14, _a;
+        var e_16, _a;
         var _this = this;
         var _loop_1 = function (player) {
             if (player.startsWith('BOT') && !this_1.gamestate.playerData[player].currentMove) {
@@ -1392,7 +1516,7 @@ var Main = /** @class */ (function () {
                         Main.error(error);
                         return;
                     }
-                    var move = randElement(validMoves);
+                    var move = Bot.getMove(validMoves);
                     API.submitmove(_this.gameid, _this.gamestate.turn, botPlayer_1, move, function (error) {
                         if (error) {
                             Main.error(error);
@@ -1405,17 +1529,17 @@ var Main = /** @class */ (function () {
         };
         var this_1 = this;
         try {
-            for (var _b = __values(this.gamedata.players), _c = _b.next(); !_c.done; _c = _b.next()) {
+            for (var _b = __values(this.gamestate.players), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var player = _c.value;
                 _loop_1(player);
             }
         }
-        catch (e_14_1) { e_14 = { error: e_14_1 }; }
+        catch (e_16_1) { e_16 = { error: e_16_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_14) throw e_14.error; }
+            finally { if (e_16) throw e_16.error; }
         }
     };
     Main.stop = function () {
@@ -1458,8 +1582,17 @@ var Scene = /** @class */ (function () {
     function Scene() {
         this.mainContainer = new PIXI.Container();
     }
+    Object.defineProperty(Scene.prototype, "isPaymentMenuActive", {
+        get: function () {
+            return this.paymentMenu && this.paymentMenu.visible;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Scene.prototype.update = function () {
+        this.hand.update();
+    };
     Scene.prototype.create = function () {
-        var gamedata = Main.gamedata;
         var gamestate = Main.gamestate;
         var player = Main.player;
         var discardWidth = 250;
@@ -1468,22 +1601,28 @@ var Scene = /** @class */ (function () {
         this.discardPile = new PIXI.Container();
         this.discardPile.addChild(Shapes.filledRoundedRect(-discardWidth / 2, -discardHeight / 2, discardWidth, discardHeight, 10, 0x888888));
         this.discardPile.addChild(Shapes.filledRoundedRect(-discardWidth / 2 + 4, -discardHeight / 2 + 4, discardWidth - 8, discardHeight - 8, 6, 0x000000));
+        var discardTitle = new PIXI.Text("Discard", { fontFamily: 'Arial', fontSize: 70, fill: 0x888888 });
+        discardTitle.anchor.set(0.5, 0.5);
+        discardTitle.scale.set(0.35, 0.35);
+        discardTitle.position.set(0, -125);
+        this.discardPile.addChild(discardTitle);
         this.mainContainer.addChild(this.discardPile);
         this.wonders = [];
-        for (var i = 0; i < gamedata.players.length; i++) {
-            var player_1 = gamedata.players[i];
-            var wonder = new Wonder(gamedata.wonders[player_1], gamestate.playerData[player_1], player_1);
+        for (var i = 0; i < gamestate.players.length; i++) {
+            var player_1 = gamestate.players[i];
+            var wonder = new Wonder(gamestate.wonders[player_1], gamestate.playerData[player_1], player_1);
             this.mainContainer.addChild(wonder);
             this.wonders.push(wonder);
         }
-        var cardIds = gamestate.playerData[player].hand;
-        cardIds = __spread(cardIds).sort(function (a, b) { return a - b; });
-        this.hand = new Hand(this.mainContainer, cardIds, this.wonders[gamedata.players.indexOf(player)], this.discardPile);
+        this.hand = new Hand(this.mainContainer, gamestate.hand, this.wonders[gamestate.players.indexOf(player)], this.discardPile);
         this.hand.reflectMove(gamestate.playerData[player].currentMove);
+        this.paymentMenu = new PIXI.Container();
+        this.paymentMenu.visible = false;
+        this.mainContainer.addChild(this.paymentMenu);
         this.adjustPositions();
     };
     Scene.prototype.adjustPositions = function () {
-        var gamedata = Main.gamedata;
+        var gamestate = Main.gamestate;
         var player = Main.player;
         var wonderScale = 2.5;
         var wonderStartY = 600;
@@ -1491,21 +1630,21 @@ var Scene = /** @class */ (function () {
         var wonderDY = 500;
         var discardY = 1000;
         // WONDERS
-        var p = gamedata.players.indexOf(player);
+        var p = gamestate.players.indexOf(player);
         this.wonders[p].position.set(Main.width / 2, wonderStartY);
         this.wonders[p].scale.set(wonderScale);
-        var l = mod(p - 1, gamedata.players.length);
-        var r = mod(p + 1, gamedata.players.length);
+        var l = mod(p - 1, gamestate.players.length);
+        var r = mod(p + 1, gamestate.players.length);
         var i;
-        for (i = 1; i < gamedata.players.length / 2; i++) {
+        for (i = 1; i < gamestate.players.length / 2; i++) {
             this.wonders[l].position.set(Main.width / 2 - wonderDX, wonderStartY + wonderDY * i);
             this.wonders[l].scale.set(wonderScale);
             this.wonders[r].position.set(Main.width / 2 + wonderDX, wonderStartY + wonderDY * i);
             this.wonders[r].scale.set(wonderScale);
-            l = mod(l - 1, gamedata.players.length);
-            r = mod(r + 1, gamedata.players.length);
+            l = mod(l - 1, gamestate.players.length);
+            r = mod(r + 1, gamestate.players.length);
         }
-        if (gamedata.players.length % 2 === 0) {
+        if (gamestate.players.length % 2 === 0) {
             this.wonders[l].position.set(Main.width / 2, wonderStartY + wonderDY * i);
             this.wonders[l].scale.set(wonderScale);
         }
@@ -1513,8 +1652,73 @@ var Scene = /** @class */ (function () {
         this.discardPile.position.set(Main.width / 2, discardY);
         this.hand.adjustPositions();
     };
-    Scene.prototype.update = function () {
-        this.hand.update();
+    Scene.prototype.startPaymentDialog = function (move, x, y) {
+        var _this = this;
+        var validPayments = API.minimalPaymentOptions(move, Main.gamestate.validMoves);
+        var paymentsStart = -100;
+        var paymentsDX = 50;
+        var paymentsDY = 50;
+        this.paymentMenu.position.set(x, y);
+        this.paymentMenu.removeChildren();
+        var paymentTitle = new PIXI.Text("Payment", { fontFamily: 'Arial', fontSize: 70, fill: 0x000000 });
+        paymentTitle.anchor.set(0.5, 0.5);
+        paymentTitle.scale.set(0.35, 0.35);
+        paymentTitle.position.set(0, -160);
+        this.paymentMenu.addChild(paymentTitle);
+        var _a = __read(API.getNeighbors(Main.gamestate, Main.player), 2), negPlayer = _a[0], posPlayer = _a[1];
+        var _loop_2 = function (i) {
+            var payment = validPayments[i];
+            if (payment.neg) {
+                var paymentTextNeg = new PIXI.Text("<-- " + payment.neg + " to " + negPlayer, { fontFamily: 'Arial', fontSize: 70, fill: 0x000000 });
+                paymentTextNeg.anchor.set(1, 0.5);
+                paymentTextNeg.scale.set(0.35, 0.35);
+                paymentTextNeg.position.set(-paymentsDX, paymentsStart + i * paymentsDY);
+                this_2.paymentMenu.addChild(paymentTextNeg);
+            }
+            if (payment.pos) {
+                var paymentTextPos = new PIXI.Text("to " + posPlayer + " " + payment.pos + " -->", { fontFamily: 'Arial', fontSize: 70, fill: 0x000000 });
+                paymentTextPos.anchor.set(0, 0.5);
+                paymentTextPos.scale.set(0.35, 0.35);
+                paymentTextPos.position.set(paymentsDX, paymentsStart + i * paymentsDY);
+                this_2.paymentMenu.addChild(paymentTextPos);
+            }
+            var paymentButton = Shapes.filledRoundedRect(-28, -20, 56, 40, 8, 0x000088);
+            paymentButton.position.set(0, paymentsStart + i * paymentsDY);
+            paymentButton.interactive = true;
+            paymentButton.buttonMode = true;
+            paymentButton.on('click', function () {
+                var trueMove = {
+                    action: move.action,
+                    card: move.card,
+                    stage: move.stage,
+                    payment: validPayments[i]
+                };
+                Main.submitMove(trueMove);
+                _this.paymentMenu.visible = false;
+            });
+            this_2.paymentMenu.addChild(paymentButton);
+        };
+        var this_2 = this;
+        for (var i = 0; i < validPayments.length; i++) {
+            _loop_2(i);
+        }
+        var bounds = this.paymentMenu.getLocalBounds();
+        var halfWidth = Math.max(Math.abs(bounds.left), Math.abs(bounds.left + bounds.width));
+        var margin = 20;
+        var closeButton = Shapes.filledRoundedRect(-20, -20, 40, 40, 3, 0xFFFFFF);
+        closeButton.position.set(halfWidth - 10, bounds.top + 10);
+        this.paymentMenu.addChild(closeButton);
+        var X = ArtCommon.X();
+        X.scale.set(0.3);
+        closeButton.addChild(X);
+        closeButton.interactive = true;
+        closeButton.buttonMode = true;
+        closeButton.on('click', function () {
+            _this.paymentMenu.visible = false;
+        });
+        this.paymentMenu.addChildAt(Shapes.filledRoundedRect(-halfWidth - margin, bounds.top - margin, 2 * halfWidth + 2 * margin, bounds.height + 2 * margin + 40, 10, 0xFFFFFF), 0);
+        this.paymentMenu.visible = true;
+        this.paymentMenu.parent.setChildIndex(this.paymentMenu, this.paymentMenu.parent.children.length - 1);
     };
     return Scene;
 }());
@@ -1568,7 +1772,7 @@ function randElement(array) {
     return array[randInt(0, array.length - 1)];
 }
 function sum(array, key) {
-    var e_15, _a;
+    var e_17, _a;
     if (!array || array.length === 0) {
         return 0;
     }
@@ -1579,19 +1783,19 @@ function sum(array, key) {
             result += key(e);
         }
     }
-    catch (e_15_1) { e_15 = { error: e_15_1 }; }
+    catch (e_17_1) { e_17 = { error: e_17_1 }; }
     finally {
         try {
             if (array_1_1 && !array_1_1.done && (_a = array_1.return)) _a.call(array_1);
         }
-        finally { if (e_15) throw e_15.error; }
+        finally { if (e_17) throw e_17.error; }
     }
     return result;
 }
 var Wonder = /** @class */ (function (_super) {
     __extends(Wonder, _super);
     function Wonder(wonder, playerData, player) {
-        var e_16, _a, e_17, _b;
+        var e_18, _a, e_19, _b;
         var _this = _super.call(this) || this;
         var wonderColor = 0xFFFFFF;
         var boardBase = Shapes.filledRoundedRect(-100, -50, 200, 100, 8, wonderColor);
@@ -1632,17 +1836,17 @@ var Wonder = /** @class */ (function (_super) {
         try {
             for (var _c = __values(playerData.playedCards), _d = _c.next(); !_d.done; _d = _c.next()) {
                 var cardId = _d.value;
-                var card = Main.gamedata.cards[cardId];
+                var card = Main.gamestate.cards[cardId];
                 var cardArt = new Card(cardId, card, new PIXI.Point(), _this, new PIXI.Container());
                 _this.addNewCardEffect(cardArt);
             }
         }
-        catch (e_16_1) { e_16 = { error: e_16_1 }; }
+        catch (e_18_1) { e_18 = { error: e_18_1 }; }
         finally {
             try {
                 if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
             }
-            finally { if (e_16) throw e_16.error; }
+            finally { if (e_18) throw e_18.error; }
         }
         var stagesMiddle = wonder.stages.length === 2 ? 32 : 0;
         var stageDX = wonder.stages.length === 4 ? 49 : 64;
@@ -1684,12 +1888,12 @@ var Wonder = /** @class */ (function (_super) {
                 _this.addChildAt(cardArt, 0);
             }
         }
-        catch (e_17_1) { e_17 = { error: e_17_1 }; }
+        catch (e_19_1) { e_19 = { error: e_19_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_17) throw e_17.error; }
+            finally { if (e_19) throw e_19.error; }
         }
         var goldCoin = Shapes.filledCircle(95, -58, 5, 0xFBE317);
         _this.addChild(goldCoin);
@@ -1838,8 +2042,8 @@ var S;
             scriptFunctions[_i] = arguments[_i];
         }
         return function () {
-            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_18_1;
-            var e_18, _a;
+            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_20_1;
+            var e_20, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -1858,14 +2062,14 @@ var S;
                         return [3 /*break*/, 1];
                     case 4: return [3 /*break*/, 7];
                     case 5:
-                        e_18_1 = _b.sent();
-                        e_18 = { error: e_18_1 };
+                        e_20_1 = _b.sent();
+                        e_20 = { error: e_20_1 };
                         return [3 /*break*/, 7];
                     case 6:
                         try {
                             if (scriptFunctions_1_1 && !scriptFunctions_1_1.done && (_a = scriptFunctions_1.return)) _a.call(scriptFunctions_1);
                         }
-                        finally { if (e_18) throw e_18.error; }
+                        finally { if (e_20) throw e_20.error; }
                         return [7 /*endfinally*/];
                     case 7: return [2 /*return*/];
                 }

@@ -48,6 +48,8 @@ namespace ArtCommon {
                 return pointsForCards(effect.color);
             } else if (effect.type === 'points_for_stages') {
                 return pointsForStages();
+            } else if (effect.type === 'points_for_finished_wonder') {
+                return pointsForFinishedWonder();
             } else if (effect.type === 'points_for_self_cards') {
                 return pointsForSelfCards(effect.color);
             } else if (effect.type === 'multi_science') {
@@ -285,6 +287,16 @@ namespace ArtCommon {
         return container;
     }
 
+    export function pointsForFinishedWonder() {
+        let container = new PIXI.Container();
+        let graphics = new PIXI.Graphics();
+        graphics.beginFill(0xFFFF00, 1);
+        graphics.drawPolygon([ -50, 45, 50, 45, 0, -45 ]);
+        graphics.endFill();
+        container.addChild(graphics);
+        return container;
+    }
+
     export function pointsForSelfCards(color: string) {
         let container = new PIXI.Container();
         container.addChild(Shapes.filledRoundedRect(-25, -40, 50, 80, 8, 0xFFFFFF));
@@ -354,6 +366,21 @@ namespace ArtCommon {
         graphics.drawPolygon([ -50, 0, -15, 50, 50, -50, -15, 20 ]);
         graphics.endFill();
         return graphics;
+    }
+
+    export function X() {
+        let width = 100;
+        let thickness = 10;
+        
+        let container = new PIXI.Container();
+        let barHeight = width * Math.SQRT2;
+        let rect1 = Shapes.filledRoundedRect(-thickness/2, -barHeight/2, thickness, barHeight, thickness/4, 0x000000);
+        rect1.angle = 45;
+        let rect2 = Shapes.filledRoundedRect(-thickness/2, -barHeight/2, thickness, barHeight, thickness/4, 0x000000);
+        rect2.angle = -45;
+        container.addChild(rect1);
+        container.addChild(rect2);
+        return container;
     }
 
     function slash() {

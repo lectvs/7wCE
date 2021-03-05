@@ -18,7 +18,7 @@ class Hand {
         this.collapsed = false;
 
         for (let i = 0; i < cardIds.length; i++) {
-            let card = new Card(cardIds[i], Main.gamedata.cards[cardIds[i]], new PIXI.Point(), activeWonder, discardPile);
+            let card = new Card(cardIds[i], Main.gamestate.cards[cardIds[i]], new PIXI.Point(), activeWonder, discardPile);
             this.cards.push(card);
             container.addChild(card);
 
@@ -63,7 +63,6 @@ class Hand {
     }
 
     reflectMove(move: API.Move) {
-        console.log('reflect', move)
         if (!move) {
             for (let card of this.cards) {
                 card.deselect();

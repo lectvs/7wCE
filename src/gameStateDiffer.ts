@@ -8,7 +8,7 @@ namespace GameStateDiffer {
             scripts: []
         };
 
-        for (let player of Main.gamedata.players) {
+        for (let player of Main.gamestate.players) {
             diffGold(gamestate, player, result);
             diffCurrentMove(gamestate, player, result);
         }
@@ -46,7 +46,7 @@ namespace GameStateDiffer {
     function diffGold(gamestate: API.GameState, player: string, result: DiffResult) {
         let oldGold = Main.gamestate.playerData[player].gold;
         let newGold = gamestate.playerData[player].gold;
-        let playeri = Main.gamedata.players.indexOf(player);
+        let playeri = Main.gamestate.players.indexOf(player);
 
         if (newGold === oldGold) return;
 
@@ -66,7 +66,7 @@ namespace GameStateDiffer {
     function diffCurrentMove(gamestate: API.GameState, player: string, result: DiffResult) {
         let oldMove = Main.gamestate.playerData[player].currentMove;
         let newMove = gamestate.playerData[player].currentMove;
-        let playeri = Main.gamedata.players.indexOf(player);
+        let playeri = Main.gamestate.players.indexOf(player);
 
         // Always reflect current move.
         if (player === Main.player) {

@@ -128,18 +128,27 @@ class Card extends PIXI.Container {
         if (this.dragging) {
             if (!Main.mouseDown) {
                 if (this.activeWonder.getMainRegion().contains(dragPosition.x, dragPosition.y)) {
-                    let goldCost = this.apiCard.cost ? (this.apiCard.cost.gold || 0) : 0;
-                    let move: API.Move = { action: 'play', card: this.apiCardId, payment: { bank: goldCost } };
-                    this.submitMove(move);
+                    let move: API.Move = { action: 'play', card: this.apiCardId };
+                    if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
+                        Main.scene.startPaymentDialog(move, 400, 400);
+                    } else {
+                        move.payment = { bank: this.apiCard?.cost?.gold };
+                        Main.submitMove(move);
+                    }
                     //this.select(move);
                 } else if (this.activeWonder.getStageRegion().contains(dragPosition.x, dragPosition.y)) {
                     let stage = this.activeWonder.getClosestStageId(dragPosition);
-                    let move: API.Move = { action: 'wonder', card: this.apiCardId, stage: stage, payment: {} };
-                    this.submitMove(move);
+                    let move: API.Move = { action: 'wonder', card: this.apiCardId, stage: stage };
+                    if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
+                        Main.scene.startPaymentDialog(move, 400, 400);
+                    } else {
+                        move.payment = { bank: Main.gamestate.wonders[Main.player].stages[stage]?.cost?.gold };
+                        Main.submitMove(move);
+                    }
                     //this.select(move);
                 } else if (this.discardPile.getBounds().contains(dragPosition.x, dragPosition.y)) {
                     let move: API.Move = { action: 'throw', card: this.apiCardId, payment: {} };
-                    this.submitMove(move);
+                    Main.submitMove(move);
                     //this.select(move);
                 } else {
                     this.state = { type: 'in_hand', visualState: 'full' };
@@ -164,7 +173,7 @@ class Card extends PIXI.Container {
             this.y = this.handPosition.y;
             this.mainContainer.scale.x = 1;
             this.mainContainer.scale.y = 1;
-            this.setInteractable(true);
+            this.setInteractable(this.canBeInteractable());
             this.visualState = this.state.visualState;
         } else if (this.state.type === 'dragging_normal') {
             this.x = dragPosition.x + this.dragging.offsetx;
@@ -172,7 +181,7 @@ class Card extends PIXI.Container {
             this.mainContainer.scale.x = 1;
             this.mainContainer.scale.y = 1;
             this.parent.setChildIndex(this, this.parent.children.length-1);
-            this.setInteractable(true);
+            this.setInteractable(this.canBeInteractable());
             this.visualState = 'full';
         } else if (this.state.type === 'dragging_play') {
             this.x = dragPosition.x;
@@ -180,7 +189,7 @@ class Card extends PIXI.Container {
             this.mainContainer.scale.x = this.activeWonder.scale.x/this.scale.x*0.75;
             this.mainContainer.scale.y = this.activeWonder.scale.y/this.scale.y*0.75;
             this.parent.setChildIndex(this, this.parent.children.length-1);
-            this.setInteractable(true);
+            this.setInteractable(this.canBeInteractable());
             this.visualState = 'effect';
         } else if (this.state.type === 'dragging_wonder') {
             let stage = this.activeWonder.getClosestStageId(dragPosition);
@@ -190,7 +199,7 @@ class Card extends PIXI.Container {
             this.mainContainer.scale.x = this.activeWonder.scale.x/this.scale.x*0.66;
             this.mainContainer.scale.y = this.activeWonder.scale.y/this.scale.y*0.66;
             this.parent.setChildIndex(this, 0);
-            this.setInteractable(true);
+            this.setInteractable(this.canBeInteractable());
             this.visualState = 'flipped';
         } else if (this.state.type === 'dragging_throw') {
             this.x = dragPosition.x + this.dragging.offsetx;
@@ -270,16 +279,8 @@ class Card extends PIXI.Container {
         return this.stateMask.height * this.scale.y * this.mainContainer.scale.y;
     }
 
-    submitMove(move: API.Move) {
-        API.submitmove(Main.gameid, Main.gamestate.turn, Main.player, move, (error: string) => {
-            if (error) {
-                Main.error(error);
-                //this.deselect();
-                //Main.undoMove();
-                return;
-            }
-            console.log('Submitted move:', move);
-        });
+    canBeInteractable() {
+        return !Main.scene || !Main.scene.isPaymentMenuActive;
     }
 
     select(move: API.Move) {

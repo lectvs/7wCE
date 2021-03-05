@@ -5,7 +5,6 @@ class Main {
 
     static gameid: string;
     static player: string;
-    static gamedata: API.GameData;
     static gamestate: API.GameState;
 
     static mouseDown: boolean;
@@ -19,7 +18,7 @@ class Main {
 
     static scriptManager: ScriptManager;
 
-    static get isHost() { return this.gamedata.host === this.player; }
+    static get isHost() { return this.gamestate.host === this.player; }
 
     static start() {
         this.app = new PIXI.Application({
@@ -47,27 +46,18 @@ class Main {
             this.update();
         });
 
-        API.getgamedata(this.gameid, (gamedata: API.GameData, error: string) => {
+        API.getgamestate(this.gameid, this.player, (gamestate: API.GameState, error: string) => {
             if (error) {
-                Main.error('Failed to get game data: ' + error);
+                Main.error('Failed to get game state: ' + error);
                 return;
             }
 
-            API.getgamestate(this.gameid, this.player, (gamestate: API.GameState, error: string) => {
-                if (error) {
-                    Main.error('Failed to get game state: ' + error);
-                    return;
-                }
-
-                console.log('Got game data:', gamedata);
-                console.log('Got game state:', gamestate);
-                this.setupGame(gamedata, gamestate);
-            });
+            console.log('Got game state:', gamestate);
+            this.setupGame(gamestate);
         });
     }
 
-    static setupGame(gamedata: API.GameData, gamestate: API.GameState) {
-        this.gamedata = gamedata;
+    static setupGame(gamestate: API.GameState) {
         this.gamestate = gamestate;
         this.initialized = true;
 
@@ -101,7 +91,7 @@ class Main {
     static sendUpdate() {
         if (this.gamestate.state === 'GAME_COMPLETE') return;
         this.scriptManager.runScript(S.chain(
-            S.wait(1),
+            S.wait(0.5),
             S.call(() => {
                 if (this.isHost) this.updateAndGetGameState();
                 else this.getGameState();
@@ -118,7 +108,7 @@ class Main {
                 return;
             }
 
-            console.log('Refreshed gamestate:', gamestate);
+            //console.log('Refreshed gamestate:', gamestate);
             if (gamestate.turn < Main.gamestate.turn) {
                 Main.error(`Error: local turn (${Main.gamestate.turn}) is greater than the game's (${gamestate.turn})?`);
                 this.sendUpdate();
@@ -138,7 +128,6 @@ class Main {
                     S.simul(...diffResult.scripts),
                     S.call(() => {
                         this.gamestate = gamestate;
-                        console.log('reloading')
                         this.createScene();
                         this.sendUpdate();
                     })
@@ -152,9 +141,21 @@ class Main {
             if (error) {
                 Main.error(error);
             } else {
-                console.log(wasUpdate ? 'Updated game' : 'No update for game');
+                if (wasUpdate) console.log('Updated game');
             }
             this.getGameState();
+        });
+    }
+
+    static submitMove(move: API.Move) {
+        API.submitmove(Main.gameid, Main.gamestate.turn, Main.player, move, (error: string) => {
+            if (error) {
+                Main.error(error);
+                //this.deselect();
+                //Main.undoMove();
+                return;
+            }
+            console.log('Submitted move:', move);
         });
     }
 
@@ -169,7 +170,7 @@ class Main {
     }
 
     static updateBotMoves() {
-        for (let player of this.gamedata.players) {
+        for (let player of this.gamestate.players) {
             if (player.startsWith('BOT') && !this.gamestate.playerData[player].currentMove) {
                 let botPlayer = player;
                 API.getvalidmoves(this.gameid, this.gamestate.turn, botPlayer, (validMoves: API.Move[], error: string) => {
@@ -178,7 +179,7 @@ class Main {
                         return;
                     }
 
-                    let move = randElement(validMoves);
+                    let move = Bot.getMove(validMoves);
                     API.submitmove(this.gameid, this.gamestate.turn, botPlayer, move, (error: string) => {
                         if (error) {
                             Main.error(error);

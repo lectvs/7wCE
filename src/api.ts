@@ -1,18 +1,17 @@
 namespace API {
-    export type GameData = {
-        players: string[];
-        host: string;
-        cards: Dict<Card>;
-        wonders: Dict<Wonder>;
-    }
-
     export type GameState = {
         state: 'NORMAL_MOVE' | 'LAST_CARD_MOVE' | 'DISCARD_MOVE' | 'GAME_COMPLETE';
         discardMoveQueue: string[];
+        players: string[];
+        host: string;
         age: number;
         turn: number;
         playerData: Dict<PlayerData>;
         discardedCardCount: number;
+        hand: number[];
+        validMoves: Move[];
+        cards: Dict<Card>;
+        wonders: Dict<Wonder>;
     }
 
     export type PlayerData = {
@@ -21,7 +20,6 @@ namespace API {
         stagesBuilt: StageBuilt[];
         militaryTokens: number[];
         handCount: number;
-        hand?: number[];
         lastMove?: Move;
         currentMove?: Move;
         pointsDistribution: Dict<number>;
@@ -83,7 +81,7 @@ namespace API {
         action: 'play' | 'wonder' | 'throw';
         card: number;
         stage?: number;
-        payment: Payment;
+        payment?: Payment;
     }
 
     export type Payment = {
@@ -111,14 +109,62 @@ namespace API {
         return true;
     }
 
-    export function getgamedata(gameid: string, callback: (gamedata: GameData, error: string) => any) {
-        httpRequest(`${LAMBDA_URL}?operation=getgamedata&gameid=${gameid}`, (responseJson: any, error: string) => {
-            if (error) {
-                callback(undefined, error);
-            } else {
-                callback(responseJson, undefined);
+    export function totalNeighborPaymentAmount(payment: Payment) {
+        if (!payment) return 0;
+        return (payment.pos || 0) + (payment.neg || 0);
+    }
+
+    export function isNeighborPaymentNecessary(move: Move, validMoves: Move[]) {
+        let foundMatchingMove = false;
+        for (let validMove of validMoves) {
+            if (validMove.action !== move.action) continue;
+            if (validMove.card !== move.card) continue;
+            foundMatchingMove = true;
+            let totalPayment = totalNeighborPaymentAmount(validMove.payment);
+            if (totalPayment === 0) return false;
+        }
+        if (!foundMatchingMove) return false;
+        return true;
+    }
+
+    export function getNeighbors(gamestate: GameState, player: string) {
+        let neg_index = gamestate.players.indexOf(player)-1;
+        if (neg_index < 0) neg_index += gamestate.players.length;
+
+        let pos_index = gamestate.players.indexOf(player)+1;
+        if (pos_index >= gamestate.players.length) pos_index -= gamestate.players.length;
+        
+        return [gamestate.players[neg_index], gamestate.players[pos_index]];
+    }
+
+    export function minimalPaymentOptions(move: Move, validMoves: Move[]) {
+        let options: Payment[] = [];
+        for (let validMove of validMoves) {
+            if (validMove.action !== move.action) continue;
+            if (validMove.card !== move.card) continue;
+            if (totalNeighborPaymentAmount(validMove.payment) === 0) continue;
+            options.push(validMove.payment);
+        }
+
+        options.sort((o1, o2) => totalNeighborPaymentAmount(o1) - totalNeighborPaymentAmount(o2));
+
+        console.log(options);
+
+        for (let i = 0; i < options.length; i++) {
+            for (let j = i+1; j < options.length; j++) {
+                let pos_i = options[i].pos || 0;
+                let neg_i = options[i].neg || 0;
+                let pos_j = options[j].pos || 0;
+                let neg_j = options[j].neg || 0;
+                console.log(pos_i, neg_i, pos_j, neg_j)
+                if (pos_i <= pos_j && neg_i <= neg_j) {
+                    options.splice(j, 1);
+                    j--;
+                }
             }
-        });
+        }
+
+        return options;
     }
 
     export function getgamestate(gameid: string, player: string, callback: (gamestate: GameState, error: string) => any) {

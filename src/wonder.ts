@@ -72,7 +72,7 @@ class Wonder extends PIXI.Container {
         this.addChild(this.scienceContainer);
 
         for (let cardId of playerData.playedCards) {
-            let card = Main.gamedata.cards[cardId];
+            let card = Main.gamestate.cards[cardId];
             let cardArt = new Card(cardId, card, new PIXI.Point(), this, new PIXI.Container());
             this.addNewCardEffect(cardArt);
         }
