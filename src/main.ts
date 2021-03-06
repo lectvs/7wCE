@@ -76,6 +76,7 @@ class Main {
     static createScene() {
         if (!this.initialized) return;
         this.scene.create();
+        this.resize();
     }
 
     static adjustPositions() {
@@ -84,7 +85,9 @@ class Main {
     }
 
     static resize() {
-        this.app.renderer.resize(window.innerWidth, this.height);
+        this.adjustPositions();
+        let sceneBounds = this.app.stage.getBounds();
+        this.app.renderer.resize(window.innerWidth, sceneBounds.y + sceneBounds.height + 400);
         this.adjustPositions();
     }
 
@@ -109,6 +112,7 @@ class Main {
             }
 
             //console.log('Refreshed gamestate:', gamestate);
+
             if (gamestate.turn < Main.gamestate.turn) {
                 Main.error(`Error: local turn (${Main.gamestate.turn}) is greater than the game's (${gamestate.turn})?`);
                 this.sendUpdate();
@@ -178,6 +182,8 @@ class Main {
                         Main.error(error);
                         return;
                     }
+
+                    if (validMoves.length === 0) return;
 
                     let move = Bot.getMove(validMoves);
                     API.submitmove(this.gameid, this.gamestate.turn, botPlayer, move, (error: string) => {

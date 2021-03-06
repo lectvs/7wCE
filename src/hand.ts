@@ -42,7 +42,7 @@ class Hand {
     }
 
     adjustPositions() {
-        let handY = 120;
+        let handY = 140;
         let handDX = 136;
 
         this.normalHandPositions = [];
@@ -99,6 +99,12 @@ class Hand {
     unflip() {
         for (let card of this.cards) {
             if (card.state.type === 'in_hand') card.state.visualState = 'full';
+        }
+    }
+
+    setVisible(value:boolean) {
+        for (let card of this.cards) {
+            card.visible = value;
         }
     }
 }

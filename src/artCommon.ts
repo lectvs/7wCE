@@ -54,6 +54,16 @@ namespace ArtCommon {
                 return pointsForSelfCards(effect.color);
             } else if (effect.type === 'multi_science') {
                 return multiScience(effect.symbols.split('/'));
+            } else if (effect.type === 'play_last_card') {
+                return playLastCard();
+            } else if (effect.type === 'build_from_discard') {
+                return buildFromDiscard();
+            } else if (effect.type === 'build_free_first_color') {
+                return buildFreeFirstColor();
+            } else if (effect.type === 'build_free_first_card') {
+                return buildFreeFirstCard();
+            } else if (effect.type === 'build_free_last_card') {
+                return buildFreeLastCard();
             }
             console.error('Effect type not found:', effect.type);
             return effectNotFound();
@@ -304,6 +314,70 @@ namespace ArtCommon {
         return container;
     }
 
+    export function playLastCard() {
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledRoundedRect(-65, -50, 60, 100, 8, ArtCommon.cardBannerForColor("grey")));
+        container.addChild(Shapes.filledRoundedRect(15, -50, 60, 100, 8, ArtCommon.cardBannerForColor("grey")));
+        let check = checkMark();
+        check.position.set(50, 0);
+        container.addChild(check);
+        return container;
+    }
+
+    export function buildFromDiscard() {
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledRoundedRect(-40, -50, 70, 100, 8, 0x888888)).angle = -20;
+        container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, ArtCommon.cardBannerForColor("grey")));
+        let cross = X(0xFF0000);
+        cross.scale.set(0.3);
+        cross.position.set(-30, -20);
+        container.addChild(cross);
+        return container;
+    }
+
+    export function buildFreeFirstColor() {
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, ArtCommon.cardBannerForColor("grey")));
+        let colors = ['brown', 'grey', 'blue', 'yellow', 'red', 'green', 'purple'];
+        for (let i = 0; i < colors.length; i++) {
+            container.addChild(Shapes.filledRect(-35 + 10*i, -50, 10, 100, ArtCommon.cardBannerForColor(colors[i])));
+        }
+        let cross = X(0xFF0000);
+        cross.scale.set(0.3);
+        cross.position.set(-30, -20);
+        container.addChild(cross);
+        return container;
+    }
+
+    export function buildFreeFirstCard() {
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, ArtCommon.cardBannerForColor("grey")));
+        let alpha = new PIXI.Text('\u03B1', { fontFamily : 'Arial', fontSize: 70, fill : 0x000000 });
+        alpha.anchor.set(0.5, 0.5);
+        alpha.position.set(0, 10);
+        container.addChild(alpha);
+        let cross = X(0xFF0000);
+        cross.scale.set(0.3);
+        cross.position.set(-30, -20);
+        container.addChild(cross);
+        return container;
+    }
+
+    export function buildFreeLastCard() {
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, ArtCommon.cardBannerForColor("grey")));
+        let omega = new PIXI.Text('\u03A9', { fontFamily : 'Arial', fontSize: 70, fill : 0x000000 });
+        omega.scale.set(0.8);
+        omega.anchor.set(0.5, 0.5);
+        omega.position.set(0, 16);
+        container.addChild(omega);
+        let cross = X(0xFF0000);
+        cross.scale.set(0.3);
+        cross.position.set(-30, -20);
+        container.addChild(cross);
+        return container;
+    }
+
     export function wood() {
         return debugEffect(0x6D9F2F);
     }
@@ -368,15 +442,15 @@ namespace ArtCommon {
         return graphics;
     }
 
-    export function X() {
+    export function X(color: number) {
         let width = 100;
-        let thickness = 10;
+        let thickness = 20;
         
         let container = new PIXI.Container();
         let barHeight = width * Math.SQRT2;
-        let rect1 = Shapes.filledRoundedRect(-thickness/2, -barHeight/2, thickness, barHeight, thickness/4, 0x000000);
+        let rect1 = Shapes.filledRoundedRect(-thickness/2, -barHeight/2, thickness, barHeight, thickness/4, color);
         rect1.angle = 45;
-        let rect2 = Shapes.filledRoundedRect(-thickness/2, -barHeight/2, thickness, barHeight, thickness/4, 0x000000);
+        let rect2 = Shapes.filledRoundedRect(-thickness/2, -barHeight/2, thickness, barHeight, thickness/4, color);
         rect2.angle = -45;
         container.addChild(rect1);
         container.addChild(rect2);

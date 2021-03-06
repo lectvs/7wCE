@@ -1,10 +1,16 @@
 class Scene {
     wonders: Wonder[];
     hand: Hand;
+    discardHand: Hand;
     discardPile: PIXI.Container;
     paymentMenu: PIXI.Container;
+    statusBar: PIXI.Container;
+    statusText: PIXI.Text;
 
     mainContainer: PIXI.Container;
+
+    wonderStartY: number = 700;
+    wonderDY: number = 500;
 
     get isPaymentMenuActive() {
         return this.paymentMenu && this.paymentMenu.visible;
@@ -15,7 +21,13 @@ class Scene {
     }
 
     update() {
+        this.setStateText();
         this.hand.update();
+        this.discardHand.update();
+
+        let myDiscardTurn = this.myTurnToBuildFromDiscard();
+        this.hand.setVisible(!myDiscardTurn);
+        this.discardHand.setVisible(myDiscardTurn);
     }
 
     create() {
@@ -48,11 +60,26 @@ class Scene {
         this.hand = new Hand(this.mainContainer, gamestate.hand, this.wonders[gamestate.players.indexOf(player)], this.discardPile);
         this.hand.reflectMove(gamestate.playerData[player].currentMove);
 
+        this.discardHand = new Hand(this.mainContainer, gamestate.discardedCards || [], this.wonders[gamestate.players.indexOf(player)], this.discardPile);
+        this.discardHand.reflectMove(gamestate.playerData[player].currentMove);
+
         this.paymentMenu = new PIXI.Container();
         this.paymentMenu.visible = false;
         this.mainContainer.addChild(this.paymentMenu);
 
+        this.statusBar = new PIXI.Container();
+        this.statusBar.addChild(Shapes.filledRoundedRect(-400, -50, 800, 100, 20, 0xDDDDDD));
+        this.mainContainer.addChild(this.statusBar);
+
+        this.statusText = new PIXI.Text("", { fontFamily : 'Arial', fontSize: 70, fill : 0x000000 });
+        this.statusText.anchor.set(0.5, 0.5);
+        this.statusText.scale.set(0.4, 0.4);
+        this.statusText.position.set(0, 22);
+        this.statusBar.addChild(this.statusText);
+
         this.adjustPositions();
+        this.setStateText();
+        this.update();
     }
 
     adjustPositions() {
@@ -60,14 +87,12 @@ class Scene {
         let player = Main.player;
 
         let wonderScale = 2.5;
-        let wonderStartY = 600;
         let wonderDX = Main.width/4;
-        let wonderDY = 500;
-        let discardY = 1000;
+        let discardY = 1200;
 
         // WONDERS
         let p = gamestate.players.indexOf(player);
-        this.wonders[p].position.set(Main.width/2, wonderStartY);
+        this.wonders[p].position.set(Main.width/2, this.wonderStartY);
         this.wonders[p].scale.set(wonderScale);
 
         let l = mod(p-1, gamestate.players.length);
@@ -75,21 +100,23 @@ class Scene {
 
         let i: number;
         for (i = 1; i < gamestate.players.length/2; i++) {
-            this.wonders[l].position.set(Main.width/2 - wonderDX, wonderStartY + wonderDY*i);
+            this.wonders[l].position.set(Main.width/2 - wonderDX, this.wonderStartY + this.wonderDY*i);
             this.wonders[l].scale.set(wonderScale);
-            this.wonders[r].position.set(Main.width/2 + wonderDX, wonderStartY + wonderDY*i);
+            this.wonders[r].position.set(Main.width/2 + wonderDX, this.wonderStartY + this.wonderDY*i);
             this.wonders[r].scale.set(wonderScale);
             l = mod(l-1, gamestate.players.length);
             r = mod(r+1, gamestate.players.length); 
         }
 
         if (gamestate.players.length % 2 === 0) {
-            this.wonders[l].position.set(Main.width/2, wonderStartY + wonderDY*i);
+            this.wonders[l].position.set(Main.width/2, this.wonderStartY + this.wonderDY*i);
             this.wonders[l].scale.set(wonderScale);
         }
 
         // DISCARD PILE
         this.discardPile.position.set(Main.width/2, discardY);
+
+        this.statusBar.position.set(Main.width/2, 0);
 
         this.hand.adjustPositions();
     }
@@ -152,7 +179,7 @@ class Scene {
         closeButton.position.set(halfWidth - 10, bounds.top + 10);
         this.paymentMenu.addChild(closeButton);
 
-        let X = ArtCommon.X();
+        let X = ArtCommon.X(0x000000);
         X.scale.set(0.3);
         closeButton.addChild(X);
 
@@ -165,5 +192,36 @@ class Scene {
         this.paymentMenu.addChildAt(Shapes.filledRoundedRect(-halfWidth - margin, bounds.top - margin, 2*halfWidth + 2*margin, bounds.height + 2*margin + 40, 10, 0xFFFFFF), 0);
         this.paymentMenu.visible = true;
         this.paymentMenu.parent.setChildIndex(this.paymentMenu, this.paymentMenu.parent.children.length-1);
+    }
+
+    setStateText() {
+        let gamestate = Main.gamestate;
+        let playerData = gamestate.playerData[Main.player];
+
+        if (gamestate.state === 'NORMAL_MOVE') {
+            if (playerData.currentMove) {
+                this.statusText.text = "Waiting for others to move";
+            } else {
+                this.statusText.text = "You must play a card";
+            }
+        } else if (gamestate.state === 'LAST_CARD_MOVE') {
+            if (playerData.currentMove || gamestate.validMoves.length === 0) {
+                this.statusText.text = "Waiting for others to play their last card";
+            } else {
+                this.statusText.text = "You may play your last card";
+            }
+        } else if (gamestate.state === 'DISCARD_MOVE') {
+            if (gamestate.discardMoveQueue[0] === Main.player) {
+                this.statusText.text = "You may build a card from the discard pile";
+            } else {
+                this.statusText.text = `Waiting for ${gamestate.discardMoveQueue[0]} to build a card from the discard pile`;
+            }
+        } else if (gamestate.state === 'GAME_COMPLETE') {
+            this.statusText.text = "Game complete";
+        }
+    }
+
+    private myTurnToBuildFromDiscard() {
+        return Main.gamestate.state === 'DISCARD_MOVE' && Main.gamestate.discardMoveQueue[0] === Main.player;
     }
 }

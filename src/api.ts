@@ -6,7 +6,9 @@ namespace API {
         host: string;
         age: number;
         turn: number;
+        turnInAge: number;
         playerData: Dict<PlayerData>;
+        discardedCards?: number[]
         discardedCardCount: number;
         hand: number[];
         validMoves: Move[];
