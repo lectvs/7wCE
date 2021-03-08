@@ -5,6 +5,12 @@ function clamp(n: number, min: number, max: number) {
     if (n > max) return max;
     return n;
 }
+function contains<T>(array: T[], element: T) {
+    for (let e of array) {
+        if (e === element) return true;
+    }
+    return false;
+}
 
 function lerp(a: number, b: number, t: number) {
     return a + (b-a)*t;

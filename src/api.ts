@@ -10,6 +10,7 @@ namespace API {
         playerData: Dict<PlayerData>;
         discardedCards?: number[]
         discardedCardCount: number;
+        lastDiscardedCardAge: number;
         hand: number[];
         validMoves: Move[];
         cards: Dict<Card>;
@@ -80,7 +81,7 @@ namespace API {
     export type MoveHistory = Dict<Dict<Move>>;
 
     export type Move = {
-        action: 'play' | 'wonder' | 'throw';
+        action: 'play' | 'wonder' | 'throw' | 'reject';
         card: number;
         stage?: number;
         payment?: Payment;
@@ -111,9 +112,26 @@ namespace API {
         return true;
     }
 
+    export function totalPaymentAmount(payment: Payment) {
+        if (!payment) return 0;
+        return (payment.pos || 0) + (payment.neg || 0) + (payment.bank || 0);
+    }
+
     export function totalNeighborPaymentAmount(payment: Payment) {
         if (!payment) return 0;
         return (payment.pos || 0) + (payment.neg || 0);
+    }
+
+    export function minimalBankPayment(move: Move, validMoves: Move[]) {
+        let result = Infinity;
+        for (let validMove of validMoves) {
+            if (validMove.action !== move.action) continue;
+            if (validMove.card !== move.card) continue;
+            if (validMove.stage !== move.stage) continue;
+            let bankPayment = validMove.payment?.bank || 0;
+            if (bankPayment < result) result = bankPayment;
+        }
+        return result;
     }
 
     export function isNeighborPaymentNecessary(move: Move, validMoves: Move[]) {
@@ -121,6 +139,7 @@ namespace API {
         for (let validMove of validMoves) {
             if (validMove.action !== move.action) continue;
             if (validMove.card !== move.card) continue;
+            if (validMove.stage !== move.stage) continue;
             foundMatchingMove = true;
             let totalPayment = totalNeighborPaymentAmount(validMove.payment);
             if (totalPayment === 0) return false;
@@ -144,13 +163,12 @@ namespace API {
         for (let validMove of validMoves) {
             if (validMove.action !== move.action) continue;
             if (validMove.card !== move.card) continue;
+            if (validMove.stage !== move.stage) continue;
             if (totalNeighborPaymentAmount(validMove.payment) === 0) continue;
             options.push(validMove.payment);
         }
 
         options.sort((o1, o2) => totalNeighborPaymentAmount(o1) - totalNeighborPaymentAmount(o2));
-
-        console.log(options);
 
         for (let i = 0; i < options.length; i++) {
             for (let j = i+1; j < options.length; j++) {
@@ -190,6 +208,7 @@ namespace API {
     }
 
     export function submitmove(gameid: string, turn: number, player: string, move: Move, callback: (error: string) => any) {
+        console.log(move)
         httpRequest(`${LAMBDA_URL}?operation=submitmove&gameid=${gameid}&turn=${turn}&player=${player}&move=${JSON.stringify(move)}`, (responseJson: any, error: string) => {
             callback(error);
         });

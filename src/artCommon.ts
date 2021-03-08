@@ -165,18 +165,14 @@ namespace ArtCommon {
     export function victoryPoints(points: number) {
         let container = new PIXI.Container();
         container.addChild(debugEffect(0xFFFFFF));
-        let text = new PIXI.Text(`${points}`, { fontFamily : 'Arial', fontSize: 70, fill : 0x000000 });
-        text.anchor.set(0.5, 0.5);
-        container.addChild(text);
+        container.addChild(Shapes.centeredText(`${points}`, 0.7, 0x000000));
         return container;
     }
 
     export function gold(gold: number) {
         let container = new PIXI.Container();
         container.addChild(debugEffect(0xFBE317));
-        let text = new PIXI.Text(`${gold}`, { fontFamily : 'Arial', fontSize: 70, fill : 0x000000 });
-        text.anchor.set(0.5, 0.5);
-        container.addChild(text);
+        container.addChild(Shapes.centeredText(`${gold}`, 0.7, 0x000000));
         return container;
     }
 
@@ -352,8 +348,7 @@ namespace ArtCommon {
     export function buildFreeFirstCard() {
         let container = new PIXI.Container();
         container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, ArtCommon.cardBannerForColor("grey")));
-        let alpha = new PIXI.Text('\u03B1', { fontFamily : 'Arial', fontSize: 70, fill : 0x000000 });
-        alpha.anchor.set(0.5, 0.5);
+        let alpha = Shapes.centeredText('\u03B1', 0.35, 0x000000);
         alpha.position.set(0, 10);
         container.addChild(alpha);
         let cross = X(0xFF0000);
@@ -366,9 +361,7 @@ namespace ArtCommon {
     export function buildFreeLastCard() {
         let container = new PIXI.Container();
         container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, ArtCommon.cardBannerForColor("grey")));
-        let omega = new PIXI.Text('\u03A9', { fontFamily : 'Arial', fontSize: 70, fill : 0x000000 });
-        omega.scale.set(0.8);
-        omega.anchor.set(0.5, 0.5);
+        let omega = Shapes.centeredText('\u03A9', 0.56, 0x000000);
         omega.position.set(0, 16);
         container.addChild(omega);
         let cross = X(0xFF0000);
@@ -432,6 +425,24 @@ namespace ArtCommon {
         graphics.drawPolygon([ -32, 20, 32, 20, 48, 48, -48, 48 ]);
         graphics.endFill();
         return graphics;
+    }
+
+    export function payment(amount: number) {
+        if (!isFinite(amount)) {
+            return ArtCommon.X(0xFF0000);
+        }
+        
+        if (amount === 0) {
+            return ArtCommon.checkMark();
+        }
+
+        let cost = new PIXI.Container();
+        cost.addChild(Shapes.filledCircle(0, 0, 50, 0xFBE317));
+        let goldText = Shapes.centeredText(`${amount}`, 1, 0xFBE317);
+        goldText.anchor.set(1, 0.5);
+        goldText.position.set(-70, 0);
+        cost.addChild(goldText);
+        return cost;
     }
 
     export function checkMark() {

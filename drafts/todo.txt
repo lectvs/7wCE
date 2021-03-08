@@ -1,7 +1,5 @@
 todo
-- disallow making invalid moves
-- cost indicators above cards
-- selecting card indices
+- current move outline
 - played cards overflow
 - end screen
     - random victory/defeat messages?

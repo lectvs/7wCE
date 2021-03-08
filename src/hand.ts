@@ -63,7 +63,7 @@ class Hand {
     }
 
     reflectMove(move: API.Move) {
-        if (!move) {
+        if (!move || move.action === 'reject') {
             for (let card of this.cards) {
                 card.deselect();
             }

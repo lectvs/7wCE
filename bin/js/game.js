@@ -101,15 +101,22 @@ var API;
         return true;
     }
     API.eqPayment = eqPayment;
+    function totalPaymentAmount(payment) {
+        if (!payment)
+            return 0;
+        return (payment.pos || 0) + (payment.neg || 0) + (payment.bank || 0);
+    }
+    API.totalPaymentAmount = totalPaymentAmount;
     function totalNeighborPaymentAmount(payment) {
         if (!payment)
             return 0;
         return (payment.pos || 0) + (payment.neg || 0);
     }
     API.totalNeighborPaymentAmount = totalNeighborPaymentAmount;
-    function isNeighborPaymentNecessary(move, validMoves) {
+    function minimalBankPayment(move, validMoves) {
         var e_1, _a;
-        var foundMatchingMove = false;
+        var _b;
+        var result = Infinity;
         try {
             for (var validMoves_1 = __values(validMoves), validMoves_1_1 = validMoves_1.next(); !validMoves_1_1.done; validMoves_1_1 = validMoves_1.next()) {
                 var validMove = validMoves_1_1.value;
@@ -117,10 +124,11 @@ var API;
                     continue;
                 if (validMove.card !== move.card)
                     continue;
-                foundMatchingMove = true;
-                var totalPayment = totalNeighborPaymentAmount(validMove.payment);
-                if (totalPayment === 0)
-                    return false;
+                if (validMove.stage !== move.stage)
+                    continue;
+                var bankPayment = ((_b = validMove.payment) === null || _b === void 0 ? void 0 : _b.bank) || 0;
+                if (bankPayment < result)
+                    result = bankPayment;
             }
         }
         catch (e_1_1) { e_1 = { error: e_1_1 }; }
@@ -129,6 +137,34 @@ var API;
                 if (validMoves_1_1 && !validMoves_1_1.done && (_a = validMoves_1.return)) _a.call(validMoves_1);
             }
             finally { if (e_1) throw e_1.error; }
+        }
+        return result;
+    }
+    API.minimalBankPayment = minimalBankPayment;
+    function isNeighborPaymentNecessary(move, validMoves) {
+        var e_2, _a;
+        var foundMatchingMove = false;
+        try {
+            for (var validMoves_2 = __values(validMoves), validMoves_2_1 = validMoves_2.next(); !validMoves_2_1.done; validMoves_2_1 = validMoves_2.next()) {
+                var validMove = validMoves_2_1.value;
+                if (validMove.action !== move.action)
+                    continue;
+                if (validMove.card !== move.card)
+                    continue;
+                if (validMove.stage !== move.stage)
+                    continue;
+                foundMatchingMove = true;
+                var totalPayment = totalNeighborPaymentAmount(validMove.payment);
+                if (totalPayment === 0)
+                    return false;
+            }
+        }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        finally {
+            try {
+                if (validMoves_2_1 && !validMoves_2_1.done && (_a = validMoves_2.return)) _a.call(validMoves_2);
+            }
+            finally { if (e_2) throw e_2.error; }
         }
         if (!foundMatchingMove)
             return false;
@@ -146,29 +182,30 @@ var API;
     }
     API.getNeighbors = getNeighbors;
     function minimalPaymentOptions(move, validMoves) {
-        var e_2, _a;
+        var e_3, _a;
         var options = [];
         try {
-            for (var validMoves_2 = __values(validMoves), validMoves_2_1 = validMoves_2.next(); !validMoves_2_1.done; validMoves_2_1 = validMoves_2.next()) {
-                var validMove = validMoves_2_1.value;
+            for (var validMoves_3 = __values(validMoves), validMoves_3_1 = validMoves_3.next(); !validMoves_3_1.done; validMoves_3_1 = validMoves_3.next()) {
+                var validMove = validMoves_3_1.value;
                 if (validMove.action !== move.action)
                     continue;
                 if (validMove.card !== move.card)
+                    continue;
+                if (validMove.stage !== move.stage)
                     continue;
                 if (totalNeighborPaymentAmount(validMove.payment) === 0)
                     continue;
                 options.push(validMove.payment);
             }
         }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
         finally {
             try {
-                if (validMoves_2_1 && !validMoves_2_1.done && (_a = validMoves_2.return)) _a.call(validMoves_2);
+                if (validMoves_3_1 && !validMoves_3_1.done && (_a = validMoves_3.return)) _a.call(validMoves_3);
             }
-            finally { if (e_2) throw e_2.error; }
+            finally { if (e_3) throw e_3.error; }
         }
         options.sort(function (o1, o2) { return totalNeighborPaymentAmount(o1) - totalNeighborPaymentAmount(o2); });
-        console.log(options);
         for (var i = 0; i < options.length; i++) {
             for (var j = i + 1; j < options.length; j++) {
                 var pos_i = options[i].pos || 0;
@@ -208,6 +245,7 @@ var API;
     }
     API.getvalidmoves = getvalidmoves;
     function submitmove(gameid, turn, player, move, callback) {
+        console.log(move);
         httpRequest(LAMBDA_URL + "?operation=submitmove&gameid=" + gameid + "&turn=" + turn + "&player=" + player + "&move=" + JSON.stringify(move), function (responseJson, error) {
             callback(error);
         });
@@ -356,31 +394,6 @@ var ArtCommon;
     }
     ArtCommon.getArtForEffects = getArtForEffects;
     function getArtForCost(cost) {
-        var e_3, _a;
-        if (!cost) {
-            return undefined;
-        }
-        var costArts = [];
-        try {
-            for (var _b = __values(cost.resources || []), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var r = _c.value;
-                costArts.push(resource(r));
-            }
-        }
-        catch (e_3_1) { e_3 = { error: e_3_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_3) throw e_3.error; }
-        }
-        if (cost.gold) {
-            costArts.push(gold(cost.gold));
-        }
-        return combineCostArt(costArts, 16);
-    }
-    ArtCommon.getArtForCost = getArtForCost;
-    function getArtForStageCost(cost) {
         var e_4, _a;
         if (!cost) {
             return undefined;
@@ -398,6 +411,31 @@ var ArtCommon;
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
             finally { if (e_4) throw e_4.error; }
+        }
+        if (cost.gold) {
+            costArts.push(gold(cost.gold));
+        }
+        return combineCostArt(costArts, 16);
+    }
+    ArtCommon.getArtForCost = getArtForCost;
+    function getArtForStageCost(cost) {
+        var e_5, _a;
+        if (!cost) {
+            return undefined;
+        }
+        var costArts = [];
+        try {
+            for (var _b = __values(cost.resources || []), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var r = _c.value;
+                costArts.push(resource(r));
+            }
+        }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_5) throw e_5.error; }
         }
         if (cost.gold) {
             costArts.push(gold(cost.gold));
@@ -425,7 +463,7 @@ var ArtCommon;
     }
     ArtCommon.resource = resource;
     function multiResource(resources) {
-        var e_5, _a;
+        var e_6, _a;
         var resourceArts = resources.map(function (r) { return resource(r); });
         for (var i = resourceArts.length - 1; i >= 1; i--) {
             resourceArts.splice(i, 0, slash());
@@ -441,12 +479,12 @@ var ArtCommon;
                 }
             }
         }
-        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+        catch (e_6_1) { e_6 = { error: e_6_1 }; }
         finally {
             try {
                 if (resourceArts_1_1 && !resourceArts_1_1.done && (_a = resourceArts_1.return)) _a.call(resourceArts_1);
             }
-            finally { if (e_5) throw e_5.error; }
+            finally { if (e_6) throw e_6.error; }
         }
         return combineEffectArt(resourceArts, 4);
     }
@@ -467,7 +505,7 @@ var ArtCommon;
     }
     ArtCommon.science = science;
     function multiScience(symbols) {
-        var e_6, _a;
+        var e_7, _a;
         var symbolArts = symbols.map(function (s) { return science(s); });
         for (var i = symbolArts.length - 1; i >= 1; i--) {
             symbolArts.splice(i, 0, slash());
@@ -478,12 +516,12 @@ var ArtCommon;
                 art.scale.set(0.8);
             }
         }
-        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+        catch (e_7_1) { e_7 = { error: e_7_1 }; }
         finally {
             try {
                 if (symbolArts_1_1 && !symbolArts_1_1.done && (_a = symbolArts_1.return)) _a.call(symbolArts_1);
             }
-            finally { if (e_6) throw e_6.error; }
+            finally { if (e_7) throw e_7.error; }
         }
         return combineEffectArt(symbolArts, 4);
     }
@@ -491,18 +529,14 @@ var ArtCommon;
     function victoryPoints(points) {
         var container = new PIXI.Container();
         container.addChild(debugEffect(0xFFFFFF));
-        var text = new PIXI.Text("" + points, { fontFamily: 'Arial', fontSize: 70, fill: 0x000000 });
-        text.anchor.set(0.5, 0.5);
-        container.addChild(text);
+        container.addChild(Shapes.centeredText("" + points, 0.7, 0x000000));
         return container;
     }
     ArtCommon.victoryPoints = victoryPoints;
     function gold(gold) {
         var container = new PIXI.Container();
         container.addChild(debugEffect(0xFBE317));
-        var text = new PIXI.Text("" + gold, { fontFamily: 'Arial', fontSize: 70, fill: 0x000000 });
-        text.anchor.set(0.5, 0.5);
-        container.addChild(text);
+        container.addChild(Shapes.centeredText("" + gold, 0.7, 0x000000));
         return container;
     }
     ArtCommon.gold = gold;
@@ -680,8 +714,7 @@ var ArtCommon;
     function buildFreeFirstCard() {
         var container = new PIXI.Container();
         container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, ArtCommon.cardBannerForColor("grey")));
-        var alpha = new PIXI.Text('\u03B1', { fontFamily: 'Arial', fontSize: 70, fill: 0x000000 });
-        alpha.anchor.set(0.5, 0.5);
+        var alpha = Shapes.centeredText('\u03B1', 0.35, 0x000000);
         alpha.position.set(0, 10);
         container.addChild(alpha);
         var cross = X(0xFF0000);
@@ -694,9 +727,7 @@ var ArtCommon;
     function buildFreeLastCard() {
         var container = new PIXI.Container();
         container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, ArtCommon.cardBannerForColor("grey")));
-        var omega = new PIXI.Text('\u03A9', { fontFamily: 'Arial', fontSize: 70, fill: 0x000000 });
-        omega.scale.set(0.8);
-        omega.anchor.set(0.5, 0.5);
+        var omega = Shapes.centeredText('\u03A9', 0.56, 0x000000);
         omega.position.set(0, 16);
         container.addChild(omega);
         var cross = X(0xFF0000);
@@ -762,6 +793,22 @@ var ArtCommon;
         return graphics;
     }
     ArtCommon.pyramidStages = pyramidStages;
+    function payment(amount) {
+        if (!isFinite(amount)) {
+            return ArtCommon.X(0xFF0000);
+        }
+        if (amount === 0) {
+            return ArtCommon.checkMark();
+        }
+        var cost = new PIXI.Container();
+        cost.addChild(Shapes.filledCircle(0, 0, 50, 0xFBE317));
+        var goldText = Shapes.centeredText("" + amount, 1, 0xFBE317);
+        goldText.anchor.set(1, 0.5);
+        goldText.position.set(-70, 0);
+        cost.addChild(goldText);
+        return cost;
+    }
+    ArtCommon.payment = payment;
     function checkMark() {
         var graphics = new PIXI.Graphics();
         graphics.beginFill(0x00FF00, 1);
@@ -813,7 +860,7 @@ var ArtCommon;
         return graphics;
     }
     function combineEffectArt(arts, padding) {
-        var e_7, _a;
+        var e_8, _a;
         var totalArtWidth = sum(arts, function (art) { return art.getBounds().width; }) + padding * (arts.length - 1);
         var container = new PIXI.Container();
         var x = -totalArtWidth / 2;
@@ -826,17 +873,17 @@ var ArtCommon;
                 x += width + padding;
             }
         }
-        catch (e_7_1) { e_7 = { error: e_7_1 }; }
+        catch (e_8_1) { e_8 = { error: e_8_1 }; }
         finally {
             try {
                 if (arts_1_1 && !arts_1_1.done && (_a = arts_1.return)) _a.call(arts_1);
             }
-            finally { if (e_7) throw e_7.error; }
+            finally { if (e_8) throw e_8.error; }
         }
         return container;
     }
     function combineCostArt(arts, padding) {
-        var e_8, _a;
+        var e_9, _a;
         var container = new PIXI.Container();
         var y = 0;
         try {
@@ -848,17 +895,17 @@ var ArtCommon;
                 y += height + padding;
             }
         }
-        catch (e_8_1) { e_8 = { error: e_8_1 }; }
+        catch (e_9_1) { e_9 = { error: e_9_1 }; }
         finally {
             try {
                 if (arts_2_1 && !arts_2_1.done && (_a = arts_2.return)) _a.call(arts_2);
             }
-            finally { if (e_8) throw e_8.error; }
+            finally { if (e_9) throw e_9.error; }
         }
         return container;
     }
     function combineStageCostArt(arts, padding) {
-        var e_9, _a;
+        var e_10, _a;
         if (arts.length >= 4) {
             if (arts.length % 2 === 0) {
                 var left = combineStageCostArt(arts.slice(0, arts.length / 2), padding);
@@ -883,12 +930,12 @@ var ArtCommon;
                 y += height + padding;
             }
         }
-        catch (e_9_1) { e_9 = { error: e_9_1 }; }
+        catch (e_10_1) { e_10 = { error: e_10_1 }; }
         finally {
             try {
                 if (arts_3_1 && !arts_3_1.done && (_a = arts_3.return)) _a.call(arts_3);
             }
-            finally { if (e_9) throw e_9.error; }
+            finally { if (e_10) throw e_10.error; }
         }
         return container;
     }
@@ -969,8 +1016,11 @@ var Card = /** @class */ (function (_super) {
         _this.backContainer.addChild(backBase);
         var backBg = Shapes.filledRoundedRect(-33 + o, -14 + o, 66 - 2 * o, 100 - 2 * o, 6 - o, ArtCommon.cardBg);
         _this.backContainer.addChild(backBg);
+        _this.paymentContainer = new PIXI.Container();
+        _this.paymentContainer.position.set(33, -14);
         _this.mainContainer.addChild(_this.frontContainer);
         _this.mainContainer.addChild(_this.backContainer);
+        _this.mainContainer.addChild(_this.paymentContainer);
         _this.addChild(_this.mainContainer);
         _this.buttonMode = true;
         _this.interactive = true;
@@ -982,38 +1032,39 @@ var Card = /** @class */ (function (_super) {
                 offsety: _this.y - position.y,
             };
         });
+        _this.configureValidMoves(Main.gamestate.validMoves);
         _this.update();
         return _this;
     }
     Card.prototype.update = function () {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c;
         var dragPosition = (_a = this.dragging) === null || _a === void 0 ? void 0 : _a.data.getLocalPosition(this.parent);
         if (this.dragging) {
+            var stage = this.activeWonder.getClosestStageId(dragPosition);
             if (!Main.mouseDown) {
-                if (this.activeWonder.getMainRegion().contains(dragPosition.x, dragPosition.y)) {
+                if (this.allowPlay && this.activeWonder.getMainRegion().contains(dragPosition.x, dragPosition.y)) {
                     var move = { action: 'play', card: this.apiCardId };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
                         Main.scene.startPaymentDialog(move, 400, 400);
                     }
                     else {
-                        move.payment = { bank: (_c = (_b = this.apiCard) === null || _b === void 0 ? void 0 : _b.cost) === null || _c === void 0 ? void 0 : _c.gold };
+                        move.payment = { bank: API.minimalBankPayment(move, Main.gamestate.validMoves) };
                         Main.submitMove(move);
                     }
                     //this.select(move);
                 }
-                else if (this.activeWonder.getStageRegion().contains(dragPosition.x, dragPosition.y)) {
-                    var stage = this.activeWonder.getClosestStageId(dragPosition);
+                else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(dragPosition.x, dragPosition.y)) {
                     var move = { action: 'wonder', card: this.apiCardId, stage: stage };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
                         Main.scene.startPaymentDialog(move, 400, 400);
                     }
                     else {
-                        move.payment = { bank: (_e = (_d = Main.gamestate.wonders[Main.player].stages[stage]) === null || _d === void 0 ? void 0 : _d.cost) === null || _e === void 0 ? void 0 : _e.gold };
+                        move.payment = { bank: (_c = (_b = Main.gamestate.wonders[Main.player].stages[stage]) === null || _b === void 0 ? void 0 : _b.cost) === null || _c === void 0 ? void 0 : _c.gold };
                         Main.submitMove(move);
                     }
                     //this.select(move);
                 }
-                else if (this.discardPile.getBounds().contains(dragPosition.x, dragPosition.y)) {
+                else if (this.allowThrow && this.discardPile.getBounds().contains(dragPosition.x, dragPosition.y)) {
                     var move = { action: 'throw', card: this.apiCardId, payment: {} };
                     Main.submitMove(move);
                     //this.select(move);
@@ -1025,13 +1076,13 @@ var Card = /** @class */ (function (_super) {
                 this.dragging = null;
             }
             else {
-                if (this.activeWonder.getMainRegion().contains(dragPosition.x, dragPosition.y)) {
+                if (this.allowPlay && this.activeWonder.getMainRegion().contains(dragPosition.x, dragPosition.y)) {
                     this.state = { type: 'dragging_play' };
                 }
-                else if (this.activeWonder.getStageRegion().contains(dragPosition.x, dragPosition.y)) {
+                else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(dragPosition.x, dragPosition.y)) {
                     this.state = { type: 'dragging_wonder' };
                 }
-                else if (this.discardPile.getBounds().contains(dragPosition.x, dragPosition.y)) {
+                else if (this.allowThrow && this.discardPile.getBounds().contains(dragPosition.x, dragPosition.y)) {
                     this.state = { type: 'dragging_throw' };
                 }
                 else {
@@ -1046,6 +1097,7 @@ var Card = /** @class */ (function (_super) {
             this.mainContainer.scale.y = 1;
             this.setInteractable(this.canBeInteractable());
             this.visualState = this.state.visualState;
+            this.paymentContainer.scale.y = 1;
         }
         else if (this.state.type === 'dragging_normal') {
             this.x = dragPosition.x + this.dragging.offsetx;
@@ -1055,6 +1107,7 @@ var Card = /** @class */ (function (_super) {
             this.parent.setChildIndex(this, this.parent.children.length - 1);
             this.setInteractable(this.canBeInteractable());
             this.visualState = 'full';
+            this.paymentContainer.scale.y = 0;
         }
         else if (this.state.type === 'dragging_play') {
             this.x = dragPosition.x;
@@ -1064,6 +1117,7 @@ var Card = /** @class */ (function (_super) {
             this.parent.setChildIndex(this, this.parent.children.length - 1);
             this.setInteractable(this.canBeInteractable());
             this.visualState = 'effect';
+            this.paymentContainer.scale.y = 0;
         }
         else if (this.state.type === 'dragging_wonder') {
             var stage = this.activeWonder.getClosestStageId(dragPosition);
@@ -1075,6 +1129,7 @@ var Card = /** @class */ (function (_super) {
             this.parent.setChildIndex(this, 0);
             this.setInteractable(this.canBeInteractable());
             this.visualState = 'flipped';
+            this.paymentContainer.scale.y = 0;
         }
         else if (this.state.type === 'dragging_throw') {
             this.x = dragPosition.x + this.dragging.offsetx;
@@ -1084,6 +1139,7 @@ var Card = /** @class */ (function (_super) {
             this.parent.setChildIndex(this, this.parent.children.length - 1);
             this.setInteractable(false);
             this.visualState = 'flipped';
+            this.paymentContainer.scale.y = 0;
         }
         else if (this.state.type === 'locked_play') {
             var effectPoint = this.activeWonder.getNewCardEffectWorldPosition(this);
@@ -1094,6 +1150,7 @@ var Card = /** @class */ (function (_super) {
             this.parent.setChildIndex(this, this.parent.children.length - 1);
             this.setInteractable(false);
             this.visualState = 'effect';
+            this.paymentContainer.scale.y = 0;
         }
         else if (this.state.type === 'locked_wonder') {
             var stagePoint = this.activeWonder.getCardPositionForStage(this.state.stage);
@@ -1104,6 +1161,7 @@ var Card = /** @class */ (function (_super) {
             this.parent.setChildIndex(this, 0);
             this.setInteractable(false);
             this.visualState = 'flipped';
+            this.paymentContainer.scale.y = 0;
         }
         else if (this.state.type === 'locked_throw') {
             var discardPoint = new PIXI.Point(this.discardPile.x, this.discardPile.y - 36 * this.scale.y);
@@ -1114,18 +1172,19 @@ var Card = /** @class */ (function (_super) {
             this.parent.setChildIndex(this, this.parent.children.length - 1);
             this.setInteractable(false);
             this.visualState = 'flipped';
+            this.paymentContainer.scale.y = 0;
         }
         else if (this.state.type === 'permanent_effect') {
-            this.scale.set(0.75);
             this.setInteractable(false);
             this.visualState = 'effect';
             this.effectT = 1;
+            this.paymentContainer.scale.y = 0;
         }
         else if (this.state.type === 'permanent_flipped') {
-            this.scale.set(0.66);
             this.setInteractable(false);
             this.visualState = 'flipped';
             this.flippedT = 1;
+            this.paymentContainer.scale.y = 0;
         }
         this.updateVisuals();
     };
@@ -1147,6 +1206,12 @@ var Card = /** @class */ (function (_super) {
         this.frontContainer.scale.x = lerp(1, 0, Math.min(this.flippedT, 0.5) * 2);
         this.backContainer.scale.x = lerp(0, 1, Math.max(0.5, this.flippedT) * 2 - 1);
     };
+    Card.prototype.getEffectRollOffsetX = function (reverse) {
+        if (reverse) {
+            return (this.stateMask.x + this.stateMask.width) * this.scale.x * this.mainContainer.scale.x;
+        }
+        return -this.stateMask.x * this.scale.x * this.mainContainer.scale.x;
+    };
     Card.prototype.getWidth = function () {
         return this.stateMask.width * this.scale.x * this.mainContainer.scale.x;
     };
@@ -1154,7 +1219,11 @@ var Card = /** @class */ (function (_super) {
         return this.stateMask.height * this.scale.y * this.mainContainer.scale.y;
     };
     Card.prototype.canBeInteractable = function () {
-        return !Main.scene || !Main.scene.isPaymentMenuActive;
+        if (Main.scene && Main.scene.isPaymentMenuActive)
+            return false;
+        if (!this.allowPlay && this.allowBuildStages.length === 0 && !this.allowThrow)
+            return false;
+        return true;
     };
     Card.prototype.select = function (move) {
         var lastSelectedCard = Main.scene.hand.selectedCard;
@@ -1174,6 +1243,45 @@ var Card = /** @class */ (function (_super) {
     Card.prototype.deselect = function () {
         this.state = { type: 'in_hand', visualState: 'full' };
     };
+    Card.prototype.configureValidMoves = function (validMoves) {
+        var e_11, _a;
+        this.allowPlay = false;
+        this.allowBuildStages = [];
+        this.allowThrow = false;
+        this.minPlayCost = Infinity;
+        try {
+            for (var validMoves_4 = __values(validMoves), validMoves_4_1 = validMoves_4.next(); !validMoves_4_1.done; validMoves_4_1 = validMoves_4.next()) {
+                var move = validMoves_4_1.value;
+                if (move.card !== this.apiCardId)
+                    continue;
+                if (move.action === 'play') {
+                    this.allowPlay = true;
+                    var cost = API.totalPaymentAmount(move.payment);
+                    if (cost < this.minPlayCost)
+                        this.minPlayCost = cost;
+                }
+                else if (move.action === 'wonder') {
+                    if (!contains(this.allowBuildStages, move.stage))
+                        this.allowBuildStages.push(move.stage);
+                }
+                else if (move.action === 'throw') {
+                    this.allowThrow = true;
+                }
+            }
+        }
+        catch (e_11_1) { e_11 = { error: e_11_1 }; }
+        finally {
+            try {
+                if (validMoves_4_1 && !validMoves_4_1.done && (_a = validMoves_4.return)) _a.call(validMoves_4);
+            }
+            finally { if (e_11) throw e_11.error; }
+        }
+        this.paymentContainer.removeChildren();
+        var payment = ArtCommon.payment(this.allowPlay ? this.minPlayCost : Infinity);
+        payment.scale.set(0.1);
+        payment.position.set(-5, -8);
+        this.paymentContainer.addChild(payment);
+    };
     Card.prototype.setInteractable = function (interactable) {
         this.buttonMode = interactable;
         this.interactive = interactable;
@@ -1189,7 +1297,7 @@ var Card = /** @class */ (function (_super) {
 var GameStateDiffer;
 (function (GameStateDiffer) {
     function diffNonTurn(gamestate) {
-        var e_10, _a;
+        var e_12, _a;
         var result = {
             scripts: []
         };
@@ -1200,12 +1308,12 @@ var GameStateDiffer;
                 diffCurrentMove(gamestate, player, result);
             }
         }
-        catch (e_10_1) { e_10 = { error: e_10_1 }; }
+        catch (e_12_1) { e_12 = { error: e_12_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_10) throw e_10.error; }
+            finally { if (e_12) throw e_12.error; }
         }
         return result;
     }
@@ -1301,7 +1409,7 @@ var Hand = /** @class */ (function () {
     }
     Object.defineProperty(Hand.prototype, "selectedCard", {
         get: function () {
-            var e_11, _a;
+            var e_13, _a;
             try {
                 for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var card = _c.value;
@@ -1309,12 +1417,12 @@ var Hand = /** @class */ (function () {
                         return card;
                 }
             }
-            catch (e_11_1) { e_11 = { error: e_11_1 }; }
+            catch (e_13_1) { e_13 = { error: e_13_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_11) throw e_11.error; }
+                finally { if (e_13) throw e_13.error; }
             }
             return undefined;
         },
@@ -1351,20 +1459,20 @@ var Hand = /** @class */ (function () {
         }
     };
     Hand.prototype.reflectMove = function (move) {
-        var e_12, _a, e_13, _b;
-        if (!move) {
+        var e_14, _a, e_15, _b;
+        if (!move || move.action === 'reject') {
             try {
                 for (var _c = __values(this.cards), _d = _c.next(); !_d.done; _d = _c.next()) {
                     var card = _d.value;
                     card.deselect();
                 }
             }
-            catch (e_12_1) { e_12 = { error: e_12_1 }; }
+            catch (e_14_1) { e_14 = { error: e_14_1 }; }
             finally {
                 try {
                     if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                 }
-                finally { if (e_12) throw e_12.error; }
+                finally { if (e_14) throw e_14.error; }
             }
             return;
         }
@@ -1381,12 +1489,12 @@ var Hand = /** @class */ (function () {
                 }
             }
         }
-        catch (e_13_1) { e_13 = { error: e_13_1 }; }
+        catch (e_15_1) { e_15 = { error: e_15_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_13) throw e_13.error; }
+            finally { if (e_15) throw e_15.error; }
         }
         if (!moved)
             console.error('Move card not found in hand:', move);
@@ -1398,45 +1506,12 @@ var Hand = /** @class */ (function () {
         this.collapsed = false;
     };
     Hand.prototype.flip = function () {
-        var e_14, _a;
+        var e_16, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
                 if (card.state.type === 'in_hand')
                     card.state.visualState = 'flipped';
-            }
-        }
-        catch (e_14_1) { e_14 = { error: e_14_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_14) throw e_14.error; }
-        }
-    };
-    Hand.prototype.unflip = function () {
-        var e_15, _a;
-        try {
-            for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var card = _c.value;
-                if (card.state.type === 'in_hand')
-                    card.state.visualState = 'full';
-            }
-        }
-        catch (e_15_1) { e_15 = { error: e_15_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_15) throw e_15.error; }
-        }
-    };
-    Hand.prototype.setVisible = function (value) {
-        var e_16, _a;
-        try {
-            for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var card = _c.value;
-                card.visible = value;
             }
         }
         catch (e_16_1) { e_16 = { error: e_16_1 }; }
@@ -1445,6 +1520,39 @@ var Hand = /** @class */ (function () {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
             finally { if (e_16) throw e_16.error; }
+        }
+    };
+    Hand.prototype.unflip = function () {
+        var e_17, _a;
+        try {
+            for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var card = _c.value;
+                if (card.state.type === 'in_hand')
+                    card.state.visualState = 'full';
+            }
+        }
+        catch (e_17_1) { e_17 = { error: e_17_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_17) throw e_17.error; }
+        }
+    };
+    Hand.prototype.setVisible = function (value) {
+        var e_18, _a;
+        try {
+            for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var card = _c.value;
+                card.visible = value;
+            }
+        }
+        catch (e_18_1) { e_18 = { error: e_18_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_18) throw e_18.error; }
         }
     };
     return Hand;
@@ -1604,17 +1712,18 @@ var Main = /** @class */ (function () {
         });
     };
     Main.updateBotMoves = function () {
-        var e_17, _a;
+        var e_19, _a;
         var _this = this;
         var _loop_1 = function (player) {
             if (player.startsWith('BOT') && !this_1.gamestate.playerData[player].currentMove) {
                 var botPlayer_1 = player;
+                var turn_1 = this_1.gamestate.turn;
                 API.getvalidmoves(this_1.gameid, this_1.gamestate.turn, botPlayer_1, function (validMoves, error) {
                     if (error) {
                         Main.error(error);
                         return;
                     }
-                    if (validMoves.length === 0)
+                    if (turn_1 !== _this.gamestate.turn || validMoves.length === 0)
                         return;
                     var move = Bot.getMove(validMoves);
                     API.submitmove(_this.gameid, _this.gamestate.turn, botPlayer_1, move, function (error) {
@@ -1634,12 +1743,12 @@ var Main = /** @class */ (function () {
                 _loop_1(player);
             }
         }
-        catch (e_17_1) { e_17 = { error: e_17_1 }; }
+        catch (e_19_1) { e_19 = { error: e_19_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_17) throw e_17.error; }
+            finally { if (e_19) throw e_19.error; }
         }
     };
     Main.stop = function () {
@@ -1648,9 +1757,7 @@ var Main = /** @class */ (function () {
     Main.error = function (text) {
         console.error(text);
         var errorBox = Shapes.filledRect(0, 0, Main.width, 50, 0xFF0000);
-        var errorText = new PIXI.Text(text, { fontFamily: 'Arial', fontSize: 50, fill: 0x000000 });
-        errorText.anchor.set(0.5, 0.5);
-        errorText.scale.set(0.5);
+        var errorText = Shapes.centeredText(text, 0.25, 0x000000);
         errorText.position.set(Main.width / 2, errorBox.height / 2);
         errorBox.addChild(errorText);
         var app = this.app;
@@ -1678,6 +1785,32 @@ var Main = /** @class */ (function () {
     Main.delta = 0;
     return Main;
 }());
+var PlayedCardEffectRoll = /** @class */ (function (_super) {
+    __extends(PlayedCardEffectRoll, _super);
+    function PlayedCardEffectRoll(reverse) {
+        var _this = _super.call(this) || this;
+        _this.cards = [];
+        _this.reverse = reverse;
+        return _this;
+    }
+    PlayedCardEffectRoll.prototype.addCard = function (card) {
+        card.position.set(this.getNextLocalX(card, 1), 0);
+        this.addChild(card);
+        this.cards.push(card);
+    };
+    PlayedCardEffectRoll.prototype.getNextX = function (card, scaleX) {
+        var localX = this.getNextLocalX(card, scaleX);
+        return this.x + localX * this.scale.x;
+    };
+    PlayedCardEffectRoll.prototype.getWidth = function () {
+        return sum(this.cards, function (card) { return card.getWidth(); });
+    };
+    PlayedCardEffectRoll.prototype.getNextLocalX = function (card, scaleX) {
+        var d = this.reverse ? -1 : 1;
+        return d * (this.getWidth() + card.getEffectRollOffsetX(this.reverse) / scaleX);
+    };
+    return PlayedCardEffectRoll;
+}(PIXI.Container));
 var Scene = /** @class */ (function () {
     function Scene() {
         this.wonderStartY = 700;
@@ -1698,6 +1831,8 @@ var Scene = /** @class */ (function () {
         var myDiscardTurn = this.myTurnToBuildFromDiscard();
         this.hand.setVisible(!myDiscardTurn);
         this.discardHand.setVisible(myDiscardTurn);
+        this.undoButton.visible = !myDiscardTurn && !!Main.gamestate.playerData[Main.player].currentMove;
+        this.discardRejectButton.visible = myDiscardTurn;
     };
     Scene.prototype.create = function () {
         var gamestate = Main.gamestate;
@@ -1708,11 +1843,18 @@ var Scene = /** @class */ (function () {
         this.discardPile = new PIXI.Container();
         this.discardPile.addChild(Shapes.filledRoundedRect(-discardWidth / 2, -discardHeight / 2, discardWidth, discardHeight, 10, 0x888888));
         this.discardPile.addChild(Shapes.filledRoundedRect(-discardWidth / 2 + 4, -discardHeight / 2 + 4, discardWidth - 8, discardHeight - 8, 6, 0x000000));
-        var discardTitle = new PIXI.Text("Discard", { fontFamily: 'Arial', fontSize: 70, fill: 0x888888 });
-        discardTitle.anchor.set(0.5, 0.5);
-        discardTitle.scale.set(0.35, 0.35);
+        var discardTitle = Shapes.centeredText("Discard", 0.25, 0x888888);
         discardTitle.position.set(0, -125);
         this.discardPile.addChild(discardTitle);
+        if (gamestate.discardedCardCount > 0) {
+            var pile = Card.flippedCardForAge(gamestate.lastDiscardedCardAge, undefined);
+            pile.scale.set(2);
+            pile.position.set(0, -36 * pile.scale.y);
+            var countText = Shapes.centeredText("" + gamestate.discardedCardCount, 0.2, ArtCommon.ageBacks[pile.apiCard.age]);
+            countText.position.set(0, 36);
+            pile.addChild(countText);
+            this.discardPile.addChild(pile);
+        }
         this.mainContainer.addChild(this.discardPile);
         this.wonders = [];
         for (var i = 0; i < gamestate.players.length; i++) {
@@ -1724,16 +1866,31 @@ var Scene = /** @class */ (function () {
         this.hand = new Hand(this.mainContainer, gamestate.hand, this.wonders[gamestate.players.indexOf(player)], this.discardPile);
         this.hand.reflectMove(gamestate.playerData[player].currentMove);
         this.discardHand = new Hand(this.mainContainer, gamestate.discardedCards || [], this.wonders[gamestate.players.indexOf(player)], this.discardPile);
-        this.discardHand.reflectMove(gamestate.playerData[player].currentMove);
+        this.undoButton = new PIXI.Container();
+        this.undoButton.addChild(Shapes.filledRoundedRect(-60, -30, 120, 60, 10, 0xFFFFFF));
+        this.undoButton.addChild(Shapes.centeredText("Undo", 0.28, 0x000000));
+        this.undoButton.interactive = true;
+        this.undoButton.buttonMode = true;
+        this.undoButton.on('click', function () {
+            Main.undoMove();
+        });
+        this.mainContainer.addChild(this.undoButton);
+        this.discardRejectButton = new PIXI.Container();
+        this.discardRejectButton.addChild(Shapes.filledRoundedRect(-80, -30, 160, 60, 10, 0xFFFFFF));
+        this.discardRejectButton.addChild(Shapes.centeredText("No thanks", 0.28, 0x000000));
+        this.discardRejectButton.interactive = true;
+        this.discardRejectButton.buttonMode = true;
+        this.discardRejectButton.on('click', function () {
+            Main.submitMove({ action: 'reject', card: -1, payment: {} });
+        });
+        this.mainContainer.addChild(this.discardRejectButton);
         this.paymentMenu = new PIXI.Container();
         this.paymentMenu.visible = false;
         this.mainContainer.addChild(this.paymentMenu);
         this.statusBar = new PIXI.Container();
         this.statusBar.addChild(Shapes.filledRoundedRect(-400, -50, 800, 100, 20, 0xDDDDDD));
         this.mainContainer.addChild(this.statusBar);
-        this.statusText = new PIXI.Text("", { fontFamily: 'Arial', fontSize: 70, fill: 0x000000 });
-        this.statusText.anchor.set(0.5, 0.5);
-        this.statusText.scale.set(0.4, 0.4);
+        this.statusText = Shapes.centeredText("", 0.28, 0x000000);
         this.statusText.position.set(0, 22);
         this.statusBar.addChild(this.statusText);
         this.adjustPositions();
@@ -1768,7 +1925,10 @@ var Scene = /** @class */ (function () {
         // DISCARD PILE
         this.discardPile.position.set(Main.width / 2, discardY);
         this.statusBar.position.set(Main.width / 2, 0);
+        // HAND
         this.hand.adjustPositions();
+        this.undoButton.position.set(Main.width / 2, 360);
+        this.discardRejectButton.position.set(Main.width / 2, 360);
     };
     Scene.prototype.startPaymentDialog = function (move, x, y) {
         var _this = this;
@@ -1778,25 +1938,21 @@ var Scene = /** @class */ (function () {
         var paymentsDY = 50;
         this.paymentMenu.position.set(x, y);
         this.paymentMenu.removeChildren();
-        var paymentTitle = new PIXI.Text("Payment", { fontFamily: 'Arial', fontSize: 70, fill: 0x000000 });
-        paymentTitle.anchor.set(0.5, 0.5);
-        paymentTitle.scale.set(0.35, 0.35);
+        var paymentTitle = Shapes.centeredText("Payment", 0.25, 0x000000);
         paymentTitle.position.set(0, -160);
         this.paymentMenu.addChild(paymentTitle);
         var _a = __read(API.getNeighbors(Main.gamestate, Main.player), 2), negPlayer = _a[0], posPlayer = _a[1];
         var _loop_2 = function (i) {
             var payment = validPayments[i];
             if (payment.neg) {
-                var paymentTextNeg = new PIXI.Text("<-- " + payment.neg + " to " + negPlayer, { fontFamily: 'Arial', fontSize: 70, fill: 0x000000 });
+                var paymentTextNeg = Shapes.centeredText("<-- " + payment.neg + " to " + negPlayer, 0.25, 0x000000);
                 paymentTextNeg.anchor.set(1, 0.5);
-                paymentTextNeg.scale.set(0.35, 0.35);
                 paymentTextNeg.position.set(-paymentsDX, paymentsStart + i * paymentsDY);
                 this_2.paymentMenu.addChild(paymentTextNeg);
             }
             if (payment.pos) {
-                var paymentTextPos = new PIXI.Text("to " + posPlayer + " " + payment.pos + " -->", { fontFamily: 'Arial', fontSize: 70, fill: 0x000000 });
+                var paymentTextPos = Shapes.centeredText("to " + posPlayer + " " + payment.pos + " -->", 0.25, 0x000000);
                 paymentTextPos.anchor.set(0, 0.5);
-                paymentTextPos.scale.set(0.35, 0.35);
                 paymentTextPos.position.set(paymentsDX, paymentsStart + i * paymentsDY);
                 this_2.paymentMenu.addChild(paymentTextPos);
             }
@@ -1898,6 +2054,12 @@ var Shapes = /** @class */ (function () {
         graphics.endFill();
         return graphics;
     };
+    Shapes.centeredText = function (text, scale, color) {
+        var pixiText = new PIXI.Text(text, { fontFamily: 'Arial', fontSize: 100, fill: color });
+        pixiText.anchor.set(0.5, 0.5);
+        pixiText.scale.set(scale);
+        return pixiText;
+    };
     return Shapes;
 }());
 function clamp(n, min, max) {
@@ -1906,6 +2068,24 @@ function clamp(n, min, max) {
     if (n > max)
         return max;
     return n;
+}
+function contains(array, element) {
+    var e_20, _a;
+    try {
+        for (var array_1 = __values(array), array_1_1 = array_1.next(); !array_1_1.done; array_1_1 = array_1.next()) {
+            var e = array_1_1.value;
+            if (e === element)
+                return true;
+        }
+    }
+    catch (e_20_1) { e_20 = { error: e_20_1 }; }
+    finally {
+        try {
+            if (array_1_1 && !array_1_1.done && (_a = array_1.return)) _a.call(array_1);
+        }
+        finally { if (e_20) throw e_20.error; }
+    }
+    return false;
 }
 function lerp(a, b, t) {
     return a + (b - a) * t;
@@ -1924,30 +2104,30 @@ function randElement(array) {
     return array[randInt(0, array.length - 1)];
 }
 function sum(array, key) {
-    var e_18, _a;
+    var e_21, _a;
     if (!array || array.length === 0) {
         return 0;
     }
     var result = 0;
     try {
-        for (var array_1 = __values(array), array_1_1 = array_1.next(); !array_1_1.done; array_1_1 = array_1.next()) {
-            var e = array_1_1.value;
+        for (var array_2 = __values(array), array_2_1 = array_2.next(); !array_2_1.done; array_2_1 = array_2.next()) {
+            var e = array_2_1.value;
             result += key(e);
         }
     }
-    catch (e_18_1) { e_18 = { error: e_18_1 }; }
+    catch (e_21_1) { e_21 = { error: e_21_1 }; }
     finally {
         try {
-            if (array_1_1 && !array_1_1.done && (_a = array_1.return)) _a.call(array_1);
+            if (array_2_1 && !array_2_1.done && (_a = array_2.return)) _a.call(array_2);
         }
-        finally { if (e_18) throw e_18.error; }
+        finally { if (e_21) throw e_21.error; }
     }
     return result;
 }
 var Wonder = /** @class */ (function (_super) {
     __extends(Wonder, _super);
     function Wonder(wonder, playerData, player) {
-        var e_19, _a, e_20, _b;
+        var e_22, _a, e_23, _b, e_24, _c;
         var _this = _super.call(this) || this;
         var wonderColor = 0xFFFFFF;
         var boardBase = Shapes.filledRoundedRect(-100, -50, 200, 100, 8, wonderColor);
@@ -1964,41 +2144,63 @@ var Wonder = /** @class */ (function (_super) {
         startingEffects.scale.set(0.12);
         startingEffects.position.set(-91 + o, -41 + o);
         _this.addChild(startingEffects);
-        _this.brownResourceContainer = new PIXI.Container();
-        _this.brownResourceContainer.position.set(-100, -65);
-        _this.addChild(_this.brownResourceContainer);
-        _this.greyResourceContainer = new PIXI.Container();
-        _this.greyResourceContainer.position.set(_this.brownResourceContainer.x + _this.brownResourceContainer.width, -65);
-        _this.addChild(_this.greyResourceContainer);
-        _this.commerceContainer = new PIXI.Container();
-        _this.commerceContainer.position.set(-100 + o, -14);
-        _this.addChild(_this.commerceContainer);
-        _this.guildContainer = new PIXI.Container();
-        _this.guildContainer.position.set(-100 + o, 12);
-        _this.addChild(_this.guildContainer);
-        _this.militaryContainer = new PIXI.Container();
-        _this.militaryContainer.position.set(-73, -41 + o);
-        _this.addChild(_this.militaryContainer);
-        _this.civilianContainer = new PIXI.Container();
-        _this.civilianContainer.position.set(100 - o, -14);
-        _this.addChild(_this.civilianContainer);
-        _this.scienceContainer = new PIXI.Container();
-        _this.scienceContainer.position.set(100 - o, 12);
-        _this.addChild(_this.scienceContainer);
+        _this.playedCardEffectRolls = {};
+        _this.playedCardEffectRolls['brown'] = new PlayedCardEffectRoll(false);
+        _this.playedCardEffectRolls['brown'].position.set(-100, -65);
+        _this.addChild(_this.playedCardEffectRolls['brown']);
+        _this.playedCardEffectRolls['grey'] = new PlayedCardEffectRoll(false);
+        _this.playedCardEffectRolls['grey'].position.set(-100, -65);
+        _this.addChild(_this.playedCardEffectRolls['grey']);
+        _this.playedCardEffectRolls['yellow'] = new PlayedCardEffectRoll(false);
+        _this.playedCardEffectRolls['yellow'].position.set(-100 + o, -14);
+        _this.addChild(_this.playedCardEffectRolls['yellow']);
+        _this.playedCardEffectRolls['purple'] = new PlayedCardEffectRoll(false);
+        _this.playedCardEffectRolls['purple'].position.set(-100 + o, 12);
+        _this.addChild(_this.playedCardEffectRolls['purple']);
+        _this.playedCardEffectRolls['red'] = new PlayedCardEffectRoll(false);
+        _this.playedCardEffectRolls['red'].position.set(-73, -41 + o);
+        _this.addChild(_this.playedCardEffectRolls['red']);
+        _this.playedCardEffectRolls['blue'] = new PlayedCardEffectRoll(true);
+        _this.playedCardEffectRolls['blue'].position.set(100 - o, -14);
+        _this.addChild(_this.playedCardEffectRolls['blue']);
+        _this.playedCardEffectRolls['green'] = new PlayedCardEffectRoll(true);
+        _this.playedCardEffectRolls['green'].position.set(100 - o, 12);
+        _this.addChild(_this.playedCardEffectRolls['green']);
         try {
-            for (var _c = __values(playerData.playedCards), _d = _c.next(); !_d.done; _d = _c.next()) {
-                var cardId = _d.value;
+            for (var _d = __values(playerData.playedCards), _e = _d.next(); !_e.done; _e = _d.next()) {
+                var cardId = _e.value;
                 var card = Main.gamestate.cards[cardId];
                 var cardArt = new Card(cardId, card, new PIXI.Point(), _this, new PIXI.Container());
                 _this.addNewCardEffect(cardArt);
             }
         }
-        catch (e_19_1) { e_19 = { error: e_19_1 }; }
+        catch (e_22_1) { e_22 = { error: e_22_1 }; }
         finally {
             try {
-                if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
             }
-            finally { if (e_19) throw e_19.error; }
+            finally { if (e_22) throw e_22.error; }
+        }
+        var stageIdsBuilt = playerData.stagesBuilt.map(function (stageBuilt) { return stageBuilt.stage; });
+        var wonderStageMinCosts = wonder.stages.map(function (stage) { return Infinity; });
+        try {
+            for (var _f = __values(Main.gamestate.validMoves), _g = _f.next(); !_g.done; _g = _f.next()) {
+                var validMove = _g.value;
+                if (validMove.action !== 'wonder')
+                    continue;
+                var stage = validMove.stage;
+                var cost = API.totalPaymentAmount(validMove.payment);
+                if (cost < wonderStageMinCosts[stage]) {
+                    wonderStageMinCosts[stage] = cost;
+                }
+            }
+        }
+        catch (e_23_1) { e_23 = { error: e_23_1 }; }
+        finally {
+            try {
+                if (_g && !_g.done && (_b = _f.return)) _b.call(_f);
+            }
+            finally { if (e_23) throw e_23.error; }
         }
         var stagesMiddle = wonder.stages.length === 2 ? 32 : 0;
         var stageDX = wonder.stages.length === 4 ? 49 : 64;
@@ -2029,34 +2231,39 @@ var Wonder = /** @class */ (function (_super) {
                 _this.addChild(costBannerBg);
                 _this.addChild(stageCost);
             }
+            if (player === Main.player && !contains(stageIdsBuilt, i)) {
+                var stagePayment = ArtCommon.payment(wonderStageMinCosts[i]);
+                stagePayment.scale.set(0.05);
+                stagePayment.position.set(_this.stageXs[i] + 21.5, 25);
+                _this.addChild(stagePayment);
+            }
         }
         try {
-            for (var _e = __values(playerData.stagesBuilt), _f = _e.next(); !_f.done; _f = _e.next()) {
-                var stageBuilt = _f.value;
+            for (var _h = __values(playerData.stagesBuilt), _j = _h.next(); !_j.done; _j = _h.next()) {
+                var stageBuilt = _j.value;
                 var cardArt = Card.flippedCardForAge(stageBuilt.cardAge, _this);
                 cardArt.state = { type: 'permanent_flipped' };
                 cardArt.update();
+                cardArt.scale.set(0.66);
                 cardArt.position.set(_this.stageXs[stageBuilt.stage], 5);
                 _this.addChildAt(cardArt, 0);
             }
         }
-        catch (e_20_1) { e_20 = { error: e_20_1 }; }
+        catch (e_24_1) { e_24 = { error: e_24_1 }; }
         finally {
             try {
-                if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                if (_j && !_j.done && (_c = _h.return)) _c.call(_h);
             }
-            finally { if (e_20) throw e_20.error; }
+            finally { if (e_24) throw e_24.error; }
         }
         var goldCoin = Shapes.filledCircle(95, -58, 5, 0xFBE317);
         _this.addChild(goldCoin);
-        _this.goldText = new PIXI.Text("" + playerData.gold, { fontFamily: 'Arial', fontSize: 70, fill: 0xFFFFFF });
+        _this.goldText = Shapes.centeredText("" + playerData.gold, 0.084, 0xFFFFFF);
         _this.goldText.anchor.set(1, 0.5);
-        _this.goldText.scale.set(0.12);
         _this.goldText.position.set(87, -58);
         _this.addChild(_this.goldText);
-        var playerText = new PIXI.Text(player, { fontFamily: 'Arial', fontSize: 70, fill: 0xFFFFFF });
+        var playerText = Shapes.centeredText(player, 0.084, 0xFFFFFF);
         playerText.anchor.set(1, 0.5);
-        playerText.scale.set(0.12);
         playerText.position.set(100, -70);
         _this.addChild(playerText);
         if (player !== Main.player && Main.gamestate.playerData[player].handCount > 0) {
@@ -2098,70 +2305,15 @@ var Wonder = /** @class */ (function (_super) {
     };
     Wonder.prototype.getNewCardEffectWorldPosition = function (cardArt) {
         var color = cardArt.apiCard.color;
-        var point;
-        if (color === 'brown') {
-            point = new PIXI.Point(this.x + (this.brownResourceContainer.x + this.brownResourceContainer.width) * this.scale.x + cardArt.getWidth() / 2, this.y + this.brownResourceContainer.y * this.scale.y);
-        }
-        else if (color === 'grey') {
-            point = new PIXI.Point(this.x + (this.greyResourceContainer.x + this.greyResourceContainer.width) * this.scale.x + cardArt.getWidth() / 2, this.y + this.greyResourceContainer.y * this.scale.y);
-        }
-        else if (color === 'yellow') {
-            point = new PIXI.Point(this.x + (this.commerceContainer.x + this.commerceContainer.width) * this.scale.x + cardArt.getWidth() / 2, this.y + this.commerceContainer.y * this.scale.y);
-        }
-        else if (color === 'purple') {
-            point = new PIXI.Point(this.x + (this.guildContainer.x + this.guildContainer.width) * this.scale.x + cardArt.getWidth() / 2, this.y + this.guildContainer.y * this.scale.y);
-        }
-        else if (color === 'red') {
-            point = new PIXI.Point(this.x + (this.militaryContainer.x + this.militaryContainer.width) * this.scale.x + cardArt.getWidth() / 2, this.y + this.militaryContainer.y * this.scale.y);
-        }
-        else if (color === 'blue') {
-            point = new PIXI.Point(this.x + (this.civilianContainer.x + -this.civilianContainer.width) * this.scale.x - cardArt.getWidth() / 2, this.y + this.civilianContainer.y * this.scale.y);
-        }
-        else if (color === 'green') {
-            point = new PIXI.Point(this.x + (this.scienceContainer.x + -this.scienceContainer.width) * this.scale.x - cardArt.getWidth() / 2, this.y + this.scienceContainer.y * this.scale.y);
-        }
-        else {
-            console.error('Card color not found:', color);
-            point = new PIXI.Point(0, 0);
-        }
-        return point;
+        return new PIXI.Point(this.x + this.playedCardEffectRolls[color].getNextX(cardArt, this.scale.x) * this.scale.x, this.y + this.playedCardEffectRolls[color].y * this.scale.y);
     };
     Wonder.prototype.addNewCardEffect = function (cardArt) {
         cardArt.state = { type: 'permanent_effect' };
         cardArt.update();
+        cardArt.scale.set(0.75);
         var color = cardArt.apiCard.color;
-        if (color === 'brown') {
-            cardArt.position.set(this.brownResourceContainer.width + cardArt.getWidth() / 2, 0);
-            this.brownResourceContainer.addChild(cardArt);
-            this.greyResourceContainer.x += cardArt.getWidth();
-        }
-        else if (color === 'grey') {
-            cardArt.position.set(this.greyResourceContainer.width + cardArt.getWidth() / 2, 0);
-            this.greyResourceContainer.addChild(cardArt);
-        }
-        else if (color === 'yellow') {
-            cardArt.position.set(this.commerceContainer.width + cardArt.getWidth() / 2, 0);
-            this.commerceContainer.addChild(cardArt);
-        }
-        else if (color === 'purple') {
-            cardArt.position.set(this.guildContainer.width + cardArt.getWidth() / 2, 0);
-            this.guildContainer.addChild(cardArt);
-        }
-        else if (color === 'red') {
-            cardArt.position.set(this.militaryContainer.width + cardArt.getWidth() / 2, 0);
-            this.militaryContainer.addChild(cardArt);
-        }
-        else if (color === 'blue') {
-            cardArt.position.set(-this.civilianContainer.width - cardArt.getWidth() / 2, 0);
-            this.civilianContainer.addChild(cardArt);
-        }
-        else if (color === 'green') {
-            cardArt.position.set(-this.scienceContainer.width - cardArt.getWidth() / 2, 0);
-            this.scienceContainer.addChild(cardArt);
-        }
-        else {
-            console.error('Card color not found:', color);
-        }
+        this.playedCardEffectRolls[color].addCard(cardArt);
+        this.playedCardEffectRolls['grey'].x = this.playedCardEffectRolls['brown'].x + this.playedCardEffectRolls['brown'].getWidth();
     };
     Wonder.prototype.makeMove = function () {
         var _this = this;
@@ -2194,8 +2346,8 @@ var S;
             scriptFunctions[_i] = arguments[_i];
         }
         return function () {
-            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_21_1;
-            var e_21, _a;
+            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_25_1;
+            var e_25, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -2214,14 +2366,14 @@ var S;
                         return [3 /*break*/, 1];
                     case 4: return [3 /*break*/, 7];
                     case 5:
-                        e_21_1 = _b.sent();
-                        e_21 = { error: e_21_1 };
+                        e_25_1 = _b.sent();
+                        e_25 = { error: e_25_1 };
                         return [3 /*break*/, 7];
                     case 6:
                         try {
                             if (scriptFunctions_1_1 && !scriptFunctions_1_1.done && (_a = scriptFunctions_1.return)) _a.call(scriptFunctions_1);
                         }
-                        finally { if (e_21) throw e_21.error; }
+                        finally { if (e_25) throw e_25.error; }
                         return [7 /*endfinally*/];
                     case 7: return [2 /*return*/];
                 }

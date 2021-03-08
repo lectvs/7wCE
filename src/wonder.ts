@@ -7,13 +7,7 @@ class Wonder extends PIXI.Container {
 
     stageXs: number[];
 
-    brownResourceContainer: PIXI.Container;
-    greyResourceContainer: PIXI.Container;
-    commerceContainer: PIXI.Container;
-    guildContainer: PIXI.Container;
-    militaryContainer: PIXI.Container;
-    civilianContainer: PIXI.Container;
-    scienceContainer: PIXI.Container;
+    playedCardEffectRolls: Dict<PlayedCardEffectRoll>;
 
     private moveRepr: Card;
     private handRepr: Card;
@@ -43,38 +37,44 @@ class Wonder extends PIXI.Container {
         startingEffects.position.set(-91+o, -41+o);
         this.addChild(startingEffects);
 
-        this.brownResourceContainer = new PIXI.Container();
-        this.brownResourceContainer.position.set(-100, -65);
-        this.addChild(this.brownResourceContainer);
-
-        this.greyResourceContainer = new PIXI.Container();
-        this.greyResourceContainer.position.set(this.brownResourceContainer.x + this.brownResourceContainer.width, -65);
-        this.addChild(this.greyResourceContainer);
-
-        this.commerceContainer = new PIXI.Container();
-        this.commerceContainer.position.set(-100+o, -14);
-        this.addChild(this.commerceContainer);
-
-        this.guildContainer = new PIXI.Container();
-        this.guildContainer.position.set(-100+o, 12);
-        this.addChild(this.guildContainer);
-
-        this.militaryContainer = new PIXI.Container();
-        this.militaryContainer.position.set(-73, -41+o);
-        this.addChild(this.militaryContainer);
-
-        this.civilianContainer = new PIXI.Container();
-        this.civilianContainer.position.set(100-o, -14);
-        this.addChild(this.civilianContainer);
-
-        this.scienceContainer = new PIXI.Container();
-        this.scienceContainer.position.set(100-o, 12);
-        this.addChild(this.scienceContainer);
+        this.playedCardEffectRolls = {};
+        this.playedCardEffectRolls['brown'] = new PlayedCardEffectRoll(false);
+        this.playedCardEffectRolls['brown'].position.set(-100, -65);
+        this.addChild(this.playedCardEffectRolls['brown']);
+        this.playedCardEffectRolls['grey'] = new PlayedCardEffectRoll(false);
+        this.playedCardEffectRolls['grey'].position.set(-100, -65);
+        this.addChild(this.playedCardEffectRolls['grey']);
+        this.playedCardEffectRolls['yellow'] = new PlayedCardEffectRoll(false);
+        this.playedCardEffectRolls['yellow'].position.set(-100+o, -14);
+        this.addChild(this.playedCardEffectRolls['yellow']);
+        this.playedCardEffectRolls['purple'] = new PlayedCardEffectRoll(false);
+        this.playedCardEffectRolls['purple'].position.set(-100+o, 12);
+        this.addChild(this.playedCardEffectRolls['purple']);
+        this.playedCardEffectRolls['red'] = new PlayedCardEffectRoll(false);
+        this.playedCardEffectRolls['red'].position.set(-73, -41+o);
+        this.addChild(this.playedCardEffectRolls['red']);
+        this.playedCardEffectRolls['blue'] = new PlayedCardEffectRoll(true);
+        this.playedCardEffectRolls['blue'].position.set(100-o, -14);
+        this.addChild(this.playedCardEffectRolls['blue']);
+        this.playedCardEffectRolls['green'] = new PlayedCardEffectRoll(true);
+        this.playedCardEffectRolls['green'].position.set(100-o, 12);
+        this.addChild(this.playedCardEffectRolls['green']);
 
         for (let cardId of playerData.playedCards) {
             let card = Main.gamestate.cards[cardId];
             let cardArt = new Card(cardId, card, new PIXI.Point(), this, new PIXI.Container());
             this.addNewCardEffect(cardArt);
+        }
+
+        let stageIdsBuilt = playerData.stagesBuilt.map(stageBuilt => stageBuilt.stage);
+        let wonderStageMinCosts = wonder.stages.map(stage => Infinity);
+        for (let validMove of Main.gamestate.validMoves) {
+            if (validMove.action !== 'wonder') continue;
+            let stage = validMove.stage;
+            let cost = API.totalPaymentAmount(validMove.payment);
+            if (cost < wonderStageMinCosts[stage]) {
+                wonderStageMinCosts[stage] = cost;
+            }
         }
 
         let stagesMiddle = wonder.stages.length === 2 ? 32 : 0;
@@ -114,12 +114,20 @@ class Wonder extends PIXI.Container {
                 this.addChild(costBannerBg);
                 this.addChild(stageCost);
             }
+
+            if (player === Main.player && !contains(stageIdsBuilt, i)) {
+                let stagePayment = ArtCommon.payment(wonderStageMinCosts[i]);
+                stagePayment.scale.set(0.05);
+                stagePayment.position.set(this.stageXs[i] + 21.5, 25);
+                this.addChild(stagePayment);
+            }
         }
 
         for (let stageBuilt of playerData.stagesBuilt) {
             let cardArt = Card.flippedCardForAge(stageBuilt.cardAge, this);
             cardArt.state = { type: 'permanent_flipped' };
             cardArt.update();
+            cardArt.scale.set(0.66);
             cardArt.position.set(this.stageXs[stageBuilt.stage], 5);
 
             this.addChildAt(cardArt, 0);
@@ -128,15 +136,13 @@ class Wonder extends PIXI.Container {
         let goldCoin = Shapes.filledCircle(95, -58, 5, 0xFBE317);
         this.addChild(goldCoin);
 
-        this.goldText = new PIXI.Text(`${playerData.gold}`, { fontFamily : 'Arial', fontSize: 70, fill : 0xFFFFFF });
+        this.goldText = Shapes.centeredText(`${playerData.gold}`, 0.084, 0xFFFFFF);
         this.goldText.anchor.set(1, 0.5);
-        this.goldText.scale.set(0.12);
         this.goldText.position.set(87, -58);
         this.addChild(this.goldText);
 
-        let playerText = new PIXI.Text(player, { fontFamily : 'Arial', fontSize: 70, fill : 0xFFFFFF });
+        let playerText = Shapes.centeredText(player, 0.084, 0xFFFFFF);
         playerText.anchor.set(1, 0.5);
-        playerText.scale.set(0.12);
         playerText.position.set(100, -70);
         this.addChild(playerText);
 
@@ -187,57 +193,16 @@ class Wonder extends PIXI.Container {
 
     getNewCardEffectWorldPosition(cardArt: Card) {
         let color = cardArt.apiCard.color;
-        let point: PIXI.Point;
-        if (color === 'brown') {
-            point = new PIXI.Point(this.x + (this.brownResourceContainer.x + this.brownResourceContainer.width)*this.scale.x + cardArt.getWidth()/2, this.y + this.brownResourceContainer.y*this.scale.y);
-        } else if (color === 'grey') {
-            point = new PIXI.Point(this.x + (this.greyResourceContainer.x + this.greyResourceContainer.width)*this.scale.x + cardArt.getWidth()/2, this.y + this.greyResourceContainer.y*this.scale.y);
-        } else if (color === 'yellow') {
-            point = new PIXI.Point(this.x + (this.commerceContainer.x + this.commerceContainer.width)*this.scale.x + cardArt.getWidth()/2, this.y + this.commerceContainer.y*this.scale.y);
-        } else if (color === 'purple') {
-            point = new PIXI.Point(this.x + (this.guildContainer.x + this.guildContainer.width)*this.scale.x + cardArt.getWidth()/2, this.y + this.guildContainer.y*this.scale.y);
-        } else if (color === 'red') {
-            point = new PIXI.Point(this.x + (this.militaryContainer.x + this.militaryContainer.width)*this.scale.x + cardArt.getWidth()/2, this.y + this.militaryContainer.y*this.scale.y);
-        } else if (color === 'blue') {
-            point = new PIXI.Point(this.x + (this.civilianContainer.x + -this.civilianContainer.width)*this.scale.x - cardArt.getWidth()/2, this.y + this.civilianContainer.y*this.scale.y);
-        } else if (color === 'green') {
-            point = new PIXI.Point(this.x + (this.scienceContainer.x + -this.scienceContainer.width)*this.scale.x - cardArt.getWidth()/2, this.y + this.scienceContainer.y*this.scale.y);
-        } else {
-            console.error('Card color not found:', color);
-            point = new PIXI.Point(0, 0);
-        }
-        return point;
+        return new PIXI.Point(this.x + this.playedCardEffectRolls[color].getNextX(cardArt, this.scale.x)*this.scale.x, this.y + this.playedCardEffectRolls[color].y*this.scale.y);
     }
 
     addNewCardEffect(cardArt: Card) {
         cardArt.state = { type: 'permanent_effect' };
         cardArt.update();
+        cardArt.scale.set(0.75);
         let color = cardArt.apiCard.color;
-        if (color === 'brown') {
-            cardArt.position.set(this.brownResourceContainer.width + cardArt.getWidth()/2, 0);
-            this.brownResourceContainer.addChild(cardArt);
-            this.greyResourceContainer.x += cardArt.getWidth();
-        } else if (color === 'grey') {
-            cardArt.position.set(this.greyResourceContainer.width + cardArt.getWidth()/2, 0);
-            this.greyResourceContainer.addChild(cardArt);
-        } else if (color === 'yellow') {
-            cardArt.position.set(this.commerceContainer.width + cardArt.getWidth()/2, 0);
-            this.commerceContainer.addChild(cardArt);
-        } else if (color === 'purple') {
-            cardArt.position.set(this.guildContainer.width + cardArt.getWidth()/2, 0);
-            this.guildContainer.addChild(cardArt);
-        } else if (color === 'red') {
-            cardArt.position.set(this.militaryContainer.width + cardArt.getWidth()/2, 0);
-            this.militaryContainer.addChild(cardArt);
-        } else if (color === 'blue') {
-            cardArt.position.set(-this.civilianContainer.width - cardArt.getWidth()/2, 0);
-            this.civilianContainer.addChild(cardArt);
-        } else if (color === 'green') {
-            cardArt.position.set(-this.scienceContainer.width - cardArt.getWidth()/2, 0);
-            this.scienceContainer.addChild(cardArt);
-        } else {
-            console.error('Card color not found:', color);
-        }
+        this.playedCardEffectRolls[color].addCard(cardArt);
+        this.playedCardEffectRolls['grey'].x = this.playedCardEffectRolls['brown'].x + this.playedCardEffectRolls['brown'].getWidth();
     }
 
     makeMove() {

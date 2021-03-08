@@ -33,9 +33,15 @@ class Card extends PIXI.Container {
     private mainContainer: PIXI.Container;
     private frontContainer: PIXI.Container;
     private backContainer: PIXI.Container;
+    private paymentContainer: PIXI.Container;
 
     private fullCardRect: PIXI.Rectangle;
     private effectsRect: PIXI.Rectangle;
+
+    private allowPlay: boolean;
+    private allowBuildStages: number[];
+    private allowThrow: boolean;
+    private minPlayCost: number;
 
     constructor(cardId: number, card: API.Card, handPosition: PIXI.Point, activeWonder: Wonder, discardPile: PIXI.Container) {
         super();
@@ -103,8 +109,12 @@ class Card extends PIXI.Container {
         let backBg = Shapes.filledRoundedRect(-33 + o, -14 + o, 66 - 2*o, 100 - 2*o, 6 - o, ArtCommon.cardBg);
         this.backContainer.addChild(backBg);
 
+        this.paymentContainer = new PIXI.Container();
+        this.paymentContainer.position.set(33, -14);
+
         this.mainContainer.addChild(this.frontContainer);
         this.mainContainer.addChild(this.backContainer);
+        this.mainContainer.addChild(this.paymentContainer);
         this.addChild(this.mainContainer);
 
         this.buttonMode = true;
@@ -119,6 +129,7 @@ class Card extends PIXI.Container {
             };
         });
 
+        this.configureValidMoves(Main.gamestate.validMoves);
         this.update();
     }
 
@@ -126,18 +137,18 @@ class Card extends PIXI.Container {
         let dragPosition = this.dragging?.data.getLocalPosition(this.parent);
 
         if (this.dragging) {
+            let stage = this.activeWonder.getClosestStageId(dragPosition);
             if (!Main.mouseDown) {
-                if (this.activeWonder.getMainRegion().contains(dragPosition.x, dragPosition.y)) {
+                if (this.allowPlay && this.activeWonder.getMainRegion().contains(dragPosition.x, dragPosition.y)) {
                     let move: API.Move = { action: 'play', card: this.apiCardId };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
                         Main.scene.startPaymentDialog(move, 400, 400);
                     } else {
-                        move.payment = { bank: this.apiCard?.cost?.gold };
+                        move.payment = { bank: API.minimalBankPayment(move, Main.gamestate.validMoves) };
                         Main.submitMove(move);
                     }
                     //this.select(move);
-                } else if (this.activeWonder.getStageRegion().contains(dragPosition.x, dragPosition.y)) {
-                    let stage = this.activeWonder.getClosestStageId(dragPosition);
+                } else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(dragPosition.x, dragPosition.y)) {
                     let move: API.Move = { action: 'wonder', card: this.apiCardId, stage: stage };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
                         Main.scene.startPaymentDialog(move, 400, 400);
@@ -146,7 +157,7 @@ class Card extends PIXI.Container {
                         Main.submitMove(move);
                     }
                     //this.select(move);
-                } else if (this.discardPile.getBounds().contains(dragPosition.x, dragPosition.y)) {
+                } else if (this.allowThrow && this.discardPile.getBounds().contains(dragPosition.x, dragPosition.y)) {
                     let move: API.Move = { action: 'throw', card: this.apiCardId, payment: {} };
                     Main.submitMove(move);
                     //this.select(move);
@@ -156,11 +167,11 @@ class Card extends PIXI.Container {
                 this.state = { type: 'in_hand', visualState: 'full' }; // todo remove this
                 this.dragging = null;
             } else {
-                if (this.activeWonder.getMainRegion().contains(dragPosition.x, dragPosition.y)) {
+                if (this.allowPlay && this.activeWonder.getMainRegion().contains(dragPosition.x, dragPosition.y)) {
                     this.state = { type: 'dragging_play' };
-                } else if (this.activeWonder.getStageRegion().contains(dragPosition.x, dragPosition.y)) {
+                } else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(dragPosition.x, dragPosition.y)) {
                     this.state = { type: 'dragging_wonder' };
-                } else if (this.discardPile.getBounds().contains(dragPosition.x, dragPosition.y)) {
+                } else if (this.allowThrow && this.discardPile.getBounds().contains(dragPosition.x, dragPosition.y)) {
                     this.state = { type: 'dragging_throw' };
                 } else {
                     this.state = { type: 'dragging_normal' };
@@ -175,6 +186,7 @@ class Card extends PIXI.Container {
             this.mainContainer.scale.y = 1;
             this.setInteractable(this.canBeInteractable());
             this.visualState = this.state.visualState;
+            this.paymentContainer.scale.y = 1;
         } else if (this.state.type === 'dragging_normal') {
             this.x = dragPosition.x + this.dragging.offsetx;
             this.y = dragPosition.y + this.dragging.offsety;
@@ -183,6 +195,7 @@ class Card extends PIXI.Container {
             this.parent.setChildIndex(this, this.parent.children.length-1);
             this.setInteractable(this.canBeInteractable());
             this.visualState = 'full';
+            this.paymentContainer.scale.y = 0;
         } else if (this.state.type === 'dragging_play') {
             this.x = dragPosition.x;
             this.y = dragPosition.y;
@@ -191,6 +204,7 @@ class Card extends PIXI.Container {
             this.parent.setChildIndex(this, this.parent.children.length-1);
             this.setInteractable(this.canBeInteractable());
             this.visualState = 'effect';
+            this.paymentContainer.scale.y = 0;
         } else if (this.state.type === 'dragging_wonder') {
             let stage = this.activeWonder.getClosestStageId(dragPosition);
             let stagePoint = this.activeWonder.getCardPositionForStage(stage);
@@ -201,6 +215,7 @@ class Card extends PIXI.Container {
             this.parent.setChildIndex(this, 0);
             this.setInteractable(this.canBeInteractable());
             this.visualState = 'flipped';
+            this.paymentContainer.scale.y = 0;
         } else if (this.state.type === 'dragging_throw') {
             this.x = dragPosition.x + this.dragging.offsetx;
             this.y = dragPosition.y + this.dragging.offsety;
@@ -209,6 +224,7 @@ class Card extends PIXI.Container {
             this.parent.setChildIndex(this, this.parent.children.length-1);
             this.setInteractable(false);
             this.visualState = 'flipped';
+            this.paymentContainer.scale.y = 0;
         } else if (this.state.type === 'locked_play') {
             let effectPoint = this.activeWonder.getNewCardEffectWorldPosition(this);
             this.x = effectPoint.x;
@@ -218,6 +234,7 @@ class Card extends PIXI.Container {
             this.parent.setChildIndex(this, this.parent.children.length-1);
             this.setInteractable(false);
             this.visualState = 'effect';
+            this.paymentContainer.scale.y = 0;
         } else if (this.state.type === 'locked_wonder') {
             let stagePoint = this.activeWonder.getCardPositionForStage(this.state.stage);
             this.x = stagePoint.x;
@@ -227,6 +244,7 @@ class Card extends PIXI.Container {
             this.parent.setChildIndex(this, 0);
             this.setInteractable(false);
             this.visualState = 'flipped';
+            this.paymentContainer.scale.y = 0;
         } else if (this.state.type === 'locked_throw') {
             let discardPoint = new PIXI.Point(this.discardPile.x, this.discardPile.y - 36*this.scale.y);
             this.x = discardPoint.x;
@@ -236,16 +254,17 @@ class Card extends PIXI.Container {
             this.parent.setChildIndex(this, this.parent.children.length-1);
             this.setInteractable(false);
             this.visualState = 'flipped';
+            this.paymentContainer.scale.y = 0;
         } else if (this.state.type === 'permanent_effect') {
-            this.scale.set(0.75);
             this.setInteractable(false);
             this.visualState = 'effect';
             this.effectT = 1;
+            this.paymentContainer.scale.y = 0;
         } else if (this.state.type === 'permanent_flipped') {
-            this.scale.set(0.66);
             this.setInteractable(false);
             this.visualState = 'flipped';
             this.flippedT = 1;
+            this.paymentContainer.scale.y = 0;
         }
 
         this.updateVisuals();
@@ -271,6 +290,13 @@ class Card extends PIXI.Container {
         this.backContainer.scale.x = lerp(0, 1, Math.max(0.5, this.flippedT) * 2 - 1);
     }
 
+    getEffectRollOffsetX(reverse: boolean) {
+        if (reverse) {
+            return (this.stateMask.x + this.stateMask.width) * this.scale.x * this.mainContainer.scale.x;
+        }
+        return -this.stateMask.x * this.scale.x * this.mainContainer.scale.x;
+    }
+
     getWidth() {
         return this.stateMask.width * this.scale.x * this.mainContainer.scale.x;
     }
@@ -280,7 +306,9 @@ class Card extends PIXI.Container {
     }
 
     canBeInteractable() {
-        return !Main.scene || !Main.scene.isPaymentMenuActive;
+        if (Main.scene && Main.scene.isPaymentMenuActive) return false;
+        if (!this.allowPlay && this.allowBuildStages.length === 0 && !this.allowThrow) return false;
+        return true;
     }
 
     select(move: API.Move) {
@@ -300,6 +328,31 @@ class Card extends PIXI.Container {
 
     deselect() {
         this.state = { type: 'in_hand', visualState: 'full' };
+    }
+
+    configureValidMoves(validMoves: API.Move[]) {
+        this.allowPlay = false;
+        this.allowBuildStages = [];
+        this.allowThrow = false;
+        this.minPlayCost = Infinity;
+        for (let move of validMoves) {
+            if (move.card !== this.apiCardId) continue;
+            if (move.action === 'play') {
+                this.allowPlay = true;
+                let cost = API.totalPaymentAmount(move.payment);
+                if (cost < this.minPlayCost) this.minPlayCost = cost;
+            } else if (move.action === 'wonder') {
+                if (!contains(this.allowBuildStages, move.stage)) this.allowBuildStages.push(move.stage);
+            } else if (move.action === 'throw') {
+                this.allowThrow = true;
+            }
+        }
+
+        this.paymentContainer.removeChildren();
+        let payment = ArtCommon.payment(this.allowPlay ? this.minPlayCost : Infinity);
+        payment.scale.set(0.1);
+        payment.position.set(-5, -8);
+        this.paymentContainer.addChild(payment);
     }
 
     setInteractable(interactable: boolean) {

@@ -177,13 +177,14 @@ class Main {
         for (let player of this.gamestate.players) {
             if (player.startsWith('BOT') && !this.gamestate.playerData[player].currentMove) {
                 let botPlayer = player;
+                let turn = this.gamestate.turn;
                 API.getvalidmoves(this.gameid, this.gamestate.turn, botPlayer, (validMoves: API.Move[], error: string) => {
                     if (error) {
                         Main.error(error);
                         return;
                     }
 
-                    if (validMoves.length === 0) return;
+                    if (turn !== this.gamestate.turn || validMoves.length === 0) return;
 
                     let move = Bot.getMove(validMoves);
                     API.submitmove(this.gameid, this.gamestate.turn, botPlayer, move, (error: string) => {
@@ -206,9 +207,7 @@ class Main {
         console.error(text);
 
         let errorBox = Shapes.filledRect(0, 0, Main.width, 50, 0xFF0000);
-        let errorText = new PIXI.Text(text, { fontFamily : 'Arial', fontSize: 50, fill : 0x000000 });
-        errorText.anchor.set(0.5, 0.5);
-        errorText.scale.set(0.5);
+        let errorText = Shapes.centeredText(text, 0.25, 0x000000);
         errorText.position.set(Main.width/2, errorBox.height/2);
         errorBox.addChild(errorText);
 

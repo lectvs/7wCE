@@ -2,6 +2,8 @@ class Scene {
     wonders: Wonder[];
     hand: Hand;
     discardHand: Hand;
+    undoButton: PIXI.Container;
+    discardRejectButton: PIXI.Container;
     discardPile: PIXI.Container;
     paymentMenu: PIXI.Container;
     statusBar: PIXI.Container;
@@ -28,6 +30,8 @@ class Scene {
         let myDiscardTurn = this.myTurnToBuildFromDiscard();
         this.hand.setVisible(!myDiscardTurn);
         this.discardHand.setVisible(myDiscardTurn);
+        this.undoButton.visible = !myDiscardTurn && !!Main.gamestate.playerData[Main.player].currentMove;
+        this.discardRejectButton.visible = myDiscardTurn;
     }
 
     create() {
@@ -42,11 +46,21 @@ class Scene {
         this.discardPile = new PIXI.Container();
         this.discardPile.addChild(Shapes.filledRoundedRect(-discardWidth/2, -discardHeight/2, discardWidth, discardHeight, 10, 0x888888));
         this.discardPile.addChild(Shapes.filledRoundedRect(-discardWidth/2+4, -discardHeight/2+4, discardWidth-8, discardHeight-8, 6, 0x000000));
-        let discardTitle = new PIXI.Text("Discard", { fontFamily : 'Arial', fontSize: 70, fill : 0x888888 });
-        discardTitle.anchor.set(0.5, 0.5);
-        discardTitle.scale.set(0.35, 0.35);
+        let discardTitle = Shapes.centeredText("Discard", 0.25, 0x888888);
         discardTitle.position.set(0, -125);
         this.discardPile.addChild(discardTitle);
+
+        if (gamestate.discardedCardCount > 0) {
+            let pile = Card.flippedCardForAge(gamestate.lastDiscardedCardAge, undefined);
+            pile.scale.set(2);
+            pile.position.set(0, -36*pile.scale.y);
+            let countText = Shapes.centeredText(`${gamestate.discardedCardCount}`, 0.2, ArtCommon.ageBacks[pile.apiCard.age]);
+            countText.position.set(0, 36);
+            pile.addChild(countText);
+            this.discardPile.addChild(pile);
+
+        }
+
         this.mainContainer.addChild(this.discardPile);
 
         this.wonders = [];
@@ -61,7 +75,26 @@ class Scene {
         this.hand.reflectMove(gamestate.playerData[player].currentMove);
 
         this.discardHand = new Hand(this.mainContainer, gamestate.discardedCards || [], this.wonders[gamestate.players.indexOf(player)], this.discardPile);
-        this.discardHand.reflectMove(gamestate.playerData[player].currentMove);
+
+        this.undoButton = new PIXI.Container();
+        this.undoButton.addChild(Shapes.filledRoundedRect(-60, -30, 120, 60, 10, 0xFFFFFF));
+        this.undoButton.addChild(Shapes.centeredText("Undo", 0.28, 0x000000));
+        this.undoButton.interactive = true;
+        this.undoButton.buttonMode = true;
+        this.undoButton.on('click', () => {
+            Main.undoMove();
+        });
+        this.mainContainer.addChild(this.undoButton);
+
+        this.discardRejectButton = new PIXI.Container();
+        this.discardRejectButton.addChild(Shapes.filledRoundedRect(-80, -30, 160, 60, 10, 0xFFFFFF));
+        this.discardRejectButton.addChild(Shapes.centeredText("No thanks", 0.28, 0x000000));
+        this.discardRejectButton.interactive = true;
+        this.discardRejectButton.buttonMode = true;
+        this.discardRejectButton.on('click', () => {
+            Main.submitMove({ action: 'reject', card: -1, payment: {} });
+        });
+        this.mainContainer.addChild(this.discardRejectButton);
 
         this.paymentMenu = new PIXI.Container();
         this.paymentMenu.visible = false;
@@ -71,9 +104,7 @@ class Scene {
         this.statusBar.addChild(Shapes.filledRoundedRect(-400, -50, 800, 100, 20, 0xDDDDDD));
         this.mainContainer.addChild(this.statusBar);
 
-        this.statusText = new PIXI.Text("", { fontFamily : 'Arial', fontSize: 70, fill : 0x000000 });
-        this.statusText.anchor.set(0.5, 0.5);
-        this.statusText.scale.set(0.4, 0.4);
+        this.statusText = Shapes.centeredText("", 0.28, 0x000000);
         this.statusText.position.set(0, 22);
         this.statusBar.addChild(this.statusText);
 
@@ -118,7 +149,10 @@ class Scene {
 
         this.statusBar.position.set(Main.width/2, 0);
 
+        // HAND
         this.hand.adjustPositions();
+        this.undoButton.position.set(Main.width/2, 360);
+        this.discardRejectButton.position.set(Main.width/2, 360);
     }
 
     startPaymentDialog(move: API.Move, x: number, y: number) {
@@ -130,9 +164,7 @@ class Scene {
 
         this.paymentMenu.position.set(x, y);
         this.paymentMenu.removeChildren();
-        let paymentTitle = new PIXI.Text("Payment", { fontFamily : 'Arial', fontSize: 70, fill : 0x000000 });
-        paymentTitle.anchor.set(0.5, 0.5);
-        paymentTitle.scale.set(0.35, 0.35);
+        let paymentTitle = Shapes.centeredText("Payment", 0.25, 0x000000);
         paymentTitle.position.set(0, -160);
         this.paymentMenu.addChild(paymentTitle);
 
@@ -141,16 +173,14 @@ class Scene {
         for (let i = 0; i < validPayments.length; i++) {
             let payment = validPayments[i];
             if (payment.neg) {
-                let paymentTextNeg = new PIXI.Text(`<-- ${payment.neg} to ${negPlayer}`, { fontFamily : 'Arial', fontSize: 70, fill : 0x000000 });
+                let paymentTextNeg = Shapes.centeredText(`<-- ${payment.neg} to ${negPlayer}`, 0.25, 0x000000);
                 paymentTextNeg.anchor.set(1, 0.5);
-                paymentTextNeg.scale.set(0.35, 0.35);
                 paymentTextNeg.position.set(-paymentsDX, paymentsStart + i*paymentsDY);
                 this.paymentMenu.addChild(paymentTextNeg);
             }
             if (payment.pos) {
-                let paymentTextPos = new PIXI.Text(`to ${posPlayer} ${payment.pos} -->`, { fontFamily : 'Arial', fontSize: 70, fill : 0x000000 });
+                let paymentTextPos = Shapes.centeredText(`to ${posPlayer} ${payment.pos} -->`, 0.25, 0x000000);
                 paymentTextPos.anchor.set(0, 0.5);
-                paymentTextPos.scale.set(0.35, 0.35);
                 paymentTextPos.position.set(paymentsDX, paymentsStart + i*paymentsDY);
                 this.paymentMenu.addChild(paymentTextPos);
             }
