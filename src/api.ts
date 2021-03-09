@@ -188,6 +188,14 @@ namespace API {
         return options;
     }
 
+    export function totalPoints(pointsDistribution: Dict<number>) {
+        let result = 0;
+        for (let key in pointsDistribution) {
+            result += pointsDistribution[key];
+        }
+        return result;
+    }
+
     export function getgamestate(gameid: string, player: string, callback: (gamestate: GameState, error: string) => any) {
         httpRequest(`${LAMBDA_URL}?operation=getgamestate&gameid=${gameid}&player=${player}`, (responseJson: any, error: string) => {
             if (error) {

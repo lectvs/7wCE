@@ -2,6 +2,7 @@ class Wonder extends PIXI.Container {
 
     player: string;
     goldText: PIXI.Text;
+    pointsText: PIXI.Text;
 
     mainRegion: PIXI.Rectangle;
     stageRegion: PIXI.Rectangle;
@@ -145,6 +146,14 @@ class Wonder extends PIXI.Container {
         this.goldText.position.set(87, -58);
         this.addChild(this.goldText);
 
+        let points = Shapes.filledCircle(69, -58, 5, 0xFFFFFF);
+        this.addChild(points);
+
+        this.pointsText = Shapes.centeredText(`${API.totalPoints(playerData.pointsDistribution)}`, 0.084, 0xFFFFFF);
+        this.pointsText.anchor.set(1, 0.5);
+        this.pointsText.position.set(61, -58);
+        this.addChild(this.pointsText);
+
         let playerText = Shapes.centeredText(player, 0.084, 0xFFFFFF);
         playerText.anchor.set(1, 0.5);
         playerText.position.set(100, -70);
@@ -209,8 +218,8 @@ class Wonder extends PIXI.Container {
         let color = cardArt.apiCard.color;
 
         let maxWidth = {
-            'brown': 200 - this.playedCardEffectRolls['grey'].getWidth(),
-            'grey': 200 - this.playedCardEffectRolls['brown'].getWidth(),
+            'brown': 150 - this.playedCardEffectRolls['grey'].getWidth(),
+            'grey': 150 - this.playedCardEffectRolls['brown'].getWidth(),
             'red': 100 - this.playedCardEffectRolls['red'].x,
             'yellow': 200 - this.playedCardEffectRolls['blue'].getWidth(),
             'purple': 200 - this.playedCardEffectRolls['green'].getWidth(),

@@ -9,6 +9,7 @@ namespace GameStateDiffer {
         };
 
         for (let player of Main.gamestate.players) {
+            diffPoints(gamestate, player, result);
             diffGold(gamestate, player, result);
             diffCurrentMove(gamestate, player, result);
         }
@@ -41,6 +42,26 @@ namespace GameStateDiffer {
         // });
 
         return result;
+    }
+
+    function diffPoints(gamestate: API.GameState, player: string, result: DiffResult) {
+        let oldPoints = API.totalPoints(Main.gamestate.playerData[player].pointsDistribution);
+        let newPoints = API.totalPoints(gamestate.playerData[player].pointsDistribution);
+        let playeri = Main.gamestate.players.indexOf(player);
+
+        if (newPoints === oldPoints) return;
+
+        result.scripts.push(function*() {
+            let pointsText = Main.scene.wonders[playeri].pointsText;
+
+            pointsText.style.fill = 0xFF0000;
+            
+            yield* S.doOverTime(1, t => {
+                pointsText.text = `${Math.round(lerp(oldPoints, newPoints, t))}`;
+            })();
+
+            pointsText.style.fill = 0xFFFFFF;
+        });
     }
 
     function diffGold(gamestate: API.GameState, player: string, result: DiffResult) {

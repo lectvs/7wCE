@@ -222,6 +222,14 @@ var API;
         return options;
     }
     API.minimalPaymentOptions = minimalPaymentOptions;
+    function totalPoints(pointsDistribution) {
+        var result = 0;
+        for (var key in pointsDistribution) {
+            result += pointsDistribution[key];
+        }
+        return result;
+    }
+    API.totalPoints = totalPoints;
     function getgamestate(gameid, player, callback) {
         httpRequest(LAMBDA_URL + "?operation=getgamestate&gameid=" + gameid + "&player=" + player, function (responseJson, error) {
             if (error) {
@@ -1330,6 +1338,7 @@ var GameStateDiffer;
         try {
             for (var _b = __values(Main.gamestate.players), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var player = _c.value;
+                diffPoints(gamestate, player, result);
                 diffGold(gamestate, player, result);
                 diffCurrentMove(gamestate, player, result);
             }
@@ -1366,6 +1375,30 @@ var GameStateDiffer;
         return result;
     }
     GameStateDiffer.diffTurn = diffTurn;
+    function diffPoints(gamestate, player, result) {
+        var oldPoints = API.totalPoints(Main.gamestate.playerData[player].pointsDistribution);
+        var newPoints = API.totalPoints(gamestate.playerData[player].pointsDistribution);
+        var playeri = Main.gamestate.players.indexOf(player);
+        if (newPoints === oldPoints)
+            return;
+        result.scripts.push(function () {
+            var pointsText;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        pointsText = Main.scene.wonders[playeri].pointsText;
+                        pointsText.style.fill = 0xFF0000;
+                        return [5 /*yield**/, __values(S.doOverTime(1, function (t) {
+                                pointsText.text = "" + Math.round(lerp(oldPoints, newPoints, t));
+                            })())];
+                    case 1:
+                        _a.sent();
+                        pointsText.style.fill = 0xFFFFFF;
+                        return [2 /*return*/];
+                }
+            });
+        });
+    }
     function diffGold(gamestate, player, result) {
         var oldGold = Main.gamestate.playerData[player].gold;
         var newGold = gamestate.playerData[player].gold;
@@ -2294,6 +2327,12 @@ var Wonder = /** @class */ (function (_super) {
         _this.goldText.anchor.set(1, 0.5);
         _this.goldText.position.set(87, -58);
         _this.addChild(_this.goldText);
+        var points = Shapes.filledCircle(69, -58, 5, 0xFFFFFF);
+        _this.addChild(points);
+        _this.pointsText = Shapes.centeredText("" + API.totalPoints(playerData.pointsDistribution), 0.084, 0xFFFFFF);
+        _this.pointsText.anchor.set(1, 0.5);
+        _this.pointsText.position.set(61, -58);
+        _this.addChild(_this.pointsText);
         var playerText = Shapes.centeredText(player, 0.084, 0xFFFFFF);
         playerText.anchor.set(1, 0.5);
         playerText.position.set(100, -70);
@@ -2347,8 +2386,8 @@ var Wonder = /** @class */ (function (_super) {
         cardArt.scale.set(0.75);
         var color = cardArt.apiCard.color;
         var maxWidth = {
-            'brown': 200 - this.playedCardEffectRolls['grey'].getWidth(),
-            'grey': 200 - this.playedCardEffectRolls['brown'].getWidth(),
+            'brown': 150 - this.playedCardEffectRolls['grey'].getWidth(),
+            'grey': 150 - this.playedCardEffectRolls['brown'].getWidth(),
             'red': 100 - this.playedCardEffectRolls['red'].x,
             'yellow': 200 - this.playedCardEffectRolls['blue'].getWidth(),
             'purple': 200 - this.playedCardEffectRolls['green'].getWidth(),

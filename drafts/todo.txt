@@ -1,5 +1,4 @@
 todo
-- points tracking
 - end screen
     - random victory/defeat messages?
 - animations
