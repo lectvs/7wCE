@@ -138,25 +138,20 @@ class Wonder extends PIXI.Container {
             this.addChildAt(cardArt, 0);
         }
 
-        let goldCoin = Shapes.filledCircle(95, -58, 5, 0xFBE317);
-        this.addChild(goldCoin);
+        this.addChild(Shapes.filledCircle(95, -58, 5, 0xFBE317));
 
-        this.goldText = Shapes.centeredText(`${playerData.gold}`, 0.084, 0xFFFFFF);
+        this.goldText = Shapes.centeredText(87, -58, `${playerData.gold}`, 0.084, 0xFFFFFF);
         this.goldText.anchor.set(1, 0.5);
-        this.goldText.position.set(87, -58);
         this.addChild(this.goldText);
 
-        let points = Shapes.filledCircle(69, -58, 5, 0xFFFFFF);
-        this.addChild(points);
+        this.addChild(Shapes.filledCircle(69, -58, 5, 0xFFFFFF));
 
-        this.pointsText = Shapes.centeredText(`${API.totalPoints(playerData.pointsDistribution)}`, 0.084, 0xFFFFFF);
+        this.pointsText = Shapes.centeredText(61, -58, `${playerData.pointsDistribution.total}`, 0.084, 0xFFFFFF);
         this.pointsText.anchor.set(1, 0.5);
-        this.pointsText.position.set(61, -58);
         this.addChild(this.pointsText);
 
-        let playerText = Shapes.centeredText(player, 0.084, 0xFFFFFF);
+        let playerText = Shapes.centeredText(100, -70, player, 0.084, 0xFFFFFF);
         playerText.anchor.set(1, 0.5);
-        playerText.position.set(100, -70);
         this.addChild(playerText);
 
         if (player !== Main.player && Main.gamestate.playerData[player].handCount > 0) {

@@ -165,14 +165,14 @@ namespace ArtCommon {
     export function victoryPoints(points: number) {
         let container = new PIXI.Container();
         container.addChild(debugEffect(0xFFFFFF));
-        container.addChild(Shapes.centeredText(`${points}`, 0.7, 0x000000));
+        container.addChild(Shapes.centeredText(0, 0, `${points}`, 0.7, 0x000000));
         return container;
     }
 
     export function gold(gold: number) {
         let container = new PIXI.Container();
         container.addChild(debugEffect(0xFBE317));
-        container.addChild(Shapes.centeredText(`${gold}`, 0.7, 0x000000));
+        container.addChild(Shapes.centeredText(0, 0, `${gold}`, 0.7, 0x000000));
         return container;
     }
 
@@ -348,9 +348,7 @@ namespace ArtCommon {
     export function buildFreeFirstCard() {
         let container = new PIXI.Container();
         container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, ArtCommon.cardBannerForColor("grey")));
-        let alpha = Shapes.centeredText('\u03B1', 0.35, 0x000000);
-        alpha.position.set(0, 10);
-        container.addChild(alpha);
+        container.addChild(Shapes.centeredText(0, 10, '\u03B1', 0.35, 0x000000));
         let cross = X(0xFF0000);
         cross.scale.set(0.3);
         cross.position.set(-30, -20);
@@ -361,9 +359,7 @@ namespace ArtCommon {
     export function buildFreeLastCard() {
         let container = new PIXI.Container();
         container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, ArtCommon.cardBannerForColor("grey")));
-        let omega = Shapes.centeredText('\u03A9', 0.56, 0x000000);
-        omega.position.set(0, 16);
-        container.addChild(omega);
+        container.addChild(Shapes.centeredText(0, 16, '\u03A9', 0.56, 0x000000));
         let cross = X(0xFF0000);
         cross.scale.set(0.3);
         cross.position.set(-30, -20);
@@ -438,9 +434,8 @@ namespace ArtCommon {
 
         let cost = new PIXI.Container();
         cost.addChild(Shapes.filledCircle(0, 0, 50, 0xFBE317));
-        let goldText = Shapes.centeredText(`${amount}`, 1, 0xFBE317);
+        let goldText = Shapes.centeredText(-70, 0, `${amount}`, 1, 0xFBE317);
         goldText.anchor.set(1, 0.5);
-        goldText.position.set(-70, 0);
         cost.addChild(goldText);
         return cost;
     }

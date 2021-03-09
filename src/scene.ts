@@ -8,6 +8,7 @@ class Scene {
     paymentMenu: PIXI.Container;
     statusBar: PIXI.Container;
     statusText: PIXI.Text;
+    endScreen: EndScreen;
 
     mainContainer: PIXI.Container;
 
@@ -46,17 +47,13 @@ class Scene {
         this.discardPile = new PIXI.Container();
         this.discardPile.addChild(Shapes.filledRoundedRect(-discardWidth/2, -discardHeight/2, discardWidth, discardHeight, 10, 0x888888));
         this.discardPile.addChild(Shapes.filledRoundedRect(-discardWidth/2+4, -discardHeight/2+4, discardWidth-8, discardHeight-8, 6, 0x000000));
-        let discardTitle = Shapes.centeredText("Discard", 0.25, 0x888888);
-        discardTitle.position.set(0, -125);
-        this.discardPile.addChild(discardTitle);
+        this.discardPile.addChild(Shapes.centeredText(0, -125, "Discard", 0.25, 0x888888));
 
         if (gamestate.discardedCardCount > 0) {
             let pile = Card.flippedCardForAge(gamestate.lastDiscardedCardAge, undefined);
             pile.scale.set(2);
             pile.position.set(0, -36*pile.scale.y);
-            let countText = Shapes.centeredText(`${gamestate.discardedCardCount}`, 0.2, ArtCommon.ageBacks[pile.apiCard.age]);
-            countText.position.set(0, 36);
-            pile.addChild(countText);
+            pile.addChild(Shapes.centeredText(0, 36, `${gamestate.discardedCardCount}`, 0.2, ArtCommon.ageBacks[pile.apiCard.age]));
             this.discardPile.addChild(pile);
         }
 
@@ -77,7 +74,7 @@ class Scene {
 
         this.undoButton = new PIXI.Container();
         this.undoButton.addChild(Shapes.filledRoundedRect(-60, -30, 120, 60, 10, 0xFFFFFF));
-        this.undoButton.addChild(Shapes.centeredText("Undo", 0.28, 0x000000));
+        this.undoButton.addChild(Shapes.centeredText(0, 0, "Undo", 0.28, 0x000000));
         this.undoButton.interactive = true;
         this.undoButton.buttonMode = true;
         this.undoButton.on('click', () => {
@@ -87,7 +84,7 @@ class Scene {
 
         this.discardRejectButton = new PIXI.Container();
         this.discardRejectButton.addChild(Shapes.filledRoundedRect(-80, -30, 160, 60, 10, 0xFFFFFF));
-        this.discardRejectButton.addChild(Shapes.centeredText("No thanks", 0.28, 0x000000));
+        this.discardRejectButton.addChild(Shapes.centeredText(0, 0, "No thanks", 0.28, 0x000000));
         this.discardRejectButton.interactive = true;
         this.discardRejectButton.buttonMode = true;
         this.discardRejectButton.on('click', () => {
@@ -103,9 +100,12 @@ class Scene {
         this.statusBar.addChild(Shapes.filledRoundedRect(-400, -50, 800, 100, 20, 0xDDDDDD));
         this.mainContainer.addChild(this.statusBar);
 
-        this.statusText = Shapes.centeredText("", 0.28, 0x000000);
-        this.statusText.position.set(0, 22);
+        this.statusText = Shapes.centeredText(0, 22, "", 0.28, 0x000000);
         this.statusBar.addChild(this.statusText);
+
+        this.endScreen = new EndScreen();
+        this.endScreen.visible = (gamestate.state === 'GAME_COMPLETE');
+        this.mainContainer.addChild(this.endScreen);
 
         this.adjustPositions();
         this.setStateText();
@@ -148,6 +148,9 @@ class Scene {
 
         this.statusBar.position.set(Main.width/2, 0);
 
+        this.endScreen.position.set(Main.width/2, window.innerHeight/2);
+        this.endScreen.adjustPositions();
+
         // HAND
         this.hand.adjustPositions();
         this.undoButton.position.set(Main.width/2, 360);
@@ -163,8 +166,7 @@ class Scene {
 
         this.paymentMenu.position.set(x, y);
         this.paymentMenu.removeChildren();
-        let paymentTitle = Shapes.centeredText("Payment", 0.25, 0x000000);
-        paymentTitle.position.set(0, -160);
+        let paymentTitle = Shapes.centeredText(0, -160, "Payment", 0.25, 0x000000);
         this.paymentMenu.addChild(paymentTitle);
 
         let [negPlayer, posPlayer] = API.getNeighbors(Main.gamestate, Main.player);
@@ -172,15 +174,13 @@ class Scene {
         for (let i = 0; i < validPayments.length; i++) {
             let payment = validPayments[i];
             if (payment.neg) {
-                let paymentTextNeg = Shapes.centeredText(`<-- ${payment.neg} to ${negPlayer}`, 0.25, 0x000000);
+                let paymentTextNeg = Shapes.centeredText(-paymentsDX, paymentsStart + i*paymentsDY, `<-- ${payment.neg} to ${negPlayer}`, 0.25, 0x000000);
                 paymentTextNeg.anchor.set(1, 0.5);
-                paymentTextNeg.position.set(-paymentsDX, paymentsStart + i*paymentsDY);
                 this.paymentMenu.addChild(paymentTextNeg);
             }
             if (payment.pos) {
-                let paymentTextPos = Shapes.centeredText(`to ${posPlayer} ${payment.pos} -->`, 0.25, 0x000000);
+                let paymentTextPos = Shapes.centeredText(paymentsDX, paymentsStart + i*paymentsDY, `to ${posPlayer} ${payment.pos} -->`, 0.25, 0x000000);
                 paymentTextPos.anchor.set(0, 0.5);
-                paymentTextPos.position.set(paymentsDX, paymentsStart + i*paymentsDY);
                 this.paymentMenu.addChild(paymentTextPos);
             }
             let paymentButton = Shapes.filledRoundedRect(-28, -20, 56, 40, 8, 0x000088);

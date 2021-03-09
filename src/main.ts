@@ -209,9 +209,7 @@ class Main {
         console.error(text);
 
         let errorBox = Shapes.filledRect(0, 0, Main.width, 50, 0xFF0000);
-        let errorText = Shapes.centeredText(text, 0.25, 0x000000);
-        errorText.position.set(Main.width/2, errorBox.height/2);
-        errorBox.addChild(errorText);
+        errorBox.addChild(Shapes.centeredText(Main.width/2, errorBox.height/2, text, 0.25, 0x000000));
 
         let app = this.app;
         this.scriptManager.runScript(function*() {

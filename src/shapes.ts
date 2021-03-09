@@ -23,10 +23,23 @@ class Shapes {
         return graphics;
     }
 
-    static centeredText(text: string, scale: number, color: number) {
+    static filledPolygon(x: number, y: number, points: number[], color: number) {
+        let shiftedPoints: number[] = [];
+        for (let i = 0; i < points.length; i++) {
+            shiftedPoints.push(points[i] + (i % 2 === 0 ? x : y));
+        }
+        let graphics = new PIXI.Graphics();
+        graphics.beginFill(color, 1);
+        graphics.drawPolygon(shiftedPoints);
+        graphics.endFill();
+        return graphics;
+    }
+
+    static centeredText(x: number, y: number, text: string, scale: number, color: number) {
         let pixiText = new PIXI.Text(text, { fontFamily : 'Arial', fontSize: 100, fill : color });
         pixiText.anchor.set(0.5, 0.5);
         pixiText.scale.set(scale);
+        pixiText.position.set(x, y);
         return pixiText;
     }
 }

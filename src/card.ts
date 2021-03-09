@@ -170,7 +170,7 @@ class Card extends PIXI.Container {
                         move.payment = { bank: API.minimalBankPayment(move, Main.gamestate.validMoves) };
                         Main.submitMove(move);
                     }
-                    //this.select(move);
+                    this.select(move);
                 } else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(dragPosition.x, dragPosition.y)) {
                     let move: API.Move = { action: 'wonder', card: this.apiCardId, stage: stage };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
@@ -179,11 +179,11 @@ class Card extends PIXI.Container {
                         move.payment = { bank: Main.gamestate.wonders[Main.player].stages[stage]?.cost?.gold };
                         Main.submitMove(move);
                     }
-                    //this.select(move);
+                    this.select(move);
                 } else if (this.allowThrow && this.discardPile.getBounds().contains(dragPosition.x, dragPosition.y)) {
                     let move: API.Move = { action: 'throw', card: this.apiCardId, payment: {} };
                     Main.submitMove(move);
-                    //this.select(move);
+                    this.select(move);
                 } else {
                     this.state = { type: 'in_hand', visualState: 'full' };
                 }

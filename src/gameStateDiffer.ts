@@ -45,8 +45,8 @@ namespace GameStateDiffer {
     }
 
     function diffPoints(gamestate: API.GameState, player: string, result: DiffResult) {
-        let oldPoints = API.totalPoints(Main.gamestate.playerData[player].pointsDistribution);
-        let newPoints = API.totalPoints(gamestate.playerData[player].pointsDistribution);
+        let oldPoints = Main.gamestate.playerData[player].pointsDistribution.total;
+        let newPoints = gamestate.playerData[player].pointsDistribution.total;
         let playeri = Main.gamestate.players.indexOf(player);
 
         if (newPoints === oldPoints) return;

@@ -25,12 +25,23 @@ namespace API {
         handCount: number;
         lastMove?: Move;
         currentMove?: Move;
-        pointsDistribution: Dict<number>;
+        pointsDistribution: PointsDistribution;
     }
 
     export type StageBuilt = {
         stage: number;
         cardAge: number;
+    }
+
+    export type PointsDistribution = {
+        conflict: number;
+        finance: number;
+        wonder: number;
+        civilian: number;
+        commerce: number;
+        guild: number;
+        science: number;
+        total: number;
     }
 
     export type Card = {
@@ -186,14 +197,6 @@ namespace API {
         }
 
         return options;
-    }
-
-    export function totalPoints(pointsDistribution: Dict<number>) {
-        let result = 0;
-        for (let key in pointsDistribution) {
-            result += pointsDistribution[key];
-        }
-        return result;
     }
 
     export function getgamestate(gameid: string, player: string, callback: (gamestate: GameState, error: string) => any) {

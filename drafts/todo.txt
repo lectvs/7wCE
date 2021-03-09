@@ -1,5 +1,3 @@
 todo
-- end screen
-    - random victory/defeat messages?
 - animations
 - hover-infos
