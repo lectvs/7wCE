@@ -14,6 +14,7 @@ class Main {
 
     static initialized: boolean;
 
+    static time: number = 0;
     static delta: number = 0;
 
     static scriptManager: ScriptManager;
@@ -43,6 +44,7 @@ class Main {
 
         PIXI.Ticker.shared.add(delta => {
             this.delta = delta / 60;
+            this.time += this.delta;
             this.update();
         });
 

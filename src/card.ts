@@ -4,7 +4,7 @@ namespace Card {
                       | { type: 'dragging_normal' | 'dragging_play' | 'dragging_wonder' | 'dragging_throw' }
                       | { type: 'locked_play' | 'locked_throw' }
                       | { type: 'locked_wonder', stage: number }
-                      | { type: 'permanent_effect' | 'permanent_flipped' };
+                      | { type: 'permanent_effect' | 'permanent_flipped', justPlayed: boolean };
     export type Dragging = {
         data: PIXI.interaction.InteractionData;
         offsetx: number;
@@ -34,6 +34,9 @@ class Card extends PIXI.Container {
     private frontContainer: PIXI.Container;
     private backContainer: PIXI.Container;
     private paymentContainer: PIXI.Container;
+
+    private effectBorder: PIXI.Graphics;
+    private flippedBorder: PIXI.Graphics;
 
     private fullCardRect: PIXI.Rectangle;
     private effectsRect: PIXI.Rectangle;
@@ -96,8 +99,8 @@ class Card extends PIXI.Container {
 
         let effectsBounds = effectContainer.getBounds();
         let effectPadding = 4;
-        this.effectsRect = new PIXI.Rectangle(effectsBounds.left - effectPadding, effectsBounds.top - effectPadding,
-                                              effectsBounds.width + 2*effectPadding, effectsBounds.height + 2*effectPadding);
+        this.effectsRect = new PIXI.Rectangle(effectsBounds.left - effectPadding, -8 - effectPadding,
+                                              effectsBounds.width + 2*effectPadding, 16 + 2*effectPadding);
 
         this.stateMask = Shapes.filledRect(0, 0, 1, 1, 0xFFFFFF);
         this.frontContainer.addChild(this.stateMask);
@@ -108,6 +111,26 @@ class Card extends PIXI.Container {
 
         let backBg = Shapes.filledRoundedRect(-33 + o, -14 + o, 66 - 2*o, 100 - 2*o, 6 - o, ArtCommon.cardBg);
         this.backContainer.addChild(backBg);
+
+        this.effectBorder = new PIXI.Graphics();
+        this.effectBorder.beginFill(0xFF0000, 1);
+        this.effectBorder.drawRect(this.effectsRect.x, this.effectsRect.y, this.effectsRect.width, this.effectsRect.height);
+        this.effectBorder.endFill();
+        this.effectBorder.beginHole();
+        this.effectBorder.drawRect(this.effectsRect.x + o, this.effectsRect.y + o, this.effectsRect.width - 2*o, this.effectsRect.height - 2*o);
+        this.effectBorder.endFill();
+        this.frontContainer.addChild(this.effectBorder);
+        this.effectBorder.visible = false;
+
+        this.flippedBorder = new PIXI.Graphics();
+        this.flippedBorder.beginFill(0xFF0000, 1);
+        this.flippedBorder.drawRoundedRect(-33, -14, 66, 100, 6);
+        this.flippedBorder.endFill();
+        this.flippedBorder.beginHole();
+        this.flippedBorder.drawRoundedRect(-33 + o, -14 + o, 66 - 2*o, 100 - 2*o, 6 - o);
+        this.flippedBorder.endFill();
+        this.backContainer.addChild(this.flippedBorder);
+        this.flippedBorder.visible = false;
 
         this.paymentContainer = new PIXI.Container();
         this.paymentContainer.position.set(33, -14);
@@ -288,6 +311,15 @@ class Card extends PIXI.Container {
 
         this.frontContainer.scale.x = lerp(1, 0, Math.min(this.flippedT, 0.5) * 2);
         this.backContainer.scale.x = lerp(0, 1, Math.max(0.5, this.flippedT) * 2 - 1);
+
+        this.effectBorder.visible = (this.state.type === 'locked_play' || (this.state.type === 'permanent_effect' && this.state.justPlayed));
+        this.flippedBorder.visible = (this.state.type === 'locked_wonder' || this.state.type === 'locked_throw' || (this.state.type === 'permanent_flipped' && this.state.justPlayed));
+
+        if (this.state.type.startsWith('locked')) {
+            this.effectBorder.alpha = this.flippedBorder.alpha = (Math.sin(Main.time*8) + 1)/2;
+        } else {
+            this.effectBorder.alpha = this.flippedBorder.alpha = 1;
+        }
     }
 
     getEffectRollOffsetX(reverse: boolean) {
@@ -360,9 +392,9 @@ class Card extends PIXI.Container {
         this.interactive = interactable;
     }
 
-    static flippedCardForAge(age: number, activeWonder: Wonder) {
-        let card = new Card(-1, { age: age, name: '', color: 'brown', effects: [] }, new PIXI.Point(), activeWonder, new PIXI.Container());
-        card.state = { type: 'permanent_flipped' };
+    static flippedCardForAge(age: number, justPlayed: boolean) {
+        let card = new Card(-1, { age: age, name: '', color: 'brown', effects: [] }, new PIXI.Point(), null, new PIXI.Container());
+        card.state = { type: 'permanent_flipped', justPlayed: justPlayed };
         card.update();
         return card;
     }

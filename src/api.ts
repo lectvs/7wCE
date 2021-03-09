@@ -68,6 +68,7 @@ namespace API {
     export type Wonder = {
         name: string;
         side: string;
+        outline_color: number;
         starting_effect_color: string;
         starting_effects: Effect[];
         stages: WonderStage[];

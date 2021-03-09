@@ -58,7 +58,6 @@ class Scene {
             countText.position.set(0, 36);
             pile.addChild(countText);
             this.discardPile.addChild(pile);
-
         }
 
         this.mainContainer.addChild(this.discardPile);

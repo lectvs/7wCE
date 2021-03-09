@@ -9,6 +9,10 @@ class PlayedCardEffectRoll extends PIXI.Container {
         this.reverse = reverse;
     }
 
+    canAddCard(card: Card, maxWidth: number) {
+        return this.getWidth() + card.getWidth() <= maxWidth;
+    }
+
     addCard(card: Card) {
         card.position.set(this.getNextLocalX(card, 1), 0);
         this.addChild(card);

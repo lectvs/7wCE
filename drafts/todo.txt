@@ -1,6 +1,6 @@
 todo
-- current move outline
-- played cards overflow
+- points tracking
 - end screen
     - random victory/defeat messages?
 - animations
+- hover-infos

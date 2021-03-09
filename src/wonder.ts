@@ -1,5 +1,6 @@
 class Wonder extends PIXI.Container {
 
+    player: string;
     goldText: PIXI.Text;
 
     mainRegion: PIXI.Rectangle;
@@ -8,6 +9,7 @@ class Wonder extends PIXI.Container {
     stageXs: number[];
 
     playedCardEffectRolls: Dict<PlayedCardEffectRoll>;
+    overflowCardEffectRolls: PlayedCardEffectRoll[];
 
     private moveRepr: Card;
     private handRepr: Card;
@@ -15,9 +17,9 @@ class Wonder extends PIXI.Container {
     constructor(wonder: API.Wonder, playerData: API.PlayerData, player: string) {
         super();
 
-        let wonderColor = 0xFFFFFF;
+        this.player = player;
 
-        let boardBase = Shapes.filledRoundedRect(-100, -50, 200, 100, 8, wonderColor);
+        let boardBase = Shapes.filledRoundedRect(-100, -50, 200, 100, 8, wonder.outline_color);
         this.addChild(boardBase);
 
         let o = 1;
@@ -60,6 +62,9 @@ class Wonder extends PIXI.Container {
         this.playedCardEffectRolls['green'].position.set(100-o, 12);
         this.addChild(this.playedCardEffectRolls['green']);
 
+        this.overflowCardEffectRolls = [];
+        this.pushNewOverflowCardEffectRoll();
+
         for (let cardId of playerData.playedCards) {
             let card = Main.gamestate.cards[cardId];
             let cardArt = new Card(cardId, card, new PIXI.Point(), this, new PIXI.Container());
@@ -84,7 +89,7 @@ class Wonder extends PIXI.Container {
         for (let i = 0; i < wonder.stages.length; i++) {
             this.stageXs.push(stagesMiddle + stageDX * (i - (wonder.stages.length - 1)/2));
 
-            let stageBase = Shapes.filledRoundedRect(-24, 29, 48, 100, 6, 0xFFFFFF);
+            let stageBase = Shapes.filledRoundedRect(-24, 29, 48, 100, 6, wonder.outline_color);
             stageBase.mask = boardBgMask;
             stageBase.x = this.stageXs[i];
             this.addChild(stageBase);
@@ -104,7 +109,7 @@ class Wonder extends PIXI.Container {
                 stageCost.scale.set(0.04);
                 stageCost.position.set(this.stageXs[i] - 22, 30);
 
-                let costBanner = Shapes.filledRoundedRect(-stageCost.width/2-2, -2, stageCost.width+4, stageCost.height + 4, 2, wonderColor);
+                let costBanner = Shapes.filledRoundedRect(-stageCost.width/2-2, -2, stageCost.width+4, stageCost.height + 4, 2, wonder.outline_color);
                 costBanner.position.set(stageCost.x, stageCost.y);
 
                 let costBannerBg = Shapes.filledRoundedRect(-stageCost.width/2-1, -1, stageCost.width+2, stageCost.height+2, 1, ArtCommon.wonderBg);
@@ -124,9 +129,8 @@ class Wonder extends PIXI.Container {
         }
 
         for (let stageBuilt of playerData.stagesBuilt) {
-            let cardArt = Card.flippedCardForAge(stageBuilt.cardAge, this);
-            cardArt.state = { type: 'permanent_flipped' };
-            cardArt.update();
+            let justPlayed = (playerData.lastMove && playerData.lastMove.action === 'wonder' && playerData.lastMove.stage === stageBuilt.stage);
+            let cardArt = Card.flippedCardForAge(stageBuilt.cardAge, justPlayed);
             cardArt.scale.set(0.66);
             cardArt.position.set(this.stageXs[stageBuilt.stage], 5);
 
@@ -147,11 +151,11 @@ class Wonder extends PIXI.Container {
         this.addChild(playerText);
 
         if (player !== Main.player && Main.gamestate.playerData[player].handCount > 0) {
-            this.handRepr = Card.flippedCardForAge(Main.gamestate.age, this);
+            this.handRepr = Card.flippedCardForAge(Main.gamestate.age, false);
             this.handRepr.scale.set(0.2);
             this.handRepr.position.set(93, -95);
 
-            this.moveRepr = Card.flippedCardForAge(Main.gamestate.age, this);
+            this.moveRepr = Card.flippedCardForAge(Main.gamestate.age, false);
             this.moveRepr.scale.set(this.handRepr.scale.x, this.handRepr.scale.y);
             this.moveRepr.position.set(this.handRepr.x, this.handRepr.y);
 
@@ -197,11 +201,32 @@ class Wonder extends PIXI.Container {
     }
 
     addNewCardEffect(cardArt: Card) {
-        cardArt.state = { type: 'permanent_effect' };
+        let playerData = Main.gamestate.playerData[this.player];
+        let justPlayed = (playerData.lastMove && playerData.lastMove.action === 'play' && playerData.lastMove.card === cardArt.apiCardId);
+        cardArt.state = { type: 'permanent_effect', justPlayed: justPlayed };
         cardArt.update();
         cardArt.scale.set(0.75);
         let color = cardArt.apiCard.color;
-        this.playedCardEffectRolls[color].addCard(cardArt);
+
+        let maxWidth = {
+            'brown': 200 - this.playedCardEffectRolls['grey'].getWidth(),
+            'grey': 200 - this.playedCardEffectRolls['brown'].getWidth(),
+            'red': 100 - this.playedCardEffectRolls['red'].x,
+            'yellow': 200 - this.playedCardEffectRolls['blue'].getWidth(),
+            'purple': 200 - this.playedCardEffectRolls['green'].getWidth(),
+            'blue': 200 - this.playedCardEffectRolls['yellow'].getWidth(),
+            'green': 200 - this.playedCardEffectRolls['purple'].getWidth(),
+        }[color];
+
+        if (this.playedCardEffectRolls[color].canAddCard(cardArt, maxWidth)) {
+            this.playedCardEffectRolls[color].addCard(cardArt);
+        } else {
+            if (!this.overflowCardEffectRolls[0].canAddCard(cardArt, 200)) {
+                this.pushNewOverflowCardEffectRoll();
+            }
+            this.overflowCardEffectRolls[0].addCard(cardArt);
+        }
+        
         this.playedCardEffectRolls['grey'].x = this.playedCardEffectRolls['brown'].x + this.playedCardEffectRolls['brown'].getWidth();
     }
 
@@ -219,5 +244,12 @@ class Wonder extends PIXI.Container {
         Main.scriptManager.runScript(
             S.doOverTime(0.1, t => this.moveRepr.x = this.handRepr.x - 15*(1-t))
         );
+    }
+
+    private pushNewOverflowCardEffectRoll() {
+        let roll = new PlayedCardEffectRoll(false);
+        roll.position.set(-100, this.playedCardEffectRolls['brown'].y - 24*(this.overflowCardEffectRolls.length + 1));
+        this.overflowCardEffectRolls.unshift(roll);
+        this.addChild(roll);
     }
 }

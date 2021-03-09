@@ -1008,7 +1008,7 @@ var Card = /** @class */ (function (_super) {
         _this.frontContainer.addChild(effectContainer);
         var effectsBounds = effectContainer.getBounds();
         var effectPadding = 4;
-        _this.effectsRect = new PIXI.Rectangle(effectsBounds.left - effectPadding, effectsBounds.top - effectPadding, effectsBounds.width + 2 * effectPadding, effectsBounds.height + 2 * effectPadding);
+        _this.effectsRect = new PIXI.Rectangle(effectsBounds.left - effectPadding, -8 - effectPadding, effectsBounds.width + 2 * effectPadding, 16 + 2 * effectPadding);
         _this.stateMask = Shapes.filledRect(0, 0, 1, 1, 0xFFFFFF);
         _this.frontContainer.addChild(_this.stateMask);
         _this.frontContainer.mask = _this.stateMask;
@@ -1016,6 +1016,24 @@ var Card = /** @class */ (function (_super) {
         _this.backContainer.addChild(backBase);
         var backBg = Shapes.filledRoundedRect(-33 + o, -14 + o, 66 - 2 * o, 100 - 2 * o, 6 - o, ArtCommon.cardBg);
         _this.backContainer.addChild(backBg);
+        _this.effectBorder = new PIXI.Graphics();
+        _this.effectBorder.beginFill(0xFF0000, 1);
+        _this.effectBorder.drawRect(_this.effectsRect.x, _this.effectsRect.y, _this.effectsRect.width, _this.effectsRect.height);
+        _this.effectBorder.endFill();
+        _this.effectBorder.beginHole();
+        _this.effectBorder.drawRect(_this.effectsRect.x + o, _this.effectsRect.y + o, _this.effectsRect.width - 2 * o, _this.effectsRect.height - 2 * o);
+        _this.effectBorder.endFill();
+        _this.frontContainer.addChild(_this.effectBorder);
+        _this.effectBorder.visible = false;
+        _this.flippedBorder = new PIXI.Graphics();
+        _this.flippedBorder.beginFill(0xFF0000, 1);
+        _this.flippedBorder.drawRoundedRect(-33, -14, 66, 100, 6);
+        _this.flippedBorder.endFill();
+        _this.flippedBorder.beginHole();
+        _this.flippedBorder.drawRoundedRect(-33 + o, -14 + o, 66 - 2 * o, 100 - 2 * o, 6 - o);
+        _this.flippedBorder.endFill();
+        _this.backContainer.addChild(_this.flippedBorder);
+        _this.flippedBorder.visible = false;
         _this.paymentContainer = new PIXI.Container();
         _this.paymentContainer.position.set(33, -14);
         _this.mainContainer.addChild(_this.frontContainer);
@@ -1205,6 +1223,14 @@ var Card = /** @class */ (function (_super) {
         this.stateMask.scale.set(lerp(this.fullCardRect.width, this.effectsRect.width, this.effectT), lerp(this.fullCardRect.height, this.effectsRect.height, this.effectT));
         this.frontContainer.scale.x = lerp(1, 0, Math.min(this.flippedT, 0.5) * 2);
         this.backContainer.scale.x = lerp(0, 1, Math.max(0.5, this.flippedT) * 2 - 1);
+        this.effectBorder.visible = (this.state.type === 'locked_play' || (this.state.type === 'permanent_effect' && this.state.justPlayed));
+        this.flippedBorder.visible = (this.state.type === 'locked_wonder' || this.state.type === 'locked_throw' || (this.state.type === 'permanent_flipped' && this.state.justPlayed));
+        if (this.state.type.startsWith('locked')) {
+            this.effectBorder.alpha = this.flippedBorder.alpha = (Math.sin(Main.time * 8) + 1) / 2;
+        }
+        else {
+            this.effectBorder.alpha = this.flippedBorder.alpha = 1;
+        }
     };
     Card.prototype.getEffectRollOffsetX = function (reverse) {
         if (reverse) {
@@ -1286,9 +1312,9 @@ var Card = /** @class */ (function (_super) {
         this.buttonMode = interactable;
         this.interactive = interactable;
     };
-    Card.flippedCardForAge = function (age, activeWonder) {
-        var card = new Card(-1, { age: age, name: '', color: 'brown', effects: [] }, new PIXI.Point(), activeWonder, new PIXI.Container());
-        card.state = { type: 'permanent_flipped' };
+    Card.flippedCardForAge = function (age, justPlayed) {
+        var card = new Card(-1, { age: age, name: '', color: 'brown', effects: [] }, new PIXI.Point(), null, new PIXI.Container());
+        card.state = { type: 'permanent_flipped', justPlayed: justPlayed };
         card.update();
         return card;
     };
@@ -1594,6 +1620,7 @@ var Main = /** @class */ (function () {
         this.player = params.get('player');
         PIXI.Ticker.shared.add(function (delta) {
             _this.delta = delta / 60;
+            _this.time += _this.delta;
             _this.update();
         });
         API.getgamestate(this.gameid, this.player, function (gamestate, error) {
@@ -1782,6 +1809,7 @@ var Main = /** @class */ (function () {
             });
         });
     };
+    Main.time = 0;
     Main.delta = 0;
     return Main;
 }());
@@ -1793,6 +1821,9 @@ var PlayedCardEffectRoll = /** @class */ (function (_super) {
         _this.reverse = reverse;
         return _this;
     }
+    PlayedCardEffectRoll.prototype.canAddCard = function (card, maxWidth) {
+        return this.getWidth() + card.getWidth() <= maxWidth;
+    };
     PlayedCardEffectRoll.prototype.addCard = function (card) {
         card.position.set(this.getNextLocalX(card, 1), 0);
         this.addChild(card);
@@ -2129,8 +2160,8 @@ var Wonder = /** @class */ (function (_super) {
     function Wonder(wonder, playerData, player) {
         var e_22, _a, e_23, _b, e_24, _c;
         var _this = _super.call(this) || this;
-        var wonderColor = 0xFFFFFF;
-        var boardBase = Shapes.filledRoundedRect(-100, -50, 200, 100, 8, wonderColor);
+        _this.player = player;
+        var boardBase = Shapes.filledRoundedRect(-100, -50, 200, 100, 8, wonder.outline_color);
         _this.addChild(boardBase);
         var o = 1;
         var boardBg = Shapes.filledRoundedRect(-100 + o, -50 + o, 200 - 2 * o, 100 - 2 * o, 8 - o, ArtCommon.wonderBg);
@@ -2166,6 +2197,8 @@ var Wonder = /** @class */ (function (_super) {
         _this.playedCardEffectRolls['green'] = new PlayedCardEffectRoll(true);
         _this.playedCardEffectRolls['green'].position.set(100 - o, 12);
         _this.addChild(_this.playedCardEffectRolls['green']);
+        _this.overflowCardEffectRolls = [];
+        _this.pushNewOverflowCardEffectRoll();
         try {
             for (var _d = __values(playerData.playedCards), _e = _d.next(); !_e.done; _e = _d.next()) {
                 var cardId = _e.value;
@@ -2207,7 +2240,7 @@ var Wonder = /** @class */ (function (_super) {
         _this.stageXs = [];
         for (var i = 0; i < wonder.stages.length; i++) {
             _this.stageXs.push(stagesMiddle + stageDX * (i - (wonder.stages.length - 1) / 2));
-            var stageBase = Shapes.filledRoundedRect(-24, 29, 48, 100, 6, 0xFFFFFF);
+            var stageBase = Shapes.filledRoundedRect(-24, 29, 48, 100, 6, wonder.outline_color);
             stageBase.mask = boardBgMask;
             stageBase.x = _this.stageXs[i];
             _this.addChild(stageBase);
@@ -2223,7 +2256,7 @@ var Wonder = /** @class */ (function (_super) {
             if (stageCost) {
                 stageCost.scale.set(0.04);
                 stageCost.position.set(_this.stageXs[i] - 22, 30);
-                var costBanner = Shapes.filledRoundedRect(-stageCost.width / 2 - 2, -2, stageCost.width + 4, stageCost.height + 4, 2, wonderColor);
+                var costBanner = Shapes.filledRoundedRect(-stageCost.width / 2 - 2, -2, stageCost.width + 4, stageCost.height + 4, 2, wonder.outline_color);
                 costBanner.position.set(stageCost.x, stageCost.y);
                 var costBannerBg = Shapes.filledRoundedRect(-stageCost.width / 2 - 1, -1, stageCost.width + 2, stageCost.height + 2, 1, ArtCommon.wonderBg);
                 costBannerBg.position.set(stageCost.x, stageCost.y);
@@ -2241,9 +2274,8 @@ var Wonder = /** @class */ (function (_super) {
         try {
             for (var _h = __values(playerData.stagesBuilt), _j = _h.next(); !_j.done; _j = _h.next()) {
                 var stageBuilt = _j.value;
-                var cardArt = Card.flippedCardForAge(stageBuilt.cardAge, _this);
-                cardArt.state = { type: 'permanent_flipped' };
-                cardArt.update();
+                var justPlayed = (playerData.lastMove && playerData.lastMove.action === 'wonder' && playerData.lastMove.stage === stageBuilt.stage);
+                var cardArt = Card.flippedCardForAge(stageBuilt.cardAge, justPlayed);
                 cardArt.scale.set(0.66);
                 cardArt.position.set(_this.stageXs[stageBuilt.stage], 5);
                 _this.addChildAt(cardArt, 0);
@@ -2267,10 +2299,10 @@ var Wonder = /** @class */ (function (_super) {
         playerText.position.set(100, -70);
         _this.addChild(playerText);
         if (player !== Main.player && Main.gamestate.playerData[player].handCount > 0) {
-            _this.handRepr = Card.flippedCardForAge(Main.gamestate.age, _this);
+            _this.handRepr = Card.flippedCardForAge(Main.gamestate.age, false);
             _this.handRepr.scale.set(0.2);
             _this.handRepr.position.set(93, -95);
-            _this.moveRepr = Card.flippedCardForAge(Main.gamestate.age, _this);
+            _this.moveRepr = Card.flippedCardForAge(Main.gamestate.age, false);
             _this.moveRepr.scale.set(_this.handRepr.scale.x, _this.handRepr.scale.y);
             _this.moveRepr.position.set(_this.handRepr.x, _this.handRepr.y);
             var checkMark = ArtCommon.checkMark();
@@ -2308,11 +2340,30 @@ var Wonder = /** @class */ (function (_super) {
         return new PIXI.Point(this.x + this.playedCardEffectRolls[color].getNextX(cardArt, this.scale.x) * this.scale.x, this.y + this.playedCardEffectRolls[color].y * this.scale.y);
     };
     Wonder.prototype.addNewCardEffect = function (cardArt) {
-        cardArt.state = { type: 'permanent_effect' };
+        var playerData = Main.gamestate.playerData[this.player];
+        var justPlayed = (playerData.lastMove && playerData.lastMove.action === 'play' && playerData.lastMove.card === cardArt.apiCardId);
+        cardArt.state = { type: 'permanent_effect', justPlayed: justPlayed };
         cardArt.update();
         cardArt.scale.set(0.75);
         var color = cardArt.apiCard.color;
-        this.playedCardEffectRolls[color].addCard(cardArt);
+        var maxWidth = {
+            'brown': 200 - this.playedCardEffectRolls['grey'].getWidth(),
+            'grey': 200 - this.playedCardEffectRolls['brown'].getWidth(),
+            'red': 100 - this.playedCardEffectRolls['red'].x,
+            'yellow': 200 - this.playedCardEffectRolls['blue'].getWidth(),
+            'purple': 200 - this.playedCardEffectRolls['green'].getWidth(),
+            'blue': 200 - this.playedCardEffectRolls['yellow'].getWidth(),
+            'green': 200 - this.playedCardEffectRolls['purple'].getWidth(),
+        }[color];
+        if (this.playedCardEffectRolls[color].canAddCard(cardArt, maxWidth)) {
+            this.playedCardEffectRolls[color].addCard(cardArt);
+        }
+        else {
+            if (!this.overflowCardEffectRolls[0].canAddCard(cardArt, 200)) {
+                this.pushNewOverflowCardEffectRoll();
+            }
+            this.overflowCardEffectRolls[0].addCard(cardArt);
+        }
         this.playedCardEffectRolls['grey'].x = this.playedCardEffectRolls['brown'].x + this.playedCardEffectRolls['brown'].getWidth();
     };
     Wonder.prototype.makeMove = function () {
@@ -2326,6 +2377,12 @@ var Wonder = /** @class */ (function (_super) {
         if (!this.moveRepr || !this.handRepr)
             return;
         Main.scriptManager.runScript(S.doOverTime(0.1, function (t) { return _this.moveRepr.x = _this.handRepr.x - 15 * (1 - t); }));
+    };
+    Wonder.prototype.pushNewOverflowCardEffectRoll = function () {
+        var roll = new PlayedCardEffectRoll(false);
+        roll.position.set(-100, this.playedCardEffectRolls['brown'].y - 24 * (this.overflowCardEffectRolls.length + 1));
+        this.overflowCardEffectRolls.unshift(roll);
+        this.addChild(roll);
     };
     return Wonder;
 }(PIXI.Container));
