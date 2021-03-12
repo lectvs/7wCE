@@ -4,19 +4,16 @@
         <title>7 Wonders CE</title>
         <meta charset="utf-8">
         <script src="js/pixi.min.js"></script>
-        <script src="js/underscore.min.js"></script>
-        <script src="js/seedrandom.min.js"></script>
         <script src="js/game.js"></script>
+        <link rel="stylesheet" href="style.css">
         <script>
-            window.onload = function () {
-                Main.start();
-                window.focus();
-            };
-            window.onclick = function () {
-                window.focus();
-            };
+            window.onload = function () { Main.start(); }
         </script>
     </head>
-    <body style="margin: 0; background-color: black; overflow-x: hidden;" tabindex="1">
+    <body style="background-color: black;">
+        <div id="status_text">
+            <p>This is the status</p>
+        </div>
+        <div id="game"></div>
     </body>
 </html>

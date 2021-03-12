@@ -52,15 +52,15 @@ namespace GameStateDiffer {
         if (newPoints === oldPoints) return;
 
         result.scripts.push(function*() {
-            let pointsText = Main.scene.wonders[playeri].pointsText;
+            //let pointsText = Main.scene.wonders[playeri].pointsText;
 
-            pointsText.style.fill = 0xFF0000;
+            //pointsText.style.fill = 0xFF0000;
             
             yield* S.doOverTime(1, t => {
-                pointsText.text = `${Math.round(lerp(oldPoints, newPoints, t))}`;
+            //    pointsText.text = `${Math.round(lerp(oldPoints, newPoints, t))}`;
             })();
 
-            pointsText.style.fill = 0xFFFFFF;
+            //pointsText.style.fill = 0xFFFFFF;
         });
     }
 
@@ -72,15 +72,15 @@ namespace GameStateDiffer {
         if (newGold === oldGold) return;
 
         result.scripts.push(function*() {
-            let goldText = Main.scene.wonders[playeri].goldText;
+            //let goldText = Main.scene.wonders[playeri].goldText;
 
-            goldText.style.fill = 0xFF0000;
+            //goldText.style.fill = 0xFF0000;
             
             yield* S.doOverTime(1, t => {
-                goldText.text = `${Math.round(lerp(oldGold, newGold, t))}`;
+            //    goldText.text = `${Math.round(lerp(oldGold, newGold, t))}`;
             })();
 
-            goldText.style.fill = 0xFFFFFF;
+            //goldText.style.fill = 0xFFFFFF;
         });
     }
 
@@ -92,7 +92,7 @@ namespace GameStateDiffer {
         // Always reflect current move.
         if (player === Main.player) {
             result.scripts.push(function*() {
-                Main.scene.hand.reflectMove(newMove);
+                //Main.scene.hand.reflectMove(newMove);
             });
             return;
         }
@@ -102,9 +102,9 @@ namespace GameStateDiffer {
         result.scripts.push(function*() {
             let wonder = Main.scene.wonders[playeri];
             if (!oldMove && newMove) {
-                wonder.makeMove();
+                //wonder.makeMove();
             } else {
-                wonder.undoMove();
+                //wonder.undoMove();
             }
         });
     }

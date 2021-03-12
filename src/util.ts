@@ -5,6 +5,15 @@ function clamp(n: number, min: number, max: number) {
     if (n > max) return max;
     return n;
 }
+
+function cloneCanvas(canvas: HTMLCanvasElement) {
+    let newCanvas = document.createElement('canvas');
+    newCanvas.width = canvas.width;
+    newCanvas.height = canvas.height;
+    newCanvas.getContext('2d').drawImage(canvas, 0, 0);
+    return newCanvas;
+}
+
 function contains<T>(array: T[], element: T) {
     for (let e of array) {
         if (e === element) return true;

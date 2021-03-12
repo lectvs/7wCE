@@ -960,6 +960,740 @@ var Bot;
     }
     Bot.getMove = getMove;
 })(Bot || (Bot = {}));
+var GameElement = /** @class */ (function () {
+    function GameElement() {
+        this.game = document.getElementById('game');
+        this.div = document.createElement('div');
+        this.div.style.position = 'absolute';
+    }
+    Object.defineProperty(GameElement.prototype, "x", {
+        get: function () {
+            return HtmlUtils.cssStylePositionToPixels(this.div.style.left, this.game.clientWidth);
+        },
+        set: function (value) { this.div.style.left = value + "px"; },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(GameElement.prototype, "y", {
+        get: function () {
+            return HtmlUtils.cssStylePositionToPixels(this.div.style.top, this.game.clientHeight);
+        },
+        set: function (value) { this.div.style.top = value + "px"; },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(GameElement.prototype, "xs", {
+        set: function (value) { this.div.style.left = value; },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(GameElement.prototype, "ys", {
+        set: function (value) { this.div.style.top = value; },
+        enumerable: false,
+        configurable: true
+    });
+    GameElement.prototype.addToGame = function () {
+        document.querySelector('#game').appendChild(this.div);
+        HTMLCanvasElement;
+    };
+    GameElement.prototype.removeFromGame = function () {
+        if (this.div.parentElement) {
+            this.div.parentElement.removeChild(this.div);
+        }
+    };
+    return GameElement;
+}());
+/// <reference path="gameElement.ts" />
+var DOMCard = /** @class */ (function (_super) {
+    __extends(DOMCard, _super);
+    function DOMCard(cardId, card, handPosition, activeWonder) {
+        var _this = _super.call(this) || this;
+        _this.CARD_WIDTH = 133;
+        _this.CARD_HEIGHT = 200;
+        _this.CARD_CORNER_RADIUS = 12;
+        _this.CARD_BORDER = 4;
+        _this.CARD_EFFECT_Y = 28;
+        _this.apiCardId = cardId;
+        _this.apiCard = card;
+        _this.handPosition = handPosition;
+        _this.activeWonder = activeWonder;
+        var front = _this.drawFront();
+        _this.div.appendChild(front);
+        return _this;
+    }
+    DOMCard.prototype.drawFront = function () {
+        var front = new PIXI.Container();
+        var cardBase = Shapes.filledRoundedRect(0, 0, this.CARD_WIDTH, this.CARD_HEIGHT, this.CARD_CORNER_RADIUS, ArtCommon.cardBannerForColor(this.apiCard.color));
+        front.addChild(cardBase);
+        var cardBg = Shapes.filledRoundedRect(this.CARD_BORDER, this.CARD_BORDER, this.CARD_WIDTH - 2 * this.CARD_BORDER, this.CARD_HEIGHT - 2 * this.CARD_BORDER, this.CARD_CORNER_RADIUS, ArtCommon.cardBg);
+        front.addChild(cardBg);
+        var cardMask = cardBase.clone();
+        front.addChild(cardMask);
+        return render(front, this.CARD_WIDTH, this.CARD_HEIGHT);
+    };
+    return DOMCard;
+}(GameElement));
+var GameStateDiffer;
+(function (GameStateDiffer) {
+    function diffNonTurn(gamestate) {
+        var e_11, _a;
+        var result = {
+            scripts: []
+        };
+        try {
+            for (var _b = __values(Main.gamestate.players), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var player = _c.value;
+                diffPoints(gamestate, player, result);
+                diffGold(gamestate, player, result);
+                diffCurrentMove(gamestate, player, result);
+            }
+        }
+        catch (e_11_1) { e_11 = { error: e_11_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_11) throw e_11.error; }
+        }
+        return result;
+    }
+    GameStateDiffer.diffNonTurn = diffNonTurn;
+    function diffTurn(gamestate) {
+        var result = diffNonTurn(gamestate);
+        if (gamestate.turn - Main.gamestate.turn > 1) {
+            result.scripts.splice(0);
+            return;
+        }
+        result.scripts.push(function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/];
+            });
+        });
+        // result.scripts.push(function*() {
+        //     Main.scene.hand.flip();
+        //     yield* S.wait(0.1)();
+        //     Main.scene.hand.collapse();
+        //     yield* S.wait(0.5)();
+        //     Main.scene.hand.uncollapse();
+        //     yield* S.wait(0.5)();
+        // });
+        return result;
+    }
+    GameStateDiffer.diffTurn = diffTurn;
+    function diffPoints(gamestate, player, result) {
+        var oldPoints = Main.gamestate.playerData[player].pointsDistribution.total;
+        var newPoints = gamestate.playerData[player].pointsDistribution.total;
+        var playeri = Main.gamestate.players.indexOf(player);
+        if (newPoints === oldPoints)
+            return;
+        result.scripts.push(function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: 
+                    //let pointsText = Main.scene.wonders[playeri].pointsText;
+                    //pointsText.style.fill = 0xFF0000;
+                    return [5 /*yield**/, __values(S.doOverTime(1, function (t) {
+                            //    pointsText.text = `${Math.round(lerp(oldPoints, newPoints, t))}`;
+                        })())];
+                    case 1:
+                        //let pointsText = Main.scene.wonders[playeri].pointsText;
+                        //pointsText.style.fill = 0xFF0000;
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    }
+    function diffGold(gamestate, player, result) {
+        var oldGold = Main.gamestate.playerData[player].gold;
+        var newGold = gamestate.playerData[player].gold;
+        var playeri = Main.gamestate.players.indexOf(player);
+        if (newGold === oldGold)
+            return;
+        result.scripts.push(function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: 
+                    //let goldText = Main.scene.wonders[playeri].goldText;
+                    //goldText.style.fill = 0xFF0000;
+                    return [5 /*yield**/, __values(S.doOverTime(1, function (t) {
+                            //    goldText.text = `${Math.round(lerp(oldGold, newGold, t))}`;
+                        })())];
+                    case 1:
+                        //let goldText = Main.scene.wonders[playeri].goldText;
+                        //goldText.style.fill = 0xFF0000;
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    }
+    function diffCurrentMove(gamestate, player, result) {
+        var oldMove = Main.gamestate.playerData[player].currentMove;
+        var newMove = gamestate.playerData[player].currentMove;
+        var playeri = Main.gamestate.players.indexOf(player);
+        // Always reflect current move.
+        if (player === Main.player) {
+            result.scripts.push(function () {
+                return __generator(this, function (_a) {
+                    return [2 /*return*/];
+                });
+            });
+            return;
+        }
+        if (API.eqMove(newMove, oldMove))
+            return;
+        result.scripts.push(function () {
+            var wonder;
+            return __generator(this, function (_a) {
+                wonder = Main.scene.wonders[playeri];
+                if (!oldMove && newMove) {
+                    //wonder.makeMove();
+                }
+                else {
+                    //wonder.undoMove();
+                }
+                return [2 /*return*/];
+            });
+        });
+    }
+})(GameStateDiffer || (GameStateDiffer = {}));
+var DOMHand = /** @class */ (function () {
+    function DOMHand(cardIds, activeWonder) {
+        this.HAND_Y = 250;
+        this.CARD_DX = 137;
+        this.cardIds = cardIds;
+        this.activeWonder = activeWonder;
+        this.create();
+    }
+    DOMHand.prototype.create = function () {
+        this.handPositions = [];
+        this.cards = [];
+        for (var i = 0; i < this.cardIds.length; i++) {
+            var handPosition = document.createElement('div');
+            handPosition.style.left = "calc(50% + " + (i - (this.cardIds.length - 1) / 2) * this.CARD_DX + "px)";
+            handPosition.style.top = this.HAND_Y + "px";
+            var card = new DOMCard(this.cardIds[i], Main.gamestate.cards[this.cardIds[i]], handPosition, this.activeWonder);
+            card.xs = handPosition.style.left;
+            card.ys = handPosition.style.top;
+            card.addToGame();
+            this.cards.push(card);
+            //card.state = { type: 'in_hand', visualState: 'full' };
+        }
+    };
+    DOMHand.prototype.destroy = function () {
+    };
+    return DOMHand;
+}());
+var HtmlUtils;
+(function (HtmlUtils) {
+    function cssStylePositionToPixels(xy, parent_wh) {
+        if (xy.endsWith('px')) {
+            return parseFloat(xy.substring(0, xy.length - 2).trim());
+        }
+        if (xy.endsWith('%')) {
+            return parseFloat(xy.substring(0, xy.length - 1).trim()) / 100 * parent_wh;
+        }
+        if (xy.startsWith('calc')) {
+            var inner = xy.substring(5, xy.length - 1).trim();
+            var innerPlus = inner.split('+');
+            if (innerPlus.length === 2) {
+                return cssStylePositionToPixels(innerPlus[0].trim(), parent_wh) + cssStylePositionToPixels(innerPlus[1].trim(), parent_wh);
+            }
+            var innerMinus = inner.split('-');
+            if (innerMinus.length === 2) {
+                return cssStylePositionToPixels(innerMinus[0].trim(), parent_wh) - cssStylePositionToPixels(innerMinus[1].trim(), parent_wh);
+            }
+        }
+        return undefined;
+    }
+    HtmlUtils.cssStylePositionToPixels = cssStylePositionToPixels;
+})(HtmlUtils || (HtmlUtils = {}));
+var Main = /** @class */ (function () {
+    function Main() {
+    }
+    Object.defineProperty(Main, "initialized", {
+        get: function () { return !!this.scene; },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Main, "isHost", {
+        get: function () { return this.gamestate.host === this.player; },
+        enumerable: false,
+        configurable: true
+    });
+    Main.start = function () {
+        var _this = this;
+        window.addEventListener('mousedown', function () { return _this.mouseDown = true; });
+        window.addEventListener('mouseup', function () { return _this.mouseDown = false; });
+        this.mouseDown = false;
+        this.scriptManager = new ScriptManager();
+        var params = new URLSearchParams(window.location.search);
+        this.gameid = params.get('gameid');
+        this.player = params.get('player');
+        PIXI.Ticker.shared.add(function (delta) {
+            _this.delta = delta / 60;
+            _this.time += _this.delta;
+            _this.update();
+        });
+        API.getgamestate(this.gameid, this.player, function (gamestate, error) {
+            if (error) {
+                Main.error('Failed to get game state: ' + error);
+                return;
+            }
+            console.log('Got game state:', gamestate);
+            _this.setupGame(gamestate);
+        });
+    };
+    Main.setupGame = function (gamestate) {
+        this.gamestate = gamestate;
+        this.scene = new DOMScene();
+        this.scene.create();
+        //this.sendUpdate();
+    };
+    Main.update = function () {
+        this.scriptManager.update();
+    };
+    Main.sendUpdate = function () {
+        var _this = this;
+        if (this.gamestate.state === 'GAME_COMPLETE')
+            return;
+        this.scriptManager.runScript(S.chain(S.wait(0.5), S.call(function () {
+            if (_this.isHost)
+                _this.updateAndGetGameState();
+            else
+                _this.getGameState();
+            _this.updateBotMoves();
+        })));
+    };
+    Main.getGameState = function () {
+        var _this = this;
+        API.getgamestate(this.gameid, this.player, function (gamestate, error) {
+            if (error) {
+                Main.error('Failed to get game state: ' + error);
+                _this.sendUpdate();
+                return;
+            }
+            //console.log('Refreshed gamestate:', gamestate);
+            if (gamestate.turn < Main.gamestate.turn) {
+                Main.error("Error: local turn (" + Main.gamestate.turn + ") is greater than the game's (" + gamestate.turn + ")?");
+                _this.sendUpdate();
+                return;
+            }
+            else if (gamestate.turn === Main.gamestate.turn) {
+                var diffResult = GameStateDiffer.diffNonTurn(gamestate);
+                _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {
+                    _this.gamestate = gamestate;
+                    _this.sendUpdate();
+                })));
+            }
+            else {
+                var diffResult = GameStateDiffer.diffTurn(gamestate);
+                _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {
+                    _this.gamestate = gamestate;
+                    _this.scene.destroy();
+                    _this.scene.create();
+                    _this.sendUpdate();
+                })));
+            }
+        });
+    };
+    Main.updateAndGetGameState = function () {
+        var _this = this;
+        API.updategame(Main.gameid, function (wasUpdate, error) {
+            if (error) {
+                Main.error(error);
+            }
+            else {
+                if (wasUpdate)
+                    console.log('Updated game');
+            }
+            _this.getGameState();
+        });
+    };
+    Main.submitMove = function (move) {
+        API.submitmove(Main.gameid, Main.gamestate.turn, Main.player, move, function (error) {
+            if (error) {
+                Main.error(error);
+                //this.deselect();
+                //Main.undoMove();
+                return;
+            }
+            console.log('Submitted move:', move);
+        });
+    };
+    Main.undoMove = function () {
+        API.undomove(this.gameid, this.gamestate.turn, this.player, function (error) {
+            if (error) {
+                Main.error(error);
+                return;
+            }
+            console.log('Undo move successful');
+        });
+    };
+    Main.updateBotMoves = function () {
+        var e_12, _a;
+        var _this = this;
+        if (!this.isHost)
+            return;
+        var _loop_1 = function (player) {
+            if (player.startsWith('BOT') && !this_1.gamestate.playerData[player].currentMove) {
+                var botPlayer_1 = player;
+                var turn_1 = this_1.gamestate.turn;
+                API.getvalidmoves(this_1.gameid, this_1.gamestate.turn, botPlayer_1, function (validMoves, error) {
+                    if (error) {
+                        Main.error(error);
+                        return;
+                    }
+                    if (turn_1 !== _this.gamestate.turn || validMoves.length === 0)
+                        return;
+                    var move = Bot.getMove(validMoves);
+                    API.submitmove(_this.gameid, _this.gamestate.turn, botPlayer_1, move, function (error) {
+                        if (error) {
+                            Main.error(error);
+                            return;
+                        }
+                        console.log('Successfully submitted bot move:', move);
+                    });
+                });
+            }
+        };
+        var this_1 = this;
+        try {
+            for (var _b = __values(this.gamestate.players), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var player = _c.value;
+                _loop_1(player);
+            }
+        }
+        catch (e_12_1) { e_12 = { error: e_12_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_12) throw e_12.error; }
+        }
+    };
+    Main.stop = function () {
+        this.scriptManager.reset();
+    };
+    Main.error = function (text) {
+        console.error(text);
+        // let errorBox = Shapes.filledRect(0, 0, Main.width, 50, 0xFF0000);
+        // errorBox.addChild(Shapes.centeredText(Main.width/2, errorBox.height/2, text, 0.25, 0x000000));
+        // let app = this.app;
+        // this.scriptManager.runScript(function*() {
+        //     errorBox.position.set(0, -50);
+        //     app.stage.addChild(errorBox);
+        //     yield* S.doOverTime(0.1, t => errorBox.position.y = 50*t-50)();
+        //     yield* S.wait(2)();
+        //     yield* S.doOverTime(0.1, t => errorBox.position.y = -50*t)();
+        //     app.stage.removeChild(errorBox);
+        // });
+    };
+    Main.time = 0;
+    Main.delta = 0;
+    return Main;
+}());
+var renderer = new PIXI.Renderer({ antialias: true, transparent: true });
+function render(object, width, height) {
+    renderer.view.width = width;
+    renderer.view.height = height;
+    renderer.render(object);
+    return cloneCanvas(renderer.view);
+}
+var DOMScene = /** @class */ (function () {
+    function DOMScene() {
+        this.HAND_Y = 250;
+        this.WONDER_START_Y = 600;
+        this.WONDER_DX = 500;
+        this.WONDER_DY = 500;
+        this.wonders = [];
+    }
+    DOMScene.prototype.create = function () {
+        var gamestate = Main.gamestate;
+        var players = Main.gamestate.players;
+        document.getElementById('game').style.height = this.WONDER_START_Y + this.WONDER_DY * Math.ceil((gamestate.players.length + 1) / 2) + "px";
+        this.wonders = players.map(function (player) { return undefined; });
+        var p = players.indexOf(Main.player);
+        var l = mod(p - 1, players.length);
+        var r = mod(p + 1, players.length);
+        var playerWonder = new DOMWonder(Main.player);
+        playerWonder.xs = '50%';
+        playerWonder.y = this.WONDER_START_Y;
+        playerWonder.addToGame();
+        this.wonders[p] = playerWonder;
+        var i;
+        for (i = 1; i < Math.floor((players.length - 1) / 2 + 1); i++) {
+            var wonder_l = new DOMWonder(players[l]);
+            wonder_l.xs = "calc(50% - " + this.WONDER_DX + "px)";
+            wonder_l.y = this.WONDER_START_Y + this.WONDER_DY * i;
+            wonder_l.addToGame();
+            this.wonders[l] = wonder_l;
+            var wonder_r = new DOMWonder(players[r]);
+            wonder_r.xs = "calc(50% + " + this.WONDER_DX + "px)";
+            wonder_r.y = this.WONDER_START_Y + this.WONDER_DY * i;
+            wonder_r.addToGame();
+            this.wonders[r] = wonder_r;
+            l = mod(l - 1, gamestate.players.length);
+            r = mod(r + 1, gamestate.players.length);
+        }
+        if (players.length % 2 === 0) {
+            var lastWonder = new DOMWonder(players[l]);
+            lastWonder.xs = '50%';
+            lastWonder.y = this.WONDER_START_Y + this.WONDER_DY * i;
+            lastWonder.addToGame();
+            this.wonders[l] = lastWonder;
+        }
+        this.hand = new DOMHand(gamestate.hand, this.wonders[p]);
+    };
+    DOMScene.prototype.destroy = function () {
+        var e_13, _a;
+        try {
+            for (var _b = __values(this.wonders), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var wonder = _c.value;
+                wonder.removeFromGame();
+            }
+        }
+        catch (e_13_1) { e_13 = { error: e_13_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_13) throw e_13.error; }
+        }
+        this.wonders = [];
+    };
+    return DOMScene;
+}());
+var Shapes = /** @class */ (function () {
+    function Shapes() {
+    }
+    Shapes.filledCircle = function (x, y, radius, color) {
+        var graphics = new PIXI.Graphics();
+        graphics.beginFill(color, 1);
+        graphics.drawCircle(x, y, radius);
+        graphics.endFill();
+        return graphics;
+    };
+    Shapes.filledRect = function (x, y, width, height, color) {
+        var graphics = new PIXI.Graphics();
+        graphics.beginFill(color, 1);
+        graphics.drawRect(x, y, width, height);
+        graphics.endFill();
+        return graphics;
+    };
+    Shapes.filledRoundedRect = function (x, y, width, height, cornerRadius, color) {
+        var graphics = new PIXI.Graphics();
+        graphics.beginFill(color, 1);
+        graphics.drawRoundedRect(x, y, width, height, cornerRadius);
+        graphics.endFill();
+        return graphics;
+    };
+    Shapes.filledPolygon = function (x, y, points, color) {
+        var shiftedPoints = [];
+        for (var i = 0; i < points.length; i++) {
+            shiftedPoints.push(points[i] + (i % 2 === 0 ? x : y));
+        }
+        var graphics = new PIXI.Graphics();
+        graphics.beginFill(color, 1);
+        graphics.drawPolygon(shiftedPoints);
+        graphics.endFill();
+        return graphics;
+    };
+    Shapes.centeredText = function (x, y, text, scale, color) {
+        var pixiText = new PIXI.Text(text, { fontFamily: 'Arial', fontSize: 100, fill: color });
+        pixiText.anchor.set(0.5, 0.5);
+        pixiText.scale.set(scale);
+        pixiText.position.set(x, y);
+        return pixiText;
+    };
+    return Shapes;
+}());
+function clamp(n, min, max) {
+    if (n < min)
+        return min;
+    if (n > max)
+        return max;
+    return n;
+}
+function cloneCanvas(canvas) {
+    var newCanvas = document.createElement('canvas');
+    newCanvas.width = canvas.width;
+    newCanvas.height = canvas.height;
+    newCanvas.getContext('2d').drawImage(canvas, 0, 0);
+    return newCanvas;
+}
+function contains(array, element) {
+    var e_14, _a;
+    try {
+        for (var array_1 = __values(array), array_1_1 = array_1.next(); !array_1_1.done; array_1_1 = array_1.next()) {
+            var e = array_1_1.value;
+            if (e === element)
+                return true;
+        }
+    }
+    catch (e_14_1) { e_14 = { error: e_14_1 }; }
+    finally {
+        try {
+            if (array_1_1 && !array_1_1.done && (_a = array_1.return)) _a.call(array_1);
+        }
+        finally { if (e_14) throw e_14.error; }
+    }
+    return false;
+}
+function lerp(a, b, t) {
+    return a + (b - a) * t;
+}
+function mod(n, mod) {
+    while (n >= mod)
+        n -= mod;
+    while (n < 0)
+        n += mod;
+    return n;
+}
+function randInt(min, max) {
+    return min + Math.floor(Math.random() * (max + 1 - min));
+}
+function randElement(array) {
+    return array[randInt(0, array.length - 1)];
+}
+function sum(array, key) {
+    var e_15, _a;
+    if (!array || array.length === 0) {
+        return 0;
+    }
+    var result = 0;
+    try {
+        for (var array_2 = __values(array), array_2_1 = array_2.next(); !array_2_1.done; array_2_1 = array_2.next()) {
+            var e = array_2_1.value;
+            result += key(e);
+        }
+    }
+    catch (e_15_1) { e_15 = { error: e_15_1 }; }
+    finally {
+        try {
+            if (array_2_1 && !array_2_1.done && (_a = array_2.return)) _a.call(array_2);
+        }
+        finally { if (e_15) throw e_15.error; }
+    }
+    return result;
+}
+/// <reference path="gameElement.ts" />
+var DOMWonder = /** @class */ (function (_super) {
+    __extends(DOMWonder, _super);
+    function DOMWonder(player) {
+        var _this = _super.call(this) || this;
+        _this.BOARD_WIDTH = 600;
+        _this.BOARD_HEIGHT = 300;
+        _this.BOARD_CORNER_RADIUS = 30;
+        _this.BOARD_BORDER = 4;
+        _this.STARTING_EFFECTS_SCALE = 0.32;
+        _this.STARTING_EFFECTS_PADDING = 8;
+        _this.STAGE_MIDDLE_2 = 396;
+        _this.STAGE_MIDDLE_134 = 300;
+        _this.STAGE_DX_4 = 147;
+        _this.STAGE_DX_123 = 192;
+        _this.STAGE_WIDTH = 144;
+        _this.STAGE_HEIGHT = 63;
+        _this.STAGE_CORNER_RADIUS = 18;
+        _this.STAGE_EFFECT_SCALE = 0.29;
+        _this.STAGE_COST_OFFSET_X = 10;
+        _this.STAGE_COST_OFFSET_Y = 60;
+        _this.STAGE_COST_PADDING = 6;
+        _this.STAGE_COST_BORDER = 3;
+        _this.STAGE_COST_SCALE = 0.12;
+        _this.STAGE_PAYMENT_OFFSET_X = -10;
+        _this.STAGE_PAYMENT_OFFSET_Y = -13;
+        _this.STAGE_PAYMENT_SCALE = 0.15;
+        _this.player = player;
+        var canvas = _this.draw();
+        _this.div.appendChild(canvas);
+        return _this;
+    }
+    DOMWonder.prototype.draw = function () {
+        var e_16, _a;
+        var wonder = Main.gamestate.wonders[this.player];
+        var playerData = Main.gamestate.playerData[this.player];
+        var wonderBoard = new PIXI.Container();
+        // Board
+        var boardBase = Shapes.filledRoundedRect(0, 0, this.BOARD_WIDTH, this.BOARD_HEIGHT, this.BOARD_CORNER_RADIUS, wonder.outline_color);
+        wonderBoard.addChild(boardBase);
+        var boardBg = Shapes.filledRoundedRect(this.BOARD_BORDER, this.BOARD_BORDER, this.BOARD_WIDTH - 2 * this.BOARD_BORDER, this.BOARD_HEIGHT - 2 * this.BOARD_BORDER, this.BOARD_CORNER_RADIUS - this.BOARD_BORDER, ArtCommon.wonderBg);
+        wonderBoard.addChild(boardBg);
+        var boardBgMask = boardBg.clone();
+        wonderBoard.addChild(boardBgMask);
+        // Starting effects
+        var startingEffects = ArtCommon.getArtForEffects(wonder.starting_effects);
+        startingEffects.scale.set(this.STARTING_EFFECTS_SCALE);
+        var startingEffectsBounds = startingEffects.getBounds();
+        startingEffects.position.set(this.BOARD_BORDER + this.STARTING_EFFECTS_PADDING - (startingEffectsBounds.left - startingEffects.x), this.BOARD_BORDER + this.STARTING_EFFECTS_PADDING - (startingEffectsBounds.top - startingEffects.y));
+        startingEffectsBounds = startingEffects.getBounds();
+        var startingEffectBanner = Shapes.filledRect(startingEffectsBounds.left - this.STARTING_EFFECTS_PADDING, startingEffectsBounds.top - this.STARTING_EFFECTS_PADDING, startingEffectsBounds.width + 2 * this.STARTING_EFFECTS_PADDING, startingEffectsBounds.height + 2 * this.STARTING_EFFECTS_PADDING, ArtCommon.cardBannerForColor(wonder.starting_effect_color));
+        startingEffectBanner.mask = boardBgMask;
+        wonderBoard.addChild(startingEffectBanner);
+        wonderBoard.addChild(startingEffects);
+        // Wonder stages
+        var stageIdsBuilt = playerData.stagesBuilt.map(function (stageBuilt) { return stageBuilt.stage; });
+        var wonderStageMinCosts = wonder.stages.map(function (stage) { return Infinity; });
+        try {
+            for (var _b = __values(Main.gamestate.validMoves), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var validMove = _c.value;
+                if (validMove.action !== 'wonder')
+                    continue;
+                var stage = validMove.stage;
+                var cost = API.totalPaymentAmount(validMove.payment);
+                if (cost < wonderStageMinCosts[stage]) {
+                    wonderStageMinCosts[stage] = cost;
+                }
+            }
+        }
+        catch (e_16_1) { e_16 = { error: e_16_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_16) throw e_16.error; }
+        }
+        var stagesMiddle = wonder.stages.length === 2 ? this.STAGE_MIDDLE_2 : this.STAGE_MIDDLE_134;
+        var stageDX = wonder.stages.length === 4 ? this.STAGE_DX_4 : this.STAGE_DX_123;
+        this.stageXs = [];
+        for (var i = 0; i < wonder.stages.length; i++) {
+            this.stageXs.push(stagesMiddle + stageDX * (i - (wonder.stages.length - 1) / 2));
+            var stageBase = Shapes.filledRoundedRect(-this.STAGE_WIDTH / 2, this.BOARD_HEIGHT - this.STAGE_HEIGHT, this.STAGE_WIDTH, this.STAGE_HEIGHT * 2, this.STAGE_CORNER_RADIUS, wonder.outline_color);
+            stageBase.mask = boardBgMask;
+            stageBase.x = this.stageXs[i];
+            wonderBoard.addChild(stageBase);
+            var stageBg = Shapes.filledRoundedRect(-this.STAGE_WIDTH / 2 + this.BOARD_BORDER, this.BOARD_HEIGHT - this.STAGE_HEIGHT + this.BOARD_BORDER, this.STAGE_WIDTH - 2 * this.BOARD_BORDER, this.STAGE_HEIGHT * 2 - 2 * this.BOARD_BORDER, this.STAGE_CORNER_RADIUS - this.BOARD_BORDER, ArtCommon.wonderBg);
+            stageBg.mask = boardBgMask;
+            stageBg.x = this.stageXs[i];
+            wonderBoard.addChild(stageBg);
+            var stageEffects = ArtCommon.getArtForEffects(wonder.stages[i].effects);
+            stageEffects.scale.set(this.STAGE_EFFECT_SCALE);
+            stageEffects.position.set(this.stageXs[i], this.BOARD_HEIGHT - this.STAGE_HEIGHT / 2);
+            wonderBoard.addChild(stageEffects);
+            var stageCost = ArtCommon.getArtForStageCost(wonder.stages[i].cost);
+            if (stageCost) {
+                stageCost.scale.set(this.STAGE_COST_SCALE);
+                stageCost.position.set(this.stageXs[i] - this.STAGE_WIDTH / 2 + this.STAGE_COST_OFFSET_X, this.BOARD_HEIGHT - this.STAGE_COST_OFFSET_Y);
+                var costBanner = Shapes.filledRoundedRect(-stageCost.width / 2 - this.STAGE_COST_PADDING, -this.STAGE_COST_PADDING, stageCost.width + 2 * this.STAGE_COST_PADDING, stageCost.height + 2 * this.STAGE_COST_PADDING, this.STAGE_COST_PADDING, wonder.outline_color);
+                costBanner.position.set(stageCost.x, stageCost.y);
+                var costBannerBg = Shapes.filledRoundedRect(-stageCost.width / 2 - (this.STAGE_COST_PADDING - this.STAGE_COST_BORDER), -(this.STAGE_COST_PADDING - this.STAGE_COST_BORDER), stageCost.width + 2 * (this.STAGE_COST_PADDING - this.STAGE_COST_BORDER), stageCost.height + 2 * (this.STAGE_COST_PADDING - this.STAGE_COST_BORDER), this.STAGE_COST_PADDING - this.STAGE_COST_BORDER, ArtCommon.wonderBg);
+                costBannerBg.position.set(stageCost.x, stageCost.y);
+                wonderBoard.addChild(costBanner);
+                wonderBoard.addChild(costBannerBg);
+                wonderBoard.addChild(stageCost);
+            }
+            if (this.player === Main.player && !contains(stageIdsBuilt, i)) {
+                var stagePayment = ArtCommon.payment(wonderStageMinCosts[i]);
+                stagePayment.scale.set(this.STAGE_PAYMENT_SCALE);
+                stagePayment.position.set(this.stageXs[i] + this.STAGE_WIDTH / 2 + this.STAGE_PAYMENT_OFFSET_X, this.BOARD_HEIGHT - this.STAGE_HEIGHT + this.STAGE_PAYMENT_OFFSET_Y);
+                wonderBoard.addChild(stagePayment);
+            }
+        }
+        return render(wonderBoard, this.BOARD_WIDTH, this.BOARD_HEIGHT);
+    };
+    return DOMWonder;
+}(GameElement));
 var Card = /** @class */ (function (_super) {
     __extends(Card, _super);
     function Card(cardId, card, handPosition, activeWonder, discardPile) {
@@ -1058,7 +1792,7 @@ var Card = /** @class */ (function (_super) {
                 if (this.allowPlay && this.activeWonder.getMainRegion().contains(dragPosition.x, dragPosition.y)) {
                     var move = { action: 'play', card: this.apiCardId };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
-                        Main.scene.startPaymentDialog(move, 400, 400);
+                        //Main.scene.startPaymentDialog(move, 400, 400);
                     }
                     else {
                         move.payment = { bank: API.minimalBankPayment(move, Main.gamestate.validMoves) };
@@ -1069,7 +1803,7 @@ var Card = /** @class */ (function (_super) {
                 else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(dragPosition.x, dragPosition.y)) {
                     var move = { action: 'wonder', card: this.apiCardId, stage: stage };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
-                        Main.scene.startPaymentDialog(move, 400, 400);
+                        //Main.scene.startPaymentDialog(move, 400, 400);
                     }
                     else {
                         move.payment = { bank: (_c = (_b = Main.gamestate.wonders[Main.player].stages[stage]) === null || _b === void 0 ? void 0 : _b.cost) === null || _c === void 0 ? void 0 : _c.gold };
@@ -1240,17 +1974,16 @@ var Card = /** @class */ (function (_super) {
         return this.stateMask.height * this.scale.y * this.mainContainer.scale.y;
     };
     Card.prototype.canBeInteractable = function () {
-        if (Main.scene && Main.scene.isPaymentMenuActive)
-            return false;
+        //if (Main.scene && Main.scene.isPaymentMenuActive) return false;
         if (!this.allowPlay && this.allowBuildStages.length === 0 && !this.allowThrow)
             return false;
         return true;
     };
     Card.prototype.select = function (move) {
-        var lastSelectedCard = Main.scene.hand.selectedCard;
-        if (lastSelectedCard) {
-            lastSelectedCard.deselect();
-        }
+        //let lastSelectedCard = Main.scene.hand.selectedCard;
+        //if (lastSelectedCard) {
+        //    lastSelectedCard.deselect();
+        //}
         if (move.action === 'play') {
             this.state = { type: 'locked_play' };
         }
@@ -1265,7 +1998,7 @@ var Card = /** @class */ (function (_super) {
         this.state = { type: 'in_hand', visualState: 'full' };
     };
     Card.prototype.configureValidMoves = function (validMoves) {
-        var e_11, _a;
+        var e_17, _a;
         this.allowPlay = false;
         this.allowBuildStages = [];
         this.allowThrow = false;
@@ -1290,12 +2023,12 @@ var Card = /** @class */ (function (_super) {
                 }
             }
         }
-        catch (e_11_1) { e_11 = { error: e_11_1 }; }
+        catch (e_17_1) { e_17 = { error: e_17_1 }; }
         finally {
             try {
                 if (validMoves_4_1 && !validMoves_4_1.done && (_a = validMoves_4.return)) _a.call(validMoves_4);
             }
-            finally { if (e_11) throw e_11.error; }
+            finally { if (e_17) throw e_17.error; }
         }
         this.paymentContainer.removeChildren();
         var payment = ArtCommon.payment(this.allowPlay ? this.minPlayCost : Infinity);
@@ -1323,7 +2056,7 @@ var EndScreen = /** @class */ (function (_super) {
         return _this;
     }
     EndScreen.prototype.create = function () {
-        var e_12, _a;
+        var e_18, _a;
         var _this = this;
         this.removeChildren();
         var players = [];
@@ -1333,12 +2066,12 @@ var EndScreen = /** @class */ (function (_super) {
                 players.push(p);
             }
         }
-        catch (e_12_1) { e_12 = { error: e_12_1 }; }
+        catch (e_18_1) { e_18 = { error: e_18_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_12) throw e_12.error; }
+            finally { if (e_18) throw e_18.error; }
         }
         players.sort(function (p1, p2) {
             var points1 = Main.gamestate.playerData[p1].pointsDistribution.total;
@@ -1401,132 +2134,6 @@ var EndScreen = /** @class */ (function (_super) {
     };
     return EndScreen;
 }(PIXI.Container));
-var GameStateDiffer;
-(function (GameStateDiffer) {
-    function diffNonTurn(gamestate) {
-        var e_13, _a;
-        var result = {
-            scripts: []
-        };
-        try {
-            for (var _b = __values(Main.gamestate.players), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var player = _c.value;
-                diffPoints(gamestate, player, result);
-                diffGold(gamestate, player, result);
-                diffCurrentMove(gamestate, player, result);
-            }
-        }
-        catch (e_13_1) { e_13 = { error: e_13_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_13) throw e_13.error; }
-        }
-        return result;
-    }
-    GameStateDiffer.diffNonTurn = diffNonTurn;
-    function diffTurn(gamestate) {
-        var result = diffNonTurn(gamestate);
-        if (gamestate.turn - Main.gamestate.turn > 1) {
-            result.scripts.splice(0);
-            return;
-        }
-        result.scripts.push(function () {
-            return __generator(this, function (_a) {
-                return [2 /*return*/];
-            });
-        });
-        // result.scripts.push(function*() {
-        //     Main.scene.hand.flip();
-        //     yield* S.wait(0.1)();
-        //     Main.scene.hand.collapse();
-        //     yield* S.wait(0.5)();
-        //     Main.scene.hand.uncollapse();
-        //     yield* S.wait(0.5)();
-        // });
-        return result;
-    }
-    GameStateDiffer.diffTurn = diffTurn;
-    function diffPoints(gamestate, player, result) {
-        var oldPoints = Main.gamestate.playerData[player].pointsDistribution.total;
-        var newPoints = gamestate.playerData[player].pointsDistribution.total;
-        var playeri = Main.gamestate.players.indexOf(player);
-        if (newPoints === oldPoints)
-            return;
-        result.scripts.push(function () {
-            var pointsText;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        pointsText = Main.scene.wonders[playeri].pointsText;
-                        pointsText.style.fill = 0xFF0000;
-                        return [5 /*yield**/, __values(S.doOverTime(1, function (t) {
-                                pointsText.text = "" + Math.round(lerp(oldPoints, newPoints, t));
-                            })())];
-                    case 1:
-                        _a.sent();
-                        pointsText.style.fill = 0xFFFFFF;
-                        return [2 /*return*/];
-                }
-            });
-        });
-    }
-    function diffGold(gamestate, player, result) {
-        var oldGold = Main.gamestate.playerData[player].gold;
-        var newGold = gamestate.playerData[player].gold;
-        var playeri = Main.gamestate.players.indexOf(player);
-        if (newGold === oldGold)
-            return;
-        result.scripts.push(function () {
-            var goldText;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        goldText = Main.scene.wonders[playeri].goldText;
-                        goldText.style.fill = 0xFF0000;
-                        return [5 /*yield**/, __values(S.doOverTime(1, function (t) {
-                                goldText.text = "" + Math.round(lerp(oldGold, newGold, t));
-                            })())];
-                    case 1:
-                        _a.sent();
-                        goldText.style.fill = 0xFFFFFF;
-                        return [2 /*return*/];
-                }
-            });
-        });
-    }
-    function diffCurrentMove(gamestate, player, result) {
-        var oldMove = Main.gamestate.playerData[player].currentMove;
-        var newMove = gamestate.playerData[player].currentMove;
-        var playeri = Main.gamestate.players.indexOf(player);
-        // Always reflect current move.
-        if (player === Main.player) {
-            result.scripts.push(function () {
-                return __generator(this, function (_a) {
-                    Main.scene.hand.reflectMove(newMove);
-                    return [2 /*return*/];
-                });
-            });
-            return;
-        }
-        if (API.eqMove(newMove, oldMove))
-            return;
-        result.scripts.push(function () {
-            var wonder;
-            return __generator(this, function (_a) {
-                wonder = Main.scene.wonders[playeri];
-                if (!oldMove && newMove) {
-                    wonder.makeMove();
-                }
-                else {
-                    wonder.undoMove();
-                }
-                return [2 /*return*/];
-            });
-        });
-    }
-})(GameStateDiffer || (GameStateDiffer = {}));
 var Hand = /** @class */ (function () {
     function Hand(container, cardIds, activeWonder, discardPile) {
         this.cards = [];
@@ -1541,7 +2148,7 @@ var Hand = /** @class */ (function () {
     }
     Object.defineProperty(Hand.prototype, "selectedCard", {
         get: function () {
-            var e_14, _a;
+            var e_19, _a;
             try {
                 for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var card = _c.value;
@@ -1549,12 +2156,12 @@ var Hand = /** @class */ (function () {
                         return card;
                 }
             }
-            catch (e_14_1) { e_14 = { error: e_14_1 }; }
+            catch (e_19_1) { e_19 = { error: e_19_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_14) throw e_14.error; }
+                finally { if (e_19) throw e_19.error; }
             }
             return undefined;
         },
@@ -1579,9 +2186,9 @@ var Hand = /** @class */ (function () {
         var handDX = 136;
         this.normalHandPositions = [];
         this.handPositions = [];
-        this.collapsedPosition = new PIXI.Point(Main.width / 2, handY);
+        this.collapsedPosition = new PIXI.Point(0, handY);
         for (var i = 0; i < this.cards.length; i++) {
-            var normalHandPosition = new PIXI.Point(Main.width / 2 + handDX * (i - (this.cards.length - 1) / 2), handY);
+            var normalHandPosition = new PIXI.Point(0 + handDX * (i - (this.cards.length - 1) / 2), handY);
             this.normalHandPositions.push(normalHandPosition);
             var handPosition = new PIXI.Point(normalHandPosition.x, normalHandPosition.y);
             this.handPositions.push(handPosition);
@@ -1591,7 +2198,7 @@ var Hand = /** @class */ (function () {
         }
     };
     Hand.prototype.reflectMove = function (move) {
-        var e_15, _a, e_16, _b;
+        var e_20, _a, e_21, _b;
         if (!move || move.action === 'reject') {
             try {
                 for (var _c = __values(this.cards), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -1599,12 +2206,12 @@ var Hand = /** @class */ (function () {
                     card.deselect();
                 }
             }
-            catch (e_15_1) { e_15 = { error: e_15_1 }; }
+            catch (e_20_1) { e_20 = { error: e_20_1 }; }
             finally {
                 try {
                     if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                 }
-                finally { if (e_15) throw e_15.error; }
+                finally { if (e_20) throw e_20.error; }
             }
             return;
         }
@@ -1621,12 +2228,12 @@ var Hand = /** @class */ (function () {
                 }
             }
         }
-        catch (e_16_1) { e_16 = { error: e_16_1 }; }
+        catch (e_21_1) { e_21 = { error: e_21_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_16) throw e_16.error; }
+            finally { if (e_21) throw e_21.error; }
         }
         if (!moved)
             console.error('Move card not found in hand:', move);
@@ -1638,7 +2245,7 @@ var Hand = /** @class */ (function () {
         this.collapsed = false;
     };
     Hand.prototype.flip = function () {
-        var e_17, _a;
+        var e_22, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
@@ -1646,16 +2253,16 @@ var Hand = /** @class */ (function () {
                     card.state.visualState = 'flipped';
             }
         }
-        catch (e_17_1) { e_17 = { error: e_17_1 }; }
+        catch (e_22_1) { e_22 = { error: e_22_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_17) throw e_17.error; }
+            finally { if (e_22) throw e_22.error; }
         }
     };
     Hand.prototype.unflip = function () {
-        var e_18, _a;
+        var e_23, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
@@ -1663,259 +2270,31 @@ var Hand = /** @class */ (function () {
                     card.state.visualState = 'full';
             }
         }
-        catch (e_18_1) { e_18 = { error: e_18_1 }; }
+        catch (e_23_1) { e_23 = { error: e_23_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_18) throw e_18.error; }
+            finally { if (e_23) throw e_23.error; }
         }
     };
     Hand.prototype.setVisible = function (value) {
-        var e_19, _a;
+        var e_24, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
                 card.visible = value;
             }
         }
-        catch (e_19_1) { e_19 = { error: e_19_1 }; }
+        catch (e_24_1) { e_24 = { error: e_24_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_19) throw e_19.error; }
+            finally { if (e_24) throw e_24.error; }
         }
     };
     return Hand;
-}());
-var Main = /** @class */ (function () {
-    function Main() {
-    }
-    Object.defineProperty(Main, "width", {
-        get: function () { return this.app.view.width; },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(Main, "height", {
-        get: function () { return this.app.view.height; },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(Main, "isHost", {
-        get: function () { return this.gamestate.host === this.player; },
-        enumerable: false,
-        configurable: true
-    });
-    Main.start = function () {
-        var _this = this;
-        this.app = new PIXI.Application({
-            width: window.innerWidth,
-            height: 2000,
-            antialias: true
-        });
-        document.body.appendChild(this.app.view);
-        window.addEventListener('mousedown', function () { return _this.mouseDown = true; });
-        window.addEventListener('mouseup', function () { return _this.mouseDown = false; });
-        window.addEventListener('resize', function () { return _this.resize(); });
-        this.mouseDown = false;
-        this.initialized = false;
-        this.scriptManager = new ScriptManager();
-        var params = new URLSearchParams(window.location.search);
-        this.gameid = params.get('gameid');
-        this.player = params.get('player');
-        PIXI.Ticker.shared.add(function (delta) {
-            _this.delta = delta / 60;
-            _this.time += _this.delta;
-            _this.update();
-        });
-        API.getgamestate(this.gameid, this.player, function (gamestate, error) {
-            if (error) {
-                Main.error('Failed to get game state: ' + error);
-                return;
-            }
-            console.log('Got game state:', gamestate);
-            _this.setupGame(gamestate);
-        });
-    };
-    Main.setupGame = function (gamestate) {
-        this.gamestate = gamestate;
-        this.initialized = true;
-        this.scene = new Scene();
-        this.app.stage.addChild(this.scene.mainContainer);
-        this.createScene();
-        this.sendUpdate();
-    };
-    Main.update = function () {
-        if (this.scene)
-            this.scene.update();
-        this.scriptManager.update();
-    };
-    Main.createScene = function () {
-        if (!this.initialized)
-            return;
-        this.scene.create();
-        this.resize();
-    };
-    Main.adjustPositions = function () {
-        if (!this.initialized)
-            return;
-        this.scene.adjustPositions();
-    };
-    Main.resize = function () {
-        this.adjustPositions();
-        var sceneBounds = this.app.stage.getBounds();
-        this.app.renderer.resize(window.innerWidth, sceneBounds.y + sceneBounds.height + 400);
-        this.adjustPositions();
-    };
-    Main.sendUpdate = function () {
-        var _this = this;
-        if (this.gamestate.state === 'GAME_COMPLETE')
-            return;
-        this.scriptManager.runScript(S.chain(S.wait(0.5), S.call(function () {
-            if (_this.isHost)
-                _this.updateAndGetGameState();
-            else
-                _this.getGameState();
-            _this.updateBotMoves();
-        })));
-    };
-    Main.getGameState = function () {
-        var _this = this;
-        API.getgamestate(this.gameid, this.player, function (gamestate, error) {
-            if (error) {
-                Main.error('Failed to get game state: ' + error);
-                _this.sendUpdate();
-                return;
-            }
-            //console.log('Refreshed gamestate:', gamestate);
-            if (gamestate.turn < Main.gamestate.turn) {
-                Main.error("Error: local turn (" + Main.gamestate.turn + ") is greater than the game's (" + gamestate.turn + ")?");
-                _this.sendUpdate();
-                return;
-            }
-            else if (gamestate.turn === Main.gamestate.turn) {
-                var diffResult = GameStateDiffer.diffNonTurn(gamestate);
-                _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {
-                    _this.gamestate = gamestate;
-                    _this.sendUpdate();
-                })));
-            }
-            else {
-                var diffResult = GameStateDiffer.diffTurn(gamestate);
-                _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {
-                    _this.gamestate = gamestate;
-                    _this.createScene();
-                    _this.sendUpdate();
-                })));
-            }
-        });
-    };
-    Main.updateAndGetGameState = function () {
-        var _this = this;
-        API.updategame(Main.gameid, function (wasUpdate, error) {
-            if (error) {
-                Main.error(error);
-            }
-            else {
-                if (wasUpdate)
-                    console.log('Updated game');
-            }
-            _this.getGameState();
-        });
-    };
-    Main.submitMove = function (move) {
-        API.submitmove(Main.gameid, Main.gamestate.turn, Main.player, move, function (error) {
-            if (error) {
-                Main.error(error);
-                //this.deselect();
-                //Main.undoMove();
-                return;
-            }
-            console.log('Submitted move:', move);
-        });
-    };
-    Main.undoMove = function () {
-        API.undomove(this.gameid, this.gamestate.turn, this.player, function (error) {
-            if (error) {
-                Main.error(error);
-                return;
-            }
-            console.log('Undo move successful');
-        });
-    };
-    Main.updateBotMoves = function () {
-        var e_20, _a;
-        var _this = this;
-        var _loop_1 = function (player) {
-            if (player.startsWith('BOT') && !this_1.gamestate.playerData[player].currentMove) {
-                var botPlayer_1 = player;
-                var turn_1 = this_1.gamestate.turn;
-                API.getvalidmoves(this_1.gameid, this_1.gamestate.turn, botPlayer_1, function (validMoves, error) {
-                    if (error) {
-                        Main.error(error);
-                        return;
-                    }
-                    if (turn_1 !== _this.gamestate.turn || validMoves.length === 0)
-                        return;
-                    var move = Bot.getMove(validMoves);
-                    API.submitmove(_this.gameid, _this.gamestate.turn, botPlayer_1, move, function (error) {
-                        if (error) {
-                            Main.error(error);
-                            return;
-                        }
-                        console.log('Successfully submitted bot move:', move);
-                    });
-                });
-            }
-        };
-        var this_1 = this;
-        try {
-            for (var _b = __values(this.gamestate.players), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var player = _c.value;
-                _loop_1(player);
-            }
-        }
-        catch (e_20_1) { e_20 = { error: e_20_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_20) throw e_20.error; }
-        }
-    };
-    Main.stop = function () {
-        this.scriptManager.reset();
-    };
-    Main.error = function (text) {
-        console.error(text);
-        var errorBox = Shapes.filledRect(0, 0, Main.width, 50, 0xFF0000);
-        errorBox.addChild(Shapes.centeredText(Main.width / 2, errorBox.height / 2, text, 0.25, 0x000000));
-        var app = this.app;
-        this.scriptManager.runScript(function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        errorBox.position.set(0, -50);
-                        app.stage.addChild(errorBox);
-                        return [5 /*yield**/, __values(S.doOverTime(0.1, function (t) { return errorBox.position.y = 50 * t - 50; })())];
-                    case 1:
-                        _a.sent();
-                        return [5 /*yield**/, __values(S.wait(2)())];
-                    case 2:
-                        _a.sent();
-                        return [5 /*yield**/, __values(S.doOverTime(0.1, function (t) { return errorBox.position.y = -50 * t; })())];
-                    case 3:
-                        _a.sent();
-                        app.stage.removeChild(errorBox);
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
-    Main.time = 0;
-    Main.delta = 0;
-    return Main;
 }());
 var PlayedCardEffectRoll = /** @class */ (function (_super) {
     __extends(PlayedCardEffectRoll, _super);
@@ -2034,36 +2413,36 @@ var Scene = /** @class */ (function () {
         var gamestate = Main.gamestate;
         var player = Main.player;
         var wonderScale = 2.5;
-        var wonderDX = Main.width / 4;
+        var wonderDX = 0;
         var discardY = 1200;
         // WONDERS
         var p = gamestate.players.indexOf(player);
-        this.wonders[p].position.set(Main.width / 2, this.wonderStartY);
+        this.wonders[p].position.set(0, this.wonderStartY);
         this.wonders[p].scale.set(wonderScale);
         var l = mod(p - 1, gamestate.players.length);
         var r = mod(p + 1, gamestate.players.length);
         var i;
         for (i = 1; i < gamestate.players.length / 2; i++) {
-            this.wonders[l].position.set(Main.width / 2 - wonderDX, this.wonderStartY + this.wonderDY * i);
+            this.wonders[l].position.set(0 - wonderDX, this.wonderStartY + this.wonderDY * i);
             this.wonders[l].scale.set(wonderScale);
-            this.wonders[r].position.set(Main.width / 2 + wonderDX, this.wonderStartY + this.wonderDY * i);
+            this.wonders[r].position.set(0 + wonderDX, this.wonderStartY + this.wonderDY * i);
             this.wonders[r].scale.set(wonderScale);
             l = mod(l - 1, gamestate.players.length);
             r = mod(r + 1, gamestate.players.length);
         }
         if (gamestate.players.length % 2 === 0) {
-            this.wonders[l].position.set(Main.width / 2, this.wonderStartY + this.wonderDY * i);
+            this.wonders[l].position.set(0, this.wonderStartY + this.wonderDY * i);
             this.wonders[l].scale.set(wonderScale);
         }
         // DISCARD PILE
-        this.discardPile.position.set(Main.width / 2, discardY);
-        this.statusBar.position.set(Main.width / 2, 0);
-        this.endScreen.position.set(Main.width / 2, window.innerHeight / 2);
+        this.discardPile.position.set(0, discardY);
+        this.statusBar.position.set(0, 0);
+        this.endScreen.position.set(0, window.innerHeight / 2);
         this.endScreen.adjustPositions();
         // HAND
         this.hand.adjustPositions();
-        this.undoButton.position.set(Main.width / 2, 360);
-        this.discardRejectButton.position.set(Main.width / 2, 360);
+        this.undoButton.position.set(0, 360);
+        this.discardRejectButton.position.set(0, 360);
     };
     Scene.prototype.startPaymentDialog = function (move, x, y) {
         var _this = this;
@@ -2162,116 +2541,10 @@ var Scene = /** @class */ (function () {
     };
     return Scene;
 }());
-var Shapes = /** @class */ (function () {
-    function Shapes() {
-    }
-    Shapes.filledCircle = function (x, y, radius, color) {
-        var graphics = new PIXI.Graphics();
-        graphics.beginFill(color, 1);
-        graphics.drawCircle(x, y, radius);
-        graphics.endFill();
-        return graphics;
-    };
-    Shapes.filledRect = function (x, y, width, height, color) {
-        var graphics = new PIXI.Graphics();
-        graphics.beginFill(color, 1);
-        graphics.drawRect(x, y, width, height);
-        graphics.endFill();
-        return graphics;
-    };
-    Shapes.filledRoundedRect = function (x, y, width, height, cornerRadius, color) {
-        var graphics = new PIXI.Graphics();
-        graphics.beginFill(color, 1);
-        graphics.drawRoundedRect(x, y, width, height, cornerRadius);
-        graphics.endFill();
-        return graphics;
-    };
-    Shapes.filledPolygon = function (x, y, points, color) {
-        var shiftedPoints = [];
-        for (var i = 0; i < points.length; i++) {
-            shiftedPoints.push(points[i] + (i % 2 === 0 ? x : y));
-        }
-        var graphics = new PIXI.Graphics();
-        graphics.beginFill(color, 1);
-        graphics.drawPolygon(shiftedPoints);
-        graphics.endFill();
-        return graphics;
-    };
-    Shapes.centeredText = function (x, y, text, scale, color) {
-        var pixiText = new PIXI.Text(text, { fontFamily: 'Arial', fontSize: 100, fill: color });
-        pixiText.anchor.set(0.5, 0.5);
-        pixiText.scale.set(scale);
-        pixiText.position.set(x, y);
-        return pixiText;
-    };
-    return Shapes;
-}());
-function clamp(n, min, max) {
-    if (n < min)
-        return min;
-    if (n > max)
-        return max;
-    return n;
-}
-function contains(array, element) {
-    var e_21, _a;
-    try {
-        for (var array_1 = __values(array), array_1_1 = array_1.next(); !array_1_1.done; array_1_1 = array_1.next()) {
-            var e = array_1_1.value;
-            if (e === element)
-                return true;
-        }
-    }
-    catch (e_21_1) { e_21 = { error: e_21_1 }; }
-    finally {
-        try {
-            if (array_1_1 && !array_1_1.done && (_a = array_1.return)) _a.call(array_1);
-        }
-        finally { if (e_21) throw e_21.error; }
-    }
-    return false;
-}
-function lerp(a, b, t) {
-    return a + (b - a) * t;
-}
-function mod(n, mod) {
-    while (n >= mod)
-        n -= mod;
-    while (n < 0)
-        n += mod;
-    return n;
-}
-function randInt(min, max) {
-    return min + Math.floor(Math.random() * (max + 1 - min));
-}
-function randElement(array) {
-    return array[randInt(0, array.length - 1)];
-}
-function sum(array, key) {
-    var e_22, _a;
-    if (!array || array.length === 0) {
-        return 0;
-    }
-    var result = 0;
-    try {
-        for (var array_2 = __values(array), array_2_1 = array_2.next(); !array_2_1.done; array_2_1 = array_2.next()) {
-            var e = array_2_1.value;
-            result += key(e);
-        }
-    }
-    catch (e_22_1) { e_22 = { error: e_22_1 }; }
-    finally {
-        try {
-            if (array_2_1 && !array_2_1.done && (_a = array_2.return)) _a.call(array_2);
-        }
-        finally { if (e_22) throw e_22.error; }
-    }
-    return result;
-}
 var Wonder = /** @class */ (function (_super) {
     __extends(Wonder, _super);
     function Wonder(wonder, playerData, player) {
-        var e_23, _a, e_24, _b, e_25, _c;
+        var e_25, _a, e_26, _b, e_27, _c;
         var _this = _super.call(this) || this;
         _this.player = player;
         var boardBase = Shapes.filledRoundedRect(-100, -50, 200, 100, 8, wonder.outline_color);
@@ -2320,12 +2593,12 @@ var Wonder = /** @class */ (function (_super) {
                 _this.addNewCardEffect(cardArt);
             }
         }
-        catch (e_23_1) { e_23 = { error: e_23_1 }; }
+        catch (e_25_1) { e_25 = { error: e_25_1 }; }
         finally {
             try {
                 if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
             }
-            finally { if (e_23) throw e_23.error; }
+            finally { if (e_25) throw e_25.error; }
         }
         var stageIdsBuilt = playerData.stagesBuilt.map(function (stageBuilt) { return stageBuilt.stage; });
         var wonderStageMinCosts = wonder.stages.map(function (stage) { return Infinity; });
@@ -2341,12 +2614,12 @@ var Wonder = /** @class */ (function (_super) {
                 }
             }
         }
-        catch (e_24_1) { e_24 = { error: e_24_1 }; }
+        catch (e_26_1) { e_26 = { error: e_26_1 }; }
         finally {
             try {
                 if (_g && !_g.done && (_b = _f.return)) _b.call(_f);
             }
-            finally { if (e_24) throw e_24.error; }
+            finally { if (e_26) throw e_26.error; }
         }
         var stagesMiddle = wonder.stages.length === 2 ? 32 : 0;
         var stageDX = wonder.stages.length === 4 ? 49 : 64;
@@ -2394,12 +2667,12 @@ var Wonder = /** @class */ (function (_super) {
                 _this.addChildAt(cardArt, 0);
             }
         }
-        catch (e_25_1) { e_25 = { error: e_25_1 }; }
+        catch (e_27_1) { e_27 = { error: e_27_1 }; }
         finally {
             try {
                 if (_j && !_j.done && (_c = _h.return)) _c.call(_h);
             }
-            finally { if (e_25) throw e_25.error; }
+            finally { if (e_27) throw e_27.error; }
         }
         _this.addChild(Shapes.filledCircle(95, -58, 5, 0xFBE317));
         _this.goldText = Shapes.centeredText(87, -58, "" + playerData.gold, 0.084, 0xFFFFFF);
@@ -2517,8 +2790,8 @@ var S;
             scriptFunctions[_i] = arguments[_i];
         }
         return function () {
-            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_26_1;
-            var e_26, _a;
+            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_28_1;
+            var e_28, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -2537,14 +2810,14 @@ var S;
                         return [3 /*break*/, 1];
                     case 4: return [3 /*break*/, 7];
                     case 5:
-                        e_26_1 = _b.sent();
-                        e_26 = { error: e_26_1 };
+                        e_28_1 = _b.sent();
+                        e_28 = { error: e_28_1 };
                         return [3 /*break*/, 7];
                     case 6:
                         try {
                             if (scriptFunctions_1_1 && !scriptFunctions_1_1.done && (_a = scriptFunctions_1.return)) _a.call(scriptFunctions_1);
                         }
-                        finally { if (e_26) throw e_26.error; }
+                        finally { if (e_28) throw e_28.error; }
                         return [7 /*endfinally*/];
                     case 7: return [2 /*return*/];
                 }
