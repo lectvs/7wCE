@@ -13,6 +13,10 @@ class GameElement {
     set xs(value: string) { this.div.style.left = value; }
     set ys(value: string) { this.div.style.top = value; }
 
+    set zIndex(value: number) {
+        this.div.style.zIndex = `${value}`;
+    }
+
     constructor() {
         this.game = document.getElementById('game');
         this.div = document.createElement('div');

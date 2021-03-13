@@ -1,5 +1,5 @@
 class DOMHand {
-    private readonly HAND_Y = 250;
+    private readonly HAND_Y = 150;
     private readonly CARD_DX = 137;
 
     private cardIds: number[];
@@ -12,6 +12,12 @@ class DOMHand {
         this.cardIds = cardIds;
         this.activeWonder = activeWonder;
         this.create();
+    }
+
+    update() {
+        for (let card of this.cards) {
+            card.update();
+        }
     }
 
     create() {

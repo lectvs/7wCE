@@ -1,14 +1,20 @@
 class DOMScene {
-    private readonly HAND_Y = 250;
     private readonly WONDER_START_Y = 600;
     private readonly WONDER_DX = 500;
     private readonly WONDER_DY = 500;
+
+    mouseX: number = 0;
+    mouseY: number = 0;
 
     wonders: DOMWonder[];
     hand: DOMHand;
 
     constructor() {
         this.wonders = [];
+    }
+
+    update() {
+        this.hand.update();
     }
 
     create() {
@@ -56,6 +62,11 @@ class DOMScene {
         }
 
         this.hand = new DOMHand(gamestate.hand, this.wonders[p]);
+
+        document.getElementById('game').onmousemove = (event: MouseEvent) => {
+            this.mouseX = event.x;
+            this.mouseY = event.y - document.getElementById('status_text').clientHeight;
+        }
     }
 
     destroy() {

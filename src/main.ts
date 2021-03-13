@@ -3,7 +3,7 @@ class Main {
     static player: string;
     static gamestate: API.GameState;
 
-    static mouseDown: boolean;
+    static mouseDown: boolean = false;
 
     static scene: DOMScene;
 
@@ -52,6 +52,7 @@ class Main {
     }
 
     static update() {
+        if (this.scene) this.scene.update();
         this.scriptManager.update();
     }
 

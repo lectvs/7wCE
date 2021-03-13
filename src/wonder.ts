@@ -24,6 +24,7 @@ class DOMWonder extends GameElement {
     private readonly STAGE_PAYMENT_OFFSET_X = -10;
     private readonly STAGE_PAYMENT_OFFSET_Y = -13;
     private readonly STAGE_PAYMENT_SCALE = 0.15;
+    private readonly BUILT_STAGE_OFFSET_Y = -130;
 
     private player: string;
 
@@ -36,6 +37,30 @@ class DOMWonder extends GameElement {
 
         let canvas = this.draw();
         this.div.appendChild(canvas);
+
+        this.zIndex = 10;
+    }
+
+    getMainRegion() {
+        return new PIXI.Rectangle(this.x - this.BOARD_WIDTH/2, this.y - this.BOARD_HEIGHT/2, this.BOARD_WIDTH, this.BOARD_HEIGHT - this.STAGE_HEIGHT);
+    }
+
+    getStageRegion() {
+        return new PIXI.Rectangle(this.x - this.BOARD_WIDTH/2, this.y + this.BOARD_HEIGHT/2 - this.STAGE_HEIGHT, this.BOARD_WIDTH, 2*this.STAGE_HEIGHT);
+    }
+
+    getClosestStageId(posx: number) {
+        let minStage = 0;
+        for (let i = 0; i < this.stageXs.length; i++) {
+            if (Math.abs(this.x - this.BOARD_WIDTH/2 + this.stageXs[i] - posx) < Math.abs(this.x - this.BOARD_WIDTH/2 + this.stageXs[minStage] - posx)) {
+                minStage = i;
+            }
+        }
+        return minStage;
+    }
+
+    getCardPositionForStage(stage: number) {
+        return new PIXI.Point(this.x - this.BOARD_WIDTH/2 + this.stageXs[stage], this.y + this.BOARD_HEIGHT/2 + this.BUILT_STAGE_OFFSET_Y);
     }
 
     private draw() {
