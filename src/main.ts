@@ -48,7 +48,7 @@ class Main {
         this.gamestate = gamestate;
         this.scene = new DOMScene();
         this.scene.create();
-        //this.sendUpdate();
+        this.sendUpdate();
     }
 
     static update() {
@@ -187,5 +187,9 @@ class Main {
 
         //     app.stage.removeChild(errorBox);
         // });
+    }
+
+    static getGameY() {
+        return document.getElementById('status').clientHeight;
     }
 }

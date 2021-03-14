@@ -8,6 +8,7 @@ class DOMScene {
 
     wonders: DOMWonder[];
     hand: DOMHand;
+    discardPile: DOMDiscardPile;
 
     constructor() {
         this.wonders = [];
@@ -15,6 +16,9 @@ class DOMScene {
 
     update() {
         this.hand.update();
+        for (let wonder of this.wonders) {
+            wonder.update();
+        }
     }
 
     create() {
@@ -63,16 +67,21 @@ class DOMScene {
 
         this.hand = new DOMHand(gamestate.hand, this.wonders[p]);
 
+        this.discardPile = new DOMDiscardPile();
+        this.discardPile.xs = '50%';
+        this.discardPile.y = this.WONDER_START_Y + this.WONDER_DY;
+        this.discardPile.addToGame();
+
         document.getElementById('game').onmousemove = (event: MouseEvent) => {
-            this.mouseX = event.x;
-            this.mouseY = event.y - document.getElementById('status_text').clientHeight;
+            this.mouseX = event.pageX;
+            this.mouseY = event.pageY - Main.getGameY();
         }
     }
 
     destroy() {
-        for (let wonder of this.wonders) {
-            wonder.removeFromGame();
+        let game = document.getElementById('game');
+        while (game.firstChild) {
+            game.removeChild(game.firstChild);
         }
-        this.wonders = [];
     }
 }

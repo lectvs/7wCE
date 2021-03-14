@@ -8,6 +8,15 @@ class DOMHand {
     handPositions: HTMLDivElement[];
     cards: DOMCard[];
 
+    get selectedCard() {
+        for (let card of this.cards) {
+            if (card.state.type.startsWith('locked')) {
+                return card;
+            }
+        }
+        return undefined;
+    }
+
     constructor(cardIds: number[], activeWonder: DOMWonder) {
         this.cardIds = cardIds;
         this.activeWonder = activeWonder;
@@ -34,11 +43,7 @@ class DOMHand {
             card.addToGame();
             this.cards.push(card);
 
-            //card.state = { type: 'in_hand', visualState: 'full' };
+            card.state = { type: 'in_hand', visualState: 'full' };
         }
-    }
-
-    destroy() {
-
     }
 }

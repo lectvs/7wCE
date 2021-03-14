@@ -25,20 +25,90 @@ class DOMWonder extends GameElement {
     private readonly STAGE_PAYMENT_OFFSET_Y = -13;
     private readonly STAGE_PAYMENT_SCALE = 0.15;
     private readonly BUILT_STAGE_OFFSET_Y = -130;
+    private readonly PLAYED_CARD_HEIGHT = 48;
+    private readonly RESOURCE_ROLL_OFFSET_Y = 30;
+    private readonly RED_ROLL_X = -200;
+    private readonly YELLOW_ROLL_Y = -40;
+    private readonly PURPLE_ROLL_Y = 32;
+    private readonly BLUE_ROLL_Y = -40;
+    private readonly GREEN_ROLL_Y = 32;
+    private readonly OVERFLOW_ROLL_START_Y = -288;
+    private readonly OVERFLOW_ROLL_DY = -54;
 
     private player: string;
 
     stageXs: number[];
+    playedCardEffectRolls: {
+        brown: DOMPlayedCardEffectRoll;
+        grey: DOMPlayedCardEffectRoll;
+        red: DOMPlayedCardEffectRoll;
+        yellow: DOMPlayedCardEffectRoll;
+        purple: DOMPlayedCardEffectRoll;
+        blue: DOMPlayedCardEffectRoll;
+        green: DOMPlayedCardEffectRoll;
+    } & Dict<DOMPlayedCardEffectRoll>;
+    overflowCardEffectRolls: DOMPlayedCardEffectRoll[];
+    builtWonderCards: DOMCard[];
 
     constructor(player: string) {
         super();
 
         this.player = player;
+        let playerData = Main.gamestate.playerData[this.player];
 
-        let canvas = this.draw();
-        this.div.appendChild(canvas);
+        let boardDiv = this.div.appendChild(document.createElement('div'));
+        boardDiv.appendChild(this.draw());
 
-        this.zIndex = 10;
+        this.playedCardEffectRolls = {
+            brown: new DOMPlayedCardEffectRoll(-this.BOARD_WIDTH/2, -this.BOARD_HEIGHT/2 - this.RESOURCE_ROLL_OFFSET_Y, false),
+            grey: undefined,
+            red: new DOMPlayedCardEffectRoll(this.RED_ROLL_X, -this.BOARD_HEIGHT/2 + this.BOARD_BORDER + this.PLAYED_CARD_HEIGHT/2, false),
+            yellow: new DOMPlayedCardEffectRoll(-this.BOARD_WIDTH/2 + this.BOARD_BORDER, this.YELLOW_ROLL_Y, false),
+            purple: new DOMPlayedCardEffectRoll(-this.BOARD_WIDTH/2 + this.BOARD_BORDER, this.PURPLE_ROLL_Y, false),
+            blue: new DOMPlayedCardEffectRoll(this.BOARD_WIDTH/2 - this.BOARD_BORDER, this.BLUE_ROLL_Y, true),
+            green: new DOMPlayedCardEffectRoll(this.BOARD_WIDTH/2 - this.BOARD_BORDER, this.GREEN_ROLL_Y, true),
+        };
+        this.playedCardEffectRolls.grey = this.playedCardEffectRolls.brown;
+        this.overflowCardEffectRolls = [];
+        this.pushNewOverflowCardEffectRoll();
+
+        for (let apiCardId of playerData.playedCards) {
+            let apiCard = Main.gamestate.cards[apiCardId];
+            let card = new DOMCard(apiCardId, apiCard, undefined, this);
+            this.addNewCardEffect(card);
+            card.addToGame();
+        }
+
+        this.builtWonderCards = [];
+        for (let stageBuilt of playerData.stagesBuilt) {
+            let justPlayed = (playerData.lastMove && playerData.lastMove.action === 'wonder' && playerData.lastMove.stage === stageBuilt.stage);
+            let card = DOMCard.flippedCardForAge(stageBuilt.cardAge, justPlayed);
+            
+            card.zIndex = ZIndices.CARD_WONDER;
+            this.builtWonderCards.push(card);
+            card.addToGame();
+        }
+
+        this.zIndex = ZIndices.WONDER;
+    }
+
+    update() {
+        for (let color in this.playedCardEffectRolls) {
+            this.playedCardEffectRolls[color].x = this.x + this.playedCardEffectRolls[color].offsetx;
+            this.playedCardEffectRolls[color].y = this.y + this.playedCardEffectRolls[color].offsety;
+            this.playedCardEffectRolls[color].update();
+        }
+
+        for (let overflowCardEffectRoll of this.overflowCardEffectRolls) {
+            overflowCardEffectRoll.x = this.x + overflowCardEffectRoll.offsetx;
+            overflowCardEffectRoll.y = this.y + overflowCardEffectRoll.offsety;
+            overflowCardEffectRoll.update();
+        }
+
+        for (let i = 0; i < this.builtWonderCards.length; i++) {
+            this.builtWonderCards[i].x = this.x - this.BOARD_WIDTH/2 + this.stageXs[Main.gamestate.playerData[this.player].stagesBuilt[i].stage];
+            this.builtWonderCards[i].y = this.y + this.BOARD_HEIGHT/2 + this.BUILT_STAGE_OFFSET_Y;
+        }
     }
 
     getMainRegion() {
@@ -61,6 +131,51 @@ class DOMWonder extends GameElement {
 
     getCardPositionForStage(stage: number) {
         return new PIXI.Point(this.x - this.BOARD_WIDTH/2 + this.stageXs[stage], this.y + this.BOARD_HEIGHT/2 + this.BUILT_STAGE_OFFSET_Y);
+    }
+
+    getNewCardEffectWorldPosition(card: DOMCard) {
+        let color = card.apiCard.color;
+        if (this.playedCardEffectRolls[color].canAddCard(card, this.getCardEffectRollMaxWidth(color))) {
+            return this.playedCardEffectRolls[color].getNextPosition(card);
+        } else {
+            if (!this.overflowCardEffectRolls[0].canAddCard(card, this.BOARD_WIDTH)) {
+                this.pushNewOverflowCardEffectRoll();
+            }
+            return this.overflowCardEffectRolls[0].getNextPosition(card);
+        }
+    }
+
+    addNewCardEffect(card: DOMCard) {
+        let playerData = Main.gamestate.playerData[this.player];
+        let justPlayed = (playerData.lastMove && playerData.lastMove.action === 'play' && playerData.lastMove.card === card.apiCardId);
+        card.state = { type: 'permanent_effect', justPlayed: justPlayed };
+        let color = card.apiCard.color;
+
+        if (this.playedCardEffectRolls[color].canAddCard(card, this.getCardEffectRollMaxWidth(color))) {
+            this.playedCardEffectRolls[color].addCard(card);
+        } else {
+            if (!this.overflowCardEffectRolls[0].canAddCard(card, this.BOARD_WIDTH)) {
+                this.pushNewOverflowCardEffectRoll();
+            }
+            this.overflowCardEffectRolls[0].addCard(card);
+        }
+    }
+
+    private getCardEffectRollMaxWidth(color: string) {
+        return {
+            'brown': this.BOARD_WIDTH,
+            'grey': this.BOARD_WIDTH,
+            'red': this.BOARD_WIDTH/2 - this.RED_ROLL_X,
+            'yellow': this.BOARD_WIDTH - 2*this.BOARD_BORDER - this.playedCardEffectRolls['blue'].width,
+            'purple': this.BOARD_WIDTH - 2*this.BOARD_BORDER - this.playedCardEffectRolls['green'].width,
+            'blue': this.BOARD_WIDTH - 2*this.BOARD_BORDER - this.playedCardEffectRolls['yellow'].width,
+            'green': this.BOARD_WIDTH - 2*this.BOARD_BORDER - this.playedCardEffectRolls['purple'].width,
+        }[color];
+    }
+
+    private pushNewOverflowCardEffectRoll() {
+        let roll = new DOMPlayedCardEffectRoll(-this.BOARD_WIDTH/2, this.OVERFLOW_ROLL_START_Y + this.OVERFLOW_ROLL_DY*(this.overflowCardEffectRolls.length-1), false);
+        this.overflowCardEffectRolls.unshift(roll);
     }
 
     private draw() {

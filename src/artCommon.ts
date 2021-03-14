@@ -8,6 +8,8 @@ namespace ArtCommon {
         3: 0xDE8C60,
     };
 
+    export const discardPileColor = 0x888888;
+
     export function cardBannerForColor(color: string) {
         if (color === 'brown') return 0x9F441C;
         if (color === 'grey') return 0xADB1B0;
