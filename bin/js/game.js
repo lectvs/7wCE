@@ -212,7 +212,6 @@ var API;
                 var neg_i = options[i].neg || 0;
                 var pos_j = options[j].pos || 0;
                 var neg_j = options[j].neg || 0;
-                console.log(pos_i, neg_i, pos_j, neg_j);
                 if (pos_i <= pos_j && neg_i <= neg_j) {
                     options.splice(j, 1);
                     j--;
@@ -304,6 +303,14 @@ var ArtCommon;
         3: 0xDE8C60,
     };
     ArtCommon.discardPileColor = 0x888888;
+    function domElementForArt(art, scale) {
+        if (scale === void 0) { scale = 1; }
+        art.scale.set(art.scale.x * scale, art.scale.y * scale);
+        var bounds = art.getBounds();
+        art.position.set(art.x - bounds.left, art.y - bounds.top);
+        return render(art, bounds.width, bounds.height);
+    }
+    ArtCommon.domElementForArt = domElementForArt;
     function cardBannerForColor(color) {
         if (color === 'brown')
             return 0x9F441C;
@@ -790,6 +797,18 @@ var ArtCommon;
         return graphics;
     }
     ArtCommon.pyramidStages = pyramidStages;
+    function goldCoin() {
+        var container = new PIXI.Container();
+        container.addChild(debugEffect(0xFBE317));
+        return container;
+    }
+    ArtCommon.goldCoin = goldCoin;
+    function pointsWreath() {
+        var container = new PIXI.Container();
+        container.addChild(debugEffect(0xFFFFFF));
+        return container;
+    }
+    ArtCommon.pointsWreath = pointsWreath;
     function payment(amount) {
         if (!isFinite(amount)) {
             return ArtCommon.X(0xFF0000);
@@ -1123,7 +1142,7 @@ var DOMCard = /** @class */ (function (_super) {
                 if (this.allowPlay && this.activeWonder.getMainRegion().contains(Main.scene.mouseX, Main.scene.mouseY)) {
                     var move = { action: 'play', card: this.apiCardId };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
-                        //Main.scene.startPaymentDialog(move, 400, 400);
+                        Main.scene.startPaymentDialog(this, move);
                     }
                     else {
                         move.payment = { bank: API.minimalBankPayment(move, Main.gamestate.validMoves) };
@@ -1134,7 +1153,7 @@ var DOMCard = /** @class */ (function (_super) {
                 else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(Main.scene.mouseX, Main.scene.mouseY)) {
                     var move = { action: 'wonder', card: this.apiCardId, stage: stage };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
-                        //Main.scene.startPaymentDialog(move, 400, 400);
+                        Main.scene.startPaymentDialog(this, move);
                     }
                     else {
                         move.payment = { bank: (_b = (_a = Main.gamestate.wonders[Main.player].stages[stage]) === null || _a === void 0 ? void 0 : _a.cost) === null || _b === void 0 ? void 0 : _b.gold };
@@ -1321,7 +1340,8 @@ var DOMCard = /** @class */ (function (_super) {
         }
     };
     DOMCard.prototype.canBeInteractable = function () {
-        //if (Main.scene && Main.scene.isPaymentMenuActive) return false;
+        if (Main.scene && Main.scene.isPaymentMenuActive)
+            return false;
         if (!this.allowPlay && this.allowBuildStages.length === 0 && !this.allowThrow)
             return false;
         return true;
@@ -1817,6 +1837,142 @@ var Main = /** @class */ (function () {
     Main.delta = 0;
     return Main;
 }());
+var DOMPaymentDialog = /** @class */ (function (_super) {
+    __extends(DOMPaymentDialog, _super);
+    function DOMPaymentDialog(card, move, activeWonder) {
+        var _this = _super.call(this) || this;
+        _this.OFFSET_X = -600;
+        _this.OFFSET_Y = -100;
+        _this.DIALOG_WIDTH = 500;
+        _this.DIALOG_EXTRA_HEIGHT = 80;
+        _this.DIALOG_CORNER_RADIUS = 10;
+        _this.DIALOG_COLOR = '#FFFFFF';
+        _this.TITLE = "Payment";
+        _this.TITLE_SIZE = 24;
+        _this.TITLE_PADDING = 16;
+        _this.PAYMENTS_MID_DIV_WIDTH_PERCENT = 20;
+        _this.PAYMENTS_DY = 50;
+        _this.PAYMENTS_TEXT_SIZE = 16;
+        _this.PAY_BUTTON_WIDTH = 48;
+        _this.PAY_BUTTON_HEIGHT = 32;
+        _this.PAY_BUTTON_COLOR = '#000088';
+        _this.card = card;
+        _this.move = move;
+        _this.activeWonder = activeWonder;
+        _this.div.appendChild(_this.draw());
+        return _this;
+    }
+    DOMPaymentDialog.prototype.update = function () {
+        this.x = this.activeWonder.x + this.OFFSET_X;
+        this.y = this.activeWonder.y + this.OFFSET_Y;
+    };
+    DOMPaymentDialog.prototype.draw = function () {
+        var _this = this;
+        var validPayments = API.minimalPaymentOptions(this.move, Main.gamestate.validMoves);
+        var dialogDiv = document.createElement('div');
+        dialogDiv.style.width = this.DIALOG_WIDTH + "px";
+        dialogDiv.style.height = validPayments.length * this.PAYMENTS_DY + this.DIALOG_EXTRA_HEIGHT + "px";
+        dialogDiv.style.backgroundColor = this.DIALOG_COLOR;
+        dialogDiv.style.borderRadius = this.DIALOG_CORNER_RADIUS + "px";
+        dialogDiv.style.position = 'relative';
+        dialogDiv.style.transform = "translate(-50%, -50%)";
+        var dialogTitle = dialogDiv.appendChild(this.drawText(this.TITLE, this.TITLE_SIZE));
+        dialogTitle.style.padding = this.TITLE_PADDING + "px";
+        var _a = __read(API.getNeighbors(Main.gamestate, Main.player), 2), negPlayer = _a[0], posPlayer = _a[1];
+        var _loop_2 = function (i) {
+            var leftDiv = dialogDiv.appendChild(document.createElement('div'));
+            leftDiv.style.width = 50 - this_2.PAYMENTS_MID_DIV_WIDTH_PERCENT / 2 + "%";
+            leftDiv.style.height = this_2.PAYMENTS_DY + "px";
+            leftDiv.style.float = 'left';
+            leftDiv.style.position = 'relative';
+            var middleDiv = dialogDiv.appendChild(document.createElement('div'));
+            middleDiv.style.width = this_2.PAYMENTS_MID_DIV_WIDTH_PERCENT + "%";
+            middleDiv.style.height = this_2.PAYMENTS_DY + "px";
+            middleDiv.style.float = 'left';
+            middleDiv.style.position = 'relative';
+            var rightDiv = dialogDiv.appendChild(document.createElement('div'));
+            rightDiv.style.width = 50 - this_2.PAYMENTS_MID_DIV_WIDTH_PERCENT / 2 + "%";
+            rightDiv.style.height = this_2.PAYMENTS_DY + "px";
+            rightDiv.style.float = 'left';
+            rightDiv.style.position = 'relative';
+            var payment = validPayments[i];
+            if (payment.neg) {
+                var paymentTextNegP = leftDiv.appendChild(this_2.drawText("<-- " + payment.neg + " to " + negPlayer, this_2.PAYMENTS_TEXT_SIZE));
+                paymentTextNegP.style.width = '100%';
+                paymentTextNegP.style.textAlign = 'right';
+                paymentTextNegP.style.position = 'absolute';
+                paymentTextNegP.style.top = '50%';
+                paymentTextNegP.style.transform = 'translate(0, -50%)';
+            }
+            if (payment.pos) {
+                var paymentTextPosP = rightDiv.appendChild(this_2.drawText("to " + posPlayer + " " + payment.pos + " -->", this_2.PAYMENTS_TEXT_SIZE));
+                paymentTextPosP.style.width = '100%';
+                paymentTextPosP.style.textAlign = 'left';
+                paymentTextPosP.style.position = 'absolute';
+                paymentTextPosP.style.top = '50%';
+                paymentTextPosP.style.transform = 'translate(0, -50%)';
+            }
+            var payButton = middleDiv.appendChild(document.createElement('div'));
+            payButton.style.backgroundColor = this_2.PAY_BUTTON_COLOR;
+            payButton.style.width = this_2.PAY_BUTTON_WIDTH + "px";
+            payButton.style.height = this_2.PAY_BUTTON_HEIGHT + "px";
+            payButton.style.position = 'absolute';
+            payButton.style.left = '50%';
+            payButton.style.top = '50%';
+            payButton.style.transform = 'translate(-50%, -50%)';
+            payButton.style.cursor = 'pointer';
+            payButton.onclick = function (event) {
+                var trueMove = {
+                    action: _this.move.action,
+                    card: _this.move.card,
+                    stage: _this.move.stage,
+                    payment: validPayments[i]
+                };
+                Main.submitMove(trueMove);
+                _this.removeFromGame(true);
+            };
+        };
+        var this_2 = this;
+        for (var i = 0; i < validPayments.length; i++) {
+            _loop_2(i);
+        }
+        // todo close button
+        var closeButton = dialogDiv.appendChild(this.drawCloseButton());
+        closeButton.style.position = 'absolute';
+        closeButton.style.left = 'calc(100% - 20px)';
+        closeButton.style.top = '20px';
+        closeButton.style.cursor = 'pointer';
+        closeButton.onclick = function (event) {
+            _this.removeFromGame();
+        };
+        return dialogDiv;
+    };
+    DOMPaymentDialog.prototype.drawText = function (text, fontSize) {
+        var p = document.createElement('p');
+        p.textContent = text;
+        p.style.textAlign = 'center';
+        p.style.fontFamily = "'Courier New', Courier, monospace";
+        p.style.fontSize = fontSize + "px";
+        return p;
+    };
+    DOMPaymentDialog.prototype.drawCloseButton = function () {
+        var closeButton = new PIXI.Container();
+        var X = ArtCommon.X(0x000000);
+        X.scale.set(0.2);
+        X.position.set(18, 18);
+        closeButton.addChild(X);
+        return render(closeButton, 36, 36);
+    };
+    DOMPaymentDialog.prototype.removeFromGame = function (success) {
+        if (success === void 0) { success = false; }
+        _super.prototype.removeFromGame.call(this);
+        Main.scene.paymentDialog = null;
+        if (!success) {
+            this.card.deselect();
+        }
+    };
+    return DOMPaymentDialog;
+}(GameElement));
 var DOMPlayedCardEffectRoll = /** @class */ (function () {
     function DOMPlayedCardEffectRoll(offsetx, offsety, reverse) {
         this.cards = [];
@@ -1871,6 +2027,11 @@ var DOMScene = /** @class */ (function () {
         this.mouseY = 0;
         this.wonders = [];
     }
+    Object.defineProperty(DOMScene.prototype, "isPaymentMenuActive", {
+        get: function () { return !!this.paymentDialog; },
+        enumerable: false,
+        configurable: true
+    });
     DOMScene.prototype.update = function () {
         var e_16, _a;
         this.hand.update();
@@ -1886,6 +2047,9 @@ var DOMScene = /** @class */ (function () {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
             finally { if (e_16) throw e_16.error; }
+        }
+        if (this.paymentDialog) {
+            this.paymentDialog.update();
         }
     };
     DOMScene.prototype.create = function () {
@@ -1933,12 +2097,21 @@ var DOMScene = /** @class */ (function () {
             _this.mouseX = event.pageX;
             _this.mouseY = event.pageY - Main.getGameY();
         };
+        this.update();
     };
     DOMScene.prototype.destroy = function () {
         var game = document.getElementById('game');
         while (game.firstChild) {
             game.removeChild(game.firstChild);
         }
+    };
+    DOMScene.prototype.startPaymentDialog = function (card, move) {
+        if (this.paymentDialog) {
+            this.paymentDialog.removeFromGame();
+        }
+        this.paymentDialog = new DOMPaymentDialog(card, move, this.wonders[Main.gamestate.players.indexOf(Main.player)]);
+        this.paymentDialog.zIndex = ZIndices.PAYMENT_DIALOG;
+        this.paymentDialog.addToGame();
     };
     return DOMScene;
 }());
@@ -2097,6 +2270,10 @@ var DOMWonder = /** @class */ (function (_super) {
         var playerData = Main.gamestate.playerData[_this.player];
         var boardDiv = _this.div.appendChild(document.createElement('div'));
         boardDiv.appendChild(_this.draw());
+        var sidebar = _this.div.appendChild(_this.drawSidebar());
+        sidebar.style.position = 'absolute';
+        sidebar.style.left = _this.BOARD_WIDTH / 2 + "px";
+        sidebar.style.top = -_this.BOARD_HEIGHT / 2 + "px";
         _this.playedCardEffectRolls = {
             brown: new DOMPlayedCardEffectRoll(-_this.BOARD_WIDTH / 2, -_this.BOARD_HEIGHT / 2 - _this.RESOURCE_ROLL_OFFSET_Y, false),
             grey: undefined,
@@ -2129,7 +2306,7 @@ var DOMWonder = /** @class */ (function (_super) {
         try {
             for (var _e = __values(playerData.stagesBuilt), _f = _e.next(); !_f.done; _f = _e.next()) {
                 var stageBuilt = _f.value;
-                var justPlayed = (playerData.lastMove && playerData.lastMove.action === 'wonder' && playerData.lastMove.stage === stageBuilt.stage);
+                var justPlayed = (Main.gamestate.state !== 'GAME_COMPLETE' && playerData.lastMove && playerData.lastMove.action === 'wonder' && playerData.lastMove.stage === stageBuilt.stage);
                 var card = DOMCard.flippedCardForAge(stageBuilt.cardAge, justPlayed);
                 card.zIndex = ZIndices.CARD_WONDER;
                 _this.builtWonderCards.push(card);
@@ -2171,6 +2348,7 @@ var DOMWonder = /** @class */ (function (_super) {
         for (var i = 0; i < this.builtWonderCards.length; i++) {
             this.builtWonderCards[i].x = this.x - this.BOARD_WIDTH / 2 + this.stageXs[Main.gamestate.playerData[this.player].stagesBuilt[i].stage];
             this.builtWonderCards[i].y = this.y + this.BOARD_HEIGHT / 2 + this.BUILT_STAGE_OFFSET_Y;
+            this.builtWonderCards[i].update();
         }
     };
     DOMWonder.prototype.getMainRegion = function () {
@@ -2205,7 +2383,7 @@ var DOMWonder = /** @class */ (function (_super) {
     };
     DOMWonder.prototype.addNewCardEffect = function (card) {
         var playerData = Main.gamestate.playerData[this.player];
-        var justPlayed = (playerData.lastMove && playerData.lastMove.action === 'play' && playerData.lastMove.card === card.apiCardId);
+        var justPlayed = (Main.gamestate.state !== 'GAME_COMPLETE' && playerData.lastMove && playerData.lastMove.action === 'play' && playerData.lastMove.card === card.apiCardId);
         card.state = { type: 'permanent_effect', justPlayed: justPlayed };
         var color = card.apiCard.color;
         if (this.playedCardEffectRolls[color].canAddCard(card, this.getCardEffectRollMaxWidth(color))) {
@@ -2315,6 +2493,36 @@ var DOMWonder = /** @class */ (function (_super) {
         }
         return render(wonderBoard, this.BOARD_WIDTH, this.BOARD_HEIGHT);
     };
+    DOMWonder.prototype.drawSidebar = function () {
+        var sidebar = document.createElement('div');
+        var pointsWreath = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.pointsWreath(), 0.2));
+        pointsWreath.style.position = 'absolute';
+        pointsWreath.style.left = '15px';
+        pointsWreath.style.top = '15px';
+        var pointsText = sidebar.appendChild(document.createElement('p'));
+        pointsText.textContent = "" + Main.gamestate.playerData[this.player].pointsDistribution.total;
+        pointsText.style.fontFamily = "'Courier New', Courier, monospace";
+        pointsText.style.fontSize = '20px';
+        pointsText.style.color = '#FFFFFF';
+        pointsText.style.position = 'absolute';
+        pointsText.style.left = '30px';
+        pointsText.style.top = '15px';
+        pointsText.style.transform = 'translate(0, -50%)';
+        var goldCoin = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.goldCoin(), 0.2));
+        goldCoin.style.position = 'absolute';
+        goldCoin.style.left = '15px';
+        goldCoin.style.top = '45px';
+        var goldText = sidebar.appendChild(document.createElement('p'));
+        goldText.textContent = "" + Main.gamestate.playerData[this.player].gold;
+        goldText.style.fontFamily = "'Courier New', Courier, monospace";
+        goldText.style.fontSize = '20px';
+        goldText.style.color = '#FBE317';
+        goldText.style.position = 'absolute';
+        goldText.style.left = '30px';
+        goldText.style.top = '45px';
+        goldText.style.transform = 'translate(0, -50%)';
+        return sidebar;
+    };
     return DOMWonder;
 }(GameElement));
 var ZIndices;
@@ -2326,6 +2534,7 @@ var ZIndices;
     ZIndices.WONDER = 10;
     ZIndices.CARD_PLAYED = 11;
     ZIndices.CARD_DRAGGING = 100;
+    ZIndices.PAYMENT_DIALOG = 1000;
 })(ZIndices || (ZIndices = {}));
 var Card = /** @class */ (function (_super) {
     __extends(Card, _super);
@@ -3088,17 +3297,17 @@ var Scene = /** @class */ (function () {
         var paymentTitle = Shapes.centeredText(0, -160, "Payment", 0.25, 0x000000);
         this.paymentMenu.addChild(paymentTitle);
         var _a = __read(API.getNeighbors(Main.gamestate, Main.player), 2), negPlayer = _a[0], posPlayer = _a[1];
-        var _loop_2 = function (i) {
+        var _loop_3 = function (i) {
             var payment = validPayments[i];
             if (payment.neg) {
                 var paymentTextNeg = Shapes.centeredText(-paymentsDX, paymentsStart + i * paymentsDY, "<-- " + payment.neg + " to " + negPlayer, 0.25, 0x000000);
                 paymentTextNeg.anchor.set(1, 0.5);
-                this_2.paymentMenu.addChild(paymentTextNeg);
+                this_3.paymentMenu.addChild(paymentTextNeg);
             }
             if (payment.pos) {
                 var paymentTextPos = Shapes.centeredText(paymentsDX, paymentsStart + i * paymentsDY, "to " + posPlayer + " " + payment.pos + " -->", 0.25, 0x000000);
                 paymentTextPos.anchor.set(0, 0.5);
-                this_2.paymentMenu.addChild(paymentTextPos);
+                this_3.paymentMenu.addChild(paymentTextPos);
             }
             var paymentButton = Shapes.filledRoundedRect(-28, -20, 56, 40, 8, 0x000088);
             paymentButton.position.set(0, paymentsStart + i * paymentsDY);
@@ -3114,11 +3323,11 @@ var Scene = /** @class */ (function () {
                 Main.submitMove(trueMove);
                 _this.paymentMenu.visible = false;
             });
-            this_2.paymentMenu.addChild(paymentButton);
+            this_3.paymentMenu.addChild(paymentButton);
         };
-        var this_2 = this;
+        var this_3 = this;
         for (var i = 0; i < validPayments.length; i++) {
-            _loop_2(i);
+            _loop_3(i);
         }
         var bounds = this.paymentMenu.getLocalBounds();
         var halfWidth = Math.max(Math.abs(bounds.left), Math.abs(bounds.left + bounds.width));

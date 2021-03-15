@@ -188,7 +188,6 @@ namespace API {
                 let neg_i = options[i].neg || 0;
                 let pos_j = options[j].pos || 0;
                 let neg_j = options[j].neg || 0;
-                console.log(pos_i, neg_i, pos_j, neg_j)
                 if (pos_i <= pos_j && neg_i <= neg_j) {
                     options.splice(j, 1);
                     j--;

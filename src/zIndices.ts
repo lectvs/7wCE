@@ -6,4 +6,5 @@ namespace ZIndices {
     export const WONDER = 10;
     export const CARD_PLAYED = 11;
     export const CARD_DRAGGING = 100;
+    export const PAYMENT_DIALOG = 1000;
 }

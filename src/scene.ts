@@ -9,6 +9,9 @@ class DOMScene {
     wonders: DOMWonder[];
     hand: DOMHand;
     discardPile: DOMDiscardPile;
+    paymentDialog: DOMPaymentDialog;
+
+    get isPaymentMenuActive() { return !!this.paymentDialog; }
 
     constructor() {
         this.wonders = [];
@@ -18,6 +21,9 @@ class DOMScene {
         this.hand.update();
         for (let wonder of this.wonders) {
             wonder.update();
+        }
+        if (this.paymentDialog) {
+            this.paymentDialog.update();
         }
     }
 
@@ -76,6 +82,8 @@ class DOMScene {
             this.mouseX = event.pageX;
             this.mouseY = event.pageY - Main.getGameY();
         }
+
+        this.update();
     }
 
     destroy() {
@@ -83,5 +91,14 @@ class DOMScene {
         while (game.firstChild) {
             game.removeChild(game.firstChild);
         }
+    }
+
+    startPaymentDialog(card: DOMCard, move: API.Move) {
+        if (this.paymentDialog) {
+            this.paymentDialog.removeFromGame();
+        }
+        this.paymentDialog = new DOMPaymentDialog(card, move, this.wonders[Main.gamestate.players.indexOf(Main.player)]);
+        this.paymentDialog.zIndex = ZIndices.PAYMENT_DIALOG;
+        this.paymentDialog.addToGame();
     }
 }

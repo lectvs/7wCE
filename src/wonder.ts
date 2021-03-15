@@ -1,7 +1,6 @@
 /// <reference path="gameElement.ts" />
 
 class DOMWonder extends GameElement {
-
     private readonly BOARD_WIDTH = 600;
     private readonly BOARD_HEIGHT = 300;
     private readonly BOARD_CORNER_RADIUS = 30;
@@ -58,6 +57,10 @@ class DOMWonder extends GameElement {
 
         let boardDiv = this.div.appendChild(document.createElement('div'));
         boardDiv.appendChild(this.draw());
+        let sidebar = this.div.appendChild(this.drawSidebar());
+        sidebar.style.position = 'absolute';
+        sidebar.style.left = `${this.BOARD_WIDTH/2}px`;
+        sidebar.style.top = `${-this.BOARD_HEIGHT/2}px`;
 
         this.playedCardEffectRolls = {
             brown: new DOMPlayedCardEffectRoll(-this.BOARD_WIDTH/2, -this.BOARD_HEIGHT/2 - this.RESOURCE_ROLL_OFFSET_Y, false),
@@ -81,7 +84,7 @@ class DOMWonder extends GameElement {
 
         this.builtWonderCards = [];
         for (let stageBuilt of playerData.stagesBuilt) {
-            let justPlayed = (playerData.lastMove && playerData.lastMove.action === 'wonder' && playerData.lastMove.stage === stageBuilt.stage);
+            let justPlayed = (Main.gamestate.state !== 'GAME_COMPLETE' && playerData.lastMove && playerData.lastMove.action === 'wonder' && playerData.lastMove.stage === stageBuilt.stage);
             let card = DOMCard.flippedCardForAge(stageBuilt.cardAge, justPlayed);
             
             card.zIndex = ZIndices.CARD_WONDER;
@@ -108,6 +111,7 @@ class DOMWonder extends GameElement {
         for (let i = 0; i < this.builtWonderCards.length; i++) {
             this.builtWonderCards[i].x = this.x - this.BOARD_WIDTH/2 + this.stageXs[Main.gamestate.playerData[this.player].stagesBuilt[i].stage];
             this.builtWonderCards[i].y = this.y + this.BOARD_HEIGHT/2 + this.BUILT_STAGE_OFFSET_Y;
+            this.builtWonderCards[i].update();
         }
     }
 
@@ -147,7 +151,7 @@ class DOMWonder extends GameElement {
 
     addNewCardEffect(card: DOMCard) {
         let playerData = Main.gamestate.playerData[this.player];
-        let justPlayed = (playerData.lastMove && playerData.lastMove.action === 'play' && playerData.lastMove.card === card.apiCardId);
+        let justPlayed = (Main.gamestate.state !== 'GAME_COMPLETE' && playerData.lastMove && playerData.lastMove.action === 'play' && playerData.lastMove.card === card.apiCardId);
         card.state = { type: 'permanent_effect', justPlayed: justPlayed };
         let color = card.apiCard.color;
 
@@ -277,5 +281,41 @@ class DOMWonder extends GameElement {
         }
 
         return render(wonderBoard, this.BOARD_WIDTH, this.BOARD_HEIGHT);
+    }
+
+    private drawSidebar() {
+        let sidebar = document.createElement('div');
+
+        let pointsWreath = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.pointsWreath(), 0.2));
+        pointsWreath.style.position = 'absolute';
+        pointsWreath.style.left = '15px';
+        pointsWreath.style.top = '15px';
+
+        let pointsText = sidebar.appendChild(document.createElement('p'));
+        pointsText.textContent = `${Main.gamestate.playerData[this.player].pointsDistribution.total}`;
+        pointsText.style.fontFamily = "'Courier New', Courier, monospace";
+        pointsText.style.fontSize = '20px';
+        pointsText.style.color = '#FFFFFF';
+        pointsText.style.position = 'absolute';
+        pointsText.style.left = '30px';
+        pointsText.style.top = '15px';
+        pointsText.style.transform = 'translate(0, -50%)';
+
+        let goldCoin = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.goldCoin(), 0.2));
+        goldCoin.style.position = 'absolute';
+        goldCoin.style.left = '15px';
+        goldCoin.style.top = '45px';
+
+        let goldText = sidebar.appendChild(document.createElement('p'));
+        goldText.textContent = `${Main.gamestate.playerData[this.player].gold}`;
+        goldText.style.fontFamily = "'Courier New', Courier, monospace";
+        goldText.style.fontSize = '20px';
+        goldText.style.color = '#FBE317';
+        goldText.style.position = 'absolute';
+        goldText.style.left = '30px';
+        goldText.style.top = '45px';
+        goldText.style.transform = 'translate(0, -50%)';
+
+        return sidebar;
     }
 }

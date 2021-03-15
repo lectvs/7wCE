@@ -10,6 +10,13 @@ namespace ArtCommon {
 
     export const discardPileColor = 0x888888;
 
+    export function domElementForArt(art: PIXI.DisplayObject, scale: number = 1) {
+        art.scale.set(art.scale.x * scale, art.scale.y * scale);
+        let bounds = art.getBounds();
+        art.position.set(art.x - bounds.left, art.y - bounds.top);
+        return render(art, bounds.width, bounds.height);
+    }
+
     export function cardBannerForColor(color: string) {
         if (color === 'brown') return 0x9F441C;
         if (color === 'grey') return 0xADB1B0;
@@ -423,6 +430,18 @@ namespace ArtCommon {
         graphics.drawPolygon([ -32, 20, 32, 20, 48, 48, -48, 48 ]);
         graphics.endFill();
         return graphics;
+    }
+
+    export function goldCoin() {
+        let container = new PIXI.Container();
+        container.addChild(debugEffect(0xFBE317));
+        return container;
+    }
+
+    export function pointsWreath() {
+        let container = new PIXI.Container();
+        container.addChild(debugEffect(0xFFFFFF));
+        return container;
     }
 
     export function payment(amount: number) {

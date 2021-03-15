@@ -133,7 +133,7 @@ class DOMCard extends GameElement {
                 if (this.allowPlay && this.activeWonder.getMainRegion().contains(Main.scene.mouseX, Main.scene.mouseY)) {
                     let move: API.Move = { action: 'play', card: this.apiCardId };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
-                        //Main.scene.startPaymentDialog(move, 400, 400);
+                        Main.scene.startPaymentDialog(this, move);
                     } else {
                         move.payment = { bank: API.minimalBankPayment(move, Main.gamestate.validMoves) };
                         Main.submitMove(move);
@@ -142,7 +142,7 @@ class DOMCard extends GameElement {
                 } else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(Main.scene.mouseX, Main.scene.mouseY)) {
                     let move: API.Move = { action: 'wonder', card: this.apiCardId, stage: stage };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
-                        //Main.scene.startPaymentDialog(move, 400, 400);
+                        Main.scene.startPaymentDialog(this, move);
                     } else {
                         move.payment = { bank: Main.gamestate.wonders[Main.player].stages[stage]?.cost?.gold };
                         Main.submitMove(move);
@@ -303,7 +303,7 @@ class DOMCard extends GameElement {
     }
 
     canBeInteractable() {
-        //if (Main.scene && Main.scene.isPaymentMenuActive) return false;
+        if (Main.scene && Main.scene.isPaymentMenuActive) return false;
         if (!this.allowPlay && this.allowBuildStages.length === 0 && !this.allowThrow) return false;
         return true;
     }
