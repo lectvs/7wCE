@@ -17,6 +17,11 @@ class GameElement {
         this.div.style.zIndex = `${value}`;
     }
 
+    get visible() { return this.div.style.visibility !== 'hidden'; }
+    set visible(value: boolean) {
+        this.div.style.visibility = value ? 'visible' : 'hidden';
+    }
+
     constructor() {
         this.game = document.getElementById('game');
         this.div = document.createElement('div');

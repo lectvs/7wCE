@@ -46,4 +46,24 @@ class DOMHand {
             card.state = { type: 'in_hand', visualState: 'full' };
         }
     }
+
+    reflectMove(move: API.Move) {
+        if (!move || move.action === 'reject') {
+            for (let card of this.cards) {
+                card.deselect();
+            }
+            return;
+        }
+
+        let moved = false;
+        for (let card of this.cards) {
+            if (card.apiCardId === move.card) {
+                card.select(move);
+                moved = true;
+            } else {
+                card.deselect();
+            }
+        }
+        if (!moved) console.error('Move card not found in hand:', move);
+    }
 }

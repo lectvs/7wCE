@@ -219,7 +219,6 @@ namespace API {
     }
 
     export function submitmove(gameid: string, turn: number, player: string, move: Move, callback: (error: string) => any) {
-        console.log(move)
         httpRequest(`${LAMBDA_URL}?operation=submitmove&gameid=${gameid}&turn=${turn}&player=${player}&move=${JSON.stringify(move)}`, (responseJson: any, error: string) => {
             callback(error);
         });

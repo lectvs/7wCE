@@ -3,7 +3,7 @@ namespace GameStateDiffer {
         scripts: Script.Function[];
     }
 
-    export function diffNonTurn(gamestate: API.GameState) {
+    export function diffNonTurn(gamestate: API.GameState, midturn: boolean) {
         let result: DiffResult = {
             scripts: []
         };
@@ -11,14 +11,14 @@ namespace GameStateDiffer {
         for (let player of Main.gamestate.players) {
             diffPoints(gamestate, player, result);
             diffGold(gamestate, player, result);
-            diffCurrentMove(gamestate, player, result);
+            if (midturn) diffCurrentMove(gamestate, player, result);
         }
 
         return result;
     }
 
     export function diffTurn(gamestate: API.GameState): DiffResult {
-        let result: DiffResult = diffNonTurn(gamestate);
+        let result: DiffResult = diffNonTurn(gamestate, false);
 
         if (gamestate.turn - Main.gamestate.turn > 1) {
             result.scripts.splice(0);
@@ -92,7 +92,9 @@ namespace GameStateDiffer {
         // Always reflect current move.
         if (player === Main.player) {
             result.scripts.push(function*() {
-                //Main.scene.hand.reflectMove(newMove);
+                if (!Main.scene.isPaymentMenuActive) {
+                    Main.scene.hand.reflectMove(newMove);
+                }
             });
             return;
         }

@@ -1,7 +1,8 @@
 class DOMScene {
-    private readonly WONDER_START_Y = 600;
+    private readonly WONDER_START_Y = 650;
     private readonly WONDER_DX = 500;
     private readonly WONDER_DY = 500;
+    private readonly ACTION_BUTTON_Y = 360;
 
     mouseX: number = 0;
     mouseY: number = 0;
@@ -10,6 +11,7 @@ class DOMScene {
     hand: DOMHand;
     discardPile: DOMDiscardPile;
     paymentDialog: DOMPaymentDialog;
+    actionButton: DOMActionButton;
 
     get isPaymentMenuActive() { return !!this.paymentDialog; }
 
@@ -19,6 +21,7 @@ class DOMScene {
 
     update() {
         this.hand.update();
+        this.actionButton.setType(this.isMyTurnToBuildFromDiscard() ? 'reject_discard' : 'undo');
         for (let wonder of this.wonders) {
             wonder.update();
         }
@@ -72,6 +75,11 @@ class DOMScene {
             this.wonders[l] = lastWonder;
         }
 
+        this.actionButton = new DOMActionButton();
+        this.actionButton.xs = '50%';
+        this.actionButton.y = this.ACTION_BUTTON_Y;
+        this.actionButton.addToGame();
+
         let cardsInHand: number[];
         if (this.isMyTurnToBuildFromDiscard()) {
             cardsInHand = gamestate.discardedCards;
@@ -82,6 +90,7 @@ class DOMScene {
         }
 
         this.hand = new DOMHand(cardsInHand, this.wonders[p]);
+        this.hand.reflectMove(gamestate.playerData[Main.player].currentMove);
 
         this.discardPile = new DOMDiscardPile();
         this.discardPile.xs = '50%';

@@ -1,14 +1,3 @@
-var __values = (this && this.__values) || function(o) {
-    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
-    if (m) return m.call(o);
-    if (o && typeof o.length === "number") return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
-        }
-    };
-    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
-};
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -22,6 +11,17 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
 var __generator = (this && this.__generator) || function (thisArg, body) {
     var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
@@ -69,6 +69,106 @@ var __spread = (this && this.__spread) || function () {
     for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]));
     return ar;
 };
+var GameElement = /** @class */ (function () {
+    function GameElement() {
+        this.game = document.getElementById('game');
+        this.div = document.createElement('div');
+        this.div.style.position = 'absolute';
+    }
+    Object.defineProperty(GameElement.prototype, "x", {
+        get: function () {
+            return HtmlUtils.cssStylePositionToPixels(this.div.style.left, this.game.clientWidth);
+        },
+        set: function (value) { this.div.style.left = value + "px"; },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(GameElement.prototype, "y", {
+        get: function () {
+            return HtmlUtils.cssStylePositionToPixels(this.div.style.top, this.game.clientHeight);
+        },
+        set: function (value) { this.div.style.top = value + "px"; },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(GameElement.prototype, "xs", {
+        set: function (value) { this.div.style.left = value; },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(GameElement.prototype, "ys", {
+        set: function (value) { this.div.style.top = value; },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(GameElement.prototype, "zIndex", {
+        set: function (value) {
+            this.div.style.zIndex = "" + value;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(GameElement.prototype, "visible", {
+        get: function () { return this.div.style.visibility !== 'hidden'; },
+        set: function (value) {
+            this.div.style.visibility = value ? 'visible' : 'hidden';
+        },
+        enumerable: false,
+        configurable: true
+    });
+    GameElement.prototype.addToGame = function () {
+        document.querySelector('#game').appendChild(this.div);
+        HTMLCanvasElement;
+    };
+    GameElement.prototype.removeFromGame = function () {
+        if (this.div.parentElement) {
+            this.div.parentElement.removeChild(this.div);
+        }
+    };
+    return GameElement;
+}());
+/// <reference path="gameElement.ts" />
+var DOMActionButton = /** @class */ (function (_super) {
+    __extends(DOMActionButton, _super);
+    function DOMActionButton() {
+        var _this = _super.call(this) || this;
+        _this.BUTTON_WIDTH = 100;
+        _this.BUTTON_HEIGHT = 50;
+        _this.BUTTON_CORNER_RADIUS = 8;
+        var button = _this.div.appendChild(document.createElement('div'));
+        button.style.backgroundColor = 'white';
+        button.style.color = 'black';
+        button.style.width = _this.BUTTON_WIDTH + "px";
+        button.style.height = _this.BUTTON_HEIGHT + "px";
+        button.style.borderRadius = _this.BUTTON_CORNER_RADIUS + "px";
+        button.style.transform = 'translate(-50%, -50%)';
+        button.style.position = 'relative';
+        button.style.cursor = 'pointer';
+        _this.textElement = button.appendChild(document.createElement('p'));
+        _this.textElement.style.fontFamily = "'Courier New', Courier, monospace";
+        _this.textElement.style.textAlign = 'center';
+        _this.textElement.style.position = 'absolute';
+        _this.textElement.style.left = '50%';
+        _this.textElement.style.top = '50%';
+        _this.textElement.style.transform = 'translate(-50%, -50%)';
+        button.onclick = function (event) {
+            if (_this.type === 'undo') {
+                Main.undoMove();
+                if (Main.scene.isPaymentMenuActive)
+                    Main.scene.paymentDialog.removeFromGame();
+            }
+            else if (_this.type === 'reject_discard') {
+                Main.submitMove({ action: 'reject', card: -1, payment: {} });
+            }
+        };
+        return _this;
+    }
+    DOMActionButton.prototype.setType = function (type) {
+        this.type = type;
+        this.textElement.textContent = (type === 'undo') ? 'Undo' : 'No Thanks';
+    };
+    return DOMActionButton;
+}(GameElement));
 var API;
 (function (API) {
     function eqMove(move1, move2) {
@@ -244,7 +344,6 @@ var API;
     }
     API.getvalidmoves = getvalidmoves;
     function submitmove(gameid, turn, player, move, callback) {
-        console.log(move);
         httpRequest(LAMBDA_URL + "?operation=submitmove&gameid=" + gameid + "&turn=" + turn + "&player=" + player + "&move=" + JSON.stringify(move), function (responseJson, error) {
             callback(error);
         });
@@ -980,56 +1079,6 @@ var Bot;
     }
     Bot.getMove = getMove;
 })(Bot || (Bot = {}));
-var GameElement = /** @class */ (function () {
-    function GameElement() {
-        this.game = document.getElementById('game');
-        this.div = document.createElement('div');
-        this.div.style.position = 'absolute';
-    }
-    Object.defineProperty(GameElement.prototype, "x", {
-        get: function () {
-            return HtmlUtils.cssStylePositionToPixels(this.div.style.left, this.game.clientWidth);
-        },
-        set: function (value) { this.div.style.left = value + "px"; },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(GameElement.prototype, "y", {
-        get: function () {
-            return HtmlUtils.cssStylePositionToPixels(this.div.style.top, this.game.clientHeight);
-        },
-        set: function (value) { this.div.style.top = value + "px"; },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(GameElement.prototype, "xs", {
-        set: function (value) { this.div.style.left = value; },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(GameElement.prototype, "ys", {
-        set: function (value) { this.div.style.top = value; },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(GameElement.prototype, "zIndex", {
-        set: function (value) {
-            this.div.style.zIndex = "" + value;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    GameElement.prototype.addToGame = function () {
-        document.querySelector('#game').appendChild(this.div);
-        HTMLCanvasElement;
-    };
-    GameElement.prototype.removeFromGame = function () {
-        if (this.div.parentElement) {
-            this.div.parentElement.removeChild(this.div);
-        }
-    };
-    return GameElement;
-}());
 /// <reference path="gameElement.ts" />
 var DOMCard = /** @class */ (function (_super) {
     __extends(DOMCard, _super);
@@ -1435,7 +1484,7 @@ var DOMDiscardPile = /** @class */ (function (_super) {
 }(GameElement));
 var GameStateDiffer;
 (function (GameStateDiffer) {
-    function diffNonTurn(gamestate) {
+    function diffNonTurn(gamestate, midturn) {
         var e_12, _a;
         var result = {
             scripts: []
@@ -1445,7 +1494,8 @@ var GameStateDiffer;
                 var player = _c.value;
                 diffPoints(gamestate, player, result);
                 diffGold(gamestate, player, result);
-                diffCurrentMove(gamestate, player, result);
+                if (midturn)
+                    diffCurrentMove(gamestate, player, result);
             }
         }
         catch (e_12_1) { e_12 = { error: e_12_1 }; }
@@ -1459,7 +1509,7 @@ var GameStateDiffer;
     }
     GameStateDiffer.diffNonTurn = diffNonTurn;
     function diffTurn(gamestate) {
-        var result = diffNonTurn(gamestate);
+        var result = diffNonTurn(gamestate, false);
         if (gamestate.turn - Main.gamestate.turn > 1) {
             result.scripts.splice(0);
             return;
@@ -1536,6 +1586,9 @@ var GameStateDiffer;
         if (player === Main.player) {
             result.scripts.push(function () {
                 return __generator(this, function (_a) {
+                    if (!Main.scene.isPaymentMenuActive) {
+                        Main.scene.hand.reflectMove(newMove);
+                    }
                     return [2 /*return*/];
                 });
             });
@@ -1619,6 +1672,47 @@ var DOMHand = /** @class */ (function () {
             this.cards.push(card);
             card.state = { type: 'in_hand', visualState: 'full' };
         }
+    };
+    DOMHand.prototype.reflectMove = function (move) {
+        var e_15, _a, e_16, _b;
+        if (!move || move.action === 'reject') {
+            try {
+                for (var _c = __values(this.cards), _d = _c.next(); !_d.done; _d = _c.next()) {
+                    var card = _d.value;
+                    card.deselect();
+                }
+            }
+            catch (e_15_1) { e_15 = { error: e_15_1 }; }
+            finally {
+                try {
+                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                }
+                finally { if (e_15) throw e_15.error; }
+            }
+            return;
+        }
+        var moved = false;
+        try {
+            for (var _e = __values(this.cards), _f = _e.next(); !_f.done; _f = _e.next()) {
+                var card = _f.value;
+                if (card.apiCardId === move.card) {
+                    card.select(move);
+                    moved = true;
+                }
+                else {
+                    card.deselect();
+                }
+            }
+        }
+        catch (e_16_1) { e_16 = { error: e_16_1 }; }
+        finally {
+            try {
+                if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+            }
+            finally { if (e_16) throw e_16.error; }
+        }
+        if (!moved)
+            console.error('Move card not found in hand:', move);
     };
     return DOMHand;
 }());
@@ -1720,9 +1814,10 @@ var Main = /** @class */ (function () {
                 return;
             }
             else if (gamestate.turn === Main.gamestate.turn) {
-                var diffResult = GameStateDiffer.diffNonTurn(gamestate);
+                var diffResult = GameStateDiffer.diffNonTurn(gamestate, true);
                 _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {
                     _this.gamestate = gamestate;
+                    //Main.scene.hand.reflectMove(gamestate.playerData[Main.player].currentMove);
                     _this.sendUpdate();
                 })));
             }
@@ -1771,7 +1866,7 @@ var Main = /** @class */ (function () {
         });
     };
     Main.updateBotMoves = function () {
-        var e_15, _a;
+        var e_17, _a;
         var _this = this;
         if (!this.isHost)
             return;
@@ -1804,12 +1899,12 @@ var Main = /** @class */ (function () {
                 _loop_1(player);
             }
         }
-        catch (e_15_1) { e_15 = { error: e_15_1 }; }
+        catch (e_17_1) { e_17 = { error: e_17_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_15) throw e_15.error; }
+            finally { if (e_17) throw e_17.error; }
         }
     };
     Main.stop = function () {
@@ -2019,9 +2114,10 @@ function render(object, width, height) {
 }
 var DOMScene = /** @class */ (function () {
     function DOMScene() {
-        this.WONDER_START_Y = 600;
+        this.WONDER_START_Y = 650;
         this.WONDER_DX = 500;
         this.WONDER_DY = 500;
+        this.ACTION_BUTTON_Y = 360;
         this.mouseX = 0;
         this.mouseY = 0;
         this.wonders = [];
@@ -2032,20 +2128,21 @@ var DOMScene = /** @class */ (function () {
         configurable: true
     });
     DOMScene.prototype.update = function () {
-        var e_16, _a;
+        var e_18, _a;
         this.hand.update();
+        this.actionButton.setType(this.isMyTurnToBuildFromDiscard() ? 'reject_discard' : 'undo');
         try {
             for (var _b = __values(this.wonders), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var wonder = _c.value;
                 wonder.update();
             }
         }
-        catch (e_16_1) { e_16 = { error: e_16_1 }; }
+        catch (e_18_1) { e_18 = { error: e_18_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_16) throw e_16.error; }
+            finally { if (e_18) throw e_18.error; }
         }
         if (this.paymentDialog) {
             this.paymentDialog.update();
@@ -2088,6 +2185,10 @@ var DOMScene = /** @class */ (function () {
             lastWonder.addToGame();
             this.wonders[l] = lastWonder;
         }
+        this.actionButton = new DOMActionButton();
+        this.actionButton.xs = '50%';
+        this.actionButton.y = this.ACTION_BUTTON_Y;
+        this.actionButton.addToGame();
         var cardsInHand;
         if (this.isMyTurnToBuildFromDiscard()) {
             cardsInHand = gamestate.discardedCards;
@@ -2099,6 +2200,7 @@ var DOMScene = /** @class */ (function () {
             cardsInHand = gamestate.hand;
         }
         this.hand = new DOMHand(cardsInHand, this.wonders[p]);
+        this.hand.reflectMove(gamestate.playerData[Main.player].currentMove);
         this.discardPile = new DOMDiscardPile();
         this.discardPile.xs = '50%';
         this.discardPile.y = this.WONDER_START_Y + this.WONDER_DY;
@@ -2220,7 +2322,7 @@ function cloneCanvas(canvas) {
     return newCanvas;
 }
 function contains(array, element) {
-    var e_17, _a;
+    var e_19, _a;
     try {
         for (var array_1 = __values(array), array_1_1 = array_1.next(); !array_1_1.done; array_1_1 = array_1.next()) {
             var e = array_1_1.value;
@@ -2228,12 +2330,12 @@ function contains(array, element) {
                 return true;
         }
     }
-    catch (e_17_1) { e_17 = { error: e_17_1 }; }
+    catch (e_19_1) { e_19 = { error: e_19_1 }; }
     finally {
         try {
             if (array_1_1 && !array_1_1.done && (_a = array_1.return)) _a.call(array_1);
         }
-        finally { if (e_17) throw e_17.error; }
+        finally { if (e_19) throw e_19.error; }
     }
     return false;
 }
@@ -2254,7 +2356,7 @@ function randElement(array) {
     return array[randInt(0, array.length - 1)];
 }
 function sum(array, key) {
-    var e_18, _a;
+    var e_20, _a;
     if (!array || array.length === 0) {
         return 0;
     }
@@ -2265,12 +2367,12 @@ function sum(array, key) {
             result += key(e);
         }
     }
-    catch (e_18_1) { e_18 = { error: e_18_1 }; }
+    catch (e_20_1) { e_20 = { error: e_20_1 }; }
     finally {
         try {
             if (array_2_1 && !array_2_1.done && (_a = array_2.return)) _a.call(array_2);
         }
-        finally { if (e_18) throw e_18.error; }
+        finally { if (e_20) throw e_20.error; }
     }
     return result;
 }
@@ -2278,7 +2380,7 @@ function sum(array, key) {
 var DOMWonder = /** @class */ (function (_super) {
     __extends(DOMWonder, _super);
     function DOMWonder(player) {
-        var e_19, _a, e_20, _b;
+        var e_21, _a, e_22, _b;
         var _this = _super.call(this) || this;
         _this.BOARD_WIDTH = 600;
         _this.BOARD_HEIGHT = 300;
@@ -2342,12 +2444,12 @@ var DOMWonder = /** @class */ (function (_super) {
                 card.addToGame();
             }
         }
-        catch (e_19_1) { e_19 = { error: e_19_1 }; }
+        catch (e_21_1) { e_21 = { error: e_21_1 }; }
         finally {
             try {
                 if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
             }
-            finally { if (e_19) throw e_19.error; }
+            finally { if (e_21) throw e_21.error; }
         }
         _this.builtWonderCards = [];
         try {
@@ -2360,18 +2462,18 @@ var DOMWonder = /** @class */ (function (_super) {
                 card.addToGame();
             }
         }
-        catch (e_20_1) { e_20 = { error: e_20_1 }; }
+        catch (e_22_1) { e_22 = { error: e_22_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_20) throw e_20.error; }
+            finally { if (e_22) throw e_22.error; }
         }
         _this.zIndex = ZIndices.WONDER;
         return _this;
     }
     DOMWonder.prototype.update = function () {
-        var e_21, _a;
+        var e_23, _a;
         for (var color in this.playedCardEffectRolls) {
             this.playedCardEffectRolls[color].x = this.x + this.playedCardEffectRolls[color].offsetx;
             this.playedCardEffectRolls[color].y = this.y + this.playedCardEffectRolls[color].offsety;
@@ -2385,12 +2487,12 @@ var DOMWonder = /** @class */ (function (_super) {
                 overflowCardEffectRoll.update();
             }
         }
-        catch (e_21_1) { e_21 = { error: e_21_1 }; }
+        catch (e_23_1) { e_23 = { error: e_23_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_21) throw e_21.error; }
+            finally { if (e_23) throw e_23.error; }
         }
         for (var i = 0; i < this.builtWonderCards.length; i++) {
             this.builtWonderCards[i].x = this.x - this.BOARD_WIDTH / 2 + this.stageXs[Main.gamestate.playerData[this.player].stagesBuilt[i].stage];
@@ -2459,7 +2561,7 @@ var DOMWonder = /** @class */ (function (_super) {
         this.overflowCardEffectRolls.unshift(roll);
     };
     DOMWonder.prototype.draw = function () {
-        var e_22, _a;
+        var e_24, _a;
         var wonder = Main.gamestate.wonders[this.player];
         var playerData = Main.gamestate.playerData[this.player];
         var wonderBoard = new PIXI.Container();
@@ -2495,12 +2597,12 @@ var DOMWonder = /** @class */ (function (_super) {
                 }
             }
         }
-        catch (e_22_1) { e_22 = { error: e_22_1 }; }
+        catch (e_24_1) { e_24 = { error: e_24_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_22) throw e_22.error; }
+            finally { if (e_24) throw e_24.error; }
         }
         var stagesMiddle = wonder.stages.length === 2 ? this.STAGE_MIDDLE_2 : this.STAGE_MIDDLE_134;
         var stageDX = wonder.stages.length === 4 ? this.STAGE_DX_4 : this.STAGE_DX_123;
@@ -2897,7 +2999,7 @@ var Card = /** @class */ (function (_super) {
         this.state = { type: 'in_hand', visualState: 'full' };
     };
     Card.prototype.configureValidMoves = function (validMoves) {
-        var e_23, _a;
+        var e_25, _a;
         this.allowPlay = false;
         this.allowBuildStages = [];
         this.allowThrow = false;
@@ -2922,12 +3024,12 @@ var Card = /** @class */ (function (_super) {
                 }
             }
         }
-        catch (e_23_1) { e_23 = { error: e_23_1 }; }
+        catch (e_25_1) { e_25 = { error: e_25_1 }; }
         finally {
             try {
                 if (validMoves_5_1 && !validMoves_5_1.done && (_a = validMoves_5.return)) _a.call(validMoves_5);
             }
-            finally { if (e_23) throw e_23.error; }
+            finally { if (e_25) throw e_25.error; }
         }
         this.paymentContainer.removeChildren();
         var payment = ArtCommon.payment(this.allowPlay ? this.minPlayCost : Infinity);
@@ -2955,7 +3057,7 @@ var EndScreen = /** @class */ (function (_super) {
         return _this;
     }
     EndScreen.prototype.create = function () {
-        var e_24, _a;
+        var e_26, _a;
         var _this = this;
         this.removeChildren();
         var players = [];
@@ -2965,12 +3067,12 @@ var EndScreen = /** @class */ (function (_super) {
                 players.push(p);
             }
         }
-        catch (e_24_1) { e_24 = { error: e_24_1 }; }
+        catch (e_26_1) { e_26 = { error: e_26_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_24) throw e_24.error; }
+            finally { if (e_26) throw e_26.error; }
         }
         players.sort(function (p1, p2) {
             var points1 = Main.gamestate.playerData[p1].pointsDistribution.total;
@@ -3047,7 +3149,7 @@ var Hand = /** @class */ (function () {
     }
     Object.defineProperty(Hand.prototype, "selectedCard", {
         get: function () {
-            var e_25, _a;
+            var e_27, _a;
             try {
                 for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var card = _c.value;
@@ -3055,12 +3157,12 @@ var Hand = /** @class */ (function () {
                         return card;
                 }
             }
-            catch (e_25_1) { e_25 = { error: e_25_1 }; }
+            catch (e_27_1) { e_27 = { error: e_27_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_25) throw e_25.error; }
+                finally { if (e_27) throw e_27.error; }
             }
             return undefined;
         },
@@ -3097,7 +3199,7 @@ var Hand = /** @class */ (function () {
         }
     };
     Hand.prototype.reflectMove = function (move) {
-        var e_26, _a, e_27, _b;
+        var e_28, _a, e_29, _b;
         if (!move || move.action === 'reject') {
             try {
                 for (var _c = __values(this.cards), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -3105,12 +3207,12 @@ var Hand = /** @class */ (function () {
                     card.deselect();
                 }
             }
-            catch (e_26_1) { e_26 = { error: e_26_1 }; }
+            catch (e_28_1) { e_28 = { error: e_28_1 }; }
             finally {
                 try {
                     if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                 }
-                finally { if (e_26) throw e_26.error; }
+                finally { if (e_28) throw e_28.error; }
             }
             return;
         }
@@ -3127,12 +3229,12 @@ var Hand = /** @class */ (function () {
                 }
             }
         }
-        catch (e_27_1) { e_27 = { error: e_27_1 }; }
+        catch (e_29_1) { e_29 = { error: e_29_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_27) throw e_27.error; }
+            finally { if (e_29) throw e_29.error; }
         }
         if (!moved)
             console.error('Move card not found in hand:', move);
@@ -3144,45 +3246,12 @@ var Hand = /** @class */ (function () {
         this.collapsed = false;
     };
     Hand.prototype.flip = function () {
-        var e_28, _a;
+        var e_30, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
                 if (card.state.type === 'in_hand')
                     card.state.visualState = 'flipped';
-            }
-        }
-        catch (e_28_1) { e_28 = { error: e_28_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_28) throw e_28.error; }
-        }
-    };
-    Hand.prototype.unflip = function () {
-        var e_29, _a;
-        try {
-            for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var card = _c.value;
-                if (card.state.type === 'in_hand')
-                    card.state.visualState = 'full';
-            }
-        }
-        catch (e_29_1) { e_29 = { error: e_29_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_29) throw e_29.error; }
-        }
-    };
-    Hand.prototype.setVisible = function (value) {
-        var e_30, _a;
-        try {
-            for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var card = _c.value;
-                card.visible = value;
             }
         }
         catch (e_30_1) { e_30 = { error: e_30_1 }; }
@@ -3191,6 +3260,39 @@ var Hand = /** @class */ (function () {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
             finally { if (e_30) throw e_30.error; }
+        }
+    };
+    Hand.prototype.unflip = function () {
+        var e_31, _a;
+        try {
+            for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var card = _c.value;
+                if (card.state.type === 'in_hand')
+                    card.state.visualState = 'full';
+            }
+        }
+        catch (e_31_1) { e_31 = { error: e_31_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_31) throw e_31.error; }
+        }
+    };
+    Hand.prototype.setVisible = function (value) {
+        var e_32, _a;
+        try {
+            for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var card = _c.value;
+                card.visible = value;
+            }
+        }
+        catch (e_32_1) { e_32 = { error: e_32_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_32) throw e_32.error; }
         }
     };
     return Hand;
@@ -3443,7 +3545,7 @@ var Scene = /** @class */ (function () {
 var Wonder = /** @class */ (function (_super) {
     __extends(Wonder, _super);
     function Wonder(wonder, playerData, player) {
-        var e_31, _a, e_32, _b, e_33, _c;
+        var e_33, _a, e_34, _b, e_35, _c;
         var _this = _super.call(this) || this;
         _this.player = player;
         var boardBase = Shapes.filledRoundedRect(-100, -50, 200, 100, 8, wonder.outline_color);
@@ -3492,12 +3594,12 @@ var Wonder = /** @class */ (function (_super) {
                 _this.addNewCardEffect(cardArt);
             }
         }
-        catch (e_31_1) { e_31 = { error: e_31_1 }; }
+        catch (e_33_1) { e_33 = { error: e_33_1 }; }
         finally {
             try {
                 if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
             }
-            finally { if (e_31) throw e_31.error; }
+            finally { if (e_33) throw e_33.error; }
         }
         var stageIdsBuilt = playerData.stagesBuilt.map(function (stageBuilt) { return stageBuilt.stage; });
         var wonderStageMinCosts = wonder.stages.map(function (stage) { return Infinity; });
@@ -3513,12 +3615,12 @@ var Wonder = /** @class */ (function (_super) {
                 }
             }
         }
-        catch (e_32_1) { e_32 = { error: e_32_1 }; }
+        catch (e_34_1) { e_34 = { error: e_34_1 }; }
         finally {
             try {
                 if (_g && !_g.done && (_b = _f.return)) _b.call(_f);
             }
-            finally { if (e_32) throw e_32.error; }
+            finally { if (e_34) throw e_34.error; }
         }
         var stagesMiddle = wonder.stages.length === 2 ? 32 : 0;
         var stageDX = wonder.stages.length === 4 ? 49 : 64;
@@ -3566,12 +3668,12 @@ var Wonder = /** @class */ (function (_super) {
                 _this.addChildAt(cardArt, 0);
             }
         }
-        catch (e_33_1) { e_33 = { error: e_33_1 }; }
+        catch (e_35_1) { e_35 = { error: e_35_1 }; }
         finally {
             try {
                 if (_j && !_j.done && (_c = _h.return)) _c.call(_h);
             }
-            finally { if (e_33) throw e_33.error; }
+            finally { if (e_35) throw e_35.error; }
         }
         _this.addChild(Shapes.filledCircle(95, -58, 5, 0xFBE317));
         _this.goldText = Shapes.centeredText(87, -58, "" + playerData.gold, 0.084, 0xFFFFFF);
@@ -3689,8 +3791,8 @@ var S;
             scriptFunctions[_i] = arguments[_i];
         }
         return function () {
-            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_34_1;
-            var e_34, _a;
+            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_36_1;
+            var e_36, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -3709,14 +3811,14 @@ var S;
                         return [3 /*break*/, 1];
                     case 4: return [3 /*break*/, 7];
                     case 5:
-                        e_34_1 = _b.sent();
-                        e_34 = { error: e_34_1 };
+                        e_36_1 = _b.sent();
+                        e_36 = { error: e_36_1 };
                         return [3 /*break*/, 7];
                     case 6:
                         try {
                             if (scriptFunctions_1_1 && !scriptFunctions_1_1.done && (_a = scriptFunctions_1.return)) _a.call(scriptFunctions_1);
                         }
-                        finally { if (e_34) throw e_34.error; }
+                        finally { if (e_36) throw e_36.error; }
                         return [7 /*endfinally*/];
                     case 7: return [2 /*return*/];
                 }

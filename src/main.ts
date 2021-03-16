@@ -83,11 +83,12 @@ class Main {
                 this.sendUpdate();
                 return;
             } else if (gamestate.turn === Main.gamestate.turn) {
-                let diffResult = GameStateDiffer.diffNonTurn(gamestate);
+                let diffResult = GameStateDiffer.diffNonTurn(gamestate, true);
                 this.scriptManager.runScript(S.chain(
                     S.simul(...diffResult.scripts),
                     S.call(() => {
                         this.gamestate = gamestate;
+                        //Main.scene.hand.reflectMove(gamestate.playerData[Main.player].currentMove);
                         this.sendUpdate();
                     })
                 ));
