@@ -1936,7 +1936,6 @@ var DOMPaymentDialog = /** @class */ (function (_super) {
         for (var i = 0; i < validPayments.length; i++) {
             _loop_2(i);
         }
-        // todo close button
         var closeButton = dialogDiv.appendChild(this.drawCloseButton());
         closeButton.style.position = 'absolute';
         closeButton.style.left = 'calc(100% - 20px)';
@@ -2051,6 +2050,7 @@ var DOMScene = /** @class */ (function () {
         if (this.paymentDialog) {
             this.paymentDialog.update();
         }
+        this.setStatus();
     };
     DOMScene.prototype.create = function () {
         var _this = this;
@@ -2088,12 +2088,23 @@ var DOMScene = /** @class */ (function () {
             lastWonder.addToGame();
             this.wonders[l] = lastWonder;
         }
-        this.hand = new DOMHand(gamestate.hand, this.wonders[p]);
+        var cardsInHand;
+        if (this.isMyTurnToBuildFromDiscard()) {
+            cardsInHand = gamestate.discardedCards;
+        }
+        else if (gamestate.state === 'DISCARD_MOVE') {
+            cardsInHand = [];
+        }
+        else {
+            cardsInHand = gamestate.hand;
+        }
+        this.hand = new DOMHand(cardsInHand, this.wonders[p]);
         this.discardPile = new DOMDiscardPile();
         this.discardPile.xs = '50%';
         this.discardPile.y = this.WONDER_START_Y + this.WONDER_DY;
         this.discardPile.addToGame();
         document.getElementById('game').onmousemove = function (event) {
+            event.preventDefault();
             _this.mouseX = event.pageX;
             _this.mouseY = event.pageY - Main.getGameY();
         };
@@ -2112,6 +2123,41 @@ var DOMScene = /** @class */ (function () {
         this.paymentDialog = new DOMPaymentDialog(card, move, this.wonders[Main.gamestate.players.indexOf(Main.player)]);
         this.paymentDialog.zIndex = ZIndices.PAYMENT_DIALOG;
         this.paymentDialog.addToGame();
+    };
+    DOMScene.prototype.setStatus = function () {
+        var gamestate = Main.gamestate;
+        var playerData = gamestate.playerData[Main.player];
+        var statusText = document.querySelector('#status > p');
+        if (gamestate.state === 'NORMAL_MOVE') {
+            if (playerData.currentMove) {
+                statusText.textContent = "Waiting for others to move";
+            }
+            else {
+                statusText.textContent = "You must play a card";
+            }
+        }
+        else if (gamestate.state === 'LAST_CARD_MOVE') {
+            if (playerData.currentMove || gamestate.validMoves.length === 0) {
+                statusText.textContent = "Waiting for others to play their last card";
+            }
+            else {
+                statusText.textContent = "You may play your last card";
+            }
+        }
+        else if (gamestate.state === 'DISCARD_MOVE') {
+            if (gamestate.discardMoveQueue[0] === Main.player) {
+                statusText.textContent = "You may build a card from the discard pile";
+            }
+            else {
+                statusText.textContent = "Waiting for " + gamestate.discardMoveQueue[0] + " to build a card from the discard pile";
+            }
+        }
+        else if (gamestate.state === 'GAME_COMPLETE') {
+            statusText.textContent = "Game complete";
+        }
+    };
+    DOMScene.prototype.isMyTurnToBuildFromDiscard = function () {
+        return Main.gamestate.state === 'DISCARD_MOVE' && Main.gamestate.discardMoveQueue[0] === Main.player;
     };
     return DOMScene;
 }());
@@ -2260,19 +2306,20 @@ var DOMWonder = /** @class */ (function (_super) {
         _this.PLAYED_CARD_HEIGHT = 48;
         _this.RESOURCE_ROLL_OFFSET_Y = 30;
         _this.RED_ROLL_X = -200;
+        _this.RED_ROLL_MAX_X = 150;
         _this.YELLOW_ROLL_Y = -40;
-        _this.PURPLE_ROLL_Y = 32;
+        _this.PURPLE_ROLL_Y = 24;
         _this.BLUE_ROLL_Y = -40;
-        _this.GREEN_ROLL_Y = 32;
+        _this.GREEN_ROLL_Y = 24;
         _this.OVERFLOW_ROLL_START_Y = -288;
         _this.OVERFLOW_ROLL_DY = -54;
+        _this.SIDEBAR_WIDTH = 600;
         _this.player = player;
         var playerData = Main.gamestate.playerData[_this.player];
         var boardDiv = _this.div.appendChild(document.createElement('div'));
         boardDiv.appendChild(_this.draw());
         var sidebar = _this.div.appendChild(_this.drawSidebar());
-        sidebar.style.position = 'absolute';
-        sidebar.style.left = _this.BOARD_WIDTH / 2 + "px";
+        sidebar.style.left = _this.BOARD_WIDTH / 2 - _this.SIDEBAR_WIDTH + "px";
         sidebar.style.top = -_this.BOARD_HEIGHT / 2 + "px";
         _this.playedCardEffectRolls = {
             brown: new DOMPlayedCardEffectRoll(-_this.BOARD_WIDTH / 2, -_this.BOARD_HEIGHT / 2 - _this.RESOURCE_ROLL_OFFSET_Y, false),
@@ -2400,7 +2447,7 @@ var DOMWonder = /** @class */ (function (_super) {
         return {
             'brown': this.BOARD_WIDTH,
             'grey': this.BOARD_WIDTH,
-            'red': this.BOARD_WIDTH / 2 - this.RED_ROLL_X,
+            'red': this.RED_ROLL_MAX_X - this.RED_ROLL_X,
             'yellow': this.BOARD_WIDTH - 2 * this.BOARD_BORDER - this.playedCardEffectRolls['blue'].width,
             'purple': this.BOARD_WIDTH - 2 * this.BOARD_BORDER - this.playedCardEffectRolls['green'].width,
             'blue': this.BOARD_WIDTH - 2 * this.BOARD_BORDER - this.playedCardEffectRolls['yellow'].width,
@@ -2495,33 +2542,43 @@ var DOMWonder = /** @class */ (function (_super) {
     };
     DOMWonder.prototype.drawSidebar = function () {
         var sidebar = document.createElement('div');
-        var pointsWreath = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.pointsWreath(), 0.2));
-        pointsWreath.style.position = 'absolute';
-        pointsWreath.style.left = '15px';
-        pointsWreath.style.top = '15px';
-        var pointsText = sidebar.appendChild(document.createElement('p'));
-        pointsText.textContent = "" + Main.gamestate.playerData[this.player].pointsDistribution.total;
-        pointsText.style.fontFamily = "'Courier New', Courier, monospace";
-        pointsText.style.fontSize = '20px';
-        pointsText.style.color = '#FFFFFF';
-        pointsText.style.position = 'absolute';
-        pointsText.style.left = '30px';
-        pointsText.style.top = '15px';
-        pointsText.style.transform = 'translate(0, -50%)';
+        sidebar.style.width = this.SIDEBAR_WIDTH + "px";
+        sidebar.style.height = '300px';
+        sidebar.style.position = 'absolute';
+        var nameText = sidebar.appendChild(this.drawSidebarText(this.player, 20));
+        nameText.style.left = this.SIDEBAR_WIDTH - 18 + "px";
+        nameText.style.top = '25px';
         var goldCoin = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.goldCoin(), 0.2));
         goldCoin.style.position = 'absolute';
-        goldCoin.style.left = '15px';
-        goldCoin.style.top = '45px';
-        var goldText = sidebar.appendChild(document.createElement('p'));
-        goldText.textContent = "" + Main.gamestate.playerData[this.player].gold;
-        goldText.style.fontFamily = "'Courier New', Courier, monospace";
-        goldText.style.fontSize = '20px';
+        goldCoin.style.left = this.SIDEBAR_WIDTH - 28 + "px";
+        goldCoin.style.top = '55px';
+        var goldText = sidebar.appendChild(this.drawSidebarText("" + Main.gamestate.playerData[this.player].gold, 20));
         goldText.style.color = '#FBE317';
-        goldText.style.position = 'absolute';
-        goldText.style.left = '30px';
-        goldText.style.top = '45px';
-        goldText.style.transform = 'translate(0, -50%)';
+        goldText.style.left = this.SIDEBAR_WIDTH - 43 + "px";
+        goldText.style.top = '55px';
+        var pointsWreath = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.pointsWreath(), 0.2));
+        pointsWreath.style.position = 'absolute';
+        pointsWreath.style.left = this.SIDEBAR_WIDTH - 88 + "px";
+        pointsWreath.style.top = '55px';
+        var pointsText = sidebar.appendChild(this.drawSidebarText("" + Main.gamestate.playerData[this.player].pointsDistribution.total, 20));
+        pointsText.style.left = this.SIDEBAR_WIDTH - 103 + "px";
+        pointsText.style.top = '55px';
         return sidebar;
+    };
+    DOMWonder.prototype.drawSidebarText = function (text, size) {
+        var div = document.createElement('div');
+        div.style.width = '50%';
+        div.style.position = 'absolute';
+        div.style.transform = 'translate(-100%, 0)';
+        var p = div.appendChild(document.createElement('p'));
+        p.textContent = text;
+        p.style.fontFamily = "'Courier New', Courier, monospace";
+        p.style.fontSize = size + "px";
+        p.style.color = "#FFFFFF";
+        p.style.width = '100%';
+        p.style.textAlign = 'right';
+        p.style.transform = 'translate(0, -50%)';
+        return div;
     };
     return DOMWonder;
 }(GameElement));

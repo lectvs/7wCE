@@ -27,12 +27,14 @@ class DOMWonder extends GameElement {
     private readonly PLAYED_CARD_HEIGHT = 48;
     private readonly RESOURCE_ROLL_OFFSET_Y = 30;
     private readonly RED_ROLL_X = -200;
+    private readonly RED_ROLL_MAX_X = 150;
     private readonly YELLOW_ROLL_Y = -40;
-    private readonly PURPLE_ROLL_Y = 32;
+    private readonly PURPLE_ROLL_Y = 24;
     private readonly BLUE_ROLL_Y = -40;
-    private readonly GREEN_ROLL_Y = 32;
+    private readonly GREEN_ROLL_Y = 24;
     private readonly OVERFLOW_ROLL_START_Y = -288;
     private readonly OVERFLOW_ROLL_DY = -54;
+    private readonly SIDEBAR_WIDTH = 600;
 
     private player: string;
 
@@ -58,8 +60,7 @@ class DOMWonder extends GameElement {
         let boardDiv = this.div.appendChild(document.createElement('div'));
         boardDiv.appendChild(this.draw());
         let sidebar = this.div.appendChild(this.drawSidebar());
-        sidebar.style.position = 'absolute';
-        sidebar.style.left = `${this.BOARD_WIDTH/2}px`;
+        sidebar.style.left = `${this.BOARD_WIDTH/2 - this.SIDEBAR_WIDTH}px`;
         sidebar.style.top = `${-this.BOARD_HEIGHT/2}px`;
 
         this.playedCardEffectRolls = {
@@ -169,7 +170,7 @@ class DOMWonder extends GameElement {
         return {
             'brown': this.BOARD_WIDTH,
             'grey': this.BOARD_WIDTH,
-            'red': this.BOARD_WIDTH/2 - this.RED_ROLL_X,
+            'red': this.RED_ROLL_MAX_X - this.RED_ROLL_X,
             'yellow': this.BOARD_WIDTH - 2*this.BOARD_BORDER - this.playedCardEffectRolls['blue'].width,
             'purple': this.BOARD_WIDTH - 2*this.BOARD_BORDER - this.playedCardEffectRolls['green'].width,
             'blue': this.BOARD_WIDTH - 2*this.BOARD_BORDER - this.playedCardEffectRolls['yellow'].width,
@@ -285,37 +286,49 @@ class DOMWonder extends GameElement {
 
     private drawSidebar() {
         let sidebar = document.createElement('div');
+        sidebar.style.width = `${this.SIDEBAR_WIDTH}px`;
+        sidebar.style.height = '300px';
+        sidebar.style.position = 'absolute';
 
-        let pointsWreath = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.pointsWreath(), 0.2));
-        pointsWreath.style.position = 'absolute';
-        pointsWreath.style.left = '15px';
-        pointsWreath.style.top = '15px';
-
-        let pointsText = sidebar.appendChild(document.createElement('p'));
-        pointsText.textContent = `${Main.gamestate.playerData[this.player].pointsDistribution.total}`;
-        pointsText.style.fontFamily = "'Courier New', Courier, monospace";
-        pointsText.style.fontSize = '20px';
-        pointsText.style.color = '#FFFFFF';
-        pointsText.style.position = 'absolute';
-        pointsText.style.left = '30px';
-        pointsText.style.top = '15px';
-        pointsText.style.transform = 'translate(0, -50%)';
+        let nameText = sidebar.appendChild(this.drawSidebarText(this.player, 20));
+        nameText.style.left = `${this.SIDEBAR_WIDTH - 18}px`;
+        nameText.style.top = '25px';
 
         let goldCoin = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.goldCoin(), 0.2));
         goldCoin.style.position = 'absolute';
-        goldCoin.style.left = '15px';
-        goldCoin.style.top = '45px';
+        goldCoin.style.left = `${this.SIDEBAR_WIDTH - 28}px`;
+        goldCoin.style.top = '55px';
 
-        let goldText = sidebar.appendChild(document.createElement('p'));
-        goldText.textContent = `${Main.gamestate.playerData[this.player].gold}`;
-        goldText.style.fontFamily = "'Courier New', Courier, monospace";
-        goldText.style.fontSize = '20px';
+        let goldText = sidebar.appendChild(this.drawSidebarText(`${Main.gamestate.playerData[this.player].gold}`, 20));
         goldText.style.color = '#FBE317';
-        goldText.style.position = 'absolute';
-        goldText.style.left = '30px';
-        goldText.style.top = '45px';
-        goldText.style.transform = 'translate(0, -50%)';
+        goldText.style.left = `${this.SIDEBAR_WIDTH - 43}px`;
+        goldText.style.top = '55px';
+
+        let pointsWreath = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.pointsWreath(), 0.2));
+        pointsWreath.style.position = 'absolute';
+        pointsWreath.style.left = `${this.SIDEBAR_WIDTH - 88}px`;
+        pointsWreath.style.top = '55px';
+
+        let pointsText = sidebar.appendChild(this.drawSidebarText(`${Main.gamestate.playerData[this.player].pointsDistribution.total}`, 20));
+        pointsText.style.left = `${this.SIDEBAR_WIDTH - 103}px`;
+        pointsText.style.top = '55px';
 
         return sidebar;
+    }
+
+    private drawSidebarText(text: string, size: number) {
+        let div = document.createElement('div');
+        div.style.width = '50%';
+        div.style.position = 'absolute';
+        div.style.transform = 'translate(-100%, 0)';
+        let p = div.appendChild(document.createElement('p'));
+        p.textContent = text;
+        p.style.fontFamily = "'Courier New', Courier, monospace";
+        p.style.fontSize = `${size}px`;
+        p.style.color = `#FFFFFF`;
+        p.style.width = '100%';
+        p.style.textAlign = 'right';
+        p.style.transform = 'translate(0, -50%)';
+        return div;
     }
 }

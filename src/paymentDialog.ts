@@ -105,7 +105,6 @@ class DOMPaymentDialog extends GameElement {
             }
         }
 
-        // todo close button
         let closeButton = dialogDiv.appendChild(this.drawCloseButton());
         closeButton.style.position = 'absolute';
         closeButton.style.left = 'calc(100% - 20px)';
