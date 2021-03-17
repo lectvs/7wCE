@@ -18,17 +18,22 @@ class DOMCard extends GameElement {
     private readonly CARD_HEIGHT = 200;
     private readonly CARD_CORNER_RADIUS = 12;
     private readonly CARD_BORDER = 4;
-    private readonly COST_X = 16.5;
-    private readonly COST_Y = 56;
-    private readonly COST_SCALE = 0.174;
-    private readonly COST_PADDING = 8;
+    private readonly TITLE_HEIGHT = 12;
+    private readonly TITLE_Y = 5;
+    private readonly TITLE_SCALE = 0.12;
+    private readonly TITLE_COLOR = 0xFFFFFF;
     private readonly BANNER_HEIGHT = 56;
     private readonly EFFECT_SCALE = 0.32;
-    private readonly EFFECT_CLIP_PADDING = 8;
+    private readonly EFFECT_CLIP_PADDING = 6;
     private readonly EFFECT_HEIGHT = 32;
+    private readonly COST_X = 16.5;
+    private readonly COST_Y = this.TITLE_HEIGHT + this.BANNER_HEIGHT;
+    private readonly COST_SCALE = 0.174;
+    private readonly COST_PADDING = 8;
     private readonly PAYMENT_HEIGHT = 32;
     private readonly PAYMENT_SCALE = 0.2;
     private readonly PAYMENT_OFFSET_X = -11;
+    private readonly DISCARD_COUNT_TEXT_SIZE = 48;
 
     apiCardId: number;
     apiCard: API.Card;
@@ -77,8 +82,8 @@ class DOMCard extends GameElement {
         this._effectT = value;
         let left = lerp(this.fullClipRect.left, this.effectClipRect.left, this._effectT) - this.CARD_WIDTH/2;
         let right = lerp(this.fullClipRect.right, this.effectClipRect.right, this._effectT) - this.CARD_WIDTH/2;
-        let top = lerp(this.fullClipRect.top, this.effectClipRect.top, this._effectT) - this.BANNER_HEIGHT/2;
-        let bottom = lerp(this.fullClipRect.bottom, this.effectClipRect.bottom, this._effectT) - this.BANNER_HEIGHT/2;
+        let top = lerp(this.fullClipRect.top, this.effectClipRect.top, this._effectT) - this.TITLE_HEIGHT - this.BANNER_HEIGHT/2;
+        let bottom = lerp(this.fullClipRect.bottom, this.effectClipRect.bottom, this._effectT) - this.TITLE_HEIGHT - this.BANNER_HEIGHT/2;
         this.frontDiv.style.clipPath = `polygon(${left}px ${top}px, ${right}px ${top}px, ${right}px ${bottom}px, ${left}px ${bottom}px)`;
         this._width = right - left;
         this._height = bottom - top;
@@ -105,10 +110,10 @@ class DOMCard extends GameElement {
 
         this.frontDiv = this.div.appendChild(document.createElement('div'));
         let front = this.frontDiv.appendChild(this.drawFront());
-        front.style.transform = `translate(-50%, -${this.PAYMENT_HEIGHT + this.BANNER_HEIGHT/2}px)`;
+        front.style.transform = `translate(-50%, -${this.PAYMENT_HEIGHT + this.TITLE_HEIGHT + this.BANNER_HEIGHT/2}px)`;
         this.backDiv = this.div.appendChild(document.createElement('div'));
         let back = this.backDiv.appendChild(this.drawBack());
-        back.style.transform = `translate(-50%, -${this.BANNER_HEIGHT/2}px)`;
+        back.style.transform = `translate(-50%, -${this.TITLE_HEIGHT + this.BANNER_HEIGHT/2}px)`;
         let highlightDiv = this.div.appendChild(document.createElement('div'));
         this.highlight = highlightDiv.appendChild(this.drawHighlight());
 
@@ -250,7 +255,7 @@ class DOMCard extends GameElement {
 
         this.highlight.style.width = `${this._width}px`;
         this.highlight.style.height = `${lerp(this.height - this.PAYMENT_HEIGHT, this.height, this.effectT)}px`;
-        this.highlight.style.transform = `translate(-50%, -${lerp(this.BANNER_HEIGHT/2, this.EFFECT_HEIGHT/2 + this.EFFECT_CLIP_PADDING, this.effectT)}px)`;
+        this.highlight.style.transform = `translate(-50%, -${lerp(this.TITLE_HEIGHT + this.BANNER_HEIGHT/2, this.EFFECT_HEIGHT/2 + this.EFFECT_CLIP_PADDING, this.effectT)}px)`;
 
         let alpha: number;
         if (this.state.type.startsWith('locked')) {
@@ -308,6 +313,20 @@ class DOMCard extends GameElement {
         return true;
     }
 
+    addDiscardCountText() {
+        let discardCountDiv = this.div.appendChild(document.createElement('div'));
+        discardCountDiv.style.position = 'absolute';
+        discardCountDiv.style.left = '0%';
+        discardCountDiv.style.top = `${this.CARD_HEIGHT/2 - this.TITLE_HEIGHT - this.BANNER_HEIGHT/2}px`;
+        let discardCount = discardCountDiv.appendChild(document.createElement('p'));
+        discardCount.textContent = `${Main.gamestate.discardedCardCount}`;
+        discardCount.style.fontFamily = "'Courier New', Courier, monospace";
+        discardCount.style.fontSize = `${this.DISCARD_COUNT_TEXT_SIZE}px`;
+        discardCount.style.color = ArtCommon.ageBacksHtml[Main.gamestate.lastDiscardedCardAge];
+        discardCount.style.position = 'absolute';
+        discardCount.style.transform = 'translate(-50%, -50%)';
+    }
+
     private drawFront() {
         let front = new PIXI.Container();
 
@@ -337,20 +356,24 @@ class DOMCard extends GameElement {
             front.addChild(costContainer);
         }
 
-        let cardBanner = Shapes.filledRect(0, 0, this.CARD_WIDTH, this.BANNER_HEIGHT, ArtCommon.cardBannerForColor(this.apiCard.color));
+        let cardBanner = Shapes.filledRect(0, 0, this.CARD_WIDTH, this.TITLE_HEIGHT + this.BANNER_HEIGHT, ArtCommon.cardBannerForColor(this.apiCard.color));
         cardBanner.mask = cardMask;
         front.addChild(cardBanner);
 
         let effectContainer = ArtCommon.getArtForEffects(this.apiCard.effects);
-        effectContainer.position.set(this.CARD_WIDTH/2, this.BANNER_HEIGHT/2);
+        effectContainer.position.set(this.CARD_WIDTH/2, this.TITLE_HEIGHT + this.BANNER_HEIGHT/2);
         effectContainer.scale.set(this.EFFECT_SCALE);
         front.addChild(effectContainer);
 
         this.fullClipRect = new PIXI.Rectangle(0, -this.PAYMENT_HEIGHT, this.CARD_WIDTH, this.PAYMENT_HEIGHT + this.CARD_HEIGHT);
         let effectBounds = effectContainer.getBounds();
         let effectHalfWidth = Math.max(this.CARD_WIDTH/2 - effectBounds.left, effectBounds.right - this.CARD_WIDTH/2);
-        this.effectClipRect = new PIXI.Rectangle(this.CARD_WIDTH/2 - effectHalfWidth - this.EFFECT_CLIP_PADDING, this.BANNER_HEIGHT/2 - this.EFFECT_HEIGHT/2 - this.EFFECT_CLIP_PADDING,
+        this.effectClipRect = new PIXI.Rectangle(this.CARD_WIDTH/2 - effectHalfWidth - this.EFFECT_CLIP_PADDING, this.TITLE_HEIGHT + this.BANNER_HEIGHT/2 - this.EFFECT_HEIGHT/2 - this.EFFECT_CLIP_PADDING,
                                                  2*effectHalfWidth + 2*this.EFFECT_CLIP_PADDING, this.EFFECT_HEIGHT + 2*this.EFFECT_CLIP_PADDING);
+
+        let title = Shapes.centeredText(this.CARD_WIDTH/2, this.TITLE_Y, this.apiCard.name, this.TITLE_SCALE, this.TITLE_COLOR);
+        title.anchor.y = 0;
+        front.addChild(title);
 
         let payment = ArtCommon.payment(this.allowPlay ? this.minPlayCost : Infinity);
         payment.scale.set(this.PAYMENT_SCALE);
@@ -384,6 +407,7 @@ class DOMCard extends GameElement {
     static flippedCardForAge(age: number, justPlayed: boolean) {
         let card = new DOMCard(-1, { age: age, name: '', color: 'brown', effects: [] }, undefined, undefined);
         card.state = { type: 'permanent_flipped', justPlayed: justPlayed };
+        card.update();
         return card;
     }
 }

@@ -401,6 +401,11 @@ var ArtCommon;
         2: 0xF9FDFE,
         3: 0xDE8C60,
     };
+    ArtCommon.ageBacksHtml = {
+        1: '#B44C20',
+        2: '#F9FDFE',
+        3: '#DE8C60',
+    };
     ArtCommon.discardPileColor = 0x888888;
     function domElementForArt(art, scale) {
         if (scale === void 0) { scale = 1; }
@@ -1088,17 +1093,22 @@ var DOMCard = /** @class */ (function (_super) {
         _this.CARD_HEIGHT = 200;
         _this.CARD_CORNER_RADIUS = 12;
         _this.CARD_BORDER = 4;
-        _this.COST_X = 16.5;
-        _this.COST_Y = 56;
-        _this.COST_SCALE = 0.174;
-        _this.COST_PADDING = 8;
+        _this.TITLE_HEIGHT = 12;
+        _this.TITLE_Y = 5;
+        _this.TITLE_SCALE = 0.12;
+        _this.TITLE_COLOR = 0xFFFFFF;
         _this.BANNER_HEIGHT = 56;
         _this.EFFECT_SCALE = 0.32;
-        _this.EFFECT_CLIP_PADDING = 8;
+        _this.EFFECT_CLIP_PADDING = 6;
         _this.EFFECT_HEIGHT = 32;
+        _this.COST_X = 16.5;
+        _this.COST_Y = _this.TITLE_HEIGHT + _this.BANNER_HEIGHT;
+        _this.COST_SCALE = 0.174;
+        _this.COST_PADDING = 8;
         _this.PAYMENT_HEIGHT = 32;
         _this.PAYMENT_SCALE = 0.2;
         _this.PAYMENT_OFFSET_X = -11;
+        _this.DISCARD_COUNT_TEXT_SIZE = 48;
         _this.apiCardId = cardId;
         _this.apiCard = card;
         _this.handPosition = handPosition;
@@ -1108,10 +1118,10 @@ var DOMCard = /** @class */ (function (_super) {
         _this.configureValidMoves(Main.gamestate.validMoves);
         _this.frontDiv = _this.div.appendChild(document.createElement('div'));
         var front = _this.frontDiv.appendChild(_this.drawFront());
-        front.style.transform = "translate(-50%, -" + (_this.PAYMENT_HEIGHT + _this.BANNER_HEIGHT / 2) + "px)";
+        front.style.transform = "translate(-50%, -" + (_this.PAYMENT_HEIGHT + _this.TITLE_HEIGHT + _this.BANNER_HEIGHT / 2) + "px)";
         _this.backDiv = _this.div.appendChild(document.createElement('div'));
         var back = _this.backDiv.appendChild(_this.drawBack());
-        back.style.transform = "translate(-50%, -" + _this.BANNER_HEIGHT / 2 + "px)";
+        back.style.transform = "translate(-50%, -" + (_this.TITLE_HEIGHT + _this.BANNER_HEIGHT / 2) + "px)";
         var highlightDiv = _this.div.appendChild(document.createElement('div'));
         _this.highlight = highlightDiv.appendChild(_this.drawHighlight());
         _this.flippedT = 0;
@@ -1165,8 +1175,8 @@ var DOMCard = /** @class */ (function (_super) {
             this._effectT = value;
             var left = lerp(this.fullClipRect.left, this.effectClipRect.left, this._effectT) - this.CARD_WIDTH / 2;
             var right = lerp(this.fullClipRect.right, this.effectClipRect.right, this._effectT) - this.CARD_WIDTH / 2;
-            var top = lerp(this.fullClipRect.top, this.effectClipRect.top, this._effectT) - this.BANNER_HEIGHT / 2;
-            var bottom = lerp(this.fullClipRect.bottom, this.effectClipRect.bottom, this._effectT) - this.BANNER_HEIGHT / 2;
+            var top = lerp(this.fullClipRect.top, this.effectClipRect.top, this._effectT) - this.TITLE_HEIGHT - this.BANNER_HEIGHT / 2;
+            var bottom = lerp(this.fullClipRect.bottom, this.effectClipRect.bottom, this._effectT) - this.TITLE_HEIGHT - this.BANNER_HEIGHT / 2;
             this.frontDiv.style.clipPath = "polygon(" + left + "px " + top + "px, " + right + "px " + top + "px, " + right + "px " + bottom + "px, " + left + "px " + bottom + "px)";
             this._width = right - left;
             this._height = bottom - top;
@@ -1323,7 +1333,7 @@ var DOMCard = /** @class */ (function (_super) {
         }
         this.highlight.style.width = this._width + "px";
         this.highlight.style.height = lerp(this.height - this.PAYMENT_HEIGHT, this.height, this.effectT) + "px";
-        this.highlight.style.transform = "translate(-50%, -" + lerp(this.BANNER_HEIGHT / 2, this.EFFECT_HEIGHT / 2 + this.EFFECT_CLIP_PADDING, this.effectT) + "px)";
+        this.highlight.style.transform = "translate(-50%, -" + lerp(this.TITLE_HEIGHT + this.BANNER_HEIGHT / 2, this.EFFECT_HEIGHT / 2 + this.EFFECT_CLIP_PADDING, this.effectT) + "px)";
         var alpha;
         if (this.state.type.startsWith('locked')) {
             alpha = (Math.sin(Main.time * 8) + 1) / 2;
@@ -1395,6 +1405,19 @@ var DOMCard = /** @class */ (function (_super) {
             return false;
         return true;
     };
+    DOMCard.prototype.addDiscardCountText = function () {
+        var discardCountDiv = this.div.appendChild(document.createElement('div'));
+        discardCountDiv.style.position = 'absolute';
+        discardCountDiv.style.left = '0%';
+        discardCountDiv.style.top = this.CARD_HEIGHT / 2 - this.TITLE_HEIGHT - this.BANNER_HEIGHT / 2 + "px";
+        var discardCount = discardCountDiv.appendChild(document.createElement('p'));
+        discardCount.textContent = "" + Main.gamestate.discardedCardCount;
+        discardCount.style.fontFamily = "'Courier New', Courier, monospace";
+        discardCount.style.fontSize = this.DISCARD_COUNT_TEXT_SIZE + "px";
+        discardCount.style.color = ArtCommon.ageBacksHtml[Main.gamestate.lastDiscardedCardAge];
+        discardCount.style.position = 'absolute';
+        discardCount.style.transform = 'translate(-50%, -50%)';
+    };
     DOMCard.prototype.drawFront = function () {
         var front = new PIXI.Container();
         var cardBase = Shapes.filledRoundedRect(0, 0, this.CARD_WIDTH, this.CARD_HEIGHT, this.CARD_CORNER_RADIUS, ArtCommon.cardBannerForColor(this.apiCard.color));
@@ -1413,17 +1436,20 @@ var DOMCard = /** @class */ (function (_super) {
             front.addChild(costBanner);
             front.addChild(costContainer);
         }
-        var cardBanner = Shapes.filledRect(0, 0, this.CARD_WIDTH, this.BANNER_HEIGHT, ArtCommon.cardBannerForColor(this.apiCard.color));
+        var cardBanner = Shapes.filledRect(0, 0, this.CARD_WIDTH, this.TITLE_HEIGHT + this.BANNER_HEIGHT, ArtCommon.cardBannerForColor(this.apiCard.color));
         cardBanner.mask = cardMask;
         front.addChild(cardBanner);
         var effectContainer = ArtCommon.getArtForEffects(this.apiCard.effects);
-        effectContainer.position.set(this.CARD_WIDTH / 2, this.BANNER_HEIGHT / 2);
+        effectContainer.position.set(this.CARD_WIDTH / 2, this.TITLE_HEIGHT + this.BANNER_HEIGHT / 2);
         effectContainer.scale.set(this.EFFECT_SCALE);
         front.addChild(effectContainer);
         this.fullClipRect = new PIXI.Rectangle(0, -this.PAYMENT_HEIGHT, this.CARD_WIDTH, this.PAYMENT_HEIGHT + this.CARD_HEIGHT);
         var effectBounds = effectContainer.getBounds();
         var effectHalfWidth = Math.max(this.CARD_WIDTH / 2 - effectBounds.left, effectBounds.right - this.CARD_WIDTH / 2);
-        this.effectClipRect = new PIXI.Rectangle(this.CARD_WIDTH / 2 - effectHalfWidth - this.EFFECT_CLIP_PADDING, this.BANNER_HEIGHT / 2 - this.EFFECT_HEIGHT / 2 - this.EFFECT_CLIP_PADDING, 2 * effectHalfWidth + 2 * this.EFFECT_CLIP_PADDING, this.EFFECT_HEIGHT + 2 * this.EFFECT_CLIP_PADDING);
+        this.effectClipRect = new PIXI.Rectangle(this.CARD_WIDTH / 2 - effectHalfWidth - this.EFFECT_CLIP_PADDING, this.TITLE_HEIGHT + this.BANNER_HEIGHT / 2 - this.EFFECT_HEIGHT / 2 - this.EFFECT_CLIP_PADDING, 2 * effectHalfWidth + 2 * this.EFFECT_CLIP_PADDING, this.EFFECT_HEIGHT + 2 * this.EFFECT_CLIP_PADDING);
+        var title = Shapes.centeredText(this.CARD_WIDTH / 2, this.TITLE_Y, this.apiCard.name, this.TITLE_SCALE, this.TITLE_COLOR);
+        title.anchor.y = 0;
+        front.addChild(title);
         var payment = ArtCommon.payment(this.allowPlay ? this.minPlayCost : Infinity);
         payment.scale.set(this.PAYMENT_SCALE);
         payment.position.set(this.CARD_WIDTH + this.PAYMENT_OFFSET_X, -this.PAYMENT_HEIGHT / 2);
@@ -1447,6 +1473,7 @@ var DOMCard = /** @class */ (function (_super) {
     DOMCard.flippedCardForAge = function (age, justPlayed) {
         var card = new DOMCard(-1, { age: age, name: '', color: 'brown', effects: [] }, undefined, undefined);
         card.state = { type: 'permanent_flipped', justPlayed: justPlayed };
+        card.update();
         return card;
     };
     return DOMCard;
@@ -1601,10 +1628,10 @@ var GameStateDiffer;
             return __generator(this, function (_a) {
                 wonder = Main.scene.wonders[playeri];
                 if (!oldMove && newMove) {
-                    //wonder.makeMove();
+                    wonder.makeMove();
                 }
                 else {
-                    //wonder.undoMove();
+                    wonder.undoMove();
                 }
                 return [2 /*return*/];
             });
@@ -2144,6 +2171,11 @@ var DOMScene = /** @class */ (function () {
             }
             finally { if (e_18) throw e_18.error; }
         }
+        if (this.topDiscardCard) {
+            var discardPoint = this.discardPile.getDiscardLockPoint();
+            this.topDiscardCard.x = discardPoint.x;
+            this.topDiscardCard.y = discardPoint.y;
+        }
         if (this.paymentDialog) {
             this.paymentDialog.update();
         }
@@ -2205,6 +2237,11 @@ var DOMScene = /** @class */ (function () {
         this.discardPile.xs = '50%';
         this.discardPile.y = this.WONDER_START_Y + this.WONDER_DY;
         this.discardPile.addToGame();
+        if (gamestate.discardedCardCount > 0) {
+            this.topDiscardCard = DOMCard.flippedCardForAge(gamestate.lastDiscardedCardAge, false);
+            this.topDiscardCard.addDiscardCountText();
+            this.topDiscardCard.addToGame();
+        }
         document.getElementById('game').onmousemove = function (event) {
             event.preventDefault();
             _this.mouseX = event.pageX;
@@ -2299,7 +2336,7 @@ var Shapes = /** @class */ (function () {
         return graphics;
     };
     Shapes.centeredText = function (x, y, text, scale, color) {
-        var pixiText = new PIXI.Text(text, { fontFamily: 'Arial', fontSize: 100, fill: color });
+        var pixiText = new PIXI.Text(text, { fontFamily: 'Courier New', fontWeight: 'bold', fontSize: 100, fill: color });
         pixiText.anchor.set(0.5, 0.5);
         pixiText.scale.set(scale);
         pixiText.position.set(x, y);
@@ -2405,9 +2442,10 @@ var DOMWonder = /** @class */ (function (_super) {
         _this.STAGE_PAYMENT_OFFSET_Y = -13;
         _this.STAGE_PAYMENT_SCALE = 0.15;
         _this.BUILT_STAGE_OFFSET_Y = -130;
-        _this.PLAYED_CARD_HEIGHT = 48;
+        _this.PLAYED_CARD_HEIGHT = 44;
         _this.RESOURCE_ROLL_OFFSET_Y = 30;
         _this.RED_ROLL_X = -200;
+        _this.RED_ROLL_Y = _this.BOARD_BORDER + 22;
         _this.RED_ROLL_MAX_X = 150;
         _this.YELLOW_ROLL_Y = -40;
         _this.PURPLE_ROLL_Y = 24;
@@ -2426,7 +2464,7 @@ var DOMWonder = /** @class */ (function (_super) {
         _this.playedCardEffectRolls = {
             brown: new DOMPlayedCardEffectRoll(-_this.BOARD_WIDTH / 2, -_this.BOARD_HEIGHT / 2 - _this.RESOURCE_ROLL_OFFSET_Y, false),
             grey: undefined,
-            red: new DOMPlayedCardEffectRoll(_this.RED_ROLL_X, -_this.BOARD_HEIGHT / 2 + _this.BOARD_BORDER + _this.PLAYED_CARD_HEIGHT / 2, false),
+            red: new DOMPlayedCardEffectRoll(_this.RED_ROLL_X, -_this.BOARD_HEIGHT / 2 + _this.RED_ROLL_Y, false),
             yellow: new DOMPlayedCardEffectRoll(-_this.BOARD_WIDTH / 2 + _this.BOARD_BORDER, _this.YELLOW_ROLL_Y, false),
             purple: new DOMPlayedCardEffectRoll(-_this.BOARD_WIDTH / 2 + _this.BOARD_BORDER, _this.PURPLE_ROLL_Y, false),
             blue: new DOMPlayedCardEffectRoll(_this.BOARD_WIDTH / 2 - _this.BOARD_BORDER, _this.BLUE_ROLL_Y, true),
@@ -2544,6 +2582,12 @@ var DOMWonder = /** @class */ (function (_super) {
             }
             this.overflowCardEffectRolls[0].addCard(card);
         }
+    };
+    DOMWonder.prototype.makeMove = function () {
+        this.moveIndicatorCheck.style.visibility = 'visible';
+    };
+    DOMWonder.prototype.undoMove = function () {
+        this.moveIndicatorCheck.style.visibility = 'hidden';
     };
     DOMWonder.prototype.getCardEffectRollMaxWidth = function (color) {
         return {
@@ -2665,6 +2709,10 @@ var DOMWonder = /** @class */ (function (_super) {
         var pointsText = sidebar.appendChild(this.drawSidebarText("" + Main.gamestate.playerData[this.player].pointsDistribution.total, 20));
         pointsText.style.left = this.SIDEBAR_WIDTH - 103 + "px";
         pointsText.style.top = '55px';
+        this.moveIndicatorCheck = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.checkMark(), 0.2));
+        this.moveIndicatorCheck.style.left = this.SIDEBAR_WIDTH - 145 + "px";
+        this.moveIndicatorCheck.style.top = '52px';
+        this.moveIndicatorCheck.style.visibility = 'hidden';
         return sidebar;
     };
     DOMWonder.prototype.drawSidebarText = function (text, size) {

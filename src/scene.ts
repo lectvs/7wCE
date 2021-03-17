@@ -10,6 +10,7 @@ class DOMScene {
     wonders: DOMWonder[];
     hand: DOMHand;
     discardPile: DOMDiscardPile;
+    topDiscardCard: DOMCard;
     paymentDialog: DOMPaymentDialog;
     actionButton: DOMActionButton;
 
@@ -25,6 +26,13 @@ class DOMScene {
         for (let wonder of this.wonders) {
             wonder.update();
         }
+        
+        if (this.topDiscardCard) {
+            let discardPoint = this.discardPile.getDiscardLockPoint();
+            this.topDiscardCard.x = discardPoint.x;
+            this.topDiscardCard.y = discardPoint.y;
+        }
+
         if (this.paymentDialog) {
             this.paymentDialog.update();
         }
@@ -96,6 +104,12 @@ class DOMScene {
         this.discardPile.xs = '50%';
         this.discardPile.y = this.WONDER_START_Y + this.WONDER_DY;
         this.discardPile.addToGame();
+
+        if (gamestate.discardedCardCount > 0) {
+            this.topDiscardCard = DOMCard.flippedCardForAge(gamestate.lastDiscardedCardAge, false);
+            this.topDiscardCard.addDiscardCountText();
+            this.topDiscardCard.addToGame();
+        }
 
         document.getElementById('game').onmousemove = (event: MouseEvent) => {
             event.preventDefault();

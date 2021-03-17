@@ -104,9 +104,9 @@ namespace GameStateDiffer {
         result.scripts.push(function*() {
             let wonder = Main.scene.wonders[playeri];
             if (!oldMove && newMove) {
-                //wonder.makeMove();
+                wonder.makeMove();
             } else {
-                //wonder.undoMove();
+                wonder.undoMove();
             }
         });
     }

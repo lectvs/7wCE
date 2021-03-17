@@ -8,6 +8,12 @@ namespace ArtCommon {
         3: 0xDE8C60,
     };
 
+    export const ageBacksHtml = {
+        1: '#B44C20',
+        2: '#F9FDFE',
+        3: '#DE8C60',
+    };
+
     export const discardPileColor = 0x888888;
 
     export function domElementForArt(art: PIXI.DisplayObject, scale: number = 1) {

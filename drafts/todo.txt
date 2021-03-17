@@ -1,3 +1,5 @@
 todo
+- game end screen
+- error reporting
 - animations
 - hover-infos

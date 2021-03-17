@@ -36,7 +36,7 @@ class Shapes {
     }
 
     static centeredText(x: number, y: number, text: string, scale: number, color: number) {
-        let pixiText = new PIXI.Text(text, { fontFamily : 'Arial', fontSize: 100, fill : color });
+        let pixiText = new PIXI.Text(text, { fontFamily : 'Courier New', fontWeight: 'bold', fontSize: 100, fill : color });
         pixiText.anchor.set(0.5, 0.5);
         pixiText.scale.set(scale);
         pixiText.position.set(x, y);

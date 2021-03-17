@@ -24,9 +24,10 @@ class DOMWonder extends GameElement {
     private readonly STAGE_PAYMENT_OFFSET_Y = -13;
     private readonly STAGE_PAYMENT_SCALE = 0.15;
     private readonly BUILT_STAGE_OFFSET_Y = -130;
-    private readonly PLAYED_CARD_HEIGHT = 48;
+    private readonly PLAYED_CARD_HEIGHT = 44;
     private readonly RESOURCE_ROLL_OFFSET_Y = 30;
     private readonly RED_ROLL_X = -200;
+    private readonly RED_ROLL_Y = this.BOARD_BORDER + 22;
     private readonly RED_ROLL_MAX_X = 150;
     private readonly YELLOW_ROLL_Y = -40;
     private readonly PURPLE_ROLL_Y = 24;
@@ -50,6 +51,7 @@ class DOMWonder extends GameElement {
     } & Dict<DOMPlayedCardEffectRoll>;
     overflowCardEffectRolls: DOMPlayedCardEffectRoll[];
     builtWonderCards: DOMCard[];
+    moveIndicatorCheck: HTMLCanvasElement;
 
     constructor(player: string) {
         super();
@@ -66,7 +68,7 @@ class DOMWonder extends GameElement {
         this.playedCardEffectRolls = {
             brown: new DOMPlayedCardEffectRoll(-this.BOARD_WIDTH/2, -this.BOARD_HEIGHT/2 - this.RESOURCE_ROLL_OFFSET_Y, false),
             grey: undefined,
-            red: new DOMPlayedCardEffectRoll(this.RED_ROLL_X, -this.BOARD_HEIGHT/2 + this.BOARD_BORDER + this.PLAYED_CARD_HEIGHT/2, false),
+            red: new DOMPlayedCardEffectRoll(this.RED_ROLL_X, -this.BOARD_HEIGHT/2 + this.RED_ROLL_Y, false),
             yellow: new DOMPlayedCardEffectRoll(-this.BOARD_WIDTH/2 + this.BOARD_BORDER, this.YELLOW_ROLL_Y, false),
             purple: new DOMPlayedCardEffectRoll(-this.BOARD_WIDTH/2 + this.BOARD_BORDER, this.PURPLE_ROLL_Y, false),
             blue: new DOMPlayedCardEffectRoll(this.BOARD_WIDTH/2 - this.BOARD_BORDER, this.BLUE_ROLL_Y, true),
@@ -164,6 +166,14 @@ class DOMWonder extends GameElement {
             }
             this.overflowCardEffectRolls[0].addCard(card);
         }
+    }
+
+    makeMove() {
+        this.moveIndicatorCheck.style.visibility = 'visible';
+    }
+
+    undoMove() {
+        this.moveIndicatorCheck.style.visibility = 'hidden';
     }
 
     private getCardEffectRollMaxWidth(color: string) {
@@ -312,6 +322,11 @@ class DOMWonder extends GameElement {
         let pointsText = sidebar.appendChild(this.drawSidebarText(`${Main.gamestate.playerData[this.player].pointsDistribution.total}`, 20));
         pointsText.style.left = `${this.SIDEBAR_WIDTH - 103}px`;
         pointsText.style.top = '55px';
+
+        this.moveIndicatorCheck = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.checkMark(), 0.2));
+        this.moveIndicatorCheck.style.left = `${this.SIDEBAR_WIDTH - 145}px`;
+        this.moveIndicatorCheck.style.top = '52px';
+        this.moveIndicatorCheck.style.visibility = 'hidden';
 
         return sidebar;
     }
