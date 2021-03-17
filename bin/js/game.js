@@ -1509,6 +1509,67 @@ var DiscardPile = /** @class */ (function (_super) {
     };
     return DiscardPile;
 }(GameElement));
+var EndScreen = /** @class */ (function () {
+    function EndScreen() {
+        this.POSITIONS_Y = 50;
+        this.NAMES_Y = 80;
+        this.POINTS_Y = 130;
+        this.POINTS_DX = 100;
+        this.POINTS_DY = 50;
+    }
+    EndScreen.prototype.create = function () {
+        var players = Main.gamestate.players;
+        players.sort(function (p1, p2) { return Main.gamestate.playerData[p2].pointsDistribution.total - Main.gamestate.playerData[p1].pointsDistribution.total; });
+        var pointsDistributions = players.map(function (player) { return Main.gamestate.playerData[player].pointsDistribution; });
+        var endscreen = document.getElementById('endscreen');
+        var x = (-1 - (players.length - 1) / 2) * this.POINTS_DX;
+        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('red')), "calc(50% + " + x + "px)", this.POINTS_Y + this.POINTS_DY * 0 + "px"));
+        endscreen.appendChild(this.scoreArt(Shapes.filledCircle(0, 0, 16, 0xFBE317), "calc(50% + " + x + "px)", this.POINTS_Y + this.POINTS_DY * 1 + "px"));
+        endscreen.appendChild(this.scoreArt(Shapes.filledPolygon(0, 0, [-18, 16, 18, 16, 0, -16], 0xFFFF00), "calc(50% + " + x + "px)", this.POINTS_Y + this.POINTS_DY * 2 + "px"));
+        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('green')), "calc(50% + " + x + "px)", this.POINTS_Y + this.POINTS_DY * 3 + "px"));
+        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('yellow')), "calc(50% + " + x + "px)", this.POINTS_Y + this.POINTS_DY * 4 + "px"));
+        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('purple')), "calc(50% + " + x + "px)", this.POINTS_Y + this.POINTS_DY * 5 + "px"));
+        endscreen.appendChild(this.scoreText('Total', "calc(50% + " + x + "px)", this.POINTS_Y + this.POINTS_DY * 6 + "px"));
+        for (var i = 0; i < players.length; i++) {
+            var x_1 = (i - (players.length - 1) / 2) * this.POINTS_DX;
+            endscreen.appendChild(this.scoreText("#" + (i + 1), "calc(50% + " + x_1 + "px)", this.POSITIONS_Y + "px"));
+            endscreen.appendChild(this.scoreText(players[i], "calc(50% + " + x_1 + "px)", this.NAMES_Y + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].conflict, "calc(50% + " + x_1 + "px)", this.POINTS_Y + this.POINTS_DY * 0 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].finance, "calc(50% + " + x_1 + "px)", this.POINTS_Y + this.POINTS_DY * 1 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].wonder, "calc(50% + " + x_1 + "px)", this.POINTS_Y + this.POINTS_DY * 2 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].science, "calc(50% + " + x_1 + "px)", this.POINTS_Y + this.POINTS_DY * 3 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].commerce, "calc(50% + " + x_1 + "px)", this.POINTS_Y + this.POINTS_DY * 4 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].guild, "calc(50% + " + x_1 + "px)", this.POINTS_Y + this.POINTS_DY * 5 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].total, "calc(50% + " + x_1 + "px)", this.POINTS_Y + this.POINTS_DY * 6 + "px"));
+        }
+    };
+    EndScreen.prototype.destroy = function () {
+        var game = document.getElementById('game');
+        while (game.firstChild) {
+            game.removeChild(game.firstChild);
+        }
+    };
+    EndScreen.prototype.scoreArt = function (pixiArt, xs, ys) {
+        var art = ArtCommon.domElementForArt(pixiArt);
+        art.style.position = 'absolute';
+        art.style.left = xs;
+        art.style.top = ys;
+        return art;
+    };
+    EndScreen.prototype.scoreText = function (text, xs, ys) {
+        var p = document.createElement('p');
+        p.textContent = text;
+        p.style.fontFamily = "'Courier New', Courier, monospace";
+        p.style.fontSize = '24px';
+        p.style.color = "#FFFFFF";
+        p.style.transform = 'translate(-50%, -50%)';
+        p.style.position = 'absolute';
+        p.style.left = xs;
+        p.style.top = ys;
+        return p;
+    };
+    return EndScreen;
+}());
 var GameStateDiffer;
 (function (GameStateDiffer) {
     function diffNonTurn(gamestate, midturn) {
@@ -1809,6 +1870,11 @@ var Main = /** @class */ (function () {
         this.scene.create();
         this.sendUpdate();
     };
+    Main.createEndScreen = function () {
+        this.endScreen = new EndScreen();
+        this.endScreen.create();
+        document.getElementById('endscreen').style.display = 'block';
+    };
     Main.update = function () {
         if (this.scene)
             this.scene.update();
@@ -1816,8 +1882,11 @@ var Main = /** @class */ (function () {
     };
     Main.sendUpdate = function () {
         var _this = this;
-        if (this.gamestate.state === 'GAME_COMPLETE')
+        if (this.gamestate.state === 'GAME_COMPLETE') {
+            if (!this.endScreen)
+                this.createEndScreen();
             return;
+        }
         this.scriptManager.runScript(S.chain(S.wait(0.5), S.call(function () {
             if (_this.isHost)
                 _this.updateAndGetGameState();
@@ -1834,7 +1903,6 @@ var Main = /** @class */ (function () {
                 _this.sendUpdate();
                 return;
             }
-            //console.log('Refreshed gamestate:', gamestate);
             if (gamestate.turn < Main.gamestate.turn) {
                 Main.error("Error: local turn (" + Main.gamestate.turn + ") is greater than the game's (" + gamestate.turn + ")?");
                 _this.sendUpdate();
@@ -1844,7 +1912,6 @@ var Main = /** @class */ (function () {
                 var diffResult = GameStateDiffer.diffNonTurn(gamestate, true);
                 _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {
                     _this.gamestate = gamestate;
-                    //Main.scene.hand.reflectMove(gamestate.playerData[Main.player].currentMove);
                     _this.sendUpdate();
                 })));
             }
@@ -1876,8 +1943,6 @@ var Main = /** @class */ (function () {
         API.submitmove(Main.gameid, Main.gamestate.turn, Main.player, move, function (error) {
             if (error) {
                 Main.error(error);
-                //this.deselect();
-                //Main.undoMove();
                 return;
             }
             console.log('Submitted move:', move);
@@ -1952,7 +2017,8 @@ var Main = /** @class */ (function () {
         // });
     };
     Main.getGameY = function () {
-        return document.getElementById('status').clientHeight;
+        return document.getElementById('status').clientHeight
+            + document.getElementById('endscreen').clientHeight;
     };
     Main.mouseDown = false;
     Main.time = 0;

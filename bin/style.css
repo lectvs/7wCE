@@ -13,6 +13,12 @@
     border-bottom-right-radius: 8px;
 }
 
+#endscreen {
+    position: relative;
+    height: 160px;
+    display: none;
+}
+
 #game {
     position: relative;
     height: 2000px;

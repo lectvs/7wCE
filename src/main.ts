@@ -6,6 +6,7 @@ class Main {
     static mouseDown: boolean = false;
 
     static scene: Scene;
+    static endScreen: EndScreen;
 
     static time: number = 0;
     static delta: number = 0;
@@ -51,13 +52,22 @@ class Main {
         this.sendUpdate();
     }
 
+    static createEndScreen() {
+        this.endScreen = new EndScreen();
+        this.endScreen.create();
+        document.getElementById('endscreen').style.display = 'block';
+    }
+
     static update() {
         if (this.scene) this.scene.update();
         this.scriptManager.update();
     }
 
     static sendUpdate() {
-        if (this.gamestate.state === 'GAME_COMPLETE') return;
+        if (this.gamestate.state === 'GAME_COMPLETE') {
+            if (!this.endScreen) this.createEndScreen();
+            return;
+        }
         this.scriptManager.runScript(S.chain(
             S.wait(0.5),
             S.call(() => {
@@ -76,8 +86,6 @@ class Main {
                 return;
             }
 
-            //console.log('Refreshed gamestate:', gamestate);
-
             if (gamestate.turn < Main.gamestate.turn) {
                 Main.error(`Error: local turn (${Main.gamestate.turn}) is greater than the game's (${gamestate.turn})?`);
                 this.sendUpdate();
@@ -88,7 +96,6 @@ class Main {
                     S.simul(...diffResult.scripts),
                     S.call(() => {
                         this.gamestate = gamestate;
-                        //Main.scene.hand.reflectMove(gamestate.playerData[Main.player].currentMove);
                         this.sendUpdate();
                     })
                 ));
@@ -122,8 +129,6 @@ class Main {
         API.submitmove(Main.gameid, Main.gamestate.turn, Main.player, move, (error: string) => {
             if (error) {
                 Main.error(error);
-                //this.deselect();
-                //Main.undoMove();
                 return;
             }
             console.log('Submitted move:', move);
@@ -191,6 +196,7 @@ class Main {
     }
 
     static getGameY() {
-        return document.getElementById('status').clientHeight;
+        return document.getElementById('status').clientHeight
+             + document.getElementById('endscreen').clientHeight;
     }
 }
