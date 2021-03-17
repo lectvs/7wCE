@@ -5,7 +5,7 @@ class Main {
 
     static mouseDown: boolean = false;
 
-    static scene: DOMScene;
+    static scene: Scene;
 
     static time: number = 0;
     static delta: number = 0;
@@ -46,7 +46,7 @@ class Main {
 
     static setupGame(gamestate: API.GameState) {
         this.gamestate = gamestate;
-        this.scene = new DOMScene();
+        this.scene = new Scene();
         this.scene.create();
         this.sendUpdate();
     }

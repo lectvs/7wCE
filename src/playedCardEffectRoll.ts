@@ -1,11 +1,11 @@
-class DOMPlayedCardEffectRoll {
+class PlayedCardEffectRoll {
     x: number;
     y: number;
     offsetx: number;
     offsety: number;
     reverse: boolean;
 
-    cards: DOMCard[];
+    cards: Card[];
 
     get width() { return sum(this.cards, card => card.effectWidth); }
 
@@ -29,17 +29,17 @@ class DOMPlayedCardEffectRoll {
         }
     }
 
-    canAddCard(card: DOMCard, maxWidth: number) {
+    canAddCard(card: Card, maxWidth: number) {
         return this.width + card.effectWidth <= maxWidth;
     }
 
-    addCard(card: DOMCard) {
+    addCard(card: Card) {
         card.zIndex = ZIndices.CARD_PLAYED;
         this.cards.push(card);
         this.update();
     }
 
-    getNextPosition(card: DOMCard) {
+    getNextPosition(card: Card) {
         let d = this.reverse ? -1 : 1;
         return new PIXI.Point(this.x + d*(this.width + card.effectWidth/2), this.y);
     }

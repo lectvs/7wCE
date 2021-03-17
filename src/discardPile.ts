@@ -1,4 +1,4 @@
-class DOMDiscardPile extends GameElement {
+class DiscardPile extends GameElement {
 
     private readonly AREA_WIDTH = 250;
     private readonly AREA_HEIGHT = 300;

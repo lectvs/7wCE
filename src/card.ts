@@ -12,7 +12,7 @@ type DraggingData = {
     offsety: number;
 }
 
-class DOMCard extends GameElement {
+class Card extends GameElement {
 
     private readonly CARD_WIDTH = 133;
     private readonly CARD_HEIGHT = 200;
@@ -38,7 +38,7 @@ class DOMCard extends GameElement {
     apiCardId: number;
     apiCard: API.Card;
     handPosition: HTMLDivElement;
-    activeWonder: DOMWonder;
+    activeWonder: Wonder;
 
     visualState: CardVisualState;
     state: CardState;
@@ -96,7 +96,7 @@ class DOMCard extends GameElement {
         this.div.style.cursor = this._interactable ? 'pointer' : 'default';
     }
 
-    constructor(cardId: number, card: API.Card, handPosition: HTMLDivElement, activeWonder: DOMWonder) {
+    constructor(cardId: number, card: API.Card, handPosition: HTMLDivElement, activeWonder: Wonder) {
         super();
 
         this.apiCardId = cardId;
@@ -405,7 +405,7 @@ class DOMCard extends GameElement {
     }
 
     static flippedCardForAge(age: number, justPlayed: boolean) {
-        let card = new DOMCard(-1, { age: age, name: '', color: 'brown', effects: [] }, undefined, undefined);
+        let card = new Card(-1, { age: age, name: '', color: 'brown', effects: [] }, undefined, undefined);
         card.state = { type: 'permanent_flipped', justPlayed: justPlayed };
         card.update();
         return card;

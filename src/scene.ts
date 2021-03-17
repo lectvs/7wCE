@@ -1,4 +1,4 @@
-class DOMScene {
+class Scene {
     private readonly WONDER_START_Y = 650;
     private readonly WONDER_DX = 500;
     private readonly WONDER_DY = 500;
@@ -7,12 +7,12 @@ class DOMScene {
     mouseX: number = 0;
     mouseY: number = 0;
 
-    wonders: DOMWonder[];
-    hand: DOMHand;
-    discardPile: DOMDiscardPile;
-    topDiscardCard: DOMCard;
-    paymentDialog: DOMPaymentDialog;
-    actionButton: DOMActionButton;
+    wonders: Wonder[];
+    hand: Hand;
+    discardPile: DiscardPile;
+    topDiscardCard: Card;
+    paymentDialog: PaymentDialog;
+    actionButton: ActionButton;
 
     get isPaymentMenuActive() { return !!this.paymentDialog; }
 
@@ -51,7 +51,7 @@ class DOMScene {
         let l = mod(p-1, players.length);
         let r = mod(p+1, players.length);
 
-        let playerWonder = new DOMWonder(Main.player);
+        let playerWonder = new Wonder(Main.player);
         playerWonder.xs = '50%';
         playerWonder.y = this.WONDER_START_Y;
         playerWonder.addToGame();
@@ -59,13 +59,13 @@ class DOMScene {
 
         let i: number;
         for (i = 1; i < Math.floor((players.length - 1)/2 + 1); i++) {
-            let wonder_l = new DOMWonder(players[l]);
+            let wonder_l = new Wonder(players[l]);
             wonder_l.xs = `calc(50% - ${this.WONDER_DX}px)`;
             wonder_l.y = this.WONDER_START_Y + this.WONDER_DY*i;
             wonder_l.addToGame();
             this.wonders[l] = wonder_l;
 
-            let wonder_r = new DOMWonder(players[r]);
+            let wonder_r = new Wonder(players[r]);
             wonder_r.xs = `calc(50% + ${this.WONDER_DX}px)`;
             wonder_r.y = this.WONDER_START_Y + this.WONDER_DY*i;
             wonder_r.addToGame();
@@ -76,14 +76,14 @@ class DOMScene {
         }
 
         if (players.length % 2 === 0) {
-            let lastWonder = new DOMWonder(players[l]);
+            let lastWonder = new Wonder(players[l]);
             lastWonder.xs = '50%';
             lastWonder.y = this.WONDER_START_Y + this.WONDER_DY*i;
             lastWonder.addToGame();
             this.wonders[l] = lastWonder;
         }
 
-        this.actionButton = new DOMActionButton();
+        this.actionButton = new ActionButton();
         this.actionButton.xs = '50%';
         this.actionButton.y = this.ACTION_BUTTON_Y;
         this.actionButton.addToGame();
@@ -97,16 +97,16 @@ class DOMScene {
             cardsInHand = gamestate.hand;
         }
 
-        this.hand = new DOMHand(cardsInHand, this.wonders[p]);
+        this.hand = new Hand(cardsInHand, this.wonders[p]);
         this.hand.reflectMove(gamestate.playerData[Main.player].currentMove);
 
-        this.discardPile = new DOMDiscardPile();
+        this.discardPile = new DiscardPile();
         this.discardPile.xs = '50%';
         this.discardPile.y = this.WONDER_START_Y + this.WONDER_DY;
         this.discardPile.addToGame();
 
         if (gamestate.discardedCardCount > 0) {
-            this.topDiscardCard = DOMCard.flippedCardForAge(gamestate.lastDiscardedCardAge, false);
+            this.topDiscardCard = Card.flippedCardForAge(gamestate.lastDiscardedCardAge, false);
             this.topDiscardCard.addDiscardCountText();
             this.topDiscardCard.addToGame();
         }
@@ -127,11 +127,11 @@ class DOMScene {
         }
     }
 
-    startPaymentDialog(card: DOMCard, move: API.Move) {
+    startPaymentDialog(card: Card, move: API.Move) {
         if (this.paymentDialog) {
             this.paymentDialog.removeFromGame();
         }
-        this.paymentDialog = new DOMPaymentDialog(card, move, this.wonders[Main.gamestate.players.indexOf(Main.player)]);
+        this.paymentDialog = new PaymentDialog(card, move, this.wonders[Main.gamestate.players.indexOf(Main.player)]);
         this.paymentDialog.zIndex = ZIndices.PAYMENT_DIALOG;
         this.paymentDialog.addToGame();
     }

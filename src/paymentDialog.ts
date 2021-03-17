@@ -1,4 +1,4 @@
-class DOMPaymentDialog extends GameElement {
+class PaymentDialog extends GameElement {
 
     private readonly OFFSET_X = -600;
     private readonly OFFSET_Y = -100;
@@ -16,11 +16,11 @@ class DOMPaymentDialog extends GameElement {
     private readonly PAY_BUTTON_HEIGHT = 32;
     private readonly PAY_BUTTON_COLOR = '#000088';
 
-    private card: DOMCard;
+    private card: Card;
     private move: API.Move;
-    private activeWonder: DOMWonder;
+    private activeWonder: Wonder;
 
-    constructor(card: DOMCard, move: API.Move, activeWonder: DOMWonder) {
+    constructor(card: Card, move: API.Move, activeWonder: Wonder) {
         super();
         this.card = card;
         this.move = move;

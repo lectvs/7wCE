@@ -1,6 +1,6 @@
 /// <reference path="gameElement.ts" />
 
-class DOMActionButton extends GameElement {
+class ActionButton extends GameElement {
     private readonly BUTTON_WIDTH = 100;
     private readonly BUTTON_HEIGHT = 50;
     private readonly BUTTON_CORNER_RADIUS = 8;

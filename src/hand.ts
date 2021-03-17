@@ -1,12 +1,12 @@
-class DOMHand {
+class Hand {
     private readonly HAND_Y = 150;
     private readonly CARD_DX = 137;
 
     private cardIds: number[];
-    private activeWonder: DOMWonder;
+    private activeWonder: Wonder;
 
     handPositions: HTMLDivElement[];
-    cards: DOMCard[];
+    cards: Card[];
 
     get selectedCard() {
         for (let card of this.cards) {
@@ -17,7 +17,7 @@ class DOMHand {
         return undefined;
     }
 
-    constructor(cardIds: number[], activeWonder: DOMWonder) {
+    constructor(cardIds: number[], activeWonder: Wonder) {
         this.cardIds = cardIds;
         this.activeWonder = activeWonder;
         this.create();
@@ -37,7 +37,7 @@ class DOMHand {
             let handPosition = document.createElement('div');
             handPosition.style.left = `calc(50% + ${(i - (this.cardIds.length - 1)/2) * this.CARD_DX}px)`;
             handPosition.style.top = `${this.HAND_Y}px`;
-            let card = new DOMCard(this.cardIds[i], Main.gamestate.cards[this.cardIds[i]], handPosition, this.activeWonder);
+            let card = new Card(this.cardIds[i], Main.gamestate.cards[this.cardIds[i]], handPosition, this.activeWonder);
             card.xs = handPosition.style.left;
             card.ys = handPosition.style.top;
             card.addToGame();
