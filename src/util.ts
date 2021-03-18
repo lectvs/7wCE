@@ -39,6 +39,15 @@ function randElement<T>(array: T[]) {
     return array[randInt(0, array.length-1)];
 }
 
+/** Inclusive */
+function range(start: number, end: number) {
+    let result: number[] = [];
+    for (let i = start; i <= end; i++) {
+        result.push(i);
+    }
+    return result;
+}
+
 function sum<T>(array: T[], key: (t: T) => number) {
     if (!array || array.length === 0) {
         return 0;
