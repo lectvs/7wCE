@@ -1521,7 +1521,7 @@ var EndScreen = /** @class */ (function () {
         this.POSITIONS_Y = 50;
         this.NAMES_Y = 80;
         this.POINTS_Y = 130;
-        this.POINTS_DX = 100;
+        this.POINTS_DX = 150;
         this.POINTS_DY = 50;
     }
     EndScreen.prototype.create = function () {
@@ -2547,7 +2547,7 @@ var Wonder = /** @class */ (function (_super) {
         _this.SIDEBAR_NAME_X = -18;
         _this.SIDEBAR_NAME_Y = 25;
         _this.SIDEBAR_GOLD_COIN_X = -28;
-        _this.SIDEBAR_GOLD_COIN_Y = 25;
+        _this.SIDEBAR_GOLD_COIN_Y = 55;
         _this.SIDEBAR_GOLD_TEXT_X = -43;
         _this.SIDEBAR_GOLD_TEXT_Y = 55;
         _this.SIDEBAR_POINTS_COIN_X = -88;

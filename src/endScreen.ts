@@ -3,7 +3,7 @@ class EndScreen {
     private readonly POSITIONS_Y = 50;
     private readonly NAMES_Y = 80;
     private readonly POINTS_Y = 130;
-    private readonly POINTS_DX = 100;
+    private readonly POINTS_DX = 150;
     private readonly POINTS_DY = 50;
 
     constructor() {

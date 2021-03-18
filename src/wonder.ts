@@ -38,7 +38,7 @@ class Wonder extends GameElement {
     private readonly SIDEBAR_NAME_X = -18;
     private readonly SIDEBAR_NAME_Y = 25;
     private readonly SIDEBAR_GOLD_COIN_X = -28;
-    private readonly SIDEBAR_GOLD_COIN_Y = 25;
+    private readonly SIDEBAR_GOLD_COIN_Y = 55;
     private readonly SIDEBAR_GOLD_TEXT_X = -43;
     private readonly SIDEBAR_GOLD_TEXT_Y = 55;
     private readonly SIDEBAR_POINTS_COIN_X = -88;
