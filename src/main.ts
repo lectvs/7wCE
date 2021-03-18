@@ -2,6 +2,7 @@ class Main {
     static gameid: string;
     static player: string;
     static gamestate: API.GameState;
+    static currentError: string;
 
     static mouseDown: boolean = false;
 
@@ -178,21 +179,11 @@ class Main {
 
     static error(text: string) {
         console.error(text);
-
-        // let errorBox = Shapes.filledRect(0, 0, Main.width, 50, 0xFF0000);
-        // errorBox.addChild(Shapes.centeredText(Main.width/2, errorBox.height/2, text, 0.25, 0x000000));
-
-        // let app = this.app;
-        // this.scriptManager.runScript(function*() {
-        //     errorBox.position.set(0, -50);
-        //     app.stage.addChild(errorBox);
-
-        //     yield* S.doOverTime(0.1, t => errorBox.position.y = 50*t-50)();
-        //     yield* S.wait(2)();
-        //     yield* S.doOverTime(0.1, t => errorBox.position.y = -50*t)();
-
-        //     app.stage.removeChild(errorBox);
-        // });
+        this.scriptManager.runScript(function*() {
+            Main.currentError = text;
+            yield* S.wait(3)();
+            Main.currentError = undefined;
+        });
     }
 
     static getGameY() {

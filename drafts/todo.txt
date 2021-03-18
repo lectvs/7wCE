@@ -1,4 +1,3 @@
 todo
-- error reporting
 - animations
 - hover-infos

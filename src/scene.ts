@@ -3,6 +3,10 @@ class Scene {
     private readonly WONDER_DX = 500;
     private readonly WONDER_DY = 500;
     private readonly ACTION_BUTTON_Y = 360;
+    private readonly ERROR_BG_COLOR = '#FF0000';
+    private readonly OK_BG_COLOR = '#FFFFFF';
+    private readonly ERROR_TEXT_COLOR = '#FFFFFF';
+    private readonly OK_TEXT_COLOR = '#000000';
 
     mouseX: number = 0;
     mouseY: number = 0;
@@ -140,9 +144,20 @@ class Scene {
         let gamestate = Main.gamestate;
         let playerData = gamestate.playerData[Main.player];
 
+        let status = <HTMLParagraphElement>document.querySelector('#status');
         let statusText = <HTMLParagraphElement>document.querySelector('#status > p');
 
-        if (gamestate.state === 'NORMAL_MOVE') {
+        if (Main.currentError) {
+            status.style.backgroundColor = this.ERROR_BG_COLOR;
+            status.style.color = this.ERROR_TEXT_COLOR;
+        } else {
+            status.style.backgroundColor = this.OK_BG_COLOR;
+            status.style.color = this.OK_TEXT_COLOR;
+        }
+
+        if (Main.currentError) {
+            statusText.textContent = Main.currentError;
+        } else if (gamestate.state === 'NORMAL_MOVE') {
             if (playerData.currentMove) {
                 statusText.textContent = "Waiting for others to move";
             } else {

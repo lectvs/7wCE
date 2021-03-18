@@ -24,18 +24,32 @@ class Wonder extends GameElement {
     private readonly STAGE_PAYMENT_OFFSET_Y = -13;
     private readonly STAGE_PAYMENT_SCALE = 0.15;
     private readonly BUILT_STAGE_OFFSET_Y = -130;
-    private readonly PLAYED_CARD_HEIGHT = 44;
     private readonly RESOURCE_ROLL_OFFSET_Y = 30;
     private readonly RED_ROLL_X = -200;
     private readonly RED_ROLL_Y = this.BOARD_BORDER + 22;
     private readonly RED_ROLL_MAX_X = 150;
-    private readonly YELLOW_ROLL_Y = -40;
+    private readonly YELLOW_ROLL_Y = -24;
     private readonly PURPLE_ROLL_Y = 24;
-    private readonly BLUE_ROLL_Y = -40;
+    private readonly BLUE_ROLL_Y = -24;
     private readonly GREEN_ROLL_Y = 24;
     private readonly OVERFLOW_ROLL_START_Y = -288;
     private readonly OVERFLOW_ROLL_DY = -54;
     private readonly SIDEBAR_WIDTH = 600;
+    private readonly SIDEBAR_NAME_X = -18;
+    private readonly SIDEBAR_NAME_Y = 25;
+    private readonly SIDEBAR_GOLD_COIN_X = -28;
+    private readonly SIDEBAR_GOLD_COIN_Y = 25;
+    private readonly SIDEBAR_GOLD_TEXT_X = -43;
+    private readonly SIDEBAR_GOLD_TEXT_Y = 55;
+    private readonly SIDEBAR_POINTS_COIN_X = -88;
+    private readonly SIDEBAR_POINTS_COIN_Y = 55;
+    private readonly SIDEBAR_POINTS_TEXT_X = -103;
+    private readonly SIDEBAR_POINTS_TEXT_Y = 55;
+    private readonly SIDEBAR_CHECKMARK_X = -145;
+    private readonly SIDEBAR_CHECKMARK_Y = 52;
+    private readonly SIDEBAR_TOKENS_X = -28;
+    private readonly SIDEBAR_TOKENS_DX = -24;
+    private readonly SIDEBAR_TOKENS_Y = 85;
 
     private player: string;
 
@@ -297,36 +311,43 @@ class Wonder extends GameElement {
     private drawSidebar() {
         let sidebar = document.createElement('div');
         sidebar.style.width = `${this.SIDEBAR_WIDTH}px`;
-        sidebar.style.height = '300px';
+        sidebar.style.height = `${this.BOARD_HEIGHT}px`;
         sidebar.style.position = 'absolute';
 
         let nameText = sidebar.appendChild(this.drawSidebarText(this.player, 20));
-        nameText.style.left = `${this.SIDEBAR_WIDTH - 18}px`;
-        nameText.style.top = '25px';
+        nameText.style.left = `${this.SIDEBAR_WIDTH + this.SIDEBAR_NAME_X}px`;
+        nameText.style.top = `${this.SIDEBAR_NAME_Y}px`;
 
         let goldCoin = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.goldCoin(), 0.2));
         goldCoin.style.position = 'absolute';
-        goldCoin.style.left = `${this.SIDEBAR_WIDTH - 28}px`;
-        goldCoin.style.top = '55px';
+        goldCoin.style.left = `${this.SIDEBAR_WIDTH + this.SIDEBAR_GOLD_COIN_X}px`;
+        goldCoin.style.top = `${this.SIDEBAR_GOLD_COIN_Y}px`;
 
         let goldText = sidebar.appendChild(this.drawSidebarText(`${Main.gamestate.playerData[this.player].gold}`, 20));
         goldText.style.color = '#FBE317';
-        goldText.style.left = `${this.SIDEBAR_WIDTH - 43}px`;
-        goldText.style.top = '55px';
+        goldText.style.left = `${this.SIDEBAR_WIDTH + this.SIDEBAR_GOLD_TEXT_X}px`;
+        goldText.style.top = `${this.SIDEBAR_GOLD_TEXT_Y}px`;
 
         let pointsWreath = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.pointsWreath(), 0.2));
         pointsWreath.style.position = 'absolute';
-        pointsWreath.style.left = `${this.SIDEBAR_WIDTH - 88}px`;
-        pointsWreath.style.top = '55px';
+        pointsWreath.style.left = `${this.SIDEBAR_WIDTH + this.SIDEBAR_POINTS_COIN_X}px`;
+        pointsWreath.style.top = `${this.SIDEBAR_POINTS_COIN_Y}px`;
 
         let pointsText = sidebar.appendChild(this.drawSidebarText(`${Main.gamestate.playerData[this.player].pointsDistribution.total}`, 20));
-        pointsText.style.left = `${this.SIDEBAR_WIDTH - 103}px`;
-        pointsText.style.top = '55px';
+        pointsText.style.left = `${this.SIDEBAR_WIDTH + this.SIDEBAR_POINTS_TEXT_X}px`;
+        pointsText.style.top = `${this.SIDEBAR_POINTS_TEXT_Y}px`;
 
         this.moveIndicatorCheck = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.checkMark(), 0.2));
-        this.moveIndicatorCheck.style.left = `${this.SIDEBAR_WIDTH - 145}px`;
-        this.moveIndicatorCheck.style.top = '52px';
+        this.moveIndicatorCheck.style.left = `${this.SIDEBAR_WIDTH + this.SIDEBAR_CHECKMARK_X}px`;
+        this.moveIndicatorCheck.style.top = `${this.SIDEBAR_CHECKMARK_Y}px`;
         this.moveIndicatorCheck.style.visibility = 'hidden';
+
+        for (let i = 0; i < Main.gamestate.playerData[this.player].militaryTokens.length; i++) {
+            let token = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.militaryToken(Main.gamestate.playerData[this.player].militaryTokens[i]), 0.2));
+            token.style.position = 'absolute';
+            token.style.left = `${this.SIDEBAR_WIDTH + this.SIDEBAR_TOKENS_X + this.SIDEBAR_TOKENS_DX*i}px`;
+            token.style.top = `${this.SIDEBAR_TOKENS_Y}px`;
+        }
 
         return sidebar;
     }

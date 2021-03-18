@@ -913,6 +913,13 @@ var ArtCommon;
         return container;
     }
     ArtCommon.pointsWreath = pointsWreath;
+    function militaryToken(amount) {
+        var container = new PIXI.Container();
+        container.addChild(debugEffect(0xD51939));
+        container.addChild(Shapes.centeredText(0, 0, "" + amount, 0.7, 0xFFFFFF));
+        return container;
+    }
+    ArtCommon.militaryToken = militaryToken;
     function payment(amount) {
         if (!isFinite(amount)) {
             return ArtCommon.X(0xFF0000);
@@ -2004,17 +2011,19 @@ var Main = /** @class */ (function () {
     };
     Main.error = function (text) {
         console.error(text);
-        // let errorBox = Shapes.filledRect(0, 0, Main.width, 50, 0xFF0000);
-        // errorBox.addChild(Shapes.centeredText(Main.width/2, errorBox.height/2, text, 0.25, 0x000000));
-        // let app = this.app;
-        // this.scriptManager.runScript(function*() {
-        //     errorBox.position.set(0, -50);
-        //     app.stage.addChild(errorBox);
-        //     yield* S.doOverTime(0.1, t => errorBox.position.y = 50*t-50)();
-        //     yield* S.wait(2)();
-        //     yield* S.doOverTime(0.1, t => errorBox.position.y = -50*t)();
-        //     app.stage.removeChild(errorBox);
-        // });
+        this.scriptManager.runScript(function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        Main.currentError = text;
+                        return [5 /*yield**/, __values(S.wait(3)())];
+                    case 1:
+                        _a.sent();
+                        Main.currentError = undefined;
+                        return [2 /*return*/];
+                }
+            });
+        });
     };
     Main.getGameY = function () {
         return document.getElementById('status').clientHeight
@@ -2211,6 +2220,10 @@ var Scene = /** @class */ (function () {
         this.WONDER_DX = 500;
         this.WONDER_DY = 500;
         this.ACTION_BUTTON_Y = 360;
+        this.ERROR_BG_COLOR = '#FF0000';
+        this.OK_BG_COLOR = '#FFFFFF';
+        this.ERROR_TEXT_COLOR = '#FFFFFF';
+        this.OK_TEXT_COLOR = '#000000';
         this.mouseX = 0;
         this.mouseY = 0;
         this.wonders = [];
@@ -2332,8 +2345,20 @@ var Scene = /** @class */ (function () {
     Scene.prototype.setStatus = function () {
         var gamestate = Main.gamestate;
         var playerData = gamestate.playerData[Main.player];
+        var status = document.querySelector('#status');
         var statusText = document.querySelector('#status > p');
-        if (gamestate.state === 'NORMAL_MOVE') {
+        if (Main.currentError) {
+            status.style.backgroundColor = this.ERROR_BG_COLOR;
+            status.style.color = this.ERROR_TEXT_COLOR;
+        }
+        else {
+            status.style.backgroundColor = this.OK_BG_COLOR;
+            status.style.color = this.OK_TEXT_COLOR;
+        }
+        if (Main.currentError) {
+            statusText.textContent = Main.currentError;
+        }
+        else if (gamestate.state === 'NORMAL_MOVE') {
             if (playerData.currentMove) {
                 statusText.textContent = "Waiting for others to move";
             }
@@ -2508,18 +2533,32 @@ var Wonder = /** @class */ (function (_super) {
         _this.STAGE_PAYMENT_OFFSET_Y = -13;
         _this.STAGE_PAYMENT_SCALE = 0.15;
         _this.BUILT_STAGE_OFFSET_Y = -130;
-        _this.PLAYED_CARD_HEIGHT = 44;
         _this.RESOURCE_ROLL_OFFSET_Y = 30;
         _this.RED_ROLL_X = -200;
         _this.RED_ROLL_Y = _this.BOARD_BORDER + 22;
         _this.RED_ROLL_MAX_X = 150;
-        _this.YELLOW_ROLL_Y = -40;
+        _this.YELLOW_ROLL_Y = -24;
         _this.PURPLE_ROLL_Y = 24;
-        _this.BLUE_ROLL_Y = -40;
+        _this.BLUE_ROLL_Y = -24;
         _this.GREEN_ROLL_Y = 24;
         _this.OVERFLOW_ROLL_START_Y = -288;
         _this.OVERFLOW_ROLL_DY = -54;
         _this.SIDEBAR_WIDTH = 600;
+        _this.SIDEBAR_NAME_X = -18;
+        _this.SIDEBAR_NAME_Y = 25;
+        _this.SIDEBAR_GOLD_COIN_X = -28;
+        _this.SIDEBAR_GOLD_COIN_Y = 25;
+        _this.SIDEBAR_GOLD_TEXT_X = -43;
+        _this.SIDEBAR_GOLD_TEXT_Y = 55;
+        _this.SIDEBAR_POINTS_COIN_X = -88;
+        _this.SIDEBAR_POINTS_COIN_Y = 55;
+        _this.SIDEBAR_POINTS_TEXT_X = -103;
+        _this.SIDEBAR_POINTS_TEXT_Y = 55;
+        _this.SIDEBAR_CHECKMARK_X = -145;
+        _this.SIDEBAR_CHECKMARK_Y = 52;
+        _this.SIDEBAR_TOKENS_X = -28;
+        _this.SIDEBAR_TOKENS_DX = -24;
+        _this.SIDEBAR_TOKENS_Y = 85;
         _this.player = player;
         var playerData = Main.gamestate.playerData[_this.player];
         var boardDiv = _this.div.appendChild(document.createElement('div'));
@@ -2755,30 +2794,36 @@ var Wonder = /** @class */ (function (_super) {
     Wonder.prototype.drawSidebar = function () {
         var sidebar = document.createElement('div');
         sidebar.style.width = this.SIDEBAR_WIDTH + "px";
-        sidebar.style.height = '300px';
+        sidebar.style.height = this.BOARD_HEIGHT + "px";
         sidebar.style.position = 'absolute';
         var nameText = sidebar.appendChild(this.drawSidebarText(this.player, 20));
-        nameText.style.left = this.SIDEBAR_WIDTH - 18 + "px";
-        nameText.style.top = '25px';
+        nameText.style.left = this.SIDEBAR_WIDTH + this.SIDEBAR_NAME_X + "px";
+        nameText.style.top = this.SIDEBAR_NAME_Y + "px";
         var goldCoin = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.goldCoin(), 0.2));
         goldCoin.style.position = 'absolute';
-        goldCoin.style.left = this.SIDEBAR_WIDTH - 28 + "px";
-        goldCoin.style.top = '55px';
+        goldCoin.style.left = this.SIDEBAR_WIDTH + this.SIDEBAR_GOLD_COIN_X + "px";
+        goldCoin.style.top = this.SIDEBAR_GOLD_COIN_Y + "px";
         var goldText = sidebar.appendChild(this.drawSidebarText("" + Main.gamestate.playerData[this.player].gold, 20));
         goldText.style.color = '#FBE317';
-        goldText.style.left = this.SIDEBAR_WIDTH - 43 + "px";
-        goldText.style.top = '55px';
+        goldText.style.left = this.SIDEBAR_WIDTH + this.SIDEBAR_GOLD_TEXT_X + "px";
+        goldText.style.top = this.SIDEBAR_GOLD_TEXT_Y + "px";
         var pointsWreath = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.pointsWreath(), 0.2));
         pointsWreath.style.position = 'absolute';
-        pointsWreath.style.left = this.SIDEBAR_WIDTH - 88 + "px";
-        pointsWreath.style.top = '55px';
+        pointsWreath.style.left = this.SIDEBAR_WIDTH + this.SIDEBAR_POINTS_COIN_X + "px";
+        pointsWreath.style.top = this.SIDEBAR_POINTS_COIN_Y + "px";
         var pointsText = sidebar.appendChild(this.drawSidebarText("" + Main.gamestate.playerData[this.player].pointsDistribution.total, 20));
-        pointsText.style.left = this.SIDEBAR_WIDTH - 103 + "px";
-        pointsText.style.top = '55px';
+        pointsText.style.left = this.SIDEBAR_WIDTH + this.SIDEBAR_POINTS_TEXT_X + "px";
+        pointsText.style.top = this.SIDEBAR_POINTS_TEXT_Y + "px";
         this.moveIndicatorCheck = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.checkMark(), 0.2));
-        this.moveIndicatorCheck.style.left = this.SIDEBAR_WIDTH - 145 + "px";
-        this.moveIndicatorCheck.style.top = '52px';
+        this.moveIndicatorCheck.style.left = this.SIDEBAR_WIDTH + this.SIDEBAR_CHECKMARK_X + "px";
+        this.moveIndicatorCheck.style.top = this.SIDEBAR_CHECKMARK_Y + "px";
         this.moveIndicatorCheck.style.visibility = 'hidden';
+        for (var i = 0; i < Main.gamestate.playerData[this.player].militaryTokens.length; i++) {
+            var token = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.militaryToken(Main.gamestate.playerData[this.player].militaryTokens[i]), 0.2));
+            token.style.position = 'absolute';
+            token.style.left = this.SIDEBAR_WIDTH + this.SIDEBAR_TOKENS_X + this.SIDEBAR_TOKENS_DX * i + "px";
+            token.style.top = this.SIDEBAR_TOKENS_Y + "px";
+        }
         return sidebar;
     };
     Wonder.prototype.drawSidebarText = function (text, size) {

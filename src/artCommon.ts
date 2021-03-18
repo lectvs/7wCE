@@ -450,6 +450,13 @@ namespace ArtCommon {
         return container;
     }
 
+    export function militaryToken(amount: number) {
+        let container = new PIXI.Container();
+        container.addChild(debugEffect(0xD51939));
+        container.addChild(Shapes.centeredText(0, 0, `${amount}`, 0.7, 0xFFFFFF));
+        return container;
+    }
+
     export function payment(amount: number) {
         if (!isFinite(amount)) {
             return ArtCommon.X(0xFF0000);
