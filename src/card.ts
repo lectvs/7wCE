@@ -19,6 +19,8 @@ class Card extends GameElement {
     handPosition: HTMLDivElement;
     activeWonder: Wonder;
 
+    targetPosition: PIXI.Point;
+
     visualState: CardVisualState;
     state: CardState;
 
@@ -82,6 +84,8 @@ class Card extends GameElement {
         this.apiCard = card;
         this.handPosition = handPosition;
         this.activeWonder = activeWonder;
+
+        this.targetPosition = new PIXI.Point();
 
         this.visualState = 'full';
         this.state = { type: 'in_hand', visualState: 'full' };
@@ -154,55 +158,49 @@ class Card extends GameElement {
         }
 
         if (this.state.type === 'in_hand') {
-            this.xs = this.handPosition.style.left;
-            this.ys = this.handPosition.style.top;
+            let game = document.getElementById('game');
+            this.targetPosition.set(HtmlUtils.cssStylePositionToPixels(this.handPosition.style.left, game.clientWidth),
+                                    HtmlUtils.cssStylePositionToPixels(this.handPosition.style.top, game.clientHeight));
             this.zIndex = C.Z_INDEX_CARD_HAND;
             this.interactable = this.canBeInteractable();
             this.visualState = this.state.visualState;
         } else if (this.state.type === 'dragging_normal') {
-            this.x = Main.scene.mouseX + this.dragging.offsetx;
-            this.y = Main.scene.mouseY + this.dragging.offsety;
+            this.targetPosition.set(Main.scene.mouseX + this.dragging.offsetx, Main.scene.mouseY + this.dragging.offsety);
             this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = this.canBeInteractable();
             this.visualState = 'full';
         } else if (this.state.type === 'dragging_play') {
-            this.x = Main.scene.mouseX;
-            this.y = Main.scene.mouseY;
+            this.targetPosition.set(Main.scene.mouseX, Main.scene.mouseY);
             this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = this.canBeInteractable();
             this.visualState = 'effect';
         } else if (this.state.type === 'dragging_wonder') {
             let stage = this.activeWonder.getClosestStageId(Main.scene.mouseX);
             let stagePoint = this.activeWonder.getCardPositionForStage(stage);
-            this.x = stagePoint.x;
-            this.y = stagePoint.y;
+            this.targetPosition.set(stagePoint.x, stagePoint.y);
             this.zIndex = C.Z_INDEX_CARD_WONDER;
             this.interactable = this.canBeInteractable();
             this.visualState = 'flipped';
         } else if (this.state.type === 'dragging_throw') {
-            this.x = Main.scene.mouseX + this.dragging.offsetx;
-            this.y = Main.scene.mouseY + this.dragging.offsety;
+            this.targetPosition.set(Main.scene.mouseX + this.dragging.offsetx, Main.scene.mouseY + this.dragging.offsety);
             this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = false;
             this.visualState = 'flipped';
         } else if (this.state.type === 'locked_play') {
             let effectPoint = this.activeWonder.getNewCardEffectWorldPosition(this);
-            this.x = effectPoint.x;
-            this.y = effectPoint.y;
+            this.targetPosition.set(effectPoint.x, effectPoint.y);
             this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = false;
             this.visualState = 'effect';
         } else if (this.state.type === 'locked_wonder') {
             let stagePoint = this.activeWonder.getCardPositionForStage(this.state.stage);
-            this.x = stagePoint.x;
-            this.y = stagePoint.y;
+            this.targetPosition.set(stagePoint.x, stagePoint.y);
             this.zIndex = C.Z_INDEX_CARD_WONDER;
             this.interactable = false;
             this.visualState = 'flipped';
         } else if (this.state.type === 'locked_throw') {
             let discardPoint = Main.scene.discardPile.getDiscardLockPoint();
-            this.x = discardPoint.x;
-            this.y = discardPoint.y;
+            this.targetPosition.set(discardPoint.x, discardPoint.y);
             this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = false;
             this.visualState = 'flipped';
@@ -216,20 +214,23 @@ class Card extends GameElement {
             this.flippedT = 1;
         }
 
+        this.x = lerp(this.x, this.targetPosition.x, 0.25);
+        this.y = lerp(this.y, this.targetPosition.y, 0.25);
+
         this.updateVisuals();
     }
 
     updateVisuals() {
         if (this.visualState === 'effect') {
-            this.effectT = 1;
+            this.effectT = lerp(this.effectT, 1, 0.25);
         } else {
-            this.effectT = 0;
+            this.effectT = lerp(this.effectT, 0, 0.25);
         }
 
         if (this.visualState === 'flipped') {
-            this.flippedT = 1;
+            this.flippedT = lerp(this.flippedT, 1, 0.25);
         } else {
-            this.flippedT = 0;
+            this.flippedT = lerp(this.flippedT, 0, 0.25);;
         }
 
         this.highlight.style.width = `${this._width}px`;
@@ -246,6 +247,11 @@ class Card extends GameElement {
         }
 
         this.highlight.style.boxShadow = `inset 0px 0px 0px 4px rgba(255, 0, 0, ${alpha})`;
+    }
+
+    snapToTarget() {
+        this.x = this.targetPosition.x;
+        this.y = this.targetPosition.y;
     }
 
     select(move: API.Move) {

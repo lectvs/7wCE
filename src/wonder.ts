@@ -18,6 +18,9 @@ class Wonder extends GameElement {
     builtWonderCards: Card[];
     moveIndicatorCheck: HTMLCanvasElement;
 
+    pointsText: HTMLParagraphElement;
+    goldText: HTMLParagraphElement;
+
     constructor(player: string) {
         super();
 
@@ -77,8 +80,9 @@ class Wonder extends GameElement {
         }
 
         for (let i = 0; i < this.builtWonderCards.length; i++) {
-            this.builtWonderCards[i].x = this.x - C.WONDER_BOARD_WIDTH/2 + this.stageXs[Main.gamestate.playerData[this.player].stagesBuilt[i].stage];
-            this.builtWonderCards[i].y = this.y + C.WONDER_BOARD_HEIGHT/2 + C.WONDER_BUILT_STAGE_OFFSET_Y;
+            this.builtWonderCards[i].targetPosition.set(this.x - C.WONDER_BOARD_WIDTH/2 + this.stageXs[Main.gamestate.playerData[this.player].stagesBuilt[i].stage],
+                                                        this.y + C.WONDER_BOARD_HEIGHT/2 + C.WONDER_BUILT_STAGE_OFFSET_Y);
+            this.builtWonderCards[i].snapToTarget();
             this.builtWonderCards[i].update();
         }
     }
@@ -275,9 +279,10 @@ class Wonder extends GameElement {
         goldCoin.style.top = `${C.WONDER_SIDEBAR_GOLD_COIN_Y}px`;
 
         let goldText = sidebar.appendChild(this.drawSidebarText(`${Main.gamestate.playerData[this.player].gold}`, 20));
-        goldText.style.color = '#FBE317';
+        goldText.style.color = ArtCommon.goldColorHtml;
         goldText.style.left = `${C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_GOLD_TEXT_X}px`;
         goldText.style.top = `${C.WONDER_SIDEBAR_GOLD_TEXT_Y}px`;
+        this.goldText = goldText.querySelector('p');
 
         let pointsWreath = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.pointsWreath(), 0.2));
         pointsWreath.style.position = 'absolute';
@@ -287,6 +292,7 @@ class Wonder extends GameElement {
         let pointsText = sidebar.appendChild(this.drawSidebarText(`${Main.gamestate.playerData[this.player].pointsDistribution.total}`, 20));
         pointsText.style.left = `${C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_POINTS_TEXT_X}px`;
         pointsText.style.top = `${C.WONDER_SIDEBAR_POINTS_TEXT_Y}px`;
+        this.pointsText = pointsText.querySelector('p');
 
         this.moveIndicatorCheck = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.checkMark(), 0.2));
         this.moveIndicatorCheck.style.left = `${C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_CHECKMARK_X}px`;

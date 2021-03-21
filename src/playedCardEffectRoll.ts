@@ -21,10 +21,11 @@ class PlayedCardEffectRoll {
     update() {
         let d = this.reverse ? -1 : 1;
         for (let i = 0; i < this.cards.length; i++) {
-            this.cards[i].x = (i === 0)
-                ? this.x + d*this.cards[i].effectWidth/2
-                : this.cards[i].x = this.cards[i-1].x + d*(this.cards[i-1].effectWidth/2 + this.cards[i].effectWidth/2);
-            this.cards[i].y = this.y;
+            this.cards[i].targetPosition.set((i === 0)
+                                                ? this.x + d*this.cards[i].effectWidth/2
+                                                : this.cards[i].x = this.cards[i-1].x + d*(this.cards[i-1].effectWidth/2 + this.cards[i].effectWidth/2),
+                                             this.y);
+            this.cards[i].snapToTarget();
             this.cards[i].update();
         }
     }

@@ -14,6 +14,8 @@ namespace ArtCommon {
         3: '#DE8C60',
     };
 
+    export const goldColor = 0xFBE317;
+    export const goldColorHtml = '#FBE317';
     export const discardPileColor = 0x888888;
 
     export function domElementForArt(art: PIXI.DisplayObject, scale: number = 1) {
@@ -186,7 +188,7 @@ namespace ArtCommon {
 
     export function gold(gold: number) {
         let container = new PIXI.Container();
-        container.addChild(debugEffect(0xFBE317));
+        container.addChild(debugEffect(ArtCommon.goldColor));
         container.addChild(Shapes.centeredText(0, 0, `${gold}`, 0.7, 0x000000));
         return container;
     }
@@ -440,7 +442,7 @@ namespace ArtCommon {
 
     export function goldCoin() {
         let container = new PIXI.Container();
-        container.addChild(debugEffect(0xFBE317));
+        container.addChild(debugEffect(ArtCommon.goldColor));
         return container;
     }
 
@@ -467,8 +469,8 @@ namespace ArtCommon {
         }
 
         let cost = new PIXI.Container();
-        cost.addChild(Shapes.filledCircle(0, 0, 50, 0xFBE317));
-        let goldText = Shapes.centeredText(-70, 0, `${amount}`, 1, 0xFBE317);
+        cost.addChild(Shapes.filledCircle(0, 0, 50, ArtCommon.goldColor));
+        let goldText = Shapes.centeredText(-70, 0, `${amount}`, 1, ArtCommon.goldColor);
         goldText.anchor.set(1, 0.5);
         cost.addChild(goldText);
         return cost;

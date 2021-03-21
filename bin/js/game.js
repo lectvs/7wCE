@@ -74,6 +74,8 @@ var GameElement = /** @class */ (function () {
         this.game = document.getElementById('game');
         this.div = document.createElement('div');
         this.div.style.position = 'absolute';
+        this.x = 0;
+        this.y = 0;
     }
     Object.defineProperty(GameElement.prototype, "x", {
         get: function () {
@@ -118,7 +120,6 @@ var GameElement = /** @class */ (function () {
     });
     GameElement.prototype.addToGame = function () {
         document.querySelector('#game').appendChild(this.div);
-        HTMLCanvasElement;
     };
     GameElement.prototype.removeFromGame = function () {
         if (this.div.parentElement) {
@@ -403,6 +404,8 @@ var ArtCommon;
         2: '#F9FDFE',
         3: '#DE8C60',
     };
+    ArtCommon.goldColor = 0xFBE317;
+    ArtCommon.goldColorHtml = '#FBE317';
     ArtCommon.discardPileColor = 0x888888;
     function domElementForArt(art, scale) {
         if (scale === void 0) { scale = 1; }
@@ -644,7 +647,7 @@ var ArtCommon;
     ArtCommon.victoryPoints = victoryPoints;
     function gold(gold) {
         var container = new PIXI.Container();
-        container.addChild(debugEffect(0xFBE317));
+        container.addChild(debugEffect(ArtCommon.goldColor));
         container.addChild(Shapes.centeredText(0, 0, "" + gold, 0.7, 0x000000));
         return container;
     }
@@ -900,7 +903,7 @@ var ArtCommon;
     ArtCommon.pyramidStages = pyramidStages;
     function goldCoin() {
         var container = new PIXI.Container();
-        container.addChild(debugEffect(0xFBE317));
+        container.addChild(debugEffect(ArtCommon.goldColor));
         return container;
     }
     ArtCommon.goldCoin = goldCoin;
@@ -925,8 +928,8 @@ var ArtCommon;
             return ArtCommon.checkMark();
         }
         var cost = new PIXI.Container();
-        cost.addChild(Shapes.filledCircle(0, 0, 50, 0xFBE317));
-        var goldText = Shapes.centeredText(-70, 0, "" + amount, 1, 0xFBE317);
+        cost.addChild(Shapes.filledCircle(0, 0, 50, ArtCommon.goldColor));
+        var goldText = Shapes.centeredText(-70, 0, "" + amount, 1, ArtCommon.goldColor);
         goldText.anchor.set(1, 0.5);
         cost.addChild(goldText);
         return cost;
@@ -1097,6 +1100,7 @@ var Card = /** @class */ (function (_super) {
         _this.apiCard = card;
         _this.handPosition = handPosition;
         _this.activeWonder = activeWonder;
+        _this.targetPosition = new PIXI.Point();
         _this.visualState = 'full';
         _this.state = { type: 'in_hand', visualState: 'full' };
         _this.configureValidMoves(Main.gamestate.validMoves);
@@ -1230,22 +1234,20 @@ var Card = /** @class */ (function (_super) {
             }
         }
         if (this.state.type === 'in_hand') {
-            this.xs = this.handPosition.style.left;
-            this.ys = this.handPosition.style.top;
+            var game = document.getElementById('game');
+            this.targetPosition.set(HtmlUtils.cssStylePositionToPixels(this.handPosition.style.left, game.clientWidth), HtmlUtils.cssStylePositionToPixels(this.handPosition.style.top, game.clientHeight));
             this.zIndex = C.Z_INDEX_CARD_HAND;
             this.interactable = this.canBeInteractable();
             this.visualState = this.state.visualState;
         }
         else if (this.state.type === 'dragging_normal') {
-            this.x = Main.scene.mouseX + this.dragging.offsetx;
-            this.y = Main.scene.mouseY + this.dragging.offsety;
+            this.targetPosition.set(Main.scene.mouseX + this.dragging.offsetx, Main.scene.mouseY + this.dragging.offsety);
             this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = this.canBeInteractable();
             this.visualState = 'full';
         }
         else if (this.state.type === 'dragging_play') {
-            this.x = Main.scene.mouseX;
-            this.y = Main.scene.mouseY;
+            this.targetPosition.set(Main.scene.mouseX, Main.scene.mouseY);
             this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = this.canBeInteractable();
             this.visualState = 'effect';
@@ -1253,39 +1255,34 @@ var Card = /** @class */ (function (_super) {
         else if (this.state.type === 'dragging_wonder') {
             var stage = this.activeWonder.getClosestStageId(Main.scene.mouseX);
             var stagePoint = this.activeWonder.getCardPositionForStage(stage);
-            this.x = stagePoint.x;
-            this.y = stagePoint.y;
+            this.targetPosition.set(stagePoint.x, stagePoint.y);
             this.zIndex = C.Z_INDEX_CARD_WONDER;
             this.interactable = this.canBeInteractable();
             this.visualState = 'flipped';
         }
         else if (this.state.type === 'dragging_throw') {
-            this.x = Main.scene.mouseX + this.dragging.offsetx;
-            this.y = Main.scene.mouseY + this.dragging.offsety;
+            this.targetPosition.set(Main.scene.mouseX + this.dragging.offsetx, Main.scene.mouseY + this.dragging.offsety);
             this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = false;
             this.visualState = 'flipped';
         }
         else if (this.state.type === 'locked_play') {
             var effectPoint = this.activeWonder.getNewCardEffectWorldPosition(this);
-            this.x = effectPoint.x;
-            this.y = effectPoint.y;
+            this.targetPosition.set(effectPoint.x, effectPoint.y);
             this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = false;
             this.visualState = 'effect';
         }
         else if (this.state.type === 'locked_wonder') {
             var stagePoint = this.activeWonder.getCardPositionForStage(this.state.stage);
-            this.x = stagePoint.x;
-            this.y = stagePoint.y;
+            this.targetPosition.set(stagePoint.x, stagePoint.y);
             this.zIndex = C.Z_INDEX_CARD_WONDER;
             this.interactable = false;
             this.visualState = 'flipped';
         }
         else if (this.state.type === 'locked_throw') {
             var discardPoint = Main.scene.discardPile.getDiscardLockPoint();
-            this.x = discardPoint.x;
-            this.y = discardPoint.y;
+            this.targetPosition.set(discardPoint.x, discardPoint.y);
             this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = false;
             this.visualState = 'flipped';
@@ -1300,20 +1297,23 @@ var Card = /** @class */ (function (_super) {
             this.visualState = 'flipped';
             this.flippedT = 1;
         }
+        this.x = lerp(this.x, this.targetPosition.x, 0.25);
+        this.y = lerp(this.y, this.targetPosition.y, 0.25);
         this.updateVisuals();
     };
     Card.prototype.updateVisuals = function () {
         if (this.visualState === 'effect') {
-            this.effectT = 1;
+            this.effectT = lerp(this.effectT, 1, 0.25);
         }
         else {
-            this.effectT = 0;
+            this.effectT = lerp(this.effectT, 0, 0.25);
         }
         if (this.visualState === 'flipped') {
-            this.flippedT = 1;
+            this.flippedT = lerp(this.flippedT, 1, 0.25);
         }
         else {
-            this.flippedT = 0;
+            this.flippedT = lerp(this.flippedT, 0, 0.25);
+            ;
         }
         this.highlight.style.width = this._width + "px";
         this.highlight.style.height = lerp(this.height - C.CARD_PAYMENT_HEIGHT, this.height, this.effectT) + "px";
@@ -1329,6 +1329,10 @@ var Card = /** @class */ (function (_super) {
             alpha = 0;
         }
         this.highlight.style.boxShadow = "inset 0px 0px 0px 4px rgba(255, 0, 0, " + alpha + ")";
+    };
+    Card.prototype.snapToTarget = function () {
+        this.x = this.targetPosition.x;
+        this.y = this.targetPosition.y;
     };
     Card.prototype.select = function (move) {
         var lastSelectedCard = Main.scene.hand.selectedCard;
@@ -1630,8 +1634,8 @@ var EndScreen = /** @class */ (function () {
         var placements = range(1, players.length);
         for (var i = 1; i < players.length; i++) {
             if (pointsDistributions[i].total === pointsDistributions[i - 1].total) {
-                pointsTotals[i - 1] += " <span style=\"color:#FBE317\">(" + golds[i - 1] + ")</span>";
-                pointsTotals[i] += " <span style=\"color:#FBE317\">(" + golds[i] + ")</span>";
+                pointsTotals[i - 1] += " <span style=\"color:" + ArtCommon.goldColorHtml + "\">(" + golds[i - 1] + ")</span>";
+                pointsTotals[i] += " <span style=\"color:" + ArtCommon.goldColorHtml + "\">(" + golds[i] + ")</span>";
                 if (golds[i] === golds[i - 1])
                     placements[i] = placements[i - 1];
             }
@@ -1639,7 +1643,7 @@ var EndScreen = /** @class */ (function () {
         var endscreen = document.getElementById('endscreen');
         var x = (-1 - (players.length - 1) / 2) * C.END_SCREEN_POINTS_DX;
         endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('red')), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 0 + "px"));
-        endscreen.appendChild(this.scoreArt(Shapes.filledCircle(0, 0, 16, 0xFBE317), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 1 + "px"));
+        endscreen.appendChild(this.scoreArt(Shapes.filledCircle(0, 0, 16, ArtCommon.goldColor), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 1 + "px"));
         endscreen.appendChild(this.scoreArt(Shapes.filledPolygon(0, 0, [-18, 16, 18, 16, 0, -16], 0xFFFF00), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 2 + "px"));
         endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('green')), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 3 + "px"));
         endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('yellow')), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 4 + "px"));
@@ -1740,18 +1744,18 @@ var GameStateDiffer;
         if (newPoints === oldPoints)
             return;
         result.scripts.push(function () {
+            var pointsText;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: 
-                    //let pointsText = Main.scene.wonders[playeri].pointsText;
-                    //pointsText.style.fill = 0xFF0000;
-                    return [5 /*yield**/, __values(S.doOverTime(1, function (t) {
-                            //    pointsText.text = `${Math.round(lerp(oldPoints, newPoints, t))}`;
-                        })())];
+                    case 0:
+                        pointsText = Main.scene.wonders[playeri].pointsText;
+                        pointsText.style.color = '#FF0000';
+                        return [5 /*yield**/, __values(S.doOverTime(1, function (t) {
+                                pointsText.textContent = "" + Math.round(lerp(oldPoints, newPoints, t));
+                            })())];
                     case 1:
-                        //let pointsText = Main.scene.wonders[playeri].pointsText;
-                        //pointsText.style.fill = 0xFF0000;
                         _a.sent();
+                        pointsText.style.color = '#FFFFFF';
                         return [2 /*return*/];
                 }
             });
@@ -1764,18 +1768,18 @@ var GameStateDiffer;
         if (newGold === oldGold)
             return;
         result.scripts.push(function () {
+            var goldText;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: 
-                    //let goldText = Main.scene.wonders[playeri].goldText;
-                    //goldText.style.fill = 0xFF0000;
-                    return [5 /*yield**/, __values(S.doOverTime(1, function (t) {
-                            //    goldText.text = `${Math.round(lerp(oldGold, newGold, t))}`;
-                        })())];
+                    case 0:
+                        goldText = Main.scene.wonders[playeri].goldText;
+                        goldText.style.color = '#FF0000';
+                        return [5 /*yield**/, __values(S.doOverTime(1, function (t) {
+                                goldText.textContent = "" + Math.round(lerp(oldGold, newGold, t));
+                            })())];
                     case 1:
-                        //let goldText = Main.scene.wonders[playeri].goldText;
-                        //goldText.style.fill = 0xFF0000;
                         _a.sent();
+                        goldText.style.color = ArtCommon.goldColorHtml;
                         return [2 /*return*/];
                 }
             });
@@ -2292,10 +2296,10 @@ var PlayedCardEffectRoll = /** @class */ (function () {
     PlayedCardEffectRoll.prototype.update = function () {
         var d = this.reverse ? -1 : 1;
         for (var i = 0; i < this.cards.length; i++) {
-            this.cards[i].x = (i === 0)
+            this.cards[i].targetPosition.set((i === 0)
                 ? this.x + d * this.cards[i].effectWidth / 2
-                : this.cards[i].x = this.cards[i - 1].x + d * (this.cards[i - 1].effectWidth / 2 + this.cards[i].effectWidth / 2);
-            this.cards[i].y = this.y;
+                : this.cards[i].x = this.cards[i - 1].x + d * (this.cards[i - 1].effectWidth / 2 + this.cards[i].effectWidth / 2), this.y);
+            this.cards[i].snapToTarget();
             this.cards[i].update();
         }
     };
@@ -2683,8 +2687,8 @@ var Wonder = /** @class */ (function (_super) {
             finally { if (e_23) throw e_23.error; }
         }
         for (var i = 0; i < this.builtWonderCards.length; i++) {
-            this.builtWonderCards[i].x = this.x - C.WONDER_BOARD_WIDTH / 2 + this.stageXs[Main.gamestate.playerData[this.player].stagesBuilt[i].stage];
-            this.builtWonderCards[i].y = this.y + C.WONDER_BOARD_HEIGHT / 2 + C.WONDER_BUILT_STAGE_OFFSET_Y;
+            this.builtWonderCards[i].targetPosition.set(this.x - C.WONDER_BOARD_WIDTH / 2 + this.stageXs[Main.gamestate.playerData[this.player].stagesBuilt[i].stage], this.y + C.WONDER_BOARD_HEIGHT / 2 + C.WONDER_BUILT_STAGE_OFFSET_Y);
+            this.builtWonderCards[i].snapToTarget();
             this.builtWonderCards[i].update();
         }
     };
@@ -2849,9 +2853,10 @@ var Wonder = /** @class */ (function (_super) {
         goldCoin.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_GOLD_COIN_X + "px";
         goldCoin.style.top = C.WONDER_SIDEBAR_GOLD_COIN_Y + "px";
         var goldText = sidebar.appendChild(this.drawSidebarText("" + Main.gamestate.playerData[this.player].gold, 20));
-        goldText.style.color = '#FBE317';
+        goldText.style.color = ArtCommon.goldColorHtml;
         goldText.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_GOLD_TEXT_X + "px";
         goldText.style.top = C.WONDER_SIDEBAR_GOLD_TEXT_Y + "px";
+        this.goldText = goldText.querySelector('p');
         var pointsWreath = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.pointsWreath(), 0.2));
         pointsWreath.style.position = 'absolute';
         pointsWreath.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_POINTS_COIN_X + "px";
@@ -2859,6 +2864,7 @@ var Wonder = /** @class */ (function (_super) {
         var pointsText = sidebar.appendChild(this.drawSidebarText("" + Main.gamestate.playerData[this.player].pointsDistribution.total, 20));
         pointsText.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_POINTS_TEXT_X + "px";
         pointsText.style.top = C.WONDER_SIDEBAR_POINTS_TEXT_Y + "px";
+        this.pointsText = pointsText.querySelector('p');
         this.moveIndicatorCheck = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.checkMark(), 0.2));
         this.moveIndicatorCheck.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_CHECKMARK_X + "px";
         this.moveIndicatorCheck.style.top = C.WONDER_SIDEBAR_CHECKMARK_Y + "px";

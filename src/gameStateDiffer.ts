@@ -52,15 +52,15 @@ namespace GameStateDiffer {
         if (newPoints === oldPoints) return;
 
         result.scripts.push(function*() {
-            //let pointsText = Main.scene.wonders[playeri].pointsText;
+            let pointsText = Main.scene.wonders[playeri].pointsText;
 
-            //pointsText.style.fill = 0xFF0000;
+            pointsText.style.color = '#FF0000';
             
             yield* S.doOverTime(1, t => {
-            //    pointsText.text = `${Math.round(lerp(oldPoints, newPoints, t))}`;
+                pointsText.textContent = `${Math.round(lerp(oldPoints, newPoints, t))}`;
             })();
 
-            //pointsText.style.fill = 0xFFFFFF;
+            pointsText.style.color = '#FFFFFF';
         });
     }
 
@@ -72,15 +72,15 @@ namespace GameStateDiffer {
         if (newGold === oldGold) return;
 
         result.scripts.push(function*() {
-            //let goldText = Main.scene.wonders[playeri].goldText;
+            let goldText = Main.scene.wonders[playeri].goldText;
 
-            //goldText.style.fill = 0xFF0000;
+            goldText.style.color = '#FF0000';
             
             yield* S.doOverTime(1, t => {
-            //    goldText.text = `${Math.round(lerp(oldGold, newGold, t))}`;
+                goldText.textContent = `${Math.round(lerp(oldGold, newGold, t))}`;
             })();
 
-            //goldText.style.fill = 0xFFFFFF;
+            goldText.style.color = ArtCommon.goldColorHtml;
         });
     }
 

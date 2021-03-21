@@ -26,11 +26,12 @@ class GameElement {
         this.game = document.getElementById('game');
         this.div = document.createElement('div');
         this.div.style.position = 'absolute';
+        this.x = 0;
+        this.y = 0;
     }
 
     addToGame() {
         document.querySelector('#game').appendChild(this.div);
-        HTMLCanvasElement
     }
 
     removeFromGame() {

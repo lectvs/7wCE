@@ -26,8 +26,8 @@ class EndScreen {
         let placements = range(1, players.length);
         for (let i = 1; i < players.length; i++) {
             if (pointsDistributions[i].total === pointsDistributions[i-1].total) {
-                pointsTotals[i-1] += ` <span style="color:#FBE317">(${golds[i-1]})</span>`;
-                pointsTotals[i] += ` <span style="color:#FBE317">(${golds[i]})</span>`;
+                pointsTotals[i-1] += ` <span style="color:${ArtCommon.goldColorHtml}">(${golds[i-1]})</span>`;
+                pointsTotals[i] += ` <span style="color:${ArtCommon.goldColorHtml}">(${golds[i]})</span>`;
                 if (golds[i] === golds[i-1]) placements[i] = placements[i-1];
             }
         }
@@ -36,7 +36,7 @@ class EndScreen {
 
         let x = (-1 - (players.length - 1) / 2) * C.END_SCREEN_POINTS_DX;
         endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('red')), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*0}px`));
-        endscreen.appendChild(this.scoreArt(Shapes.filledCircle(0, 0, 16, 0xFBE317), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*1}px`));
+        endscreen.appendChild(this.scoreArt(Shapes.filledCircle(0, 0, 16, ArtCommon.goldColor), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*1}px`));
         endscreen.appendChild(this.scoreArt(Shapes.filledPolygon(0, 0, [ -18, 16, 18, 16, 0, -16 ], 0xFFFF00), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*2}px`));
         endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('green')), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*3}px`));
         endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('yellow')), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*4}px`));
