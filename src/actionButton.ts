@@ -1,9 +1,6 @@
 /// <reference path="gameElement.ts" />
 
 class ActionButton extends GameElement {
-    private readonly BUTTON_WIDTH = 100;
-    private readonly BUTTON_HEIGHT = 50;
-    private readonly BUTTON_CORNER_RADIUS = 8;
 
     private textElement: HTMLParagraphElement;
     private type: 'undo' | 'reject_discard';
@@ -14,9 +11,9 @@ class ActionButton extends GameElement {
         let button = this.div.appendChild(document.createElement('div'));
         button.style.backgroundColor = 'white';
         button.style.color = 'black';
-        button.style.width = `${this.BUTTON_WIDTH}px`;
-        button.style.height = `${this.BUTTON_HEIGHT}px`;
-        button.style.borderRadius = `${this.BUTTON_CORNER_RADIUS}px`;
+        button.style.width = `${C.ACTION_BUTTON_WIDTH}px`;
+        button.style.height = `${C.ACTION_BUTTON_HEIGHT}px`;
+        button.style.borderRadius = `${C.ACTION_BUTTON_CORNER_RADIUS}px`;
         button.style.transform = 'translate(-50%, -50%)';
         button.style.position = 'relative';
         button.style.cursor = 'pointer';

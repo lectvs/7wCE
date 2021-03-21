@@ -132,15 +132,12 @@ var ActionButton = /** @class */ (function (_super) {
     __extends(ActionButton, _super);
     function ActionButton() {
         var _this = _super.call(this) || this;
-        _this.BUTTON_WIDTH = 100;
-        _this.BUTTON_HEIGHT = 50;
-        _this.BUTTON_CORNER_RADIUS = 8;
         var button = _this.div.appendChild(document.createElement('div'));
         button.style.backgroundColor = 'white';
         button.style.color = 'black';
-        button.style.width = _this.BUTTON_WIDTH + "px";
-        button.style.height = _this.BUTTON_HEIGHT + "px";
-        button.style.borderRadius = _this.BUTTON_CORNER_RADIUS + "px";
+        button.style.width = C.ACTION_BUTTON_WIDTH + "px";
+        button.style.height = C.ACTION_BUTTON_HEIGHT + "px";
+        button.style.borderRadius = C.ACTION_BUTTON_CORNER_RADIUS + "px";
         button.style.transform = 'translate(-50%, -50%)';
         button.style.position = 'relative';
         button.style.cursor = 'pointer';
@@ -1096,26 +1093,6 @@ var Card = /** @class */ (function (_super) {
     __extends(Card, _super);
     function Card(cardId, card, handPosition, activeWonder) {
         var _this = _super.call(this) || this;
-        _this.CARD_WIDTH = 133;
-        _this.CARD_HEIGHT = 200;
-        _this.CARD_CORNER_RADIUS = 12;
-        _this.CARD_BORDER = 4;
-        _this.TITLE_HEIGHT = 12;
-        _this.TITLE_Y = 5;
-        _this.TITLE_SCALE = 0.12;
-        _this.TITLE_COLOR = 0xFFFFFF;
-        _this.BANNER_HEIGHT = 56;
-        _this.EFFECT_SCALE = 0.32;
-        _this.EFFECT_CLIP_PADDING = 6;
-        _this.EFFECT_HEIGHT = 32;
-        _this.COST_X = 16.5;
-        _this.COST_Y = _this.TITLE_HEIGHT + _this.BANNER_HEIGHT;
-        _this.COST_SCALE = 0.174;
-        _this.COST_PADDING = 8;
-        _this.PAYMENT_HEIGHT = 32;
-        _this.PAYMENT_SCALE = 0.2;
-        _this.PAYMENT_OFFSET_X = -11;
-        _this.DISCARD_COUNT_TEXT_SIZE = 48;
         _this.apiCardId = cardId;
         _this.apiCard = card;
         _this.handPosition = handPosition;
@@ -1125,10 +1102,10 @@ var Card = /** @class */ (function (_super) {
         _this.configureValidMoves(Main.gamestate.validMoves);
         _this.frontDiv = _this.div.appendChild(document.createElement('div'));
         var front = _this.frontDiv.appendChild(_this.drawFront());
-        front.style.transform = "translate(-50%, -" + (_this.PAYMENT_HEIGHT + _this.TITLE_HEIGHT + _this.BANNER_HEIGHT / 2) + "px)";
+        front.style.transform = "translate(-50%, -" + (C.CARD_PAYMENT_HEIGHT + C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2) + "px)";
         _this.backDiv = _this.div.appendChild(document.createElement('div'));
         var back = _this.backDiv.appendChild(_this.drawBack());
-        back.style.transform = "translate(-50%, -" + (_this.TITLE_HEIGHT + _this.BANNER_HEIGHT / 2) + "px)";
+        back.style.transform = "translate(-50%, -" + (C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2) + "px)";
         var highlightDiv = _this.div.appendChild(document.createElement('div'));
         _this.highlight = highlightDiv.appendChild(_this.drawHighlight());
         _this.flippedT = 0;
@@ -1180,10 +1157,10 @@ var Card = /** @class */ (function (_super) {
         get: function () { return this._effectT; },
         set: function (value) {
             this._effectT = value;
-            var left = lerp(this.fullClipRect.left, this.effectClipRect.left, this._effectT) - this.CARD_WIDTH / 2;
-            var right = lerp(this.fullClipRect.right, this.effectClipRect.right, this._effectT) - this.CARD_WIDTH / 2;
-            var top = lerp(this.fullClipRect.top, this.effectClipRect.top, this._effectT) - this.TITLE_HEIGHT - this.BANNER_HEIGHT / 2;
-            var bottom = lerp(this.fullClipRect.bottom, this.effectClipRect.bottom, this._effectT) - this.TITLE_HEIGHT - this.BANNER_HEIGHT / 2;
+            var left = lerp(this.fullClipRect.left, this.effectClipRect.left, this._effectT) - C.CARD_WIDTH / 2;
+            var right = lerp(this.fullClipRect.right, this.effectClipRect.right, this._effectT) - C.CARD_WIDTH / 2;
+            var top = lerp(this.fullClipRect.top, this.effectClipRect.top, this._effectT) - C.CARD_TITLE_HEIGHT - C.CARD_BANNER_HEIGHT / 2;
+            var bottom = lerp(this.fullClipRect.bottom, this.effectClipRect.bottom, this._effectT) - C.CARD_TITLE_HEIGHT - C.CARD_BANNER_HEIGHT / 2;
             this.frontDiv.style.clipPath = "polygon(" + left + "px " + top + "px, " + right + "px " + top + "px, " + right + "px " + bottom + "px, " + left + "px " + bottom + "px)";
             this._width = right - left;
             this._height = bottom - top;
@@ -1255,21 +1232,21 @@ var Card = /** @class */ (function (_super) {
         if (this.state.type === 'in_hand') {
             this.xs = this.handPosition.style.left;
             this.ys = this.handPosition.style.top;
-            this.zIndex = ZIndices.CARD_HAND;
+            this.zIndex = C.Z_INDEX_CARD_HAND;
             this.interactable = this.canBeInteractable();
             this.visualState = this.state.visualState;
         }
         else if (this.state.type === 'dragging_normal') {
             this.x = Main.scene.mouseX + this.dragging.offsetx;
             this.y = Main.scene.mouseY + this.dragging.offsety;
-            this.zIndex = ZIndices.CARD_DRAGGING;
+            this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = this.canBeInteractable();
             this.visualState = 'full';
         }
         else if (this.state.type === 'dragging_play') {
             this.x = Main.scene.mouseX;
             this.y = Main.scene.mouseY;
-            this.zIndex = ZIndices.CARD_DRAGGING;
+            this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = this.canBeInteractable();
             this.visualState = 'effect';
         }
@@ -1278,14 +1255,14 @@ var Card = /** @class */ (function (_super) {
             var stagePoint = this.activeWonder.getCardPositionForStage(stage);
             this.x = stagePoint.x;
             this.y = stagePoint.y;
-            this.zIndex = ZIndices.CARD_WONDER;
+            this.zIndex = C.Z_INDEX_CARD_WONDER;
             this.interactable = this.canBeInteractable();
             this.visualState = 'flipped';
         }
         else if (this.state.type === 'dragging_throw') {
             this.x = Main.scene.mouseX + this.dragging.offsetx;
             this.y = Main.scene.mouseY + this.dragging.offsety;
-            this.zIndex = ZIndices.CARD_DRAGGING;
+            this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = false;
             this.visualState = 'flipped';
         }
@@ -1293,7 +1270,7 @@ var Card = /** @class */ (function (_super) {
             var effectPoint = this.activeWonder.getNewCardEffectWorldPosition(this);
             this.x = effectPoint.x;
             this.y = effectPoint.y;
-            this.zIndex = ZIndices.CARD_DRAGGING;
+            this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = false;
             this.visualState = 'effect';
         }
@@ -1301,7 +1278,7 @@ var Card = /** @class */ (function (_super) {
             var stagePoint = this.activeWonder.getCardPositionForStage(this.state.stage);
             this.x = stagePoint.x;
             this.y = stagePoint.y;
-            this.zIndex = ZIndices.CARD_WONDER;
+            this.zIndex = C.Z_INDEX_CARD_WONDER;
             this.interactable = false;
             this.visualState = 'flipped';
         }
@@ -1309,7 +1286,7 @@ var Card = /** @class */ (function (_super) {
             var discardPoint = Main.scene.discardPile.getDiscardLockPoint();
             this.x = discardPoint.x;
             this.y = discardPoint.y;
-            this.zIndex = ZIndices.CARD_DRAGGING;
+            this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = false;
             this.visualState = 'flipped';
         }
@@ -1339,8 +1316,8 @@ var Card = /** @class */ (function (_super) {
             this.flippedT = 0;
         }
         this.highlight.style.width = this._width + "px";
-        this.highlight.style.height = lerp(this.height - this.PAYMENT_HEIGHT, this.height, this.effectT) + "px";
-        this.highlight.style.transform = "translate(-50%, -" + lerp(this.TITLE_HEIGHT + this.BANNER_HEIGHT / 2, this.EFFECT_HEIGHT / 2 + this.EFFECT_CLIP_PADDING, this.effectT) + "px)";
+        this.highlight.style.height = lerp(this.height - C.CARD_PAYMENT_HEIGHT, this.height, this.effectT) + "px";
+        this.highlight.style.transform = "translate(-50%, -" + lerp(C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2, C.CARD_EFFECT_HEIGHT / 2 + C.CARD_EFFECT_CLIP_PADDING, this.effectT) + "px)";
         var alpha;
         if (this.state.type.startsWith('locked')) {
             alpha = (Math.sin(Main.time * 8) + 1) / 2;
@@ -1416,61 +1393,61 @@ var Card = /** @class */ (function (_super) {
         var discardCountDiv = this.div.appendChild(document.createElement('div'));
         discardCountDiv.style.position = 'absolute';
         discardCountDiv.style.left = '0%';
-        discardCountDiv.style.top = this.CARD_HEIGHT / 2 - this.TITLE_HEIGHT - this.BANNER_HEIGHT / 2 + "px";
+        discardCountDiv.style.top = C.CARD_HEIGHT / 2 - C.CARD_TITLE_HEIGHT - C.CARD_BANNER_HEIGHT / 2 + "px";
         var discardCount = discardCountDiv.appendChild(document.createElement('p'));
         discardCount.textContent = "" + Main.gamestate.discardedCardCount;
         discardCount.style.fontFamily = "'Courier New', Courier, monospace";
-        discardCount.style.fontSize = this.DISCARD_COUNT_TEXT_SIZE + "px";
+        discardCount.style.fontSize = C.CARD_DISCARD_COUNT_TEXT_SIZE + "px";
         discardCount.style.color = ArtCommon.ageBacksHtml[Main.gamestate.lastDiscardedCardAge];
         discardCount.style.position = 'absolute';
         discardCount.style.transform = 'translate(-50%, -50%)';
     };
     Card.prototype.drawFront = function () {
         var front = new PIXI.Container();
-        var cardBase = Shapes.filledRoundedRect(0, 0, this.CARD_WIDTH, this.CARD_HEIGHT, this.CARD_CORNER_RADIUS, ArtCommon.cardBannerForColor(this.apiCard.color));
+        var cardBase = Shapes.filledRoundedRect(0, 0, C.CARD_WIDTH, C.CARD_HEIGHT, C.CARD_CORNER_RADIUS, ArtCommon.cardBannerForColor(this.apiCard.color));
         front.addChild(cardBase);
-        var cardBg = Shapes.filledRoundedRect(this.CARD_BORDER, this.CARD_BORDER, this.CARD_WIDTH - 2 * this.CARD_BORDER, this.CARD_HEIGHT - 2 * this.CARD_BORDER, this.CARD_CORNER_RADIUS - this.CARD_BORDER, ArtCommon.cardBg);
+        var cardBg = Shapes.filledRoundedRect(C.CARD_BORDER, C.CARD_BORDER, C.CARD_WIDTH - 2 * C.CARD_BORDER, C.CARD_HEIGHT - 2 * C.CARD_BORDER, C.CARD_CORNER_RADIUS - C.CARD_BORDER, ArtCommon.cardBg);
         front.addChild(cardBg);
         var cardMask = cardBase.clone();
         front.addChild(cardMask);
         var costContainer = ArtCommon.getArtForCost(this.apiCard.cost);
         if (costContainer) {
-            costContainer.scale.set(this.COST_SCALE);
-            costContainer.position.set(this.COST_X, this.COST_Y);
-            var costBanner = Shapes.filledRoundedRect(-costContainer.width / 2 - this.COST_PADDING, -this.COST_PADDING, costContainer.width + 2 * this.COST_PADDING, costContainer.height + 2 * this.COST_PADDING, this.COST_PADDING, ArtCommon.cardBannerForColor(this.apiCard.color));
-            costBanner.position.set(this.COST_X, this.COST_Y);
+            costContainer.scale.set(C.CARD_COST_SCALE);
+            costContainer.position.set(C.CARD_COST_X, C.CARD_COST_Y);
+            var costBanner = Shapes.filledRoundedRect(-costContainer.width / 2 - C.CARD_COST_PADDING, -C.CARD_COST_PADDING, costContainer.width + 2 * C.CARD_COST_PADDING, costContainer.height + 2 * C.CARD_COST_PADDING, C.CARD_COST_PADDING, ArtCommon.cardBannerForColor(this.apiCard.color));
+            costBanner.position.set(C.CARD_COST_X, C.CARD_COST_Y);
             costBanner.mask = cardMask;
             front.addChild(costBanner);
             front.addChild(costContainer);
         }
-        var cardBanner = Shapes.filledRect(0, 0, this.CARD_WIDTH, this.TITLE_HEIGHT + this.BANNER_HEIGHT, ArtCommon.cardBannerForColor(this.apiCard.color));
+        var cardBanner = Shapes.filledRect(0, 0, C.CARD_WIDTH, C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT, ArtCommon.cardBannerForColor(this.apiCard.color));
         cardBanner.mask = cardMask;
         front.addChild(cardBanner);
         var effectContainer = ArtCommon.getArtForEffects(this.apiCard.effects);
-        effectContainer.position.set(this.CARD_WIDTH / 2, this.TITLE_HEIGHT + this.BANNER_HEIGHT / 2);
-        effectContainer.scale.set(this.EFFECT_SCALE);
+        effectContainer.position.set(C.CARD_WIDTH / 2, C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2);
+        effectContainer.scale.set(C.CARD_EFFECT_SCALE);
         front.addChild(effectContainer);
-        this.fullClipRect = new PIXI.Rectangle(0, -this.PAYMENT_HEIGHT, this.CARD_WIDTH, this.PAYMENT_HEIGHT + this.CARD_HEIGHT);
+        this.fullClipRect = new PIXI.Rectangle(0, -C.CARD_PAYMENT_HEIGHT, C.CARD_WIDTH, C.CARD_PAYMENT_HEIGHT + C.CARD_HEIGHT);
         var effectBounds = effectContainer.getBounds();
-        var effectHalfWidth = Math.max(this.CARD_WIDTH / 2 - effectBounds.left, effectBounds.right - this.CARD_WIDTH / 2);
-        this.effectClipRect = new PIXI.Rectangle(this.CARD_WIDTH / 2 - effectHalfWidth - this.EFFECT_CLIP_PADDING, this.TITLE_HEIGHT + this.BANNER_HEIGHT / 2 - this.EFFECT_HEIGHT / 2 - this.EFFECT_CLIP_PADDING, 2 * effectHalfWidth + 2 * this.EFFECT_CLIP_PADDING, this.EFFECT_HEIGHT + 2 * this.EFFECT_CLIP_PADDING);
-        var title = Shapes.centeredText(this.CARD_WIDTH / 2, this.TITLE_Y, this.apiCard.name, this.TITLE_SCALE, this.TITLE_COLOR);
+        var effectHalfWidth = Math.max(C.CARD_WIDTH / 2 - effectBounds.left, effectBounds.right - C.CARD_WIDTH / 2);
+        this.effectClipRect = new PIXI.Rectangle(C.CARD_WIDTH / 2 - effectHalfWidth - C.CARD_EFFECT_CLIP_PADDING, C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2 - C.CARD_EFFECT_HEIGHT / 2 - C.CARD_EFFECT_CLIP_PADDING, 2 * effectHalfWidth + 2 * C.CARD_EFFECT_CLIP_PADDING, C.CARD_EFFECT_HEIGHT + 2 * C.CARD_EFFECT_CLIP_PADDING);
+        var title = Shapes.centeredText(C.CARD_WIDTH / 2, C.CARD_TITLE_Y, this.apiCard.name, C.CARD_TITLE_SCALE, C.CARD_TITLE_COLOR);
         title.anchor.y = 0;
         front.addChild(title);
         var payment = ArtCommon.payment(this.allowPlay ? this.minPlayCost : Infinity);
-        payment.scale.set(this.PAYMENT_SCALE);
-        payment.position.set(this.CARD_WIDTH + this.PAYMENT_OFFSET_X, -this.PAYMENT_HEIGHT / 2);
+        payment.scale.set(C.CARD_PAYMENT_SCALE);
+        payment.position.set(C.CARD_WIDTH + C.CARD_PAYMENT_OFFSET_X, -C.CARD_PAYMENT_HEIGHT / 2);
         front.addChild(payment);
-        front.position.set(0, this.PAYMENT_HEIGHT);
-        return render(front, this.CARD_WIDTH, this.PAYMENT_HEIGHT + this.CARD_HEIGHT);
+        front.position.set(0, C.CARD_PAYMENT_HEIGHT);
+        return render(front, C.CARD_WIDTH, C.CARD_PAYMENT_HEIGHT + C.CARD_HEIGHT);
     };
     Card.prototype.drawBack = function () {
         var back = new PIXI.Container();
-        var cardBase = Shapes.filledRoundedRect(0, 0, this.CARD_WIDTH, this.CARD_HEIGHT, this.CARD_CORNER_RADIUS, ArtCommon.ageBacks[this.apiCard.age]);
+        var cardBase = Shapes.filledRoundedRect(0, 0, C.CARD_WIDTH, C.CARD_HEIGHT, C.CARD_CORNER_RADIUS, ArtCommon.ageBacks[this.apiCard.age]);
         back.addChild(cardBase);
-        var cardBg = Shapes.filledRoundedRect(this.CARD_BORDER, this.CARD_BORDER, this.CARD_WIDTH - 2 * this.CARD_BORDER, this.CARD_HEIGHT - 2 * this.CARD_BORDER, this.CARD_CORNER_RADIUS - this.CARD_BORDER, ArtCommon.cardBg);
+        var cardBg = Shapes.filledRoundedRect(C.CARD_BORDER, C.CARD_BORDER, C.CARD_WIDTH - 2 * C.CARD_BORDER, C.CARD_HEIGHT - 2 * C.CARD_BORDER, C.CARD_CORNER_RADIUS - C.CARD_BORDER, ArtCommon.cardBg);
         back.addChild(cardBg);
-        return render(back, this.CARD_WIDTH, this.CARD_HEIGHT);
+        return render(back, C.CARD_WIDTH, C.CARD_HEIGHT);
     };
     Card.prototype.drawHighlight = function () {
         var highlight = document.createElement('div');
@@ -1485,44 +1462,154 @@ var Card = /** @class */ (function (_super) {
     };
     return Card;
 }(GameElement));
+var C = /** @class */ (function () {
+    function C() {
+    }
+    C.Z_INDEX_DISCARD_PILE = -10;
+    C.Z_INDEX_DISCARD_CARDS = -9;
+    C.Z_INDEX_CARD_HAND = 0;
+    C.Z_INDEX_CARD_WONDER = 9;
+    C.Z_INDEX_WONDER = 10;
+    C.Z_INDEX_CARD_PLAYED = 11;
+    C.Z_INDEX_CARD_DRAGGING = 100;
+    C.Z_INDEX_PAYMENT_DIALOG = 1000;
+    C.ERROR_BG_COLOR = '#FF0000';
+    C.OK_BG_COLOR = '#FFFFFF';
+    C.ERROR_TEXT_COLOR = '#FFFFFF';
+    C.OK_TEXT_COLOR = '#000000';
+    C.ACTION_BUTTON_Y = 360;
+    C.ACTION_BUTTON_WIDTH = 100;
+    C.ACTION_BUTTON_HEIGHT = 50;
+    C.ACTION_BUTTON_CORNER_RADIUS = 8;
+    C.CARD_WIDTH = 133;
+    C.CARD_HEIGHT = 200;
+    C.CARD_CORNER_RADIUS = 12;
+    C.CARD_BORDER = 4;
+    C.CARD_TITLE_HEIGHT = 12;
+    C.CARD_TITLE_Y = 5;
+    C.CARD_TITLE_SCALE = 0.12;
+    C.CARD_TITLE_COLOR = 0xFFFFFF;
+    C.CARD_BANNER_HEIGHT = 56;
+    C.CARD_EFFECT_SCALE = 0.32;
+    C.CARD_EFFECT_CLIP_PADDING = 6;
+    C.CARD_EFFECT_HEIGHT = 32;
+    C.CARD_COST_X = 16.5;
+    C.CARD_COST_Y = C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT;
+    C.CARD_COST_SCALE = 0.174;
+    C.CARD_COST_PADDING = 8;
+    C.CARD_PAYMENT_HEIGHT = 32;
+    C.CARD_PAYMENT_SCALE = 0.2;
+    C.CARD_PAYMENT_OFFSET_X = -11;
+    C.CARD_DISCARD_COUNT_TEXT_SIZE = 48;
+    C.HAND_Y = 150;
+    C.HAND_CARD_DX = 137;
+    C.WONDER_START_Y = 650;
+    C.WONDER_DX = 500;
+    C.WONDER_DY = 500;
+    C.WONDER_BOARD_WIDTH = 600;
+    C.WONDER_BOARD_HEIGHT = 300;
+    C.WONDER_BOARD_CORNER_RADIUS = 30;
+    C.WONDER_BOARD_BORDER = 4;
+    C.WONDER_STARTING_EFFECTS_SCALE = 0.32;
+    C.WONDER_STARTING_EFFECTS_PADDING = 8;
+    C.WONDER_STAGE_MIDDLE_2 = 396;
+    C.WONDER_STAGE_MIDDLE_134 = 300;
+    C.WONDER_STAGE_DX_4 = 147;
+    C.WONDER_STAGE_DX_123 = 192;
+    C.WONDER_STAGE_WIDTH = 144;
+    C.WONDER_STAGE_HEIGHT = 63;
+    C.WONDER_STAGE_CORNER_RADIUS = 18;
+    C.WONDER_STAGE_EFFECT_SCALE = 0.29;
+    C.WONDER_STAGE_COST_OFFSET_X = 10;
+    C.WONDER_STAGE_COST_OFFSET_Y = 60;
+    C.WONDER_STAGE_COST_PADDING = 6;
+    C.WONDER_STAGE_COST_BORDER = 3;
+    C.WONDER_STAGE_COST_SCALE = 0.12;
+    C.WONDER_STAGE_PAYMENT_OFFSET_X = -10;
+    C.WONDER_STAGE_PAYMENT_OFFSET_Y = -13;
+    C.WONDER_STAGE_PAYMENT_SCALE = 0.15;
+    C.WONDER_BUILT_STAGE_OFFSET_Y = -130;
+    C.WONDER_RESOURCE_ROLL_OFFSET_Y = 30;
+    C.WONDER_RED_ROLL_X = -200;
+    C.WONDER_RED_ROLL_Y = C.WONDER_BOARD_BORDER + 22;
+    C.WONDER_RED_ROLL_MAX_X = 150;
+    C.WONDER_YELLOW_ROLL_Y = -24;
+    C.WONDER_PURPLE_ROLL_Y = 24;
+    C.WONDER_BLUE_ROLL_Y = -24;
+    C.WONDER_GREEN_ROLL_Y = 24;
+    C.WONDER_OVERFLOW_ROLL_START_Y = -288;
+    C.WONDER_OVERFLOW_ROLL_DY = -54;
+    C.WONDER_SIDEBAR_WIDTH = 600;
+    C.WONDER_SIDEBAR_NAME_X = -18;
+    C.WONDER_SIDEBAR_NAME_Y = 25;
+    C.WONDER_SIDEBAR_GOLD_COIN_X = -28;
+    C.WONDER_SIDEBAR_GOLD_COIN_Y = 55;
+    C.WONDER_SIDEBAR_GOLD_TEXT_X = -43;
+    C.WONDER_SIDEBAR_GOLD_TEXT_Y = 55;
+    C.WONDER_SIDEBAR_POINTS_COIN_X = -88;
+    C.WONDER_SIDEBAR_POINTS_COIN_Y = 55;
+    C.WONDER_SIDEBAR_POINTS_TEXT_X = -103;
+    C.WONDER_SIDEBAR_POINTS_TEXT_Y = 55;
+    C.WONDER_SIDEBAR_CHECKMARK_X = -145;
+    C.WONDER_SIDEBAR_CHECKMARK_Y = 52;
+    C.WONDER_SIDEBAR_TOKENS_X = -28;
+    C.WONDER_SIDEBAR_TOKENS_DX = -24;
+    C.WONDER_SIDEBAR_TOKENS_Y = 85;
+    C.DISCARD_PILE_AREA_WIDTH = 250;
+    C.DISCARD_PILE_AREA_HEIGHT = 300;
+    C.DISCARD_PILE_AREA_CORNER_RADIUS = 10;
+    C.DISCARD_PILE_AREA_BORDER = 4;
+    C.DISCARD_PILE_TITLE_Y = 25;
+    C.DISCARD_PILE_TITLE_SCALE = 0.25;
+    C.DISCARD_PILE_TITLE_TEXT = "Discard";
+    C.DISCARD_PILE_LOCK_OFFSET_Y = -60;
+    C.PAYMENT_DIALOG_OFFSET_X = -600;
+    C.PAYMENT_DIALOG_OFFSET_Y = -100;
+    C.PAYMENT_DIALOG_WIDTH = 500;
+    C.PAYMENT_DIALOG_EXTRA_HEIGHT = 80;
+    C.PAYMENT_DIALOG_CORNER_RADIUS = 10;
+    C.PAYMENT_DIALOG_COLOR = '#FFFFFF';
+    C.PAYMENT_DIALOG_TITLE = "Payment";
+    C.PAYMENT_DIALOG_TITLE_SIZE = 24;
+    C.PAYMENT_DIALOG_TITLE_PADDING = 16;
+    C.PAYMENT_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT = 20;
+    C.PAYMENT_DIALOG_PAYMENTS_DY = 50;
+    C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE = 16;
+    C.PAYMENT_DIALOG_PAY_BUTTON_WIDTH = 48;
+    C.PAYMENT_DIALOG_PAY_BUTTON_HEIGHT = 32;
+    C.PAYMENT_DIALOG_PAY_BUTTON_COLOR = '#000088';
+    C.END_SCREEN_POSITIONS_Y = 50;
+    C.END_SCREEN_NAMES_Y = 80;
+    C.END_SCREEN_POINTS_Y = 130;
+    C.END_SCREEN_POINTS_DX = 150;
+    C.END_SCREEN_POINTS_DY = 50;
+    return C;
+}());
 var DiscardPile = /** @class */ (function (_super) {
     __extends(DiscardPile, _super);
     function DiscardPile() {
         var _this = _super.call(this) || this;
-        _this.AREA_WIDTH = 250;
-        _this.AREA_HEIGHT = 300;
-        _this.AREA_CORNER_RADIUS = 10;
-        _this.AREA_BORDER = 4;
-        _this.TITLE_Y = 25;
-        _this.TITLE_SCALE = 0.25;
-        _this.TITLE_TEXT = "Discard";
-        _this.LOCK_OFFSET_Y = -60;
         _this.div.appendChild(_this.draw());
-        _this.zIndex = ZIndices.DISCARD_PILE;
+        _this.zIndex = C.Z_INDEX_DISCARD_PILE;
         return _this;
     }
     DiscardPile.prototype.getDiscardRegion = function () {
-        return new PIXI.Rectangle(this.x - this.AREA_WIDTH / 2, this.y - this.AREA_HEIGHT / 2, this.AREA_WIDTH, this.AREA_HEIGHT);
+        return new PIXI.Rectangle(this.x - C.DISCARD_PILE_AREA_WIDTH / 2, this.y - C.DISCARD_PILE_AREA_HEIGHT / 2, C.DISCARD_PILE_AREA_WIDTH, C.DISCARD_PILE_AREA_HEIGHT);
     };
     DiscardPile.prototype.getDiscardLockPoint = function () {
-        return new PIXI.Point(this.x, this.y + this.LOCK_OFFSET_Y);
+        return new PIXI.Point(this.x, this.y + C.DISCARD_PILE_LOCK_OFFSET_Y);
     };
     DiscardPile.prototype.draw = function () {
         var discardPile = new PIXI.Container();
-        discardPile.addChild(Shapes.filledRoundedRect(0, 0, this.AREA_WIDTH, this.AREA_HEIGHT, this.AREA_CORNER_RADIUS, ArtCommon.discardPileColor));
-        discardPile.addChild(Shapes.filledRoundedRect(this.AREA_BORDER, this.AREA_BORDER, this.AREA_WIDTH - 2 * this.AREA_BORDER, this.AREA_HEIGHT - 2 * this.AREA_BORDER, this.AREA_CORNER_RADIUS - this.AREA_BORDER, 0x000000));
-        discardPile.addChild(Shapes.centeredText(this.AREA_WIDTH / 2, this.TITLE_Y, this.TITLE_TEXT, this.TITLE_SCALE, ArtCommon.discardPileColor));
-        return render(discardPile, this.AREA_WIDTH, this.AREA_HEIGHT);
+        discardPile.addChild(Shapes.filledRoundedRect(0, 0, C.DISCARD_PILE_AREA_WIDTH, C.DISCARD_PILE_AREA_HEIGHT, C.DISCARD_PILE_AREA_CORNER_RADIUS, ArtCommon.discardPileColor));
+        discardPile.addChild(Shapes.filledRoundedRect(C.DISCARD_PILE_AREA_BORDER, C.DISCARD_PILE_AREA_BORDER, C.DISCARD_PILE_AREA_WIDTH - 2 * C.DISCARD_PILE_AREA_BORDER, C.DISCARD_PILE_AREA_HEIGHT - 2 * C.DISCARD_PILE_AREA_BORDER, C.DISCARD_PILE_AREA_CORNER_RADIUS - C.DISCARD_PILE_AREA_BORDER, 0x000000));
+        discardPile.addChild(Shapes.centeredText(C.DISCARD_PILE_AREA_WIDTH / 2, C.DISCARD_PILE_TITLE_Y, C.DISCARD_PILE_TITLE_TEXT, C.DISCARD_PILE_TITLE_SCALE, ArtCommon.discardPileColor));
+        return render(discardPile, C.DISCARD_PILE_AREA_WIDTH, C.DISCARD_PILE_AREA_HEIGHT);
     };
     return DiscardPile;
 }(GameElement));
 var EndScreen = /** @class */ (function () {
     function EndScreen() {
-        this.POSITIONS_Y = 50;
-        this.NAMES_Y = 80;
-        this.POINTS_Y = 130;
-        this.POINTS_DX = 150;
-        this.POINTS_DY = 50;
     }
     EndScreen.prototype.create = function () {
         var players = Main.gamestate.players;
@@ -1550,25 +1637,25 @@ var EndScreen = /** @class */ (function () {
             }
         }
         var endscreen = document.getElementById('endscreen');
-        var x = (-1 - (players.length - 1) / 2) * this.POINTS_DX;
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('red')), "calc(50% + " + x + "px)", this.POINTS_Y + this.POINTS_DY * 0 + "px"));
-        endscreen.appendChild(this.scoreArt(Shapes.filledCircle(0, 0, 16, 0xFBE317), "calc(50% + " + x + "px)", this.POINTS_Y + this.POINTS_DY * 1 + "px"));
-        endscreen.appendChild(this.scoreArt(Shapes.filledPolygon(0, 0, [-18, 16, 18, 16, 0, -16], 0xFFFF00), "calc(50% + " + x + "px)", this.POINTS_Y + this.POINTS_DY * 2 + "px"));
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('green')), "calc(50% + " + x + "px)", this.POINTS_Y + this.POINTS_DY * 3 + "px"));
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('yellow')), "calc(50% + " + x + "px)", this.POINTS_Y + this.POINTS_DY * 4 + "px"));
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('purple')), "calc(50% + " + x + "px)", this.POINTS_Y + this.POINTS_DY * 5 + "px"));
-        endscreen.appendChild(this.scoreText('Total', "calc(50% + " + x + "px)", this.POINTS_Y + this.POINTS_DY * 6 + "px"));
+        var x = (-1 - (players.length - 1) / 2) * C.END_SCREEN_POINTS_DX;
+        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('red')), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 0 + "px"));
+        endscreen.appendChild(this.scoreArt(Shapes.filledCircle(0, 0, 16, 0xFBE317), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 1 + "px"));
+        endscreen.appendChild(this.scoreArt(Shapes.filledPolygon(0, 0, [-18, 16, 18, 16, 0, -16], 0xFFFF00), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 2 + "px"));
+        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('green')), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 3 + "px"));
+        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('yellow')), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 4 + "px"));
+        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('purple')), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 5 + "px"));
+        endscreen.appendChild(this.scoreText('Total', "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 6 + "px"));
         for (var i = 0; i < players.length; i++) {
-            var x_1 = (i - (players.length - 1) / 2) * this.POINTS_DX;
-            endscreen.appendChild(this.scoreText("#" + placements[i], "calc(50% + " + x_1 + "px)", this.POSITIONS_Y + "px"));
-            endscreen.appendChild(this.scoreText(players[i], "calc(50% + " + x_1 + "px)", this.NAMES_Y + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].conflict, "calc(50% + " + x_1 + "px)", this.POINTS_Y + this.POINTS_DY * 0 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].finance, "calc(50% + " + x_1 + "px)", this.POINTS_Y + this.POINTS_DY * 1 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].wonder, "calc(50% + " + x_1 + "px)", this.POINTS_Y + this.POINTS_DY * 2 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].science, "calc(50% + " + x_1 + "px)", this.POINTS_Y + this.POINTS_DY * 3 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].commerce, "calc(50% + " + x_1 + "px)", this.POINTS_Y + this.POINTS_DY * 4 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].guild, "calc(50% + " + x_1 + "px)", this.POINTS_Y + this.POINTS_DY * 5 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsTotals[i], "calc(50% + " + x_1 + "px)", this.POINTS_Y + this.POINTS_DY * 6 + "px"));
+            var x_1 = (i - (players.length - 1) / 2) * C.END_SCREEN_POINTS_DX;
+            endscreen.appendChild(this.scoreText("#" + placements[i], "calc(50% + " + x_1 + "px)", C.END_SCREEN_POSITIONS_Y + "px"));
+            endscreen.appendChild(this.scoreText(players[i], "calc(50% + " + x_1 + "px)", C.END_SCREEN_NAMES_Y + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].conflict, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 0 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].finance, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 1 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].wonder, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 2 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].science, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 3 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].commerce, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 4 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].guild, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 5 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsTotals[i], "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 6 + "px"));
         }
     };
     EndScreen.prototype.destroy = function () {
@@ -1729,8 +1816,6 @@ var GameStateDiffer;
 })(GameStateDiffer || (GameStateDiffer = {}));
 var Hand = /** @class */ (function () {
     function Hand(cardIds, activeWonder) {
-        this.HAND_Y = 150;
-        this.CARD_DX = 137;
         this.cardIds = cardIds;
         this.activeWonder = activeWonder;
         this.create();
@@ -1779,8 +1864,8 @@ var Hand = /** @class */ (function () {
         this.cards = [];
         for (var i = 0; i < this.cardIds.length; i++) {
             var handPosition = document.createElement('div');
-            handPosition.style.left = "calc(50% + " + (i - (this.cardIds.length - 1) / 2) * this.CARD_DX + "px)";
-            handPosition.style.top = this.HAND_Y + "px";
+            handPosition.style.left = "calc(50% + " + (i - (this.cardIds.length - 1) / 2) * C.HAND_CARD_DX + "px)";
+            handPosition.style.top = C.HAND_Y + "px";
             var card = new Card(this.cardIds[i], Main.gamestate.cards[this.cardIds[i]], handPosition, this.activeWonder);
             card.xs = handPosition.style.left;
             card.ys = handPosition.style.top;
@@ -1883,6 +1968,10 @@ var Main = /** @class */ (function () {
             _this.time += _this.delta;
             _this.update();
         });
+        if (!this.gameid || !this.player) {
+            Main.error('gameid and player must be specified in URL parameters');
+            return;
+        }
         API.getgamestate(this.gameid, this.player, function (gamestate, error) {
             if (error) {
                 Main.error('Failed to get game state: ' + error);
@@ -1907,6 +1996,17 @@ var Main = /** @class */ (function () {
         if (this.scene)
             this.scene.update();
         this.scriptManager.update();
+        var status = document.querySelector('#status');
+        var statusText = document.querySelector('#status > p');
+        if (Main.currentError) {
+            status.style.backgroundColor = C.ERROR_BG_COLOR;
+            status.style.color = C.ERROR_TEXT_COLOR;
+            statusText.textContent = Main.currentError;
+        }
+        else if (this.scene) {
+            status.style.backgroundColor = C.OK_BG_COLOR;
+            status.style.color = C.OK_TEXT_COLOR;
+        }
     };
     Main.sendUpdate = function () {
         var _this = this;
@@ -2059,21 +2159,6 @@ var PaymentDialog = /** @class */ (function (_super) {
     __extends(PaymentDialog, _super);
     function PaymentDialog(card, move, activeWonder) {
         var _this = _super.call(this) || this;
-        _this.OFFSET_X = -600;
-        _this.OFFSET_Y = -100;
-        _this.DIALOG_WIDTH = 500;
-        _this.DIALOG_EXTRA_HEIGHT = 80;
-        _this.DIALOG_CORNER_RADIUS = 10;
-        _this.DIALOG_COLOR = '#FFFFFF';
-        _this.TITLE = "Payment";
-        _this.TITLE_SIZE = 24;
-        _this.TITLE_PADDING = 16;
-        _this.PAYMENTS_MID_DIV_WIDTH_PERCENT = 20;
-        _this.PAYMENTS_DY = 50;
-        _this.PAYMENTS_TEXT_SIZE = 16;
-        _this.PAY_BUTTON_WIDTH = 48;
-        _this.PAY_BUTTON_HEIGHT = 32;
-        _this.PAY_BUTTON_COLOR = '#000088';
         _this.card = card;
         _this.move = move;
         _this.activeWonder = activeWonder;
@@ -2081,41 +2166,41 @@ var PaymentDialog = /** @class */ (function (_super) {
         return _this;
     }
     PaymentDialog.prototype.update = function () {
-        this.x = this.activeWonder.x + this.OFFSET_X;
-        this.y = this.activeWonder.y + this.OFFSET_Y;
+        this.x = this.activeWonder.x + C.PAYMENT_DIALOG_OFFSET_X;
+        this.y = this.activeWonder.y + C.PAYMENT_DIALOG_OFFSET_Y;
     };
     PaymentDialog.prototype.draw = function () {
         var _this = this;
         var validPayments = API.minimalPaymentOptions(this.move, Main.gamestate.validMoves);
         var dialogDiv = document.createElement('div');
-        dialogDiv.style.width = this.DIALOG_WIDTH + "px";
-        dialogDiv.style.height = validPayments.length * this.PAYMENTS_DY + this.DIALOG_EXTRA_HEIGHT + "px";
-        dialogDiv.style.backgroundColor = this.DIALOG_COLOR;
-        dialogDiv.style.borderRadius = this.DIALOG_CORNER_RADIUS + "px";
+        dialogDiv.style.width = C.PAYMENT_DIALOG_WIDTH + "px";
+        dialogDiv.style.height = validPayments.length * C.PAYMENT_DIALOG_PAYMENTS_DY + C.PAYMENT_DIALOG_EXTRA_HEIGHT + "px";
+        dialogDiv.style.backgroundColor = C.PAYMENT_DIALOG_COLOR;
+        dialogDiv.style.borderRadius = C.PAYMENT_DIALOG_CORNER_RADIUS + "px";
         dialogDiv.style.position = 'relative';
         dialogDiv.style.transform = "translate(-50%, -50%)";
-        var dialogTitle = dialogDiv.appendChild(this.drawText(this.TITLE, this.TITLE_SIZE));
-        dialogTitle.style.padding = this.TITLE_PADDING + "px";
+        var dialogTitle = dialogDiv.appendChild(this.drawText(C.PAYMENT_DIALOG_TITLE, C.PAYMENT_DIALOG_TITLE_SIZE));
+        dialogTitle.style.padding = C.PAYMENT_DIALOG_TITLE_PADDING + "px";
         var _a = __read(API.getNeighbors(Main.gamestate, Main.player), 2), negPlayer = _a[0], posPlayer = _a[1];
         var _loop_2 = function (i) {
             var leftDiv = dialogDiv.appendChild(document.createElement('div'));
-            leftDiv.style.width = 50 - this_2.PAYMENTS_MID_DIV_WIDTH_PERCENT / 2 + "%";
-            leftDiv.style.height = this_2.PAYMENTS_DY + "px";
+            leftDiv.style.width = 50 - C.PAYMENT_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 2 + "%";
+            leftDiv.style.height = C.PAYMENT_DIALOG_PAYMENTS_DY + "px";
             leftDiv.style.float = 'left';
             leftDiv.style.position = 'relative';
             var middleDiv = dialogDiv.appendChild(document.createElement('div'));
-            middleDiv.style.width = this_2.PAYMENTS_MID_DIV_WIDTH_PERCENT + "%";
-            middleDiv.style.height = this_2.PAYMENTS_DY + "px";
+            middleDiv.style.width = C.PAYMENT_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT + "%";
+            middleDiv.style.height = C.PAYMENT_DIALOG_PAYMENTS_DY + "px";
             middleDiv.style.float = 'left';
             middleDiv.style.position = 'relative';
             var rightDiv = dialogDiv.appendChild(document.createElement('div'));
-            rightDiv.style.width = 50 - this_2.PAYMENTS_MID_DIV_WIDTH_PERCENT / 2 + "%";
-            rightDiv.style.height = this_2.PAYMENTS_DY + "px";
+            rightDiv.style.width = 50 - C.PAYMENT_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 2 + "%";
+            rightDiv.style.height = C.PAYMENT_DIALOG_PAYMENTS_DY + "px";
             rightDiv.style.float = 'left';
             rightDiv.style.position = 'relative';
             var payment = validPayments[i];
             if (payment.neg) {
-                var paymentTextNegP = leftDiv.appendChild(this_2.drawText("<-- " + payment.neg + " to " + negPlayer, this_2.PAYMENTS_TEXT_SIZE));
+                var paymentTextNegP = leftDiv.appendChild(this_2.drawText("<-- " + payment.neg + " to " + negPlayer, C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
                 paymentTextNegP.style.width = '100%';
                 paymentTextNegP.style.textAlign = 'right';
                 paymentTextNegP.style.position = 'absolute';
@@ -2123,7 +2208,7 @@ var PaymentDialog = /** @class */ (function (_super) {
                 paymentTextNegP.style.transform = 'translate(0, -50%)';
             }
             if (payment.pos) {
-                var paymentTextPosP = rightDiv.appendChild(this_2.drawText("to " + posPlayer + " " + payment.pos + " -->", this_2.PAYMENTS_TEXT_SIZE));
+                var paymentTextPosP = rightDiv.appendChild(this_2.drawText("to " + posPlayer + " " + payment.pos + " -->", C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
                 paymentTextPosP.style.width = '100%';
                 paymentTextPosP.style.textAlign = 'left';
                 paymentTextPosP.style.position = 'absolute';
@@ -2131,9 +2216,9 @@ var PaymentDialog = /** @class */ (function (_super) {
                 paymentTextPosP.style.transform = 'translate(0, -50%)';
             }
             var payButton = middleDiv.appendChild(document.createElement('div'));
-            payButton.style.backgroundColor = this_2.PAY_BUTTON_COLOR;
-            payButton.style.width = this_2.PAY_BUTTON_WIDTH + "px";
-            payButton.style.height = this_2.PAY_BUTTON_HEIGHT + "px";
+            payButton.style.backgroundColor = C.PAYMENT_DIALOG_PAY_BUTTON_COLOR;
+            payButton.style.width = C.PAYMENT_DIALOG_PAY_BUTTON_WIDTH + "px";
+            payButton.style.height = C.PAYMENT_DIALOG_PAY_BUTTON_HEIGHT + "px";
             payButton.style.position = 'absolute';
             payButton.style.left = '50%';
             payButton.style.top = '50%';
@@ -2218,7 +2303,7 @@ var PlayedCardEffectRoll = /** @class */ (function () {
         return this.width + card.effectWidth <= maxWidth;
     };
     PlayedCardEffectRoll.prototype.addCard = function (card) {
-        card.zIndex = ZIndices.CARD_PLAYED;
+        card.zIndex = C.Z_INDEX_CARD_PLAYED;
         this.cards.push(card);
         this.update();
     };
@@ -2237,14 +2322,6 @@ function render(object, width, height) {
 }
 var Scene = /** @class */ (function () {
     function Scene() {
-        this.WONDER_START_Y = 650;
-        this.WONDER_DX = 500;
-        this.WONDER_DY = 500;
-        this.ACTION_BUTTON_Y = 360;
-        this.ERROR_BG_COLOR = '#FF0000';
-        this.OK_BG_COLOR = '#FFFFFF';
-        this.ERROR_TEXT_COLOR = '#FFFFFF';
-        this.OK_TEXT_COLOR = '#000000';
         this.mouseX = 0;
         this.mouseY = 0;
         this.wonders = [];
@@ -2285,26 +2362,26 @@ var Scene = /** @class */ (function () {
         var _this = this;
         var gamestate = Main.gamestate;
         var players = Main.gamestate.players;
-        document.getElementById('game').style.height = this.WONDER_START_Y + this.WONDER_DY * Math.ceil((gamestate.players.length + 1) / 2) + "px";
+        document.getElementById('game').style.height = C.WONDER_START_Y + C.WONDER_DY * Math.ceil((gamestate.players.length + 1) / 2) + "px";
         this.wonders = players.map(function (player) { return undefined; });
         var p = players.indexOf(Main.player);
         var l = mod(p - 1, players.length);
         var r = mod(p + 1, players.length);
         var playerWonder = new Wonder(Main.player);
         playerWonder.xs = '50%';
-        playerWonder.y = this.WONDER_START_Y;
+        playerWonder.y = C.WONDER_START_Y;
         playerWonder.addToGame();
         this.wonders[p] = playerWonder;
         var i;
         for (i = 1; i < Math.floor((players.length - 1) / 2 + 1); i++) {
             var wonder_l = new Wonder(players[l]);
-            wonder_l.xs = "calc(50% - " + this.WONDER_DX + "px)";
-            wonder_l.y = this.WONDER_START_Y + this.WONDER_DY * i;
+            wonder_l.xs = "calc(50% - " + C.WONDER_DX + "px)";
+            wonder_l.y = C.WONDER_START_Y + C.WONDER_DY * i;
             wonder_l.addToGame();
             this.wonders[l] = wonder_l;
             var wonder_r = new Wonder(players[r]);
-            wonder_r.xs = "calc(50% + " + this.WONDER_DX + "px)";
-            wonder_r.y = this.WONDER_START_Y + this.WONDER_DY * i;
+            wonder_r.xs = "calc(50% + " + C.WONDER_DX + "px)";
+            wonder_r.y = C.WONDER_START_Y + C.WONDER_DY * i;
             wonder_r.addToGame();
             this.wonders[r] = wonder_r;
             l = mod(l - 1, gamestate.players.length);
@@ -2313,13 +2390,13 @@ var Scene = /** @class */ (function () {
         if (players.length % 2 === 0) {
             var lastWonder = new Wonder(players[l]);
             lastWonder.xs = '50%';
-            lastWonder.y = this.WONDER_START_Y + this.WONDER_DY * i;
+            lastWonder.y = C.WONDER_START_Y + C.WONDER_DY * i;
             lastWonder.addToGame();
             this.wonders[l] = lastWonder;
         }
         this.actionButton = new ActionButton();
         this.actionButton.xs = '50%';
-        this.actionButton.y = this.ACTION_BUTTON_Y;
+        this.actionButton.y = C.ACTION_BUTTON_Y;
         this.actionButton.addToGame();
         var cardsInHand;
         if (this.isMyTurnToBuildFromDiscard()) {
@@ -2335,7 +2412,7 @@ var Scene = /** @class */ (function () {
         this.hand.reflectMove(gamestate.playerData[Main.player].currentMove);
         this.discardPile = new DiscardPile();
         this.discardPile.xs = '50%';
-        this.discardPile.y = this.WONDER_START_Y + this.WONDER_DY;
+        this.discardPile.y = C.WONDER_START_Y + C.WONDER_DY;
         this.discardPile.addToGame();
         if (gamestate.discardedCardCount > 0) {
             this.topDiscardCard = Card.flippedCardForAge(gamestate.lastDiscardedCardAge, false);
@@ -2360,26 +2437,14 @@ var Scene = /** @class */ (function () {
             this.paymentDialog.removeFromGame();
         }
         this.paymentDialog = new PaymentDialog(card, move, this.wonders[Main.gamestate.players.indexOf(Main.player)]);
-        this.paymentDialog.zIndex = ZIndices.PAYMENT_DIALOG;
+        this.paymentDialog.zIndex = C.Z_INDEX_PAYMENT_DIALOG;
         this.paymentDialog.addToGame();
     };
     Scene.prototype.setStatus = function () {
         var gamestate = Main.gamestate;
         var playerData = gamestate.playerData[Main.player];
-        var status = document.querySelector('#status');
         var statusText = document.querySelector('#status > p');
-        if (Main.currentError) {
-            status.style.backgroundColor = this.ERROR_BG_COLOR;
-            status.style.color = this.ERROR_TEXT_COLOR;
-        }
-        else {
-            status.style.backgroundColor = this.OK_BG_COLOR;
-            status.style.color = this.OK_TEXT_COLOR;
-        }
-        if (Main.currentError) {
-            statusText.textContent = Main.currentError;
-        }
-        else if (gamestate.state === 'NORMAL_MOVE') {
+        if (gamestate.state === 'NORMAL_MOVE') {
             if (playerData.currentMove) {
                 statusText.textContent = "Waiting for others to move";
             }
@@ -2539,70 +2604,21 @@ var Wonder = /** @class */ (function (_super) {
     function Wonder(player) {
         var e_21, _a, e_22, _b;
         var _this = _super.call(this) || this;
-        _this.BOARD_WIDTH = 600;
-        _this.BOARD_HEIGHT = 300;
-        _this.BOARD_CORNER_RADIUS = 30;
-        _this.BOARD_BORDER = 4;
-        _this.STARTING_EFFECTS_SCALE = 0.32;
-        _this.STARTING_EFFECTS_PADDING = 8;
-        _this.STAGE_MIDDLE_2 = 396;
-        _this.STAGE_MIDDLE_134 = 300;
-        _this.STAGE_DX_4 = 147;
-        _this.STAGE_DX_123 = 192;
-        _this.STAGE_WIDTH = 144;
-        _this.STAGE_HEIGHT = 63;
-        _this.STAGE_CORNER_RADIUS = 18;
-        _this.STAGE_EFFECT_SCALE = 0.29;
-        _this.STAGE_COST_OFFSET_X = 10;
-        _this.STAGE_COST_OFFSET_Y = 60;
-        _this.STAGE_COST_PADDING = 6;
-        _this.STAGE_COST_BORDER = 3;
-        _this.STAGE_COST_SCALE = 0.12;
-        _this.STAGE_PAYMENT_OFFSET_X = -10;
-        _this.STAGE_PAYMENT_OFFSET_Y = -13;
-        _this.STAGE_PAYMENT_SCALE = 0.15;
-        _this.BUILT_STAGE_OFFSET_Y = -130;
-        _this.RESOURCE_ROLL_OFFSET_Y = 30;
-        _this.RED_ROLL_X = -200;
-        _this.RED_ROLL_Y = _this.BOARD_BORDER + 22;
-        _this.RED_ROLL_MAX_X = 150;
-        _this.YELLOW_ROLL_Y = -24;
-        _this.PURPLE_ROLL_Y = 24;
-        _this.BLUE_ROLL_Y = -24;
-        _this.GREEN_ROLL_Y = 24;
-        _this.OVERFLOW_ROLL_START_Y = -288;
-        _this.OVERFLOW_ROLL_DY = -54;
-        _this.SIDEBAR_WIDTH = 600;
-        _this.SIDEBAR_NAME_X = -18;
-        _this.SIDEBAR_NAME_Y = 25;
-        _this.SIDEBAR_GOLD_COIN_X = -28;
-        _this.SIDEBAR_GOLD_COIN_Y = 55;
-        _this.SIDEBAR_GOLD_TEXT_X = -43;
-        _this.SIDEBAR_GOLD_TEXT_Y = 55;
-        _this.SIDEBAR_POINTS_COIN_X = -88;
-        _this.SIDEBAR_POINTS_COIN_Y = 55;
-        _this.SIDEBAR_POINTS_TEXT_X = -103;
-        _this.SIDEBAR_POINTS_TEXT_Y = 55;
-        _this.SIDEBAR_CHECKMARK_X = -145;
-        _this.SIDEBAR_CHECKMARK_Y = 52;
-        _this.SIDEBAR_TOKENS_X = -28;
-        _this.SIDEBAR_TOKENS_DX = -24;
-        _this.SIDEBAR_TOKENS_Y = 85;
         _this.player = player;
         var playerData = Main.gamestate.playerData[_this.player];
         var boardDiv = _this.div.appendChild(document.createElement('div'));
         boardDiv.appendChild(_this.draw());
         var sidebar = _this.div.appendChild(_this.drawSidebar());
-        sidebar.style.left = _this.BOARD_WIDTH / 2 - _this.SIDEBAR_WIDTH + "px";
-        sidebar.style.top = -_this.BOARD_HEIGHT / 2 + "px";
+        sidebar.style.left = C.WONDER_BOARD_WIDTH / 2 - C.WONDER_SIDEBAR_WIDTH + "px";
+        sidebar.style.top = -C.WONDER_BOARD_HEIGHT / 2 + "px";
         _this.playedCardEffectRolls = {
-            brown: new PlayedCardEffectRoll(-_this.BOARD_WIDTH / 2, -_this.BOARD_HEIGHT / 2 - _this.RESOURCE_ROLL_OFFSET_Y, false),
+            brown: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH / 2, -C.WONDER_BOARD_HEIGHT / 2 - C.WONDER_RESOURCE_ROLL_OFFSET_Y, false),
             grey: undefined,
-            red: new PlayedCardEffectRoll(_this.RED_ROLL_X, -_this.BOARD_HEIGHT / 2 + _this.RED_ROLL_Y, false),
-            yellow: new PlayedCardEffectRoll(-_this.BOARD_WIDTH / 2 + _this.BOARD_BORDER, _this.YELLOW_ROLL_Y, false),
-            purple: new PlayedCardEffectRoll(-_this.BOARD_WIDTH / 2 + _this.BOARD_BORDER, _this.PURPLE_ROLL_Y, false),
-            blue: new PlayedCardEffectRoll(_this.BOARD_WIDTH / 2 - _this.BOARD_BORDER, _this.BLUE_ROLL_Y, true),
-            green: new PlayedCardEffectRoll(_this.BOARD_WIDTH / 2 - _this.BOARD_BORDER, _this.GREEN_ROLL_Y, true),
+            red: new PlayedCardEffectRoll(C.WONDER_RED_ROLL_X, -C.WONDER_BOARD_HEIGHT / 2 + C.WONDER_RED_ROLL_Y, false),
+            yellow: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH / 2 + C.WONDER_BOARD_BORDER, C.WONDER_YELLOW_ROLL_Y, false),
+            purple: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH / 2 + C.WONDER_BOARD_BORDER, C.WONDER_PURPLE_ROLL_Y, false),
+            blue: new PlayedCardEffectRoll(C.WONDER_BOARD_WIDTH / 2 - C.WONDER_BOARD_BORDER, C.WONDER_BLUE_ROLL_Y, true),
+            green: new PlayedCardEffectRoll(C.WONDER_BOARD_WIDTH / 2 - C.WONDER_BOARD_BORDER, C.WONDER_GREEN_ROLL_Y, true),
         };
         _this.playedCardEffectRolls.grey = _this.playedCardEffectRolls.brown;
         _this.overflowCardEffectRolls = [];
@@ -2629,7 +2645,7 @@ var Wonder = /** @class */ (function (_super) {
                 var stageBuilt = _f.value;
                 var justPlayed = (Main.gamestate.state !== 'GAME_COMPLETE' && playerData.lastMove && playerData.lastMove.action === 'wonder' && playerData.lastMove.stage === stageBuilt.stage);
                 var card = Card.flippedCardForAge(stageBuilt.cardAge, justPlayed);
-                card.zIndex = ZIndices.CARD_WONDER;
+                card.zIndex = C.Z_INDEX_CARD_WONDER;
                 _this.builtWonderCards.push(card);
                 card.addToGame();
             }
@@ -2641,7 +2657,7 @@ var Wonder = /** @class */ (function (_super) {
             }
             finally { if (e_22) throw e_22.error; }
         }
-        _this.zIndex = ZIndices.WONDER;
+        _this.zIndex = C.Z_INDEX_WONDER;
         return _this;
     }
     Wonder.prototype.update = function () {
@@ -2667,28 +2683,28 @@ var Wonder = /** @class */ (function (_super) {
             finally { if (e_23) throw e_23.error; }
         }
         for (var i = 0; i < this.builtWonderCards.length; i++) {
-            this.builtWonderCards[i].x = this.x - this.BOARD_WIDTH / 2 + this.stageXs[Main.gamestate.playerData[this.player].stagesBuilt[i].stage];
-            this.builtWonderCards[i].y = this.y + this.BOARD_HEIGHT / 2 + this.BUILT_STAGE_OFFSET_Y;
+            this.builtWonderCards[i].x = this.x - C.WONDER_BOARD_WIDTH / 2 + this.stageXs[Main.gamestate.playerData[this.player].stagesBuilt[i].stage];
+            this.builtWonderCards[i].y = this.y + C.WONDER_BOARD_HEIGHT / 2 + C.WONDER_BUILT_STAGE_OFFSET_Y;
             this.builtWonderCards[i].update();
         }
     };
     Wonder.prototype.getMainRegion = function () {
-        return new PIXI.Rectangle(this.x - this.BOARD_WIDTH / 2, this.y - this.BOARD_HEIGHT / 2, this.BOARD_WIDTH, this.BOARD_HEIGHT - this.STAGE_HEIGHT);
+        return new PIXI.Rectangle(this.x - C.WONDER_BOARD_WIDTH / 2, this.y - C.WONDER_BOARD_HEIGHT / 2, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT);
     };
     Wonder.prototype.getStageRegion = function () {
-        return new PIXI.Rectangle(this.x - this.BOARD_WIDTH / 2, this.y + this.BOARD_HEIGHT / 2 - this.STAGE_HEIGHT, this.BOARD_WIDTH, 2 * this.STAGE_HEIGHT);
+        return new PIXI.Rectangle(this.x - C.WONDER_BOARD_WIDTH / 2, this.y + C.WONDER_BOARD_HEIGHT / 2 - C.WONDER_STAGE_HEIGHT, C.WONDER_BOARD_WIDTH, 2 * C.WONDER_STAGE_HEIGHT);
     };
     Wonder.prototype.getClosestStageId = function (posx) {
         var minStage = 0;
         for (var i = 0; i < this.stageXs.length; i++) {
-            if (Math.abs(this.x - this.BOARD_WIDTH / 2 + this.stageXs[i] - posx) < Math.abs(this.x - this.BOARD_WIDTH / 2 + this.stageXs[minStage] - posx)) {
+            if (Math.abs(this.x - C.WONDER_BOARD_WIDTH / 2 + this.stageXs[i] - posx) < Math.abs(this.x - C.WONDER_BOARD_WIDTH / 2 + this.stageXs[minStage] - posx)) {
                 minStage = i;
             }
         }
         return minStage;
     };
     Wonder.prototype.getCardPositionForStage = function (stage) {
-        return new PIXI.Point(this.x - this.BOARD_WIDTH / 2 + this.stageXs[stage], this.y + this.BOARD_HEIGHT / 2 + this.BUILT_STAGE_OFFSET_Y);
+        return new PIXI.Point(this.x - C.WONDER_BOARD_WIDTH / 2 + this.stageXs[stage], this.y + C.WONDER_BOARD_HEIGHT / 2 + C.WONDER_BUILT_STAGE_OFFSET_Y);
     };
     Wonder.prototype.getNewCardEffectWorldPosition = function (card) {
         var color = card.apiCard.color;
@@ -2696,7 +2712,7 @@ var Wonder = /** @class */ (function (_super) {
             return this.playedCardEffectRolls[color].getNextPosition(card);
         }
         else {
-            if (!this.overflowCardEffectRolls[0].canAddCard(card, this.BOARD_WIDTH)) {
+            if (!this.overflowCardEffectRolls[0].canAddCard(card, C.WONDER_BOARD_WIDTH)) {
                 this.pushNewOverflowCardEffectRoll();
             }
             return this.overflowCardEffectRolls[0].getNextPosition(card);
@@ -2711,7 +2727,7 @@ var Wonder = /** @class */ (function (_super) {
             this.playedCardEffectRolls[color].addCard(card);
         }
         else {
-            if (!this.overflowCardEffectRolls[0].canAddCard(card, this.BOARD_WIDTH)) {
+            if (!this.overflowCardEffectRolls[0].canAddCard(card, C.WONDER_BOARD_WIDTH)) {
                 this.pushNewOverflowCardEffectRoll();
             }
             this.overflowCardEffectRolls[0].addCard(card);
@@ -2725,17 +2741,17 @@ var Wonder = /** @class */ (function (_super) {
     };
     Wonder.prototype.getCardEffectRollMaxWidth = function (color) {
         return {
-            'brown': this.BOARD_WIDTH,
-            'grey': this.BOARD_WIDTH,
-            'red': this.RED_ROLL_MAX_X - this.RED_ROLL_X,
-            'yellow': this.BOARD_WIDTH - 2 * this.BOARD_BORDER - this.playedCardEffectRolls['blue'].width,
-            'purple': this.BOARD_WIDTH - 2 * this.BOARD_BORDER - this.playedCardEffectRolls['green'].width,
-            'blue': this.BOARD_WIDTH - 2 * this.BOARD_BORDER - this.playedCardEffectRolls['yellow'].width,
-            'green': this.BOARD_WIDTH - 2 * this.BOARD_BORDER - this.playedCardEffectRolls['purple'].width,
+            'brown': C.WONDER_BOARD_WIDTH,
+            'grey': C.WONDER_BOARD_WIDTH,
+            'red': C.WONDER_RED_ROLL_MAX_X - C.WONDER_RED_ROLL_X,
+            'yellow': C.WONDER_BOARD_WIDTH - 2 * C.WONDER_BOARD_BORDER - this.playedCardEffectRolls['blue'].width,
+            'purple': C.WONDER_BOARD_WIDTH - 2 * C.WONDER_BOARD_BORDER - this.playedCardEffectRolls['green'].width,
+            'blue': C.WONDER_BOARD_WIDTH - 2 * C.WONDER_BOARD_BORDER - this.playedCardEffectRolls['yellow'].width,
+            'green': C.WONDER_BOARD_WIDTH - 2 * C.WONDER_BOARD_BORDER - this.playedCardEffectRolls['purple'].width,
         }[color];
     };
     Wonder.prototype.pushNewOverflowCardEffectRoll = function () {
-        var roll = new PlayedCardEffectRoll(-this.BOARD_WIDTH / 2, this.OVERFLOW_ROLL_START_Y + this.OVERFLOW_ROLL_DY * (this.overflowCardEffectRolls.length - 1), false);
+        var roll = new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH / 2, C.WONDER_OVERFLOW_ROLL_START_Y + C.WONDER_OVERFLOW_ROLL_DY * (this.overflowCardEffectRolls.length - 1), false);
         this.overflowCardEffectRolls.unshift(roll);
     };
     Wonder.prototype.draw = function () {
@@ -2744,19 +2760,19 @@ var Wonder = /** @class */ (function (_super) {
         var playerData = Main.gamestate.playerData[this.player];
         var wonderBoard = new PIXI.Container();
         // Board
-        var boardBase = Shapes.filledRoundedRect(0, 0, this.BOARD_WIDTH, this.BOARD_HEIGHT, this.BOARD_CORNER_RADIUS, wonder.outline_color);
+        var boardBase = Shapes.filledRoundedRect(0, 0, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT, C.WONDER_BOARD_CORNER_RADIUS, wonder.outline_color);
         wonderBoard.addChild(boardBase);
-        var boardBg = Shapes.filledRoundedRect(this.BOARD_BORDER, this.BOARD_BORDER, this.BOARD_WIDTH - 2 * this.BOARD_BORDER, this.BOARD_HEIGHT - 2 * this.BOARD_BORDER, this.BOARD_CORNER_RADIUS - this.BOARD_BORDER, ArtCommon.wonderBg);
+        var boardBg = Shapes.filledRoundedRect(C.WONDER_BOARD_BORDER, C.WONDER_BOARD_BORDER, C.WONDER_BOARD_WIDTH - 2 * C.WONDER_BOARD_BORDER, C.WONDER_BOARD_HEIGHT - 2 * C.WONDER_BOARD_BORDER, C.WONDER_BOARD_CORNER_RADIUS - C.WONDER_BOARD_BORDER, ArtCommon.wonderBg);
         wonderBoard.addChild(boardBg);
         var boardBgMask = boardBg.clone();
         wonderBoard.addChild(boardBgMask);
         // Starting effects
         var startingEffects = ArtCommon.getArtForEffects(wonder.starting_effects);
-        startingEffects.scale.set(this.STARTING_EFFECTS_SCALE);
+        startingEffects.scale.set(C.WONDER_STARTING_EFFECTS_SCALE);
         var startingEffectsBounds = startingEffects.getBounds();
-        startingEffects.position.set(this.BOARD_BORDER + this.STARTING_EFFECTS_PADDING - (startingEffectsBounds.left - startingEffects.x), this.BOARD_BORDER + this.STARTING_EFFECTS_PADDING - (startingEffectsBounds.top - startingEffects.y));
+        startingEffects.position.set(C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.left - startingEffects.x), C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.top - startingEffects.y));
         startingEffectsBounds = startingEffects.getBounds();
-        var startingEffectBanner = Shapes.filledRect(startingEffectsBounds.left - this.STARTING_EFFECTS_PADDING, startingEffectsBounds.top - this.STARTING_EFFECTS_PADDING, startingEffectsBounds.width + 2 * this.STARTING_EFFECTS_PADDING, startingEffectsBounds.height + 2 * this.STARTING_EFFECTS_PADDING, ArtCommon.cardBannerForColor(wonder.starting_effect_color));
+        var startingEffectBanner = Shapes.filledRect(startingEffectsBounds.left - C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.top - C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.width + 2 * C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.height + 2 * C.WONDER_STARTING_EFFECTS_PADDING, ArtCommon.cardBannerForColor(wonder.starting_effect_color));
         startingEffectBanner.mask = boardBgMask;
         wonderBoard.addChild(startingEffectBanner);
         wonderBoard.addChild(startingEffects);
@@ -2782,30 +2798,30 @@ var Wonder = /** @class */ (function (_super) {
             }
             finally { if (e_24) throw e_24.error; }
         }
-        var stagesMiddle = wonder.stages.length === 2 ? this.STAGE_MIDDLE_2 : this.STAGE_MIDDLE_134;
-        var stageDX = wonder.stages.length === 4 ? this.STAGE_DX_4 : this.STAGE_DX_123;
+        var stagesMiddle = wonder.stages.length === 2 ? C.WONDER_STAGE_MIDDLE_2 : C.WONDER_STAGE_MIDDLE_134;
+        var stageDX = wonder.stages.length === 4 ? C.WONDER_STAGE_DX_4 : C.WONDER_STAGE_DX_123;
         this.stageXs = [];
         for (var i = 0; i < wonder.stages.length; i++) {
             this.stageXs.push(stagesMiddle + stageDX * (i - (wonder.stages.length - 1) / 2));
-            var stageBase = Shapes.filledRoundedRect(-this.STAGE_WIDTH / 2, this.BOARD_HEIGHT - this.STAGE_HEIGHT, this.STAGE_WIDTH, this.STAGE_HEIGHT * 2, this.STAGE_CORNER_RADIUS, wonder.outline_color);
+            var stageBase = Shapes.filledRoundedRect(-C.WONDER_STAGE_WIDTH / 2, C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT, C.WONDER_STAGE_WIDTH, C.WONDER_STAGE_HEIGHT * 2, C.WONDER_STAGE_CORNER_RADIUS, wonder.outline_color);
             stageBase.mask = boardBgMask;
             stageBase.x = this.stageXs[i];
             wonderBoard.addChild(stageBase);
-            var stageBg = Shapes.filledRoundedRect(-this.STAGE_WIDTH / 2 + this.BOARD_BORDER, this.BOARD_HEIGHT - this.STAGE_HEIGHT + this.BOARD_BORDER, this.STAGE_WIDTH - 2 * this.BOARD_BORDER, this.STAGE_HEIGHT * 2 - 2 * this.BOARD_BORDER, this.STAGE_CORNER_RADIUS - this.BOARD_BORDER, ArtCommon.wonderBg);
+            var stageBg = Shapes.filledRoundedRect(-C.WONDER_STAGE_WIDTH / 2 + C.WONDER_BOARD_BORDER, C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT + C.WONDER_BOARD_BORDER, C.WONDER_STAGE_WIDTH - 2 * C.WONDER_BOARD_BORDER, C.WONDER_STAGE_HEIGHT * 2 - 2 * C.WONDER_BOARD_BORDER, C.WONDER_STAGE_CORNER_RADIUS - C.WONDER_BOARD_BORDER, ArtCommon.wonderBg);
             stageBg.mask = boardBgMask;
             stageBg.x = this.stageXs[i];
             wonderBoard.addChild(stageBg);
             var stageEffects = ArtCommon.getArtForEffects(wonder.stages[i].effects);
-            stageEffects.scale.set(this.STAGE_EFFECT_SCALE);
-            stageEffects.position.set(this.stageXs[i], this.BOARD_HEIGHT - this.STAGE_HEIGHT / 2);
+            stageEffects.scale.set(C.WONDER_STAGE_EFFECT_SCALE);
+            stageEffects.position.set(this.stageXs[i], C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT / 2);
             wonderBoard.addChild(stageEffects);
             var stageCost = ArtCommon.getArtForStageCost(wonder.stages[i].cost);
             if (stageCost) {
-                stageCost.scale.set(this.STAGE_COST_SCALE);
-                stageCost.position.set(this.stageXs[i] - this.STAGE_WIDTH / 2 + this.STAGE_COST_OFFSET_X, this.BOARD_HEIGHT - this.STAGE_COST_OFFSET_Y);
-                var costBanner = Shapes.filledRoundedRect(-stageCost.width / 2 - this.STAGE_COST_PADDING, -this.STAGE_COST_PADDING, stageCost.width + 2 * this.STAGE_COST_PADDING, stageCost.height + 2 * this.STAGE_COST_PADDING, this.STAGE_COST_PADDING, wonder.outline_color);
+                stageCost.scale.set(C.WONDER_STAGE_COST_SCALE);
+                stageCost.position.set(this.stageXs[i] - C.WONDER_STAGE_WIDTH / 2 + C.WONDER_STAGE_COST_OFFSET_X, C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_COST_OFFSET_Y);
+                var costBanner = Shapes.filledRoundedRect(-stageCost.width / 2 - C.WONDER_STAGE_COST_PADDING, -C.WONDER_STAGE_COST_PADDING, stageCost.width + 2 * C.WONDER_STAGE_COST_PADDING, stageCost.height + 2 * C.WONDER_STAGE_COST_PADDING, C.WONDER_STAGE_COST_PADDING, wonder.outline_color);
                 costBanner.position.set(stageCost.x, stageCost.y);
-                var costBannerBg = Shapes.filledRoundedRect(-stageCost.width / 2 - (this.STAGE_COST_PADDING - this.STAGE_COST_BORDER), -(this.STAGE_COST_PADDING - this.STAGE_COST_BORDER), stageCost.width + 2 * (this.STAGE_COST_PADDING - this.STAGE_COST_BORDER), stageCost.height + 2 * (this.STAGE_COST_PADDING - this.STAGE_COST_BORDER), this.STAGE_COST_PADDING - this.STAGE_COST_BORDER, ArtCommon.wonderBg);
+                var costBannerBg = Shapes.filledRoundedRect(-stageCost.width / 2 - (C.WONDER_STAGE_COST_PADDING - C.WONDER_STAGE_COST_BORDER), -(C.WONDER_STAGE_COST_PADDING - C.WONDER_STAGE_COST_BORDER), stageCost.width + 2 * (C.WONDER_STAGE_COST_PADDING - C.WONDER_STAGE_COST_BORDER), stageCost.height + 2 * (C.WONDER_STAGE_COST_PADDING - C.WONDER_STAGE_COST_BORDER), C.WONDER_STAGE_COST_PADDING - C.WONDER_STAGE_COST_BORDER, ArtCommon.wonderBg);
                 costBannerBg.position.set(stageCost.x, stageCost.y);
                 wonderBoard.addChild(costBanner);
                 wonderBoard.addChild(costBannerBg);
@@ -2813,45 +2829,45 @@ var Wonder = /** @class */ (function (_super) {
             }
             if (this.player === Main.player && !contains(stageIdsBuilt, i)) {
                 var stagePayment = ArtCommon.payment(wonderStageMinCosts[i]);
-                stagePayment.scale.set(this.STAGE_PAYMENT_SCALE);
-                stagePayment.position.set(this.stageXs[i] + this.STAGE_WIDTH / 2 + this.STAGE_PAYMENT_OFFSET_X, this.BOARD_HEIGHT - this.STAGE_HEIGHT + this.STAGE_PAYMENT_OFFSET_Y);
+                stagePayment.scale.set(C.WONDER_STAGE_PAYMENT_SCALE);
+                stagePayment.position.set(this.stageXs[i] + C.WONDER_STAGE_WIDTH / 2 + C.WONDER_STAGE_PAYMENT_OFFSET_X, C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT + C.WONDER_STAGE_PAYMENT_OFFSET_Y);
                 wonderBoard.addChild(stagePayment);
             }
         }
-        return render(wonderBoard, this.BOARD_WIDTH, this.BOARD_HEIGHT);
+        return render(wonderBoard, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT);
     };
     Wonder.prototype.drawSidebar = function () {
         var sidebar = document.createElement('div');
-        sidebar.style.width = this.SIDEBAR_WIDTH + "px";
-        sidebar.style.height = this.BOARD_HEIGHT + "px";
+        sidebar.style.width = C.WONDER_SIDEBAR_WIDTH + "px";
+        sidebar.style.height = C.WONDER_BOARD_HEIGHT + "px";
         sidebar.style.position = 'absolute';
         var nameText = sidebar.appendChild(this.drawSidebarText(this.player, 20));
-        nameText.style.left = this.SIDEBAR_WIDTH + this.SIDEBAR_NAME_X + "px";
-        nameText.style.top = this.SIDEBAR_NAME_Y + "px";
+        nameText.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_NAME_X + "px";
+        nameText.style.top = C.WONDER_SIDEBAR_NAME_Y + "px";
         var goldCoin = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.goldCoin(), 0.2));
         goldCoin.style.position = 'absolute';
-        goldCoin.style.left = this.SIDEBAR_WIDTH + this.SIDEBAR_GOLD_COIN_X + "px";
-        goldCoin.style.top = this.SIDEBAR_GOLD_COIN_Y + "px";
+        goldCoin.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_GOLD_COIN_X + "px";
+        goldCoin.style.top = C.WONDER_SIDEBAR_GOLD_COIN_Y + "px";
         var goldText = sidebar.appendChild(this.drawSidebarText("" + Main.gamestate.playerData[this.player].gold, 20));
         goldText.style.color = '#FBE317';
-        goldText.style.left = this.SIDEBAR_WIDTH + this.SIDEBAR_GOLD_TEXT_X + "px";
-        goldText.style.top = this.SIDEBAR_GOLD_TEXT_Y + "px";
+        goldText.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_GOLD_TEXT_X + "px";
+        goldText.style.top = C.WONDER_SIDEBAR_GOLD_TEXT_Y + "px";
         var pointsWreath = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.pointsWreath(), 0.2));
         pointsWreath.style.position = 'absolute';
-        pointsWreath.style.left = this.SIDEBAR_WIDTH + this.SIDEBAR_POINTS_COIN_X + "px";
-        pointsWreath.style.top = this.SIDEBAR_POINTS_COIN_Y + "px";
+        pointsWreath.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_POINTS_COIN_X + "px";
+        pointsWreath.style.top = C.WONDER_SIDEBAR_POINTS_COIN_Y + "px";
         var pointsText = sidebar.appendChild(this.drawSidebarText("" + Main.gamestate.playerData[this.player].pointsDistribution.total, 20));
-        pointsText.style.left = this.SIDEBAR_WIDTH + this.SIDEBAR_POINTS_TEXT_X + "px";
-        pointsText.style.top = this.SIDEBAR_POINTS_TEXT_Y + "px";
+        pointsText.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_POINTS_TEXT_X + "px";
+        pointsText.style.top = C.WONDER_SIDEBAR_POINTS_TEXT_Y + "px";
         this.moveIndicatorCheck = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.checkMark(), 0.2));
-        this.moveIndicatorCheck.style.left = this.SIDEBAR_WIDTH + this.SIDEBAR_CHECKMARK_X + "px";
-        this.moveIndicatorCheck.style.top = this.SIDEBAR_CHECKMARK_Y + "px";
+        this.moveIndicatorCheck.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_CHECKMARK_X + "px";
+        this.moveIndicatorCheck.style.top = C.WONDER_SIDEBAR_CHECKMARK_Y + "px";
         this.moveIndicatorCheck.style.visibility = 'hidden';
         for (var i = 0; i < Main.gamestate.playerData[this.player].militaryTokens.length; i++) {
             var token = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.militaryToken(Main.gamestate.playerData[this.player].militaryTokens[i]), 0.2));
             token.style.position = 'absolute';
-            token.style.left = this.SIDEBAR_WIDTH + this.SIDEBAR_TOKENS_X + this.SIDEBAR_TOKENS_DX * i + "px";
-            token.style.top = this.SIDEBAR_TOKENS_Y + "px";
+            token.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_TOKENS_X + C.WONDER_SIDEBAR_TOKENS_DX * i + "px";
+            token.style.top = C.WONDER_SIDEBAR_TOKENS_Y + "px";
         }
         return sidebar;
     };
@@ -2872,17 +2888,6 @@ var Wonder = /** @class */ (function (_super) {
     };
     return Wonder;
 }(GameElement));
-var ZIndices;
-(function (ZIndices) {
-    ZIndices.DISCARD_PILE = -10;
-    ZIndices.DISCARD_CARDS = -9;
-    ZIndices.CARD_HAND = 0;
-    ZIndices.CARD_WONDER = 9;
-    ZIndices.WONDER = 10;
-    ZIndices.CARD_PLAYED = 11;
-    ZIndices.CARD_DRAGGING = 100;
-    ZIndices.PAYMENT_DIALOG = 1000;
-})(ZIndices || (ZIndices = {}));
 var S;
 (function (S) {
     function call(callback) {

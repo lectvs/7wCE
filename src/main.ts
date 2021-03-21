@@ -35,6 +35,11 @@ class Main {
             this.update();
         });
 
+        if (!this.gameid || !this.player) {
+            Main.error('gameid and player must be specified in URL parameters');
+            return;
+        }
+
         API.getgamestate(this.gameid, this.player, (gamestate: API.GameState, error: string) => {
             if (error) {
                 Main.error('Failed to get game state: ' + error);
@@ -62,6 +67,17 @@ class Main {
     static update() {
         if (this.scene) this.scene.update();
         this.scriptManager.update();
+
+        let status = <HTMLParagraphElement>document.querySelector('#status');
+        let statusText = <HTMLParagraphElement>document.querySelector('#status > p');
+        if (Main.currentError) {
+            status.style.backgroundColor = C.ERROR_BG_COLOR;
+            status.style.color = C.ERROR_TEXT_COLOR;
+            statusText.textContent = Main.currentError;
+        } else if (this.scene) {
+            status.style.backgroundColor = C.OK_BG_COLOR;
+            status.style.color = C.OK_TEXT_COLOR;
+        }
     }
 
     static sendUpdate() {

@@ -34,7 +34,7 @@ class PlayedCardEffectRoll {
     }
 
     addCard(card: Card) {
-        card.zIndex = ZIndices.CARD_PLAYED;
+        card.zIndex = C.Z_INDEX_CARD_PLAYED;
         this.cards.push(card);
         this.update();
     }

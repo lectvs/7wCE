@@ -1,11 +1,5 @@
 class EndScreen {
 
-    private readonly POSITIONS_Y = 50;
-    private readonly NAMES_Y = 80;
-    private readonly POINTS_Y = 130;
-    private readonly POINTS_DX = 150;
-    private readonly POINTS_DY = 50;
-
     constructor() {
     }
 
@@ -40,26 +34,26 @@ class EndScreen {
 
         let endscreen = document.getElementById('endscreen');
 
-        let x = (-1 - (players.length - 1) / 2) * this.POINTS_DX;
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('red')), `calc(50% + ${x}px)`, `${this.POINTS_Y + this.POINTS_DY*0}px`));
-        endscreen.appendChild(this.scoreArt(Shapes.filledCircle(0, 0, 16, 0xFBE317), `calc(50% + ${x}px)`, `${this.POINTS_Y + this.POINTS_DY*1}px`));
-        endscreen.appendChild(this.scoreArt(Shapes.filledPolygon(0, 0, [ -18, 16, 18, 16, 0, -16 ], 0xFFFF00), `calc(50% + ${x}px)`, `${this.POINTS_Y + this.POINTS_DY*2}px`));
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('green')), `calc(50% + ${x}px)`, `${this.POINTS_Y + this.POINTS_DY*3}px`));
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('yellow')), `calc(50% + ${x}px)`, `${this.POINTS_Y + this.POINTS_DY*4}px`));
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('purple')), `calc(50% + ${x}px)`, `${this.POINTS_Y + this.POINTS_DY*5}px`));
-        endscreen.appendChild(this.scoreText('Total', `calc(50% + ${x}px)`, `${this.POINTS_Y + this.POINTS_DY*6}px`));
+        let x = (-1 - (players.length - 1) / 2) * C.END_SCREEN_POINTS_DX;
+        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('red')), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*0}px`));
+        endscreen.appendChild(this.scoreArt(Shapes.filledCircle(0, 0, 16, 0xFBE317), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*1}px`));
+        endscreen.appendChild(this.scoreArt(Shapes.filledPolygon(0, 0, [ -18, 16, 18, 16, 0, -16 ], 0xFFFF00), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*2}px`));
+        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('green')), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*3}px`));
+        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('yellow')), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*4}px`));
+        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, 32, 32, ArtCommon.cardBannerForColor('purple')), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*5}px`));
+        endscreen.appendChild(this.scoreText('Total', `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*6}px`));
 
         for (let i = 0; i < players.length; i++) {
-            let x = (i - (players.length - 1) / 2) * this.POINTS_DX;
-            endscreen.appendChild(this.scoreText(`#${placements[i]}`, `calc(50% + ${x}px)`, `${this.POSITIONS_Y}px`));
-            endscreen.appendChild(this.scoreText(players[i], `calc(50% + ${x}px)`, `${this.NAMES_Y}px`));
-            endscreen.appendChild(this.scoreText(`${pointsDistributions[i].conflict}`, `calc(50% + ${x}px)`, `${this.POINTS_Y + this.POINTS_DY*0}px`));
-            endscreen.appendChild(this.scoreText(`${pointsDistributions[i].finance}`,  `calc(50% + ${x}px)`, `${this.POINTS_Y + this.POINTS_DY*1}px`));
-            endscreen.appendChild(this.scoreText(`${pointsDistributions[i].wonder}`,   `calc(50% + ${x}px)`, `${this.POINTS_Y + this.POINTS_DY*2}px`));
-            endscreen.appendChild(this.scoreText(`${pointsDistributions[i].science}`,  `calc(50% + ${x}px)`, `${this.POINTS_Y + this.POINTS_DY*3}px`));
-            endscreen.appendChild(this.scoreText(`${pointsDistributions[i].commerce}`, `calc(50% + ${x}px)`, `${this.POINTS_Y + this.POINTS_DY*4}px`));
-            endscreen.appendChild(this.scoreText(`${pointsDistributions[i].guild}`,    `calc(50% + ${x}px)`, `${this.POINTS_Y + this.POINTS_DY*5}px`));
-            endscreen.appendChild(this.scoreText(`${pointsTotals[i]}`, `calc(50% + ${x}px)`, `${this.POINTS_Y + this.POINTS_DY*6}px`));
+            let x = (i - (players.length - 1) / 2) * C.END_SCREEN_POINTS_DX;
+            endscreen.appendChild(this.scoreText(`#${placements[i]}`, `calc(50% + ${x}px)`, `${C.END_SCREEN_POSITIONS_Y}px`));
+            endscreen.appendChild(this.scoreText(players[i], `calc(50% + ${x}px)`, `${C.END_SCREEN_NAMES_Y}px`));
+            endscreen.appendChild(this.scoreText(`${pointsDistributions[i].conflict}`, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*0}px`));
+            endscreen.appendChild(this.scoreText(`${pointsDistributions[i].finance}`,  `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*1}px`));
+            endscreen.appendChild(this.scoreText(`${pointsDistributions[i].wonder}`,   `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*2}px`));
+            endscreen.appendChild(this.scoreText(`${pointsDistributions[i].science}`,  `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*3}px`));
+            endscreen.appendChild(this.scoreText(`${pointsDistributions[i].commerce}`, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*4}px`));
+            endscreen.appendChild(this.scoreText(`${pointsDistributions[i].guild}`,    `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*5}px`));
+            endscreen.appendChild(this.scoreText(`${pointsTotals[i]}`, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*6}px`));
         }
     }
 
