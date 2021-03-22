@@ -2,10 +2,11 @@
 
 type CardVisualState = 'full' | 'effect' | 'flipped';
 type CardState = { type: 'in_hand', visualState: CardVisualState }
-                  | { type: 'dragging_normal' | 'dragging_play' | 'dragging_wonder' | 'dragging_throw' }
-                  | { type: 'locked_play' | 'locked_throw' }
-                  | { type: 'locked_wonder', stage: number }
-                  | { type: 'permanent_effect' | 'permanent_flipped', justPlayed: boolean };
+               | { type: 'in_hand_moving' }
+               | { type: 'dragging_normal' | 'dragging_play' | 'dragging_wonder' | 'dragging_throw' }
+               | { type: 'locked_play' | 'locked_throw' }
+               | { type: 'locked_wonder', stage: number }
+               | { type: 'permanent_effect' | 'permanent_flipped', justPlayed: boolean };
 
 type DraggingData = {
     offsetx: number;
@@ -16,7 +17,7 @@ class Card extends GameElement {
 
     apiCardId: number;
     apiCard: API.Card;
-    handPosition: HTMLDivElement;
+    handPosition: PIXI.Point;
     activeWonder: Wonder;
 
     targetPosition: PIXI.Point;
@@ -77,7 +78,7 @@ class Card extends GameElement {
         this.div.style.cursor = this._interactable ? 'pointer' : 'default';
     }
 
-    constructor(cardId: number, card: API.Card, handPosition: HTMLDivElement, activeWonder: Wonder) {
+    constructor(cardId: number, card: API.Card, handPosition: PIXI.Point, activeWonder: Wonder, validMoves: API.Move[]) {
         super();
 
         this.apiCardId = cardId;
@@ -89,16 +90,19 @@ class Card extends GameElement {
 
         this.visualState = 'full';
         this.state = { type: 'in_hand', visualState: 'full' };
-        this.configureValidMoves(Main.gamestate.validMoves);
+        this.configureValidMoves(validMoves);
 
         this.frontDiv = this.div.appendChild(document.createElement('div'));
+        this.frontDiv.style.transformOrigin = 'left center';
         let front = this.frontDiv.appendChild(this.drawFront());
         front.style.transform = `translate(-50%, -${C.CARD_PAYMENT_HEIGHT + C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2}px)`;
         this.backDiv = this.div.appendChild(document.createElement('div'));
+        this.backDiv.style.transformOrigin = 'left center';
         let back = this.backDiv.appendChild(this.drawBack());
         back.style.transform = `translate(-50%, -${C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2}px)`;
         let highlightDiv = this.div.appendChild(document.createElement('div'));
         this.highlight = highlightDiv.appendChild(this.drawHighlight());
+
 
         this.flippedT = 0;
         this.effectT = 0;
@@ -158,10 +162,8 @@ class Card extends GameElement {
         }
 
         if (this.state.type === 'in_hand') {
-            let game = document.getElementById('game');
-            this.targetPosition.set(HtmlUtils.cssStylePositionToPixels(this.handPosition.style.left, game.clientWidth),
-                                    HtmlUtils.cssStylePositionToPixels(this.handPosition.style.top, game.clientHeight));
-            this.zIndex = C.Z_INDEX_CARD_HAND;
+            this.targetPosition.set(this.handPosition.x, this.handPosition.y);
+            if (Math.abs(this.y - this.targetPosition.y) < 4) this.zIndex = C.Z_INDEX_CARD_HAND;
             this.interactable = this.canBeInteractable();
             this.visualState = this.state.visualState;
         } else if (this.state.type === 'dragging_normal') {
@@ -212,10 +214,16 @@ class Card extends GameElement {
             this.interactable = false;
             this.visualState = 'flipped';
             this.flippedT = 1;
+        } else if (this.state.type === 'in_hand_moving') {
+            this.zIndex = C.Z_INDEX_CARD_MOVING;
+            this.interactable = false;
+            this.visualState = 'flipped';
         }
 
         this.x = lerp(this.x, this.targetPosition.x, 0.25);
+        if (Math.abs(this.x - this.targetPosition.x) < 1) this.x = this.targetPosition.x;
         this.y = lerp(this.y, this.targetPosition.y, 0.25);
+        if (Math.abs(this.y - this.targetPosition.y) < 1) this.y = this.targetPosition.y;
 
         this.updateVisuals();
     }
@@ -230,7 +238,7 @@ class Card extends GameElement {
         if (this.visualState === 'flipped') {
             this.flippedT = lerp(this.flippedT, 1, 0.25);
         } else {
-            this.flippedT = lerp(this.flippedT, 0, 0.25);;
+            this.flippedT = lerp(this.flippedT, 0, 0.25);
         }
 
         this.highlight.style.width = `${this._width}px`;
@@ -247,6 +255,14 @@ class Card extends GameElement {
         }
 
         this.highlight.style.boxShadow = `inset 0px 0px 0px 4px rgba(255, 0, 0, ${alpha})`;
+    }
+
+    snap() {
+        this.update();
+        this.effectT = (this.visualState === 'effect') ? 1 : 0;
+        this.flippedT = (this.visualState === 'flipped') ? 1 : 0;
+        this.snapToTarget();
+        this.update();
     }
 
     snapToTarget() {
@@ -270,6 +286,7 @@ class Card extends GameElement {
     }
 
     deselect() {
+        if (this.state.type.startsWith('dragging')) return;
         this.state = { type: 'in_hand', visualState: 'full' };
     }
 
@@ -390,7 +407,7 @@ class Card extends GameElement {
     }
 
     static flippedCardForAge(age: number, justPlayed: boolean) {
-        let card = new Card(-1, { age: age, name: '', color: 'brown', effects: [] }, undefined, undefined);
+        let card = new Card(-1, { age: age, name: '', color: 'brown', effects: [] }, undefined, undefined, []);
         card.state = { type: 'permanent_flipped', justPlayed: justPlayed };
         card.update();
         return card;

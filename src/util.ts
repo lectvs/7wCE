@@ -21,6 +21,14 @@ function contains<T>(array: T[], element: T) {
     return false;
 }
 
+function filledArray<T>(len: number, fillWith: T) {
+    let result: T[] = [];
+    for (let i = 0; i < len; i++) {
+        result.push(fillWith);
+    }
+    return result;
+}
+
 function lerp(a: number, b: number, t: number) {
     return a + (b-a)*t;
 }

@@ -14,6 +14,9 @@ class Main {
 
     static scriptManager: ScriptManager;
 
+    static get gameWidth() { return document.getElementById('game').clientWidth; }
+    static get gameHeight() { return document.getElementById('game').clientHeight; }
+
     static get initialized() { return !!this.scene; }
     static get isHost() { return this.gamestate.host === this.player; }
 

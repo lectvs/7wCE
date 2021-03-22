@@ -2,6 +2,7 @@ namespace API {
     export type GameState = {
         state: 'NORMAL_MOVE' | 'LAST_CARD_MOVE' | 'DISCARD_MOVE' | 'GAME_COMPLETE';
         discardMoveQueue: string[];
+        lastCardPlayers: string[];
         players: string[];
         host: string;
         age: number;

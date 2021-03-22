@@ -16,7 +16,7 @@ namespace S {
     export function doOverTime(duration: number, callback: (t: number) => any) {
         return function*() {
             let t = 0;
-            while (t < duration) {
+            while (t + Main.delta < duration) {
                 t += Main.delta;
                 callback(t/duration);
                 yield;

@@ -12,7 +12,7 @@ class DiscardPile extends GameElement {
     }
 
     getDiscardLockPoint() {
-        return new PIXI.Point(this.x, this.y + C.DISCARD_PILE_LOCK_OFFSET_Y);
+        return new PIXI.Point(this.x, this.y - C.CARD_CENTER_OFFSET_Y);
     }
 
     private draw() {

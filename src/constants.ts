@@ -5,6 +5,7 @@ class C {
     public static readonly Z_INDEX_CARD_WONDER = 9;
     public static readonly Z_INDEX_WONDER = 10;
     public static readonly Z_INDEX_CARD_PLAYED = 11;
+    public static readonly Z_INDEX_CARD_MOVING = 12;
     public static readonly Z_INDEX_CARD_DRAGGING = 100;
     public static readonly Z_INDEX_PAYMENT_DIALOG = 1000;
 
@@ -38,8 +39,11 @@ class C {
     public static readonly CARD_PAYMENT_SCALE = 0.2;
     public static readonly CARD_PAYMENT_OFFSET_X = -11;
     public static readonly CARD_DISCARD_COUNT_TEXT_SIZE = 48;
+    public static readonly CARD_CENTER_OFFSET_Y = 60;
 
     public static readonly HAND_Y = 150;
+    public static readonly HAND_DX = 900;
+    public static readonly HAND_LAST_DX = 400;
     public static readonly HAND_CARD_DX = 137;
 
     public static readonly WONDER_START_Y = 650;
@@ -102,7 +106,6 @@ class C {
     public static readonly DISCARD_PILE_TITLE_Y = 25;
     public static readonly DISCARD_PILE_TITLE_SCALE = 0.25;
     public static readonly DISCARD_PILE_TITLE_TEXT = "Discard";
-    public static readonly DISCARD_PILE_LOCK_OFFSET_Y = -60;
 
     public static readonly PAYMENT_DIALOG_OFFSET_X = -600;
     public static readonly PAYMENT_DIALOG_OFFSET_Y = -100;

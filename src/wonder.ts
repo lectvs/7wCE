@@ -48,7 +48,7 @@ class Wonder extends GameElement {
 
         for (let apiCardId of playerData.playedCards) {
             let apiCard = Main.gamestate.cards[apiCardId];
-            let card = new Card(apiCardId, apiCard, undefined, this);
+            let card = new Card(apiCardId, apiCard, undefined, this, []);
             this.addNewCardEffect(card);
             card.addToGame();
         }

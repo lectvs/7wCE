@@ -1,9 +1,19 @@
+type HandData = { type: 'normal', cardIds: number[], activeWonder: Wonder, validMoves: API.Move[] }
+              | { type: 'back', player: string, age: number }
+              | { type: 'discard', count: number, lastCardAge: number };
+
+type HandState = { type: 'normal' }
+               | { type: 'moving' };
+
 class Hand {
 
-    private cardIds: number[];
-    private activeWonder: Wonder;
+    cardIds: number[];
+    activeWonder: Wonder;
 
-    handPositions: HTMLDivElement[];
+    xs: string;
+    ys: string;
+
+    state: HandState;
     cards: Card[];
 
     get selectedCard() {
@@ -15,34 +25,68 @@ class Hand {
         return undefined;
     }
 
-    constructor(cardIds: number[], activeWonder: Wonder) {
-        this.cardIds = cardIds;
-        this.activeWonder = activeWonder;
-        this.create();
+    constructor(xs: string, ys: string, handData: HandData) {
+        this.state = { type: 'normal' };
+        this.xs = xs;
+        this.ys = ys;
+        this.createWithData(handData);
     }
 
     update() {
-        for (let card of this.cards) {
-            card.update();
+        for (let i = 0; i < this.cards.length; i++) {
+            let nhp = this.getNormalHandPosition(i);
+            this.cards[i].handPosition?.set(nhp.x, nhp.y);
+            if (this.state.type === 'normal') {
+                if (this.cards[i].state.type === 'in_hand_moving') this.cards[i].state = { type: 'in_hand', visualState: 'full' };
+            } else if (this.state.type === 'moving') {
+                if (this.cards[i].state.type === 'in_hand') this.cards[i].state = { type: 'in_hand_moving' };
+                if (this.cards[i].state.type === 'in_hand_moving') {
+                    this.cards[i].targetPosition.set(HtmlUtils.cssStylePositionToPixels(this.xs, Main.gameWidth),
+                                                     HtmlUtils.cssStylePositionToPixels(this.ys, Main.gameHeight));
+                }
+            }
+            this.cards[i].update();
         }
     }
 
-    create() {
-        this.handPositions = [];
+    createWithData(handData: HandData) {
         this.cards = [];
 
+        this.cardIds = handData.type === 'normal'
+                        ? handData.cardIds
+                        : filledArray(handData.type === 'back' ? Main.gamestate.playerData[handData.player].handCount : handData.count, -1);
+        this.activeWonder = handData.type === 'normal' ? handData.activeWonder : undefined;
+
         for (let i = 0; i < this.cardIds.length; i++) {
-            let handPosition = document.createElement('div');
-            handPosition.style.left = `calc(50% + ${(i - (this.cardIds.length - 1)/2) * C.HAND_CARD_DX}px)`;
-            handPosition.style.top = `${C.HAND_Y}px`;
-            let card = new Card(this.cardIds[i], Main.gamestate.cards[this.cardIds[i]], handPosition, this.activeWonder);
-            card.xs = handPosition.style.left;
-            card.ys = handPosition.style.top;
+            let handPosition = this.getNormalHandPosition(i);
+            let card = handData.type === 'normal'
+                        ? new Card(this.cardIds[i], Main.gamestate.cards[this.cardIds[i]], handPosition, this.activeWonder, handData.validMoves)
+                        : Card.flippedCardForAge(handData.type === 'back' ? handData.age : handData.lastCardAge, false);
+            card.x = handPosition.x;
+            card.y = handPosition.y;
             card.addToGame();
             this.cards.push(card);
 
             card.state = { type: 'in_hand', visualState: 'full' };
         }
+
+        if (this.cards.length > 0 && handData.type === 'discard') {
+            this.cards[this.cards.length-1].addDiscardCountText();
+        }
+    }
+
+    destroy() {
+        for (let i = 0; i < this.cards.length; i++) {
+            this.cards[i].removeFromGame();
+        }
+    }
+
+    snap() {
+        this.update();
+        for (let i = 0; i < this.cards.length; i++) {
+            this.cards[i].snap();
+        }
+        this.update();
     }
 
     reflectMove(move: API.Move) {
@@ -63,5 +107,27 @@ class Hand {
             }
         }
         if (!moved) console.error('Move card not found in hand:', move);
+    }
+
+    getNormalHandPosition(cardIndex: number) {
+        let ppx = this.getPositionPixels();
+        let cardsInHand = [];
+        for (let i = 0; i < this.cards.length; i++) {
+            if (this.cards[i].state.type.startsWith('in_hand')) {
+                cardsInHand.push(this.cards[i]);
+            } else if (i < cardIndex) {
+                cardIndex--;
+            }
+        }
+        ppx.x += (cardIndex - (cardsInHand.length - 1)/2) * C.HAND_CARD_DX;
+        return ppx;
+    }
+
+    getStartMovingPosition() {
+        return new PIXI.Point(Main.gameWidth/2, C.HAND_Y);
+    }
+
+    getPositionPixels() {
+        return new PIXI.Point(HtmlUtils.cssStylePositionToPixels(this.xs, Main.gameWidth), HtmlUtils.cssStylePositionToPixels(this.ys, Main.gameHeight));
     }
 }

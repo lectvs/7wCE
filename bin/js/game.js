@@ -1094,7 +1094,7 @@ var Bot;
 /// <reference path="gameElement.ts" />
 var Card = /** @class */ (function (_super) {
     __extends(Card, _super);
-    function Card(cardId, card, handPosition, activeWonder) {
+    function Card(cardId, card, handPosition, activeWonder, validMoves) {
         var _this = _super.call(this) || this;
         _this.apiCardId = cardId;
         _this.apiCard = card;
@@ -1103,11 +1103,13 @@ var Card = /** @class */ (function (_super) {
         _this.targetPosition = new PIXI.Point();
         _this.visualState = 'full';
         _this.state = { type: 'in_hand', visualState: 'full' };
-        _this.configureValidMoves(Main.gamestate.validMoves);
+        _this.configureValidMoves(validMoves);
         _this.frontDiv = _this.div.appendChild(document.createElement('div'));
+        _this.frontDiv.style.transformOrigin = 'left center';
         var front = _this.frontDiv.appendChild(_this.drawFront());
         front.style.transform = "translate(-50%, -" + (C.CARD_PAYMENT_HEIGHT + C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2) + "px)";
         _this.backDiv = _this.div.appendChild(document.createElement('div'));
+        _this.backDiv.style.transformOrigin = 'left center';
         var back = _this.backDiv.appendChild(_this.drawBack());
         back.style.transform = "translate(-50%, -" + (C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2) + "px)";
         var highlightDiv = _this.div.appendChild(document.createElement('div'));
@@ -1234,9 +1236,9 @@ var Card = /** @class */ (function (_super) {
             }
         }
         if (this.state.type === 'in_hand') {
-            var game = document.getElementById('game');
-            this.targetPosition.set(HtmlUtils.cssStylePositionToPixels(this.handPosition.style.left, game.clientWidth), HtmlUtils.cssStylePositionToPixels(this.handPosition.style.top, game.clientHeight));
-            this.zIndex = C.Z_INDEX_CARD_HAND;
+            this.targetPosition.set(this.handPosition.x, this.handPosition.y);
+            if (Math.abs(this.y - this.targetPosition.y) < 4)
+                this.zIndex = C.Z_INDEX_CARD_HAND;
             this.interactable = this.canBeInteractable();
             this.visualState = this.state.visualState;
         }
@@ -1297,8 +1299,17 @@ var Card = /** @class */ (function (_super) {
             this.visualState = 'flipped';
             this.flippedT = 1;
         }
+        else if (this.state.type === 'in_hand_moving') {
+            this.zIndex = C.Z_INDEX_CARD_MOVING;
+            this.interactable = false;
+            this.visualState = 'flipped';
+        }
         this.x = lerp(this.x, this.targetPosition.x, 0.25);
+        if (Math.abs(this.x - this.targetPosition.x) < 1)
+            this.x = this.targetPosition.x;
         this.y = lerp(this.y, this.targetPosition.y, 0.25);
+        if (Math.abs(this.y - this.targetPosition.y) < 1)
+            this.y = this.targetPosition.y;
         this.updateVisuals();
     };
     Card.prototype.updateVisuals = function () {
@@ -1313,7 +1324,6 @@ var Card = /** @class */ (function (_super) {
         }
         else {
             this.flippedT = lerp(this.flippedT, 0, 0.25);
-            ;
         }
         this.highlight.style.width = this._width + "px";
         this.highlight.style.height = lerp(this.height - C.CARD_PAYMENT_HEIGHT, this.height, this.effectT) + "px";
@@ -1329,6 +1339,13 @@ var Card = /** @class */ (function (_super) {
             alpha = 0;
         }
         this.highlight.style.boxShadow = "inset 0px 0px 0px 4px rgba(255, 0, 0, " + alpha + ")";
+    };
+    Card.prototype.snap = function () {
+        this.update();
+        this.effectT = (this.visualState === 'effect') ? 1 : 0;
+        this.flippedT = (this.visualState === 'flipped') ? 1 : 0;
+        this.snapToTarget();
+        this.update();
     };
     Card.prototype.snapToTarget = function () {
         this.x = this.targetPosition.x;
@@ -1350,6 +1367,8 @@ var Card = /** @class */ (function (_super) {
         }
     };
     Card.prototype.deselect = function () {
+        if (this.state.type.startsWith('dragging'))
+            return;
         this.state = { type: 'in_hand', visualState: 'full' };
     };
     Card.prototype.configureValidMoves = function (validMoves) {
@@ -1459,7 +1478,7 @@ var Card = /** @class */ (function (_super) {
         return highlight;
     };
     Card.flippedCardForAge = function (age, justPlayed) {
-        var card = new Card(-1, { age: age, name: '', color: 'brown', effects: [] }, undefined, undefined);
+        var card = new Card(-1, { age: age, name: '', color: 'brown', effects: [] }, undefined, undefined, []);
         card.state = { type: 'permanent_flipped', justPlayed: justPlayed };
         card.update();
         return card;
@@ -1475,6 +1494,7 @@ var C = /** @class */ (function () {
     C.Z_INDEX_CARD_WONDER = 9;
     C.Z_INDEX_WONDER = 10;
     C.Z_INDEX_CARD_PLAYED = 11;
+    C.Z_INDEX_CARD_MOVING = 12;
     C.Z_INDEX_CARD_DRAGGING = 100;
     C.Z_INDEX_PAYMENT_DIALOG = 1000;
     C.ERROR_BG_COLOR = '#FF0000';
@@ -1505,7 +1525,10 @@ var C = /** @class */ (function () {
     C.CARD_PAYMENT_SCALE = 0.2;
     C.CARD_PAYMENT_OFFSET_X = -11;
     C.CARD_DISCARD_COUNT_TEXT_SIZE = 48;
+    C.CARD_CENTER_OFFSET_Y = 60;
     C.HAND_Y = 150;
+    C.HAND_DX = 900;
+    C.HAND_LAST_DX = 400;
     C.HAND_CARD_DX = 137;
     C.WONDER_START_Y = 650;
     C.WONDER_DX = 500;
@@ -1566,7 +1589,6 @@ var C = /** @class */ (function () {
     C.DISCARD_PILE_TITLE_Y = 25;
     C.DISCARD_PILE_TITLE_SCALE = 0.25;
     C.DISCARD_PILE_TITLE_TEXT = "Discard";
-    C.DISCARD_PILE_LOCK_OFFSET_Y = -60;
     C.PAYMENT_DIALOG_OFFSET_X = -600;
     C.PAYMENT_DIALOG_OFFSET_Y = -100;
     C.PAYMENT_DIALOG_WIDTH = 500;
@@ -1601,7 +1623,7 @@ var DiscardPile = /** @class */ (function (_super) {
         return new PIXI.Rectangle(this.x - C.DISCARD_PILE_AREA_WIDTH / 2, this.y - C.DISCARD_PILE_AREA_HEIGHT / 2, C.DISCARD_PILE_AREA_WIDTH, C.DISCARD_PILE_AREA_HEIGHT);
     };
     DiscardPile.prototype.getDiscardLockPoint = function () {
-        return new PIXI.Point(this.x, this.y + C.DISCARD_PILE_LOCK_OFFSET_Y);
+        return new PIXI.Point(this.x, this.y - C.CARD_CENTER_OFFSET_Y);
     };
     DiscardPile.prototype.draw = function () {
         var discardPile = new PIXI.Container();
@@ -1722,18 +1744,132 @@ var GameStateDiffer;
             return;
         }
         result.scripts.push(function () {
+            var handPosition_1, targetHandPosition_1, discardHandPosition_1, targetDiscardHandPosition_1, lerpt_1, currentHandPositions_1, targetHandPosition_2, lerpt_2, handPosition_2, targetHandPosition_3, discardHandPosition_2, lerpt_3, currentHandPositions_2, targetHandPositions_1, newHand, lerpt_4;
             return __generator(this, function (_a) {
-                return [2 /*return*/];
+                switch (_a.label) {
+                    case 0:
+                        if (!(Main.gamestate.state === 'DISCARD_MOVE' && Main.gamestate.discardMoveQueue[0] === Main.player)) return [3 /*break*/, 4];
+                        Main.scene.discardHand = Main.scene.hand;
+                        Main.scene.hands[Main.gamestate.players.indexOf(Main.player)] = new Hand('50%', -Main.getGameY() - 200 + "px", { type: 'normal', cardIds: Main.gamestate.hand, activeWonder: Main.scene.topWonder, validMoves: Main.gamestate.validMoves });
+                        Main.scene.hand.snap();
+                        handPosition_1 = Main.scene.hand.getPositionPixels();
+                        targetHandPosition_1 = Main.scene.discardHand.getPositionPixels();
+                        discardHandPosition_1 = Main.scene.discardHand.getPositionPixels();
+                        targetDiscardHandPosition_1 = Main.scene.discardPile.getDiscardLockPoint();
+                        Main.scene.discardHand.state = { type: 'moving' };
+                        return [5 /*yield**/, __values(S.wait(0.4)())];
+                    case 1:
+                        _a.sent();
+                        lerpt_1 = 0;
+                        return [5 /*yield**/, __values(S.doOverTime(0.3, function (t) {
+                                lerpt_1 = lerp(lerpt_1, 1, Math.pow(t, 2));
+                                Main.scene.hand.xs = lerp(handPosition_1.x, targetHandPosition_1.x, lerpt_1) + "px";
+                                Main.scene.hand.ys = lerp(handPosition_1.y, targetHandPosition_1.y, lerpt_1) + "px";
+                                Main.scene.discardHand.xs = lerp(discardHandPosition_1.x, targetDiscardHandPosition_1.x, lerpt_1) + "px";
+                                Main.scene.discardHand.ys = lerp(discardHandPosition_1.y, targetDiscardHandPosition_1.y, lerpt_1) + "px";
+                            })())];
+                    case 2:
+                        _a.sent();
+                        return [5 /*yield**/, __values(S.wait(0.2)())];
+                    case 3:
+                        _a.sent();
+                        _a.label = 4;
+                    case 4:
+                        if (!(gamestate.state === 'LAST_CARD_MOVE')) return [3 /*break*/, 7];
+                        currentHandPositions_1 = Main.scene.hands.map(function (hand) { return hand.getPositionPixels(); });
+                        targetHandPosition_2 = Main.scene.discardPile.getDiscardLockPoint();
+                        lerpt_2 = 0;
+                        return [5 /*yield**/, __values(S.doOverTime(0.3, function (t) {
+                                lerpt_2 = lerp(lerpt_2, 1, Math.pow(t, 2));
+                                for (var i = 0; i < Main.scene.hands.length; i++) {
+                                    if (!contains(gamestate.lastCardPlayers, gamestate.players[i])) {
+                                        Main.scene.hands[i].state = { type: 'moving' };
+                                        Main.scene.hands[i].xs = lerp(currentHandPositions_1[i].x, targetHandPosition_2.x, lerpt_2) + "px";
+                                        Main.scene.hands[i].ys = lerp(currentHandPositions_1[i].y, targetHandPosition_2.y, lerpt_2) + "px";
+                                    }
+                                }
+                            })())];
+                    case 5:
+                        _a.sent();
+                        return [5 /*yield**/, __values(S.wait(0.5)())];
+                    case 6:
+                        _a.sent();
+                        return [3 /*break*/, 18];
+                    case 7:
+                        if (!(Main.gamestate.state === 'LAST_CARD_MOVE')) return [3 /*break*/, 8];
+                        return [3 /*break*/, 18];
+                    case 8:
+                        if (!(gamestate.state === 'DISCARD_MOVE')) return [3 /*break*/, 13];
+                        if (!(gamestate.discardMoveQueue[0] === Main.player)) return [3 /*break*/, 12];
+                        handPosition_2 = Main.scene.hand.getPositionPixels();
+                        targetHandPosition_3 = handPosition_2.clone();
+                        discardHandPosition_2 = Main.scene.discardHand.getPositionPixels();
+                        targetHandPosition_3.y = -Main.getGameY() - 200;
+                        lerpt_3 = 0;
+                        return [5 /*yield**/, __values(S.doOverTime(0.3, function (t) {
+                                lerpt_3 = lerp(lerpt_3, 1, Math.pow(t, 2));
+                                Main.scene.hand.xs = lerp(handPosition_2.x, targetHandPosition_3.x, lerpt_3) + "px";
+                                Main.scene.hand.ys = lerp(handPosition_2.y, targetHandPosition_3.y, lerpt_3) + "px";
+                                Main.scene.discardHand.xs = lerp(discardHandPosition_2.x, handPosition_2.x, lerpt_3) + "px";
+                                Main.scene.discardHand.ys = lerp(discardHandPosition_2.y, handPosition_2.y, lerpt_3) + "px";
+                            })())];
+                    case 9:
+                        _a.sent();
+                        return [5 /*yield**/, __values(S.wait(0.2)())];
+                    case 10:
+                        _a.sent();
+                        Main.scene.discardHand.destroy();
+                        Main.scene.discardHand.createWithData({ type: 'normal', cardIds: gamestate.discardedCards, activeWonder: Main.scene.topWonder, validMoves: gamestate.validMoves });
+                        Main.scene.discardHand.snap();
+                        Main.scene.discardHand.state = { type: 'normal' };
+                        return [5 /*yield**/, __values(S.wait(0.4)())];
+                    case 11:
+                        _a.sent();
+                        Main.scene.discardHand.snap();
+                        _a.label = 12;
+                    case 12: return [3 /*break*/, 18];
+                    case 13:
+                        currentHandPositions_2 = Main.scene.hands.map(function (hand) { return hand.getPositionPixels(); });
+                        targetHandPositions_1 = __spread(currentHandPositions_2);
+                        newHand = void 0;
+                        if (Main.gamestate.age % 2 === 0) {
+                            targetHandPositions_1.unshift(targetHandPositions_1.pop());
+                            newHand = Main.scene.hands[mod(Main.gamestate.players.indexOf(Main.player) + 1, Main.gamestate.players.length)];
+                        }
+                        else {
+                            targetHandPositions_1.push(targetHandPositions_1.shift());
+                            newHand = Main.scene.hands[mod(Main.gamestate.players.indexOf(Main.player) - 1, Main.gamestate.players.length)];
+                        }
+                        Main.scene.hand.state = { type: 'moving' };
+                        return [5 /*yield**/, __values(S.wait(0.5)())];
+                    case 14:
+                        _a.sent();
+                        lerpt_4 = 0;
+                        return [5 /*yield**/, __values(S.doOverTime(0.3, function (t) {
+                                lerpt_4 = lerp(lerpt_4, 1, Math.pow(t, 2));
+                                for (var i = 0; i < Main.scene.hands.length; i++) {
+                                    Main.scene.hands[i].xs = lerp(currentHandPositions_2[i].x, targetHandPositions_1[i].x, lerpt_4) + "px";
+                                    Main.scene.hands[i].ys = lerp(currentHandPositions_2[i].y, targetHandPositions_1[i].y, lerpt_4) + "px";
+                                }
+                            })())];
+                    case 15:
+                        _a.sent();
+                        return [5 /*yield**/, __values(S.wait(0.2)())];
+                    case 16:
+                        _a.sent();
+                        newHand.destroy();
+                        newHand.createWithData({ type: 'normal', cardIds: gamestate.hand, activeWonder: Main.scene.hand.activeWonder, validMoves: gamestate.validMoves });
+                        newHand.snap();
+                        newHand.state = { type: 'normal' };
+                        return [5 /*yield**/, __values(S.wait(0.4)())];
+                    case 17:
+                        _a.sent();
+                        newHand.snap();
+                        _a.label = 18;
+                    case 18: return [2 /*return*/];
+                }
             });
         });
-        // result.scripts.push(function*() {
-        //     Main.scene.hand.flip();
-        //     yield* S.wait(0.1)();
-        //     Main.scene.hand.collapse();
-        //     yield* S.wait(0.5)();
-        //     Main.scene.hand.uncollapse();
-        //     yield* S.wait(0.5)();
-        // });
         return result;
     }
     GameStateDiffer.diffTurn = diffTurn;
@@ -1819,10 +1955,11 @@ var GameStateDiffer;
     }
 })(GameStateDiffer || (GameStateDiffer = {}));
 var Hand = /** @class */ (function () {
-    function Hand(cardIds, activeWonder) {
-        this.cardIds = cardIds;
-        this.activeWonder = activeWonder;
-        this.create();
+    function Hand(xs, ys, handData) {
+        this.state = { type: 'normal' };
+        this.xs = xs;
+        this.ys = ys;
+        this.createWithData(handData);
     }
     Object.defineProperty(Hand.prototype, "selectedCard", {
         get: function () {
@@ -1848,38 +1985,59 @@ var Hand = /** @class */ (function () {
         configurable: true
     });
     Hand.prototype.update = function () {
-        var e_14, _a;
-        try {
-            for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var card = _c.value;
-                card.update();
+        var _a;
+        for (var i = 0; i < this.cards.length; i++) {
+            var nhp = this.getNormalHandPosition(i);
+            (_a = this.cards[i].handPosition) === null || _a === void 0 ? void 0 : _a.set(nhp.x, nhp.y);
+            if (this.state.type === 'normal') {
+                if (this.cards[i].state.type === 'in_hand_moving')
+                    this.cards[i].state = { type: 'in_hand', visualState: 'full' };
             }
-        }
-        catch (e_14_1) { e_14 = { error: e_14_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            else if (this.state.type === 'moving') {
+                if (this.cards[i].state.type === 'in_hand')
+                    this.cards[i].state = { type: 'in_hand_moving' };
+                if (this.cards[i].state.type === 'in_hand_moving') {
+                    this.cards[i].targetPosition.set(HtmlUtils.cssStylePositionToPixels(this.xs, Main.gameWidth), HtmlUtils.cssStylePositionToPixels(this.ys, Main.gameHeight));
+                }
             }
-            finally { if (e_14) throw e_14.error; }
+            this.cards[i].update();
         }
     };
-    Hand.prototype.create = function () {
-        this.handPositions = [];
+    Hand.prototype.createWithData = function (handData) {
         this.cards = [];
+        this.cardIds = handData.type === 'normal'
+            ? handData.cardIds
+            : filledArray(handData.type === 'back' ? Main.gamestate.playerData[handData.player].handCount : handData.count, -1);
+        this.activeWonder = handData.type === 'normal' ? handData.activeWonder : undefined;
         for (var i = 0; i < this.cardIds.length; i++) {
-            var handPosition = document.createElement('div');
-            handPosition.style.left = "calc(50% + " + (i - (this.cardIds.length - 1) / 2) * C.HAND_CARD_DX + "px)";
-            handPosition.style.top = C.HAND_Y + "px";
-            var card = new Card(this.cardIds[i], Main.gamestate.cards[this.cardIds[i]], handPosition, this.activeWonder);
-            card.xs = handPosition.style.left;
-            card.ys = handPosition.style.top;
+            var handPosition = this.getNormalHandPosition(i);
+            var card = handData.type === 'normal'
+                ? new Card(this.cardIds[i], Main.gamestate.cards[this.cardIds[i]], handPosition, this.activeWonder, handData.validMoves)
+                : Card.flippedCardForAge(handData.type === 'back' ? handData.age : handData.lastCardAge, false);
+            card.x = handPosition.x;
+            card.y = handPosition.y;
             card.addToGame();
             this.cards.push(card);
             card.state = { type: 'in_hand', visualState: 'full' };
         }
+        if (this.cards.length > 0 && handData.type === 'discard') {
+            this.cards[this.cards.length - 1].addDiscardCountText();
+        }
+    };
+    Hand.prototype.destroy = function () {
+        for (var i = 0; i < this.cards.length; i++) {
+            this.cards[i].removeFromGame();
+        }
+    };
+    Hand.prototype.snap = function () {
+        this.update();
+        for (var i = 0; i < this.cards.length; i++) {
+            this.cards[i].snap();
+        }
+        this.update();
     };
     Hand.prototype.reflectMove = function (move) {
-        var e_15, _a, e_16, _b;
+        var e_14, _a, e_15, _b;
         if (!move || move.action === 'reject') {
             try {
                 for (var _c = __values(this.cards), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -1887,12 +2045,12 @@ var Hand = /** @class */ (function () {
                     card.deselect();
                 }
             }
-            catch (e_15_1) { e_15 = { error: e_15_1 }; }
+            catch (e_14_1) { e_14 = { error: e_14_1 }; }
             finally {
                 try {
                     if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                 }
-                finally { if (e_15) throw e_15.error; }
+                finally { if (e_14) throw e_14.error; }
             }
             return;
         }
@@ -1909,15 +2067,35 @@ var Hand = /** @class */ (function () {
                 }
             }
         }
-        catch (e_16_1) { e_16 = { error: e_16_1 }; }
+        catch (e_15_1) { e_15 = { error: e_15_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_16) throw e_16.error; }
+            finally { if (e_15) throw e_15.error; }
         }
         if (!moved)
             console.error('Move card not found in hand:', move);
+    };
+    Hand.prototype.getNormalHandPosition = function (cardIndex) {
+        var ppx = this.getPositionPixels();
+        var cardsInHand = [];
+        for (var i = 0; i < this.cards.length; i++) {
+            if (this.cards[i].state.type.startsWith('in_hand')) {
+                cardsInHand.push(this.cards[i]);
+            }
+            else if (i < cardIndex) {
+                cardIndex--;
+            }
+        }
+        ppx.x += (cardIndex - (cardsInHand.length - 1) / 2) * C.HAND_CARD_DX;
+        return ppx;
+    };
+    Hand.prototype.getStartMovingPosition = function () {
+        return new PIXI.Point(Main.gameWidth / 2, C.HAND_Y);
+    };
+    Hand.prototype.getPositionPixels = function () {
+        return new PIXI.Point(HtmlUtils.cssStylePositionToPixels(this.xs, Main.gameWidth), HtmlUtils.cssStylePositionToPixels(this.ys, Main.gameHeight));
     };
     return Hand;
 }());
@@ -1948,6 +2126,16 @@ var HtmlUtils;
 var Main = /** @class */ (function () {
     function Main() {
     }
+    Object.defineProperty(Main, "gameWidth", {
+        get: function () { return document.getElementById('game').clientWidth; },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Main, "gameHeight", {
+        get: function () { return document.getElementById('game').clientHeight; },
+        enumerable: false,
+        configurable: true
+    });
     Object.defineProperty(Main, "initialized", {
         get: function () { return !!this.scene; },
         enumerable: false,
@@ -2090,7 +2278,7 @@ var Main = /** @class */ (function () {
         });
     };
     Main.updateBotMoves = function () {
-        var e_17, _a;
+        var e_16, _a;
         var _this = this;
         if (!this.isHost)
             return;
@@ -2123,12 +2311,12 @@ var Main = /** @class */ (function () {
                 _loop_1(player);
             }
         }
-        catch (e_17_1) { e_17 = { error: e_17_1 }; }
+        catch (e_16_1) { e_16 = { error: e_16_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_17) throw e_17.error; }
+            finally { if (e_16) throw e_16.error; }
         }
     };
     Main.stop = function () {
@@ -2330,32 +2518,52 @@ var Scene = /** @class */ (function () {
         this.mouseY = 0;
         this.wonders = [];
     }
+    Object.defineProperty(Scene.prototype, "hand", {
+        get: function () { return this.hands[Main.gamestate.players.indexOf(Main.player)]; },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Scene.prototype, "topWonder", {
+        get: function () { return this.wonders[Main.gamestate.players.indexOf(Main.player)]; },
+        enumerable: false,
+        configurable: true
+    });
     Object.defineProperty(Scene.prototype, "isPaymentMenuActive", {
         get: function () { return !!this.paymentDialog; },
         enumerable: false,
         configurable: true
     });
     Scene.prototype.update = function () {
-        var e_18, _a;
-        this.hand.update();
+        var e_17, _a, e_18, _b;
+        try {
+            for (var _c = __values(this.hands), _d = _c.next(); !_d.done; _d = _c.next()) {
+                var hand = _d.value;
+                hand.update();
+            }
+        }
+        catch (e_17_1) { e_17 = { error: e_17_1 }; }
+        finally {
+            try {
+                if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+            }
+            finally { if (e_17) throw e_17.error; }
+        }
         this.actionButton.setType(this.isMyTurnToBuildFromDiscard() ? 'reject_discard' : 'undo');
         try {
-            for (var _b = __values(this.wonders), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var wonder = _c.value;
+            for (var _e = __values(this.wonders), _f = _e.next(); !_f.done; _f = _e.next()) {
+                var wonder = _f.value;
                 wonder.update();
             }
         }
         catch (e_18_1) { e_18 = { error: e_18_1 }; }
         finally {
             try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
             finally { if (e_18) throw e_18.error; }
         }
-        if (this.topDiscardCard) {
-            var discardPoint = this.discardPile.getDiscardLockPoint();
-            this.topDiscardCard.x = discardPoint.x;
-            this.topDiscardCard.y = discardPoint.y;
+        if (this.discardHand) {
+            this.discardHand.update();
         }
         if (this.paymentDialog) {
             this.paymentDialog.update();
@@ -2367,7 +2575,9 @@ var Scene = /** @class */ (function () {
         var gamestate = Main.gamestate;
         var players = Main.gamestate.players;
         document.getElementById('game').style.height = C.WONDER_START_Y + C.WONDER_DY * Math.ceil((gamestate.players.length + 1) / 2) + "px";
+        var cardsInHand = this.isMyTurnToBuildFromDiscard() ? gamestate.discardedCards : gamestate.hand;
         this.wonders = players.map(function (player) { return undefined; });
+        this.hands = players.map(function (player) { return undefined; });
         var p = players.indexOf(Main.player);
         var l = mod(p - 1, players.length);
         var r = mod(p + 1, players.length);
@@ -2376,6 +2586,8 @@ var Scene = /** @class */ (function () {
         playerWonder.y = C.WONDER_START_Y;
         playerWonder.addToGame();
         this.wonders[p] = playerWonder;
+        this.hands[p] = new Hand('50%', C.HAND_Y + "px", { type: 'normal', cardIds: cardsInHand, activeWonder: playerWonder, validMoves: Main.gamestate.validMoves });
+        this.hands[p].snap();
         var i;
         for (i = 1; i < Math.floor((players.length - 1) / 2 + 1); i++) {
             var wonder_l = new Wonder(players[l]);
@@ -2383,11 +2595,17 @@ var Scene = /** @class */ (function () {
             wonder_l.y = C.WONDER_START_Y + C.WONDER_DY * i;
             wonder_l.addToGame();
             this.wonders[l] = wonder_l;
+            this.hands[l] = new Hand("calc(50% - " + C.HAND_DX + "px)", C.WONDER_START_Y + C.WONDER_DY * i - C.CARD_CENTER_OFFSET_Y + "px", { type: 'back', player: players[l], age: gamestate.age });
+            this.hands[l].state = { type: 'moving' };
+            this.hands[l].snap();
             var wonder_r = new Wonder(players[r]);
             wonder_r.xs = "calc(50% + " + C.WONDER_DX + "px)";
             wonder_r.y = C.WONDER_START_Y + C.WONDER_DY * i;
             wonder_r.addToGame();
             this.wonders[r] = wonder_r;
+            this.hands[r] = new Hand("calc(50% + " + C.HAND_DX + "px)", C.WONDER_START_Y + C.WONDER_DY * i - C.CARD_CENTER_OFFSET_Y + "px", { type: 'back', player: players[r], age: gamestate.age });
+            this.hands[r].state = { type: 'moving' };
+            this.hands[r].snap();
             l = mod(l - 1, gamestate.players.length);
             r = mod(r + 1, gamestate.players.length);
         }
@@ -2397,32 +2615,23 @@ var Scene = /** @class */ (function () {
             lastWonder.y = C.WONDER_START_Y + C.WONDER_DY * i;
             lastWonder.addToGame();
             this.wonders[l] = lastWonder;
+            this.hands[l] = new Hand("calc(50% + " + C.HAND_LAST_DX + "px)", C.WONDER_START_Y + C.WONDER_DY * i - C.CARD_CENTER_OFFSET_Y + "px", { type: 'back', player: players[l], age: gamestate.age });
+            this.hands[l].state = { type: 'moving' };
+            this.hands[l].snap();
         }
         this.actionButton = new ActionButton();
         this.actionButton.xs = '50%';
         this.actionButton.y = C.ACTION_BUTTON_Y;
         this.actionButton.addToGame();
-        var cardsInHand;
-        if (this.isMyTurnToBuildFromDiscard()) {
-            cardsInHand = gamestate.discardedCards;
-        }
-        else if (gamestate.state === 'DISCARD_MOVE') {
-            cardsInHand = [];
-        }
-        else {
-            cardsInHand = gamestate.hand;
-        }
-        this.hand = new Hand(cardsInHand, this.wonders[p]);
         this.hand.reflectMove(gamestate.playerData[Main.player].currentMove);
         this.discardPile = new DiscardPile();
         this.discardPile.xs = '50%';
         this.discardPile.y = C.WONDER_START_Y + C.WONDER_DY;
         this.discardPile.addToGame();
-        if (gamestate.discardedCardCount > 0) {
-            this.topDiscardCard = Card.flippedCardForAge(gamestate.lastDiscardedCardAge, false);
-            this.topDiscardCard.addDiscardCountText();
-            this.topDiscardCard.addToGame();
-        }
+        var discardPoint = this.discardPile.getDiscardLockPoint();
+        this.discardHand = new Hand('50%', discardPoint.y + "px", { type: 'discard', count: this.isMyTurnToBuildFromDiscard() ? 0 : gamestate.discardedCardCount, lastCardAge: gamestate.lastDiscardedCardAge });
+        this.discardHand.state = { type: 'moving' };
+        this.discardHand.snap();
         document.getElementById('game').onmousemove = function (event) {
             event.preventDefault();
             _this.mouseX = event.pageX;
@@ -2458,7 +2667,12 @@ var Scene = /** @class */ (function () {
         }
         else if (gamestate.state === 'LAST_CARD_MOVE') {
             if (playerData.currentMove || gamestate.validMoves.length === 0) {
-                statusText.textContent = "Waiting for others to play their last card";
+                if (gamestate.lastCardPlayers.length === 1) {
+                    statusText.textContent = "Waiting for " + gamestate.lastCardPlayers[0] + " to play their last card";
+                }
+                else {
+                    statusText.textContent = "Waiting for others to play their last cards";
+                }
             }
             else {
                 statusText.textContent = "You may play your last card";
@@ -2557,6 +2771,13 @@ function contains(array, element) {
     }
     return false;
 }
+function filledArray(len, fillWith) {
+    var result = [];
+    for (var i = 0; i < len; i++) {
+        result.push(fillWith);
+    }
+    return result;
+}
 function lerp(a, b, t) {
     return a + (b - a) * t;
 }
@@ -2631,7 +2852,7 @@ var Wonder = /** @class */ (function (_super) {
             for (var _c = __values(playerData.playedCards), _d = _c.next(); !_d.done; _d = _c.next()) {
                 var apiCardId = _d.value;
                 var apiCard = Main.gamestate.cards[apiCardId];
-                var card = new Card(apiCardId, apiCard, undefined, _this);
+                var card = new Card(apiCardId, apiCard, undefined, _this, []);
                 _this.addNewCardEffect(card);
                 card.addToGame();
             }
@@ -2955,7 +3176,7 @@ var S;
                         t = 0;
                         _a.label = 1;
                     case 1:
-                        if (!(t < duration)) return [3 /*break*/, 3];
+                        if (!(t + Main.delta < duration)) return [3 /*break*/, 3];
                         t += Main.delta;
                         callback(t / duration);
                         return [4 /*yield*/];

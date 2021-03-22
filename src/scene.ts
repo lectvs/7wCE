@@ -4,12 +4,14 @@ class Scene {
     mouseY: number = 0;
 
     wonders: Wonder[];
-    hand: Hand;
+    hands: Hand[];
     discardPile: DiscardPile;
-    topDiscardCard: Card;
+    discardHand: Hand;
     paymentDialog: PaymentDialog;
     actionButton: ActionButton;
 
+    get hand() { return this.hands[Main.gamestate.players.indexOf(Main.player)]; }
+    get topWonder() { return this.wonders[Main.gamestate.players.indexOf(Main.player)]; }
     get isPaymentMenuActive() { return !!this.paymentDialog; }
 
     constructor() {
@@ -17,16 +19,17 @@ class Scene {
     }
 
     update() {
-        this.hand.update();
+        for (let hand of this.hands) {
+            hand.update();
+        }
+
         this.actionButton.setType(this.isMyTurnToBuildFromDiscard() ? 'reject_discard' : 'undo');
         for (let wonder of this.wonders) {
             wonder.update();
         }
-        
-        if (this.topDiscardCard) {
-            let discardPoint = this.discardPile.getDiscardLockPoint();
-            this.topDiscardCard.x = discardPoint.x;
-            this.topDiscardCard.y = discardPoint.y;
+
+        if (this.discardHand) {
+            this.discardHand.update();
         }
 
         if (this.paymentDialog) {
@@ -41,7 +44,10 @@ class Scene {
 
         document.getElementById('game').style.height = `${C.WONDER_START_Y + C.WONDER_DY * Math.ceil((gamestate.players.length + 1) / 2)}px`;
 
+        let cardsInHand = this.isMyTurnToBuildFromDiscard() ? gamestate.discardedCards : gamestate.hand;
+
         this.wonders = players.map(player => undefined);
+        this.hands = players.map(player => undefined);
 
         let p = players.indexOf(Main.player);
         let l = mod(p-1, players.length);
@@ -52,6 +58,8 @@ class Scene {
         playerWonder.y = C.WONDER_START_Y;
         playerWonder.addToGame();
         this.wonders[p] = playerWonder;
+        this.hands[p] = new Hand('50%', `${C.HAND_Y}px`, { type: 'normal', cardIds: cardsInHand, activeWonder: playerWonder, validMoves: Main.gamestate.validMoves });
+        this.hands[p].snap();
 
         let i: number;
         for (i = 1; i < Math.floor((players.length - 1)/2 + 1); i++) {
@@ -60,12 +68,18 @@ class Scene {
             wonder_l.y = C.WONDER_START_Y + C.WONDER_DY*i;
             wonder_l.addToGame();
             this.wonders[l] = wonder_l;
+            this.hands[l] = new Hand(`calc(50% - ${C.HAND_DX}px)`, `${C.WONDER_START_Y + C.WONDER_DY*i - C.CARD_CENTER_OFFSET_Y}px`, { type: 'back', player: players[l], age: gamestate.age });
+            this.hands[l].state = { type: 'moving' };
+            this.hands[l].snap();
 
             let wonder_r = new Wonder(players[r]);
             wonder_r.xs = `calc(50% + ${C.WONDER_DX}px)`;
             wonder_r.y = C.WONDER_START_Y + C.WONDER_DY*i;
             wonder_r.addToGame();
             this.wonders[r] = wonder_r;
+            this.hands[r] = new Hand(`calc(50% + ${C.HAND_DX}px)`, `${C.WONDER_START_Y + C.WONDER_DY*i - C.CARD_CENTER_OFFSET_Y}px`, { type: 'back', player: players[r], age: gamestate.age });
+            this.hands[r].state = { type: 'moving' };
+            this.hands[r].snap();
 
             l = mod(l-1, gamestate.players.length);
             r = mod(r+1, gamestate.players.length);
@@ -77,6 +91,9 @@ class Scene {
             lastWonder.y = C.WONDER_START_Y + C.WONDER_DY*i;
             lastWonder.addToGame();
             this.wonders[l] = lastWonder;
+            this.hands[l] = new Hand(`calc(50% + ${C.HAND_LAST_DX}px)`, `${C.WONDER_START_Y + C.WONDER_DY*i - C.CARD_CENTER_OFFSET_Y}px`, { type: 'back', player: players[l], age: gamestate.age });
+            this.hands[l].state = { type: 'moving' };
+            this.hands[l].snap();
         }
 
         this.actionButton = new ActionButton();
@@ -84,16 +101,6 @@ class Scene {
         this.actionButton.y = C.ACTION_BUTTON_Y;
         this.actionButton.addToGame();
 
-        let cardsInHand: number[];
-        if (this.isMyTurnToBuildFromDiscard()) {
-            cardsInHand = gamestate.discardedCards;
-        } else if (gamestate.state === 'DISCARD_MOVE') {
-            cardsInHand = [];
-        } else {
-            cardsInHand = gamestate.hand;
-        }
-
-        this.hand = new Hand(cardsInHand, this.wonders[p]);
         this.hand.reflectMove(gamestate.playerData[Main.player].currentMove);
 
         this.discardPile = new DiscardPile();
@@ -101,11 +108,11 @@ class Scene {
         this.discardPile.y = C.WONDER_START_Y + C.WONDER_DY;
         this.discardPile.addToGame();
 
-        if (gamestate.discardedCardCount > 0) {
-            this.topDiscardCard = Card.flippedCardForAge(gamestate.lastDiscardedCardAge, false);
-            this.topDiscardCard.addDiscardCountText();
-            this.topDiscardCard.addToGame();
-        }
+        let discardPoint = this.discardPile.getDiscardLockPoint();
+        this.discardHand = new Hand('50%', `${discardPoint.y}px`,
+                            { type: 'discard', count: this.isMyTurnToBuildFromDiscard() ? 0 : gamestate.discardedCardCount, lastCardAge: gamestate.lastDiscardedCardAge });
+        this.discardHand.state = { type: 'moving' };
+        this.discardHand.snap();
 
         document.getElementById('game').onmousemove = (event: MouseEvent) => {
             event.preventDefault();
@@ -146,7 +153,11 @@ class Scene {
             }
         } else if (gamestate.state === 'LAST_CARD_MOVE') {
             if (playerData.currentMove || gamestate.validMoves.length === 0) {
-                statusText.textContent = "Waiting for others to play their last card";
+                if (gamestate.lastCardPlayers.length === 1) {
+                    statusText.textContent = `Waiting for ${gamestate.lastCardPlayers[0]} to play their last card`;
+                } else {
+                    statusText.textContent = "Waiting for others to play their last cards";
+                }
             } else {
                 statusText.textContent = "You may play your last card";
             }
