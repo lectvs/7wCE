@@ -3,15 +3,25 @@ class GameElement {
     div: HTMLDivElement;
 
     get x() {
-        return HtmlUtils.cssStylePositionToPixels(this.div.style.left, this.game.clientWidth);
+        return HtmlUtils.cssStylePositionToPixels(this._xs, Main.gameWidth);
     }
     get y() {
-        return HtmlUtils.cssStylePositionToPixels(this.div.style.top, this.game.clientHeight);
+        return HtmlUtils.cssStylePositionToPixels(this._ys, Main.gameHeight);
     }
-    set x(value: number) { this.div.style.left = `${value}px`; }
-    set y(value: number) { this.div.style.top = `${value}px`; }
-    set xs(value: string) { this.div.style.left = value; }
-    set ys(value: string) { this.div.style.top = value; }
+    set x(value: number) { this.xs = `${value}px`; }
+    set y(value: number) { this.ys = `${value}px`; }
+
+    private _xs: string = `0px`;
+    set xs(value: string) {
+        this._xs = value;
+        this.div.style.left = value;
+    }
+
+    private _ys: string = `0px`;
+    set ys(value: string) {
+        this._ys = value;
+        this.div.style.top = value;
+    }
 
     private _scale: number = 1;
     get scale() { return this._scale; }
@@ -20,12 +30,17 @@ class GameElement {
         this.setTransform();
     }
 
+    private _zIndex: number = 0;
+    get zIndex() { return this._zIndex; }
     set zIndex(value: number) {
+        this._zIndex = value;
         this.div.style.zIndex = `${value}`;
     }
 
-    get visible() { return this.div.style.visibility !== 'hidden'; }
+    private _visible: boolean = true;
+    get visible() { return this._visible; }
     set visible(value: boolean) {
+        this._visible = value;
         this.div.style.visibility = value ? 'visible' : 'hidden';
     }
 
@@ -33,8 +48,6 @@ class GameElement {
         this.game = document.getElementById('game');
         this.div = document.createElement('div');
         this.div.style.position = 'absolute';
-        this.x = 0;
-        this.y = 0;
         this.setTransform();
     }
 

@@ -14,8 +14,8 @@ class Main {
 
     static scriptManager: ScriptManager;
 
-    static get gameWidth() { return document.getElementById('game').clientWidth; }
-    static get gameHeight() { return document.getElementById('game').clientHeight; }
+    static gameWidth: number;
+    static gameHeight: number;
 
     static get initialized() { return !!this.scene; }
     static get isHost() { return this.gamestate.host === this.player; }
@@ -25,6 +25,9 @@ class Main {
         window.addEventListener('mouseup', () => this.mouseDown = false);
 
         this.mouseDown = false;
+        let game = document.getElementById('game');
+        this.gameWidth = game.clientWidth;
+        this.gameHeight = game.clientHeight;
 
         this.scriptManager = new ScriptManager();
 
@@ -68,6 +71,10 @@ class Main {
     }
 
     static update() {
+        let game = document.getElementById('game');
+        this.gameWidth = game.clientWidth;
+        this.gameHeight = game.clientHeight;
+
         if (this.scene) this.scene.update();
         this.scriptManager.update();
 

@@ -19,6 +19,10 @@ class Scene {
     }
 
     update() {
+        // document.getElementById('game').childNodes.forEach((child: HTMLElement) => {
+        //     child.style.display = 'none';
+        // });
+
         for (let hand of this.hands) {
             hand.update();
         }
@@ -36,6 +40,10 @@ class Scene {
             this.paymentDialog.update();
         }
         this.setStatus();
+
+        // document.getElementById('game').childNodes.forEach((child: HTMLElement) => {
+        //     child.style.display = 'block';
+        // });
     }
 
     create() {

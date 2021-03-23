@@ -71,37 +71,45 @@ var __spread = (this && this.__spread) || function () {
 };
 var GameElement = /** @class */ (function () {
     function GameElement() {
+        this._xs = "0px";
+        this._ys = "0px";
         this._scale = 1;
+        this._zIndex = 0;
+        this._visible = true;
         this.game = document.getElementById('game');
         this.div = document.createElement('div');
         this.div.style.position = 'absolute';
-        this.x = 0;
-        this.y = 0;
         this.setTransform();
     }
     Object.defineProperty(GameElement.prototype, "x", {
         get: function () {
-            return HtmlUtils.cssStylePositionToPixels(this.div.style.left, this.game.clientWidth);
+            return HtmlUtils.cssStylePositionToPixels(this._xs, Main.gameWidth);
         },
-        set: function (value) { this.div.style.left = value + "px"; },
+        set: function (value) { this.xs = value + "px"; },
         enumerable: false,
         configurable: true
     });
     Object.defineProperty(GameElement.prototype, "y", {
         get: function () {
-            return HtmlUtils.cssStylePositionToPixels(this.div.style.top, this.game.clientHeight);
+            return HtmlUtils.cssStylePositionToPixels(this._ys, Main.gameHeight);
         },
-        set: function (value) { this.div.style.top = value + "px"; },
+        set: function (value) { this.ys = value + "px"; },
         enumerable: false,
         configurable: true
     });
     Object.defineProperty(GameElement.prototype, "xs", {
-        set: function (value) { this.div.style.left = value; },
+        set: function (value) {
+            this._xs = value;
+            this.div.style.left = value;
+        },
         enumerable: false,
         configurable: true
     });
     Object.defineProperty(GameElement.prototype, "ys", {
-        set: function (value) { this.div.style.top = value; },
+        set: function (value) {
+            this._ys = value;
+            this.div.style.top = value;
+        },
         enumerable: false,
         configurable: true
     });
@@ -115,15 +123,18 @@ var GameElement = /** @class */ (function () {
         configurable: true
     });
     Object.defineProperty(GameElement.prototype, "zIndex", {
+        get: function () { return this._zIndex; },
         set: function (value) {
+            this._zIndex = value;
             this.div.style.zIndex = "" + value;
         },
         enumerable: false,
         configurable: true
     });
     Object.defineProperty(GameElement.prototype, "visible", {
-        get: function () { return this.div.style.visibility !== 'hidden'; },
+        get: function () { return this._visible; },
         set: function (value) {
+            this._visible = value;
             this.div.style.visibility = value ? 'visible' : 'hidden';
         },
         enumerable: false,
@@ -1113,6 +1124,7 @@ var Card = /** @class */ (function (_super) {
         _this._flippedT = 0;
         _this._effectT = 0;
         _this._interactable = false;
+        _this._checkMarkVisible = true;
         _this.apiCardId = cardId;
         _this.apiCard = card;
         _this.handPosition = handPosition;
@@ -1191,8 +1203,9 @@ var Card = /** @class */ (function (_super) {
         configurable: true
     });
     Object.defineProperty(Card.prototype, "checkMarkVisible", {
-        get: function () { return this.checkMark.style.visibility !== 'hidden'; },
+        get: function () { return this._checkMarkVisible; },
         set: function (value) {
+            this._checkMarkVisible = value;
             this.checkMark.style.visibility = value ? 'visible' : 'hidden';
         },
         enumerable: false,
@@ -1218,9 +1231,10 @@ var Card = /** @class */ (function (_super) {
         this.checkMark.style.top = C.CARD_HEIGHT / 2 - C.CARD_TITLE_HEIGHT - C.CARD_BANNER_HEIGHT / 2 + "px";
         this.checkMark.appendChild(ArtCommon.domElementForArt(ArtCommon.checkMark(), 0.8));
         this.checkMarkVisible = false;
-        this.flippedT = this.flippedT;
-        this.effectT = this.effectT;
-        this.interactable = this.interactable;
+        this.effectT++;
+        this.effectT--;
+        this.flippedT++;
+        this.flippedT--;
     };
     Card.prototype.destroy = function () {
         while (this.div.firstChild) {
@@ -1376,9 +1390,6 @@ var Card = /** @class */ (function (_super) {
         else {
             this.flippedT = lerp(this.flippedT, 0, 0.25);
         }
-        this.highlight.style.width = this._width + "px";
-        this.highlight.style.height = lerp(this.height - C.CARD_PAYMENT_HEIGHT, this.height, this.effectT) + "px";
-        this.highlight.style.transform = "translate(-50%, -" + lerp(C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2, C.CARD_EFFECT_HEIGHT / 2 + C.CARD_EFFECT_CLIP_PADDING, this.effectT) + "px)";
         var alpha;
         if (this.state.type.startsWith('locked')) {
             alpha = (Math.sin(Main.time * 8) + 1) / 2;
@@ -1388,6 +1399,11 @@ var Card = /** @class */ (function (_super) {
         }
         else {
             alpha = 0;
+        }
+        if (alpha > 0) {
+            this.highlight.style.width = this._width + "px";
+            this.highlight.style.height = lerp(this.height - C.CARD_PAYMENT_HEIGHT, this.height, this.effectT) + "px";
+            this.highlight.style.transform = "translate(-50%, -" + lerp(C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2, C.CARD_EFFECT_HEIGHT / 2 + C.CARD_EFFECT_CLIP_PADDING, this.effectT) + "px)";
         }
         this.highlight.style.boxShadow = "inset 0px 0px 0px 4px rgba(255, 0, 0, " + alpha + ")";
     };
@@ -2007,10 +2023,10 @@ var GameStateDiffer;
                                     Main.scene.hands[i].xs = lerp(currentHandPositions_2[i].x, targetHandPositions_1[i].x, lerpt_4) + "px";
                                     Main.scene.hands[i].ys = lerp(currentHandPositions_2[i].y, targetHandPositions_1[i].y, lerpt_4) + "px";
                                     if (i === newHandi_1) {
-                                        Main.scene.hands[i].scale = lerp(C.HAND_FLANK_SCALE, 1, lerpt_4);
+                                        Main.scene.hands[i].scale = lerp(Main.scene.hands[i].scale, 1, lerpt_4);
                                     }
                                     else {
-                                        Main.scene.hands[i].scale = lerp(1, C.HAND_FLANK_SCALE, lerpt_4);
+                                        Main.scene.hands[i].scale = lerp(Main.scene.hands[i].scale, C.HAND_FLANK_SCALE, lerpt_4);
                                     }
                                 }
                             })())];
@@ -2023,8 +2039,50 @@ var GameStateDiffer;
                         Main.scene.hands[newHandi_1].createWithData({ type: 'normal', cardIds: gamestate.hand, activeWonder: Main.scene.hand.activeWonder, validMoves: gamestate.validMoves });
                         Main.scene.hands[newHandi_1].snap();
                         Main.scene.hands[newHandi_1].state = { type: 'normal' };
-                        return [5 /*yield**/, __values(S.wait(0.4)())];
+                        // let n = 0.4;
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'moving' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'normal' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'moving' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'normal' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'moving' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'normal' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'moving' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'normal' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'moving' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'normal' };
+                        return [5 /*yield**/, __values(S.wait(0.5)())];
                     case 18:
+                        // let n = 0.4;
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'moving' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'normal' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'moving' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'normal' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'moving' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'normal' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'moving' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'normal' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'moving' };
+                        // yield* S.wait(n)();
+                        // Main.scene.hands[newHandi].state = { type: 'normal' };
                         _a.sent();
                         Main.scene.hands[newHandi_1].snap();
                         _a.label = 19;
@@ -2328,16 +2386,6 @@ var HtmlUtils;
 var Main = /** @class */ (function () {
     function Main() {
     }
-    Object.defineProperty(Main, "gameWidth", {
-        get: function () { return document.getElementById('game').clientWidth; },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(Main, "gameHeight", {
-        get: function () { return document.getElementById('game').clientHeight; },
-        enumerable: false,
-        configurable: true
-    });
     Object.defineProperty(Main, "initialized", {
         get: function () { return !!this.scene; },
         enumerable: false,
@@ -2353,6 +2401,9 @@ var Main = /** @class */ (function () {
         window.addEventListener('mousedown', function () { return _this.mouseDown = true; });
         window.addEventListener('mouseup', function () { return _this.mouseDown = false; });
         this.mouseDown = false;
+        var game = document.getElementById('game');
+        this.gameWidth = game.clientWidth;
+        this.gameHeight = game.clientHeight;
         this.scriptManager = new ScriptManager();
         var params = new URLSearchParams(window.location.search);
         this.gameid = params.get('gameid');
@@ -2387,6 +2438,9 @@ var Main = /** @class */ (function () {
         document.getElementById('endscreen').style.display = 'block';
     };
     Main.update = function () {
+        var game = document.getElementById('game');
+        this.gameWidth = game.clientWidth;
+        this.gameHeight = game.clientHeight;
         if (this.scene)
             this.scene.update();
         this.scriptManager.update();
@@ -2736,6 +2790,9 @@ var Scene = /** @class */ (function () {
         configurable: true
     });
     Scene.prototype.update = function () {
+        // document.getElementById('game').childNodes.forEach((child: HTMLElement) => {
+        //     child.style.display = 'none';
+        // });
         var e_18, _a, e_19, _b;
         try {
             for (var _c = __values(this.hands), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -2771,6 +2828,9 @@ var Scene = /** @class */ (function () {
             this.paymentDialog.update();
         }
         this.setStatus();
+        // document.getElementById('game').childNodes.forEach((child: HTMLElement) => {
+        //     child.style.display = 'block';
+        // });
     };
     Scene.prototype.create = function () {
         var _this = this;

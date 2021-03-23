@@ -206,9 +206,9 @@ namespace GameStateDiffer {
                         Main.scene.hands[i].ys = `${lerp(currentHandPositions[i].y, targetHandPositions[i].y, lerpt)}px`;
 
                         if (i === newHandi) {
-                            Main.scene.hands[i].scale = lerp(C.HAND_FLANK_SCALE, 1, lerpt);
+                            Main.scene.hands[i].scale = lerp(Main.scene.hands[i].scale, 1, lerpt);
                         } else {
-                            Main.scene.hands[i].scale = lerp(1, C.HAND_FLANK_SCALE, lerpt);
+                            Main.scene.hands[i].scale = lerp(Main.scene.hands[i].scale, C.HAND_FLANK_SCALE, lerpt);
                         }
                     }
                 })();
@@ -220,7 +220,29 @@ namespace GameStateDiffer {
                 Main.scene.hands[newHandi].snap();
                 Main.scene.hands[newHandi].state = { type: 'normal' };
 
-                yield* S.wait(0.4)();
+                // let n = 0.4;
+                // yield* S.wait(n)();
+                // Main.scene.hands[newHandi].state = { type: 'moving' };
+                // yield* S.wait(n)();
+                // Main.scene.hands[newHandi].state = { type: 'normal' };
+                // yield* S.wait(n)();
+                // Main.scene.hands[newHandi].state = { type: 'moving' };
+                // yield* S.wait(n)();
+                // Main.scene.hands[newHandi].state = { type: 'normal' };
+                // yield* S.wait(n)();
+                // Main.scene.hands[newHandi].state = { type: 'moving' };
+                // yield* S.wait(n)();
+                // Main.scene.hands[newHandi].state = { type: 'normal' };
+                // yield* S.wait(n)();
+                // Main.scene.hands[newHandi].state = { type: 'moving' };
+                // yield* S.wait(n)();
+                // Main.scene.hands[newHandi].state = { type: 'normal' };
+                // yield* S.wait(n)();
+                // Main.scene.hands[newHandi].state = { type: 'moving' };
+                // yield* S.wait(n)();
+                // Main.scene.hands[newHandi].state = { type: 'normal' };
+
+                yield* S.wait(0.5)();
                 Main.scene.hands[newHandi].snap();
             }
         })

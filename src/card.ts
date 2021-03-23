@@ -80,8 +80,10 @@ class Card extends GameElement {
         this.div.style.cursor = this._interactable ? 'pointer' : 'default';
     }
 
-    get checkMarkVisible() { return this.checkMark.style.visibility !== 'hidden'; }
+    private _checkMarkVisible: boolean = true;
+    get checkMarkVisible() { return this._checkMarkVisible; }
     set checkMarkVisible(value: boolean) {
+        this._checkMarkVisible = value;
         this.checkMark.style.visibility = value ? 'visible' : 'hidden';
     }
 
@@ -136,9 +138,8 @@ class Card extends GameElement {
         this.checkMark.appendChild(ArtCommon.domElementForArt(ArtCommon.checkMark(), 0.8));
         this.checkMarkVisible = false;
 
-        this.flippedT = this.flippedT;
-        this.effectT = this.effectT;
-        this.interactable = this.interactable;
+        this.effectT++; this.effectT--;
+        this.flippedT++; this.flippedT--;
     }
     
     destroy() {
@@ -275,10 +276,6 @@ class Card extends GameElement {
             this.flippedT = lerp(this.flippedT, 0, 0.25);
         }
 
-        this.highlight.style.width = `${this._width}px`;
-        this.highlight.style.height = `${lerp(this.height - C.CARD_PAYMENT_HEIGHT, this.height, this.effectT)}px`;
-        this.highlight.style.transform = `translate(-50%, -${lerp(C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2, C.CARD_EFFECT_HEIGHT/2 + C.CARD_EFFECT_CLIP_PADDING, this.effectT)}px)`;
-
         let alpha: number;
         if (this.state.type.startsWith('locked')) {
             alpha = (Math.sin(Main.time*8) + 1)/2;
@@ -288,6 +285,11 @@ class Card extends GameElement {
             alpha = 0;
         }
 
+        if (alpha > 0) {
+            this.highlight.style.width = `${this._width}px`;
+            this.highlight.style.height = `${lerp(this.height - C.CARD_PAYMENT_HEIGHT, this.height, this.effectT)}px`;
+            this.highlight.style.transform = `translate(-50%, -${lerp(C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2, C.CARD_EFFECT_HEIGHT/2 + C.CARD_EFFECT_CLIP_PADDING, this.effectT)}px)`;
+        }
         this.highlight.style.boxShadow = `inset 0px 0px 0px 4px rgba(255, 0, 0, ${alpha})`;
     }
 
