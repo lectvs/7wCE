@@ -365,7 +365,7 @@ namespace ArtCommon {
     export function buildFreeFirstCard() {
         let container = new PIXI.Container();
         container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, ArtCommon.cardBannerForColor("grey")));
-        container.addChild(Shapes.centeredText(0, 10, '\u03B1', 0.35, 0x000000));
+        container.addChild(Shapes.centeredText(0, 14, '\u03B1', 0.56, 0x000000));
         let cross = X(0xFF0000);
         cross.scale.set(0.3);
         cross.position.set(-30, -20);

@@ -42,9 +42,12 @@ class C {
     public static readonly CARD_CENTER_OFFSET_Y = 60;
 
     public static readonly HAND_Y = 150;
-    public static readonly HAND_DX = 900;
     public static readonly HAND_LAST_DX = 400;
     public static readonly HAND_CARD_DX = 137;
+    public static readonly HAND_FLANK_DX = 845;
+    public static readonly HAND_FLANK_DY = -130;
+    public static readonly HAND_FLANK_SCALE = 0.5;
+    public static readonly HAND_FLANK_MOVED_DX = 70;
 
     public static readonly WONDER_START_Y = 650;
     public static readonly WONDER_DX = 500;

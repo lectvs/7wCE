@@ -68,8 +68,10 @@ class Scene {
             wonder_l.y = C.WONDER_START_Y + C.WONDER_DY*i;
             wonder_l.addToGame();
             this.wonders[l] = wonder_l;
-            this.hands[l] = new Hand(`calc(50% - ${C.HAND_DX}px)`, `${C.WONDER_START_Y + C.WONDER_DY*i - C.CARD_CENTER_OFFSET_Y}px`, { type: 'back', player: players[l], age: gamestate.age });
-            this.hands[l].state = { type: 'moving' };
+            this.hands[l] = new Hand(`calc(50% - ${C.HAND_FLANK_DX}px)`, `${C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY}px`,
+                                        { type: 'back', player: players[l], age: gamestate.age, flankDirection: -1 });
+            this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
+            this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].snap();
 
             let wonder_r = new Wonder(players[r]);
@@ -77,8 +79,10 @@ class Scene {
             wonder_r.y = C.WONDER_START_Y + C.WONDER_DY*i;
             wonder_r.addToGame();
             this.wonders[r] = wonder_r;
-            this.hands[r] = new Hand(`calc(50% + ${C.HAND_DX}px)`, `${C.WONDER_START_Y + C.WONDER_DY*i - C.CARD_CENTER_OFFSET_Y}px`, { type: 'back', player: players[r], age: gamestate.age });
-            this.hands[r].state = { type: 'moving' };
+            this.hands[r] = new Hand(`calc(50% + ${C.HAND_FLANK_DX}px)`, `${C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY}px`,
+                                        { type: 'back', player: players[r], age: gamestate.age, flankDirection: 1 });
+            this.hands[r].state = { type: 'back', moved: !!gamestate.playerData[players[r]].currentMove };
+            this.hands[r].scale = C.HAND_FLANK_SCALE;
             this.hands[r].snap();
 
             l = mod(l-1, gamestate.players.length);
@@ -91,8 +95,10 @@ class Scene {
             lastWonder.y = C.WONDER_START_Y + C.WONDER_DY*i;
             lastWonder.addToGame();
             this.wonders[l] = lastWonder;
-            this.hands[l] = new Hand(`calc(50% + ${C.HAND_LAST_DX}px)`, `${C.WONDER_START_Y + C.WONDER_DY*i - C.CARD_CENTER_OFFSET_Y}px`, { type: 'back', player: players[l], age: gamestate.age });
-            this.hands[l].state = { type: 'moving' };
+            this.hands[l] = new Hand(`calc(50% + ${C.HAND_LAST_DX}px)`, `${C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY}px`,
+                                        { type: 'back', player: players[l], age: gamestate.age, flankDirection: 1 });
+            this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
+            this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].snap();
         }
 

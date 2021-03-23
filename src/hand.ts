@@ -1,20 +1,24 @@
 type HandData = { type: 'normal', cardIds: number[], activeWonder: Wonder, validMoves: API.Move[] }
-              | { type: 'back', player: string, age: number }
+              | { type: 'back', player: string, age: number, flankDirection: number }
               | { type: 'discard', count: number, lastCardAge: number };
 
 type HandState = { type: 'normal' }
+               | { type: 'back', moved: boolean }
                | { type: 'moving' };
 
 class Hand {
 
     cardIds: number[];
     activeWonder: Wonder;
+    flankDirection: number;
 
     xs: string;
     ys: string;
 
     state: HandState;
     cards: Card[];
+
+    scale: number;
 
     get selectedCard() {
         for (let card of this.cards) {
@@ -29,6 +33,7 @@ class Hand {
         this.state = { type: 'normal' };
         this.xs = xs;
         this.ys = ys;
+        this.scale = 1;
         this.createWithData(handData);
     }
 
@@ -37,12 +42,25 @@ class Hand {
             let nhp = this.getNormalHandPosition(i);
             this.cards[i].handPosition?.set(nhp.x, nhp.y);
             if (this.state.type === 'normal') {
-                if (this.cards[i].state.type === 'in_hand_moving') this.cards[i].state = { type: 'in_hand', visualState: 'full' };
-            } else if (this.state.type === 'moving') {
-                if (this.cards[i].state.type === 'in_hand') this.cards[i].state = { type: 'in_hand_moving' };
                 if (this.cards[i].state.type === 'in_hand_moving') {
-                    this.cards[i].targetPosition.set(HtmlUtils.cssStylePositionToPixels(this.xs, Main.gameWidth),
-                                                     HtmlUtils.cssStylePositionToPixels(this.ys, Main.gameHeight));
+                    this.cards[i].state = { type: 'in_hand', visualState: 'full' };
+                }
+                this.cards[i].scale = this.scale;
+            } else {
+                if (this.cards[i].state.type === 'in_hand') {
+                    this.cards[i].state = { type: 'in_hand_moving' };
+                }
+                // No, this should NOT be an 'else'
+                if (this.cards[i].state.type === 'in_hand_moving' || this.cards[i].state.type === 'in_discard') {
+                    this.cards[i].targetPosition = this.getPositionPixels();
+                    this.cards[i].scale = this.scale;
+                }
+
+                if (this.state.type === 'back' && this.state.moved && i === 0) {
+                    if (this.cards.length > 1) this.cards[i].targetPosition.x += C.HAND_FLANK_MOVED_DX * this.flankDirection;
+                    this.cards[i].checkMarkVisible = true;
+                }  else {
+                    this.cards[i].checkMarkVisible = false;
                 }
             }
             this.cards[i].update();
@@ -56,6 +74,7 @@ class Hand {
                         ? handData.cardIds
                         : filledArray(handData.type === 'back' ? Main.gamestate.playerData[handData.player].handCount : handData.count, -1);
         this.activeWonder = handData.type === 'normal' ? handData.activeWonder : undefined;
+        this.flankDirection = handData.type === 'back' ? handData.flankDirection : 1;
 
         for (let i = 0; i < this.cardIds.length; i++) {
             let handPosition = this.getNormalHandPosition(i);
@@ -67,7 +86,7 @@ class Hand {
             card.addToGame();
             this.cards.push(card);
 
-            card.state = { type: 'in_hand', visualState: 'full' };
+            card.state = handData.type === 'discard' ? { type: 'in_discard' } : { type: 'in_hand', visualState: 'full' };
         }
 
         if (this.cards.length > 0 && handData.type === 'discard') {
@@ -107,6 +126,20 @@ class Hand {
             }
         }
         if (!moved) console.error('Move card not found in hand:', move);
+    }
+
+    makeMove() {
+        if (this.state.type === 'back') this.state.moved = true;
+    }
+
+    undoMove() {
+        if (this.state.type === 'back') this.state.moved = false;
+    }
+
+    setAllCardState(state: CardState) {
+        for (let card of this.cards) {
+            card.state = state;
+        }
     }
 
     getNormalHandPosition(cardIndex: number) {

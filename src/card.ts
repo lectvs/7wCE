@@ -3,10 +3,11 @@
 type CardVisualState = 'full' | 'effect' | 'flipped';
 type CardState = { type: 'in_hand', visualState: CardVisualState }
                | { type: 'in_hand_moving' }
+               | { type: 'in_discard' }
                | { type: 'dragging_normal' | 'dragging_play' | 'dragging_wonder' | 'dragging_throw' }
                | { type: 'locked_play' | 'locked_throw' }
                | { type: 'locked_wonder', stage: number }
-               | { type: 'permanent_effect' | 'permanent_flipped', justPlayed: boolean };
+               | { type: 'full' | 'effect' | 'flipped', snap: boolean, justPlayed: boolean };
 
 type DraggingData = {
     offsetx: number;
@@ -30,7 +31,8 @@ class Card extends GameElement {
 
     frontDiv: HTMLDivElement;
     backDiv: HTMLDivElement;
-    highlight: HTMLDivElement;
+    private highlight: HTMLDivElement;
+    private checkMark: HTMLDivElement;
 
     private allowPlay: boolean;
     private allowBuildStages: number[];
@@ -45,7 +47,7 @@ class Card extends GameElement {
     get height() { return this._height; }
     get effectWidth() { return this.effectClipRect.width; }
 
-    private _flippedT: number;
+    private _flippedT: number = 0;
     get flippedT() { return this._flippedT; }
     set flippedT(value: number) {
         this._flippedT = value;
@@ -58,7 +60,7 @@ class Card extends GameElement {
         }
     }
 
-    private _effectT: number;
+    private _effectT: number = 0;
     get effectT() { return this._effectT; }
     set effectT(value: number) {
         this._effectT = value;
@@ -71,11 +73,16 @@ class Card extends GameElement {
         this._height = bottom - top;
     }
 
-    private _interactable: boolean;
+    private _interactable: boolean = false;
     get interactable() { return this._interactable; }
     set interactable(value: boolean) {
         this._interactable = value;
         this.div.style.cursor = this._interactable ? 'pointer' : 'default';
+    }
+
+    get checkMarkVisible() { return this.checkMark.style.visibility !== 'hidden'; }
+    set checkMarkVisible(value: boolean) {
+        this.checkMark.style.visibility = value ? 'visible' : 'hidden';
     }
 
     constructor(cardId: number, card: API.Card, handPosition: PIXI.Point, activeWonder: Wonder, validMoves: API.Move[]) {
@@ -92,9 +99,28 @@ class Card extends GameElement {
         this.state = { type: 'in_hand', visualState: 'full' };
         this.configureValidMoves(validMoves);
 
+        this.create(cardId, card, true);
+
+        // Dragging
+        this.frontDiv.onmousedown = (event: MouseEvent) => {
+            if (!this.interactable) return;
+            if (event.button !== 0) return;
+            this.dragging = {
+                offsetx: this.x - Main.scene.mouseX,
+                offsety: this.y - Main.scene.mouseY
+            };
+        };
+    }
+
+    create(cardId: number, card: API.Card, drawPayment: boolean) {
+        this.apiCardId = cardId;
+        this.apiCard = card;
+
+        this.div.style.transformOrigin = `left top`;
+
         this.frontDiv = this.div.appendChild(document.createElement('div'));
         this.frontDiv.style.transformOrigin = 'left center';
-        let front = this.frontDiv.appendChild(this.drawFront());
+        let front = this.frontDiv.appendChild(this.drawFront(drawPayment));
         front.style.transform = `translate(-50%, -${C.CARD_PAYMENT_HEIGHT + C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2}px)`;
         this.backDiv = this.div.appendChild(document.createElement('div'));
         this.backDiv.style.transformOrigin = 'left center';
@@ -103,19 +129,22 @@ class Card extends GameElement {
         let highlightDiv = this.div.appendChild(document.createElement('div'));
         this.highlight = highlightDiv.appendChild(this.drawHighlight());
 
+        this.checkMark = this.backDiv.appendChild(document.createElement('div'));
+        this.checkMark.style.position = 'absolute';
+        this.checkMark.style.left = '0%';
+        this.checkMark.style.top = `${C.CARD_HEIGHT/2 - C.CARD_TITLE_HEIGHT - C.CARD_BANNER_HEIGHT/2}px`;
+        this.checkMark.appendChild(ArtCommon.domElementForArt(ArtCommon.checkMark(), 0.8));
+        this.checkMarkVisible = false;
 
-        this.flippedT = 0;
-        this.effectT = 0;
-        this.interactable = false;
-
-        // Dragging
-        this.frontDiv.onmousedown = (event: MouseEvent) => {
-            if (!this.interactable) return;
-            this.dragging = {
-                offsetx: this.x - Main.scene.mouseX,
-                offsety: this.y - Main.scene.mouseY
-            };
-        };
+        this.flippedT = this.flippedT;
+        this.effectT = this.effectT;
+        this.interactable = this.interactable;
+    }
+    
+    destroy() {
+        while (this.div.firstChild) {
+            this.div.removeChild(this.div.firstChild);
+        }
     }
 
     update() {
@@ -206,16 +235,25 @@ class Card extends GameElement {
             this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = false;
             this.visualState = 'flipped';
-        } else if (this.state.type === 'permanent_effect') {
+        } else if (this.state.type === 'full') {
+            this.interactable = false;
+            this.visualState = 'full';
+            if (this.state.snap) this.effectT = 0;
+            if (this.state.snap) this.flippedT = 0;
+        } else if (this.state.type === 'effect') {
             this.interactable = false;
             this.visualState = 'effect';
-            this.effectT = 1;
-        } else if (this.state.type === 'permanent_flipped') {
+            if (this.state.snap) this.effectT = 1;
+        } else if (this.state.type === 'flipped') {
             this.interactable = false;
             this.visualState = 'flipped';
-            this.flippedT = 1;
+            if (this.state.snap) this.flippedT = 1;
         } else if (this.state.type === 'in_hand_moving') {
             this.zIndex = C.Z_INDEX_CARD_MOVING;
+            this.interactable = false;
+            this.visualState = 'flipped';
+        } else if (this.state.type === 'in_discard') {
+            this.zIndex = C.Z_INDEX_DISCARD_CARDS;
             this.interactable = false;
             this.visualState = 'flipped';
         }
@@ -248,7 +286,7 @@ class Card extends GameElement {
         let alpha: number;
         if (this.state.type.startsWith('locked')) {
             alpha = (Math.sin(Main.time*8) + 1)/2;
-        } else if ((this.state.type === 'permanent_effect' || this.state.type === 'permanent_flipped') && this.state.justPlayed) {
+        } else if ((this.state.type === 'effect' || this.state.type === 'flipped') && this.state.justPlayed) {
             alpha = 1;
         } else {
             alpha = 0;
@@ -329,7 +367,7 @@ class Card extends GameElement {
         discardCount.style.transform = 'translate(-50%, -50%)';
     }
 
-    private drawFront() {
+    private drawFront(drawPayment: boolean) {
         let front = new PIXI.Container();
 
         let cardBase = Shapes.filledRoundedRect(0, 0, C.CARD_WIDTH, C.CARD_HEIGHT, C.CARD_CORNER_RADIUS, ArtCommon.cardBannerForColor(this.apiCard.color));
@@ -380,6 +418,7 @@ class Card extends GameElement {
         let payment = ArtCommon.payment(this.allowPlay ? this.minPlayCost : Infinity);
         payment.scale.set(C.CARD_PAYMENT_SCALE);
         payment.position.set(C.CARD_WIDTH + C.CARD_PAYMENT_OFFSET_X, -C.CARD_PAYMENT_HEIGHT/2);
+        if (!drawPayment) payment.visible = false;
         front.addChild(payment);
 
         front.position.set(0, C.CARD_PAYMENT_HEIGHT);
@@ -408,7 +447,7 @@ class Card extends GameElement {
 
     static flippedCardForAge(age: number, justPlayed: boolean) {
         let card = new Card(-1, { age: age, name: '', color: 'brown', effects: [] }, undefined, undefined, []);
-        card.state = { type: 'permanent_flipped', justPlayed: justPlayed };
+        card.state = { type: 'flipped', snap: true, justPlayed: justPlayed };
         card.update();
         return card;
     }

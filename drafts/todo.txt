@@ -1,3 +1,4 @@
 todo
+- remove 'effect'/'flipped' snap?
 - animations
 - hover-infos

@@ -13,6 +13,13 @@ class GameElement {
     set xs(value: string) { this.div.style.left = value; }
     set ys(value: string) { this.div.style.top = value; }
 
+    private _scale: number = 1;
+    get scale() { return this._scale; }
+    set scale(value: number) {
+        this._scale = value;
+        this.setTransform();
+    }
+
     set zIndex(value: number) {
         this.div.style.zIndex = `${value}`;
     }
@@ -28,6 +35,7 @@ class GameElement {
         this.div.style.position = 'absolute';
         this.x = 0;
         this.y = 0;
+        this.setTransform();
     }
 
     addToGame() {
@@ -38,5 +46,9 @@ class GameElement {
         if (this.div.parentElement) {
             this.div.parentElement.removeChild(this.div);
         }
+    }
+
+    private setTransform() {
+        this.div.style.transform = `scale(${this._scale})`;
     }
 }
