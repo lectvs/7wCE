@@ -151,7 +151,7 @@ class Card extends GameElement {
     update() {
         if (this.dragging) {
             let stage = this.activeWonder.getClosestStageId(Main.scene.mouseX);
-            if (!Main.mouseDown) {
+            if (!Main.mouseDown || !this.canBeInteractable()) {
                 if (this.allowPlay && this.activeWonder.getMainRegion().contains(Main.scene.mouseX, Main.scene.mouseY)) {
                     let move: API.Move = { action: 'play', card: this.apiCardId };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
@@ -347,6 +347,7 @@ class Card extends GameElement {
 
     canBeInteractable() {
         if (Main.scene && Main.scene.isPaymentMenuActive) return false;
+        if (Main.diffing) return false;
         if (!this.allowPlay && this.allowBuildStages.length === 0 && !this.allowThrow) return false;
         return true;
     }

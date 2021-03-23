@@ -1245,7 +1245,7 @@ var Card = /** @class */ (function (_super) {
         var _a, _b;
         if (this.dragging) {
             var stage = this.activeWonder.getClosestStageId(Main.scene.mouseX);
-            if (!Main.mouseDown) {
+            if (!Main.mouseDown || !this.canBeInteractable()) {
                 if (this.allowPlay && this.activeWonder.getMainRegion().contains(Main.scene.mouseX, Main.scene.mouseY)) {
                     var move = { action: 'play', card: this.apiCardId };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
@@ -1474,6 +1474,8 @@ var Card = /** @class */ (function (_super) {
     };
     Card.prototype.canBeInteractable = function () {
         if (Main.scene && Main.scene.isPaymentMenuActive)
+            return false;
+        if (Main.diffing)
             return false;
         if (!this.allowPlay && this.allowBuildStages.length === 0 && !this.allowThrow)
             return false;
@@ -2039,50 +2041,8 @@ var GameStateDiffer;
                         Main.scene.hands[newHandi_1].createWithData({ type: 'normal', cardIds: gamestate.hand, activeWonder: Main.scene.hand.activeWonder, validMoves: gamestate.validMoves });
                         Main.scene.hands[newHandi_1].snap();
                         Main.scene.hands[newHandi_1].state = { type: 'normal' };
-                        // let n = 0.4;
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'moving' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'normal' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'moving' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'normal' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'moving' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'normal' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'moving' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'normal' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'moving' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'normal' };
                         return [5 /*yield**/, __values(S.wait(0.5)())];
                     case 18:
-                        // let n = 0.4;
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'moving' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'normal' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'moving' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'normal' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'moving' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'normal' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'moving' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'normal' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'moving' };
-                        // yield* S.wait(n)();
-                        // Main.scene.hands[newHandi].state = { type: 'normal' };
                         _a.sent();
                         Main.scene.hands[newHandi_1].snap();
                         _a.label = 19;
@@ -2145,8 +2105,8 @@ var GameStateDiffer;
         var oldMove = Main.gamestate.playerData[player].currentMove;
         var newMove = gamestate.playerData[player].currentMove;
         var playeri = Main.gamestate.players.indexOf(player);
-        // Always reflect current move.
-        if (player === Main.player) {
+        // Reflect current move.
+        if (player === Main.player && !Main.isMoveImmune) {
             result.scripts.push(function () {
                 return __generator(this, function (_a) {
                     if (!Main.scene.isPaymentMenuActive) {
@@ -2386,13 +2346,13 @@ var HtmlUtils;
 var Main = /** @class */ (function () {
     function Main() {
     }
-    Object.defineProperty(Main, "initialized", {
-        get: function () { return !!this.scene; },
+    Object.defineProperty(Main, "isHost", {
+        get: function () { return this.gamestate.host === this.player; },
         enumerable: false,
         configurable: true
     });
-    Object.defineProperty(Main, "isHost", {
-        get: function () { return this.gamestate.host === this.player; },
+    Object.defineProperty(Main, "isMoveImmune", {
+        get: function () { return this.moveImmuneTime > 0; },
         enumerable: false,
         configurable: true
     });
@@ -2404,6 +2364,7 @@ var Main = /** @class */ (function () {
         var game = document.getElementById('game');
         this.gameWidth = game.clientWidth;
         this.gameHeight = game.clientHeight;
+        this.moveImmuneTime = 0;
         this.scriptManager = new ScriptManager();
         var params = new URLSearchParams(window.location.search);
         this.gameid = params.get('gameid');
@@ -2441,6 +2402,7 @@ var Main = /** @class */ (function () {
         var game = document.getElementById('game');
         this.gameWidth = game.clientWidth;
         this.gameHeight = game.clientHeight;
+        this.moveImmuneTime = clamp(this.moveImmuneTime - Main.delta, 0, Infinity);
         if (this.scene)
             this.scene.update();
         this.scriptManager.update();
@@ -2493,7 +2455,9 @@ var Main = /** @class */ (function () {
             }
             else {
                 var diffResult = GameStateDiffer.diffTurn(gamestate);
+                _this.diffing = true;
                 _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {
+                    _this.diffing = false;
                     _this.gamestate = gamestate;
                     _this.scene.destroy();
                     _this.scene.create();
@@ -2516,22 +2480,28 @@ var Main = /** @class */ (function () {
         });
     };
     Main.submitMove = function (move) {
+        var _this = this;
         API.submitmove(Main.gameid, Main.gamestate.turn, Main.player, move, function (error) {
             if (error) {
                 Main.error(error);
                 return;
             }
             console.log('Submitted move:', move);
+            _this.moveImmuneTime = 1;
         });
+        this.moveImmuneTime = 2;
     };
     Main.undoMove = function () {
+        var _this = this;
         API.undomove(this.gameid, this.gamestate.turn, this.player, function (error) {
             if (error) {
                 Main.error(error);
                 return;
             }
             console.log('Undo move successful');
+            _this.moveImmuneTime = 1;
         });
+        this.moveImmuneTime = 2;
     };
     Main.updateBotMoves = function () {
         var e_17, _a;

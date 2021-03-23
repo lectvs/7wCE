@@ -17,8 +17,11 @@ class Main {
     static gameWidth: number;
     static gameHeight: number;
 
-    static get initialized() { return !!this.scene; }
+    static moveImmuneTime: number;
+    static diffing: boolean;
+
     static get isHost() { return this.gamestate.host === this.player; }
+    static get isMoveImmune() { return this.moveImmuneTime > 0; }
 
     static start() {
         window.addEventListener('mousedown', () => this.mouseDown = true);
@@ -28,6 +31,7 @@ class Main {
         let game = document.getElementById('game');
         this.gameWidth = game.clientWidth;
         this.gameHeight = game.clientHeight;
+        this.moveImmuneTime = 0;
 
         this.scriptManager = new ScriptManager();
 
@@ -74,6 +78,7 @@ class Main {
         let game = document.getElementById('game');
         this.gameWidth = game.clientWidth;
         this.gameHeight = game.clientHeight;
+        this.moveImmuneTime = clamp(this.moveImmuneTime - Main.delta, 0, Infinity);
 
         if (this.scene) this.scene.update();
         this.scriptManager.update();
@@ -128,13 +133,16 @@ class Main {
                 ));
             } else {
                 let diffResult = GameStateDiffer.diffTurn(gamestate);
+                this.diffing = true;
                 this.scriptManager.runScript(S.chain(
                     S.simul(...diffResult.scripts),
                     S.call(() => {
+                        this.diffing = false;
                         this.gamestate = gamestate;
                         this.scene.destroy();
                         this.scene.create();
                         this.sendUpdate();
+
                     })
                 ));
             }
@@ -159,7 +167,9 @@ class Main {
                 return;
             }
             console.log('Submitted move:', move);
+            this.moveImmuneTime = 1;
         });
+        this.moveImmuneTime = 2;
     }
 
     static undoMove() {
@@ -169,7 +179,9 @@ class Main {
                 return;
             }
             console.log('Undo move successful');
-        })
+            this.moveImmuneTime = 1;
+        });
+        this.moveImmuneTime = 2;
     }
 
     static updateBotMoves() {

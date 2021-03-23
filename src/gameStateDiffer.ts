@@ -220,28 +220,6 @@ namespace GameStateDiffer {
                 Main.scene.hands[newHandi].snap();
                 Main.scene.hands[newHandi].state = { type: 'normal' };
 
-                // let n = 0.4;
-                // yield* S.wait(n)();
-                // Main.scene.hands[newHandi].state = { type: 'moving' };
-                // yield* S.wait(n)();
-                // Main.scene.hands[newHandi].state = { type: 'normal' };
-                // yield* S.wait(n)();
-                // Main.scene.hands[newHandi].state = { type: 'moving' };
-                // yield* S.wait(n)();
-                // Main.scene.hands[newHandi].state = { type: 'normal' };
-                // yield* S.wait(n)();
-                // Main.scene.hands[newHandi].state = { type: 'moving' };
-                // yield* S.wait(n)();
-                // Main.scene.hands[newHandi].state = { type: 'normal' };
-                // yield* S.wait(n)();
-                // Main.scene.hands[newHandi].state = { type: 'moving' };
-                // yield* S.wait(n)();
-                // Main.scene.hands[newHandi].state = { type: 'normal' };
-                // yield* S.wait(n)();
-                // Main.scene.hands[newHandi].state = { type: 'moving' };
-                // yield* S.wait(n)();
-                // Main.scene.hands[newHandi].state = { type: 'normal' };
-
                 yield* S.wait(0.5)();
                 Main.scene.hands[newHandi].snap();
             }
@@ -295,8 +273,8 @@ namespace GameStateDiffer {
         let newMove = gamestate.playerData[player].currentMove;
         let playeri = Main.gamestate.players.indexOf(player);
 
-        // Always reflect current move.
-        if (player === Main.player) {
+        // Reflect current move.
+        if (player === Main.player && !Main.isMoveImmune) {
             result.scripts.push(function*() {
                 if (!Main.scene.isPaymentMenuActive) {
                     Main.scene.hand.reflectMove(newMove);
