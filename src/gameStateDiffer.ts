@@ -38,25 +38,29 @@ namespace GameStateDiffer {
                     }
                     if (!lastMove) return;
 
-                    hand.state = { type: 'back', moved: true };
+                    if (Main.gamestate.state !== 'DISCARD_MOVE') {
+                        hand.state = { type: 'back', moved: true };
+                    }
                     yield* S.wait(0.5)();
 
-                    let WAIT_TIME = 1;
-                    let MOVE_TIME = 1;
-
                     if (lastMove.action === 'play') {
-                        let card = hand.cards.shift();
-                        hand.state = { type: 'back', moved: false };
+                        let card: Card;
+                        if (Main.gamestate.state === 'DISCARD_MOVE') {
+                            card = Main.scene.discardHand.cards.pop();
+                        } else {
+                            card = hand.cards.shift();
+                            hand.state = { type: 'back', moved: false };
+                        }
                         card.destroy();
                         card.create(lastMove.card, gamestate.cards[lastMove.card], false);
 
                         card.state = { type: 'full', justPlayed: false };
-                        yield* S.doOverTime(WAIT_TIME, t => { card.update() })();
+                        yield* S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, t => { card.update() })();
 
                         card.state = { type: 'effect', justPlayed: false };
                         card.zIndex = C.Z_INDEX_CARD_PLAYED;
                         let playedPoint = Main.scene.wonders[i].getNewCardEffectWorldPosition(card);
-                        yield* S.doOverTime(MOVE_TIME, t => {
+                        yield* S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, t => {
                             card.targetPosition.x = lerp(card.targetPosition.x, playedPoint.x, t**2);
                             card.targetPosition.y = lerp(card.targetPosition.y, playedPoint.y, t**2);
                             card.scale = lerp(card.scale, 1, t**2);
@@ -68,12 +72,12 @@ namespace GameStateDiffer {
                         hand.state = { type: 'back', moved: false };
 
                         card.checkMarkVisible = false;
-                        yield* S.doOverTime(WAIT_TIME, t => { card.update() })();
+                        yield* S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, t => { card.update() })();
 
                         card.state = { type: 'flipped', justPlayed: false };
                         card.zIndex = C.Z_INDEX_CARD_WONDER;
                         let wonderPoint = Main.scene.wonders[i].getCardPositionForStage(lastMove.stage);
-                        yield* S.doOverTime(MOVE_TIME, t => {
+                        yield* S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, t => {
                             card.targetPosition.x = lerp(card.targetPosition.x, wonderPoint.x, t**2);
                             card.targetPosition.y = lerp(card.targetPosition.y, wonderPoint.y, t**2);
                             card.scale = lerp(card.scale, 1, t**2);
@@ -85,10 +89,10 @@ namespace GameStateDiffer {
                         hand.state = { type: 'back', moved: false };
 
                         card.checkMarkVisible = false;
-                        yield* S.doOverTime(WAIT_TIME, t => { card.update() })();
+                        yield* S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, t => { card.update() })();
 
                         let discardPoint = Main.scene.discardPile.getDiscardLockPoint();
-                        yield* S.doOverTime(MOVE_TIME, t => {
+                        yield* S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, t => {
                             card.targetPosition.x = lerp(card.targetPosition.x, discardPoint.x, t**2);
                             card.targetPosition.y = lerp(card.targetPosition.y, discardPoint.y, t**2);
                             card.scale = lerp(card.scale, 1, t**2);
@@ -284,7 +288,7 @@ namespace GameStateDiffer {
         result.scripts.push(function*() {
             if (!oldMove && newMove) {
                 Main.scene.wonders[playeri].makeMove();
-                Main.scene.hands[playeri].makeMove();
+                if (Main.gamestate.state !== 'DISCARD_MOVE') Main.scene.hands[playeri].makeMove();
             } else {
                 Main.scene.wonders[playeri].undoMove();
                 Main.scene.hands[playeri].undoMove();

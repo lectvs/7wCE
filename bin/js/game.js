@@ -1550,6 +1550,8 @@ var C = /** @class */ (function () {
     C.Z_INDEX_CARD_MOVING = 12;
     C.Z_INDEX_CARD_DRAGGING = 100;
     C.Z_INDEX_PAYMENT_DIALOG = 1000;
+    C.ANIMATION_TURN_REVEAL_TIME = 1;
+    C.ANIMATION_TURN_PLAY_TIME = 1;
     C.ERROR_BG_COLOR = '#FF0000';
     C.OK_BG_COLOR = '#FFFFFF';
     C.ERROR_TEXT_COLOR = '#FFFFFF';
@@ -1806,7 +1808,7 @@ var GameStateDiffer;
                     case 0:
                         moveScripts = gamestate.players.map(function (player) {
                             return function () {
-                                var i, hand, lastMove, WAIT_TIME, MOVE_TIME, card_1, playedPoint_1, card_2, wonderPoint_1, card_3, discardPoint_1;
+                                var i, hand, lastMove, card_1, playedPoint_1, card_2, wonderPoint_1, card_3, discardPoint_1;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
                                         case 0:
@@ -1819,25 +1821,30 @@ var GameStateDiffer;
                                             }
                                             if (!lastMove)
                                                 return [2 /*return*/];
-                                            hand.state = { type: 'back', moved: true };
+                                            if (Main.gamestate.state !== 'DISCARD_MOVE') {
+                                                hand.state = { type: 'back', moved: true };
+                                            }
                                             return [5 /*yield**/, __values(S.wait(0.5)())];
                                         case 1:
                                             _a.sent();
-                                            WAIT_TIME = 1;
-                                            MOVE_TIME = 1;
                                             if (!(lastMove.action === 'play')) return [3 /*break*/, 4];
-                                            card_1 = hand.cards.shift();
-                                            hand.state = { type: 'back', moved: false };
+                                            if (Main.gamestate.state === 'DISCARD_MOVE') {
+                                                card_1 = Main.scene.discardHand.cards.pop();
+                                            }
+                                            else {
+                                                card_1 = hand.cards.shift();
+                                                hand.state = { type: 'back', moved: false };
+                                            }
                                             card_1.destroy();
                                             card_1.create(lastMove.card, gamestate.cards[lastMove.card], false);
                                             card_1.state = { type: 'full', justPlayed: false };
-                                            return [5 /*yield**/, __values(S.doOverTime(WAIT_TIME, function (t) { card_1.update(); })())];
+                                            return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, function (t) { card_1.update(); })())];
                                         case 2:
                                             _a.sent();
                                             card_1.state = { type: 'effect', justPlayed: false };
                                             card_1.zIndex = C.Z_INDEX_CARD_PLAYED;
                                             playedPoint_1 = Main.scene.wonders[i].getNewCardEffectWorldPosition(card_1);
-                                            return [5 /*yield**/, __values(S.doOverTime(MOVE_TIME, function (t) {
+                                            return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, function (t) {
                                                     card_1.targetPosition.x = lerp(card_1.targetPosition.x, playedPoint_1.x, Math.pow(t, 2));
                                                     card_1.targetPosition.y = lerp(card_1.targetPosition.y, playedPoint_1.y, Math.pow(t, 2));
                                                     card_1.scale = lerp(card_1.scale, 1, Math.pow(t, 2));
@@ -1852,13 +1859,13 @@ var GameStateDiffer;
                                             card_2 = hand.cards.shift();
                                             hand.state = { type: 'back', moved: false };
                                             card_2.checkMarkVisible = false;
-                                            return [5 /*yield**/, __values(S.doOverTime(WAIT_TIME, function (t) { card_2.update(); })())];
+                                            return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, function (t) { card_2.update(); })())];
                                         case 5:
                                             _a.sent();
                                             card_2.state = { type: 'flipped', justPlayed: false };
                                             card_2.zIndex = C.Z_INDEX_CARD_WONDER;
                                             wonderPoint_1 = Main.scene.wonders[i].getCardPositionForStage(lastMove.stage);
-                                            return [5 /*yield**/, __values(S.doOverTime(MOVE_TIME, function (t) {
+                                            return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, function (t) {
                                                     card_2.targetPosition.x = lerp(card_2.targetPosition.x, wonderPoint_1.x, Math.pow(t, 2));
                                                     card_2.targetPosition.y = lerp(card_2.targetPosition.y, wonderPoint_1.y, Math.pow(t, 2));
                                                     card_2.scale = lerp(card_2.scale, 1, Math.pow(t, 2));
@@ -1873,11 +1880,11 @@ var GameStateDiffer;
                                             card_3 = hand.cards.shift();
                                             hand.state = { type: 'back', moved: false };
                                             card_3.checkMarkVisible = false;
-                                            return [5 /*yield**/, __values(S.doOverTime(WAIT_TIME, function (t) { card_3.update(); })())];
+                                            return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, function (t) { card_3.update(); })())];
                                         case 8:
                                             _a.sent();
                                             discardPoint_1 = Main.scene.discardPile.getDiscardLockPoint();
-                                            return [5 /*yield**/, __values(S.doOverTime(MOVE_TIME, function (t) {
+                                            return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, function (t) {
                                                     card_3.targetPosition.x = lerp(card_3.targetPosition.x, discardPoint_1.x, Math.pow(t, 2));
                                                     card_3.targetPosition.y = lerp(card_3.targetPosition.y, discardPoint_1.y, Math.pow(t, 2));
                                                     card_3.scale = lerp(card_3.scale, 1, Math.pow(t, 2));
@@ -2098,7 +2105,8 @@ var GameStateDiffer;
             return __generator(this, function (_a) {
                 if (!oldMove && newMove) {
                     Main.scene.wonders[playeri].makeMove();
-                    Main.scene.hands[playeri].makeMove();
+                    if (Main.gamestate.state !== 'DISCARD_MOVE')
+                        Main.scene.hands[playeri].makeMove();
                 }
                 else {
                     Main.scene.wonders[playeri].undoMove();

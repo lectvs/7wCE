@@ -9,6 +9,9 @@ class C {
     public static readonly Z_INDEX_CARD_DRAGGING = 100;
     public static readonly Z_INDEX_PAYMENT_DIALOG = 1000;
 
+    public static readonly ANIMATION_TURN_REVEAL_TIME = 1;
+    public static readonly ANIMATION_TURN_PLAY_TIME = 1;
+
     public static readonly ERROR_BG_COLOR = '#FF0000';
     public static readonly OK_BG_COLOR = '#FFFFFF';
     public static readonly ERROR_TEXT_COLOR = '#FFFFFF';
