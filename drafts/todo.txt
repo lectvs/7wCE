@@ -1,4 +1,4 @@
 todo
-- remove 'effect'/'flipped' snap?
+- animate play for others' play from discard
 - animations
 - hover-infos

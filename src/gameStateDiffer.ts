@@ -50,10 +50,10 @@ namespace GameStateDiffer {
                         card.destroy();
                         card.create(lastMove.card, gamestate.cards[lastMove.card], false);
 
-                        card.state = { type: 'full', snap: false, justPlayed: false };
+                        card.state = { type: 'full', justPlayed: false };
                         yield* S.doOverTime(WAIT_TIME, t => { card.update() })();
 
-                        card.state = { type: 'effect', snap: false, justPlayed: false };
+                        card.state = { type: 'effect', justPlayed: false };
                         card.zIndex = C.Z_INDEX_CARD_PLAYED;
                         let playedPoint = Main.scene.wonders[i].getNewCardEffectWorldPosition(card);
                         yield* S.doOverTime(MOVE_TIME, t => {
@@ -70,7 +70,7 @@ namespace GameStateDiffer {
                         card.checkMarkVisible = false;
                         yield* S.doOverTime(WAIT_TIME, t => { card.update() })();
 
-                        card.state = { type: 'flipped', snap: false, justPlayed: false };
+                        card.state = { type: 'flipped', justPlayed: false };
                         card.zIndex = C.Z_INDEX_CARD_WONDER;
                         let wonderPoint = Main.scene.wonders[i].getCardPositionForStage(lastMove.stage);
                         yield* S.doOverTime(MOVE_TIME, t => {

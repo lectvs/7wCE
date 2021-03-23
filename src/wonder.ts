@@ -124,7 +124,8 @@ class Wonder extends GameElement {
     addNewCardEffect(card: Card) {
         let playerData = Main.gamestate.playerData[this.player];
         let justPlayed = (Main.gamestate.state !== 'GAME_COMPLETE' && playerData.lastMove && playerData.lastMove.action === 'play' && playerData.lastMove.card === card.apiCardId);
-        card.state = { type: 'effect', snap: true, justPlayed: justPlayed };
+        card.state = { type: 'effect', justPlayed: justPlayed };
+        card.snap();
         let color = card.apiCard.color;
 
         if (this.playedCardEffectRolls[color].canAddCard(card, this.getCardEffectRollMaxWidth(color))) {

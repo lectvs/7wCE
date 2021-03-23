@@ -1336,22 +1336,14 @@ var Card = /** @class */ (function (_super) {
         else if (this.state.type === 'full') {
             this.interactable = false;
             this.visualState = 'full';
-            if (this.state.snap)
-                this.effectT = 0;
-            if (this.state.snap)
-                this.flippedT = 0;
         }
         else if (this.state.type === 'effect') {
             this.interactable = false;
             this.visualState = 'effect';
-            if (this.state.snap)
-                this.effectT = 1;
         }
         else if (this.state.type === 'flipped') {
             this.interactable = false;
             this.visualState = 'flipped';
-            if (this.state.snap)
-                this.flippedT = 1;
         }
         else if (this.state.type === 'in_hand_moving') {
             this.zIndex = C.Z_INDEX_CARD_MOVING;
@@ -1540,8 +1532,8 @@ var Card = /** @class */ (function (_super) {
     };
     Card.flippedCardForAge = function (age, justPlayed) {
         var card = new Card(-1, { age: age, name: '', color: 'brown', effects: [] }, undefined, undefined, []);
-        card.state = { type: 'flipped', snap: true, justPlayed: justPlayed };
-        card.update();
+        card.state = { type: 'flipped', justPlayed: justPlayed };
+        card.snap();
         return card;
     };
     return Card;
@@ -1838,11 +1830,11 @@ var GameStateDiffer;
                                             hand.state = { type: 'back', moved: false };
                                             card_1.destroy();
                                             card_1.create(lastMove.card, gamestate.cards[lastMove.card], false);
-                                            card_1.state = { type: 'full', snap: false, justPlayed: false };
+                                            card_1.state = { type: 'full', justPlayed: false };
                                             return [5 /*yield**/, __values(S.doOverTime(WAIT_TIME, function (t) { card_1.update(); })())];
                                         case 2:
                                             _a.sent();
-                                            card_1.state = { type: 'effect', snap: false, justPlayed: false };
+                                            card_1.state = { type: 'effect', justPlayed: false };
                                             card_1.zIndex = C.Z_INDEX_CARD_PLAYED;
                                             playedPoint_1 = Main.scene.wonders[i].getNewCardEffectWorldPosition(card_1);
                                             return [5 /*yield**/, __values(S.doOverTime(MOVE_TIME, function (t) {
@@ -1863,7 +1855,7 @@ var GameStateDiffer;
                                             return [5 /*yield**/, __values(S.doOverTime(WAIT_TIME, function (t) { card_2.update(); })())];
                                         case 5:
                                             _a.sent();
-                                            card_2.state = { type: 'flipped', snap: false, justPlayed: false };
+                                            card_2.state = { type: 'flipped', justPlayed: false };
                                             card_2.zIndex = C.Z_INDEX_CARD_WONDER;
                                             wonderPoint_1 = Main.scene.wonders[i].getCardPositionForStage(lastMove.stage);
                                             return [5 /*yield**/, __values(S.doOverTime(MOVE_TIME, function (t) {
@@ -3151,7 +3143,8 @@ var Wonder = /** @class */ (function (_super) {
     Wonder.prototype.addNewCardEffect = function (card) {
         var playerData = Main.gamestate.playerData[this.player];
         var justPlayed = (Main.gamestate.state !== 'GAME_COMPLETE' && playerData.lastMove && playerData.lastMove.action === 'play' && playerData.lastMove.card === card.apiCardId);
-        card.state = { type: 'effect', snap: true, justPlayed: justPlayed };
+        card.state = { type: 'effect', justPlayed: justPlayed };
+        card.snap();
         var color = card.apiCard.color;
         if (this.playedCardEffectRolls[color].canAddCard(card, this.getCardEffectRollMaxWidth(color))) {
             this.playedCardEffectRolls[color].addCard(card);

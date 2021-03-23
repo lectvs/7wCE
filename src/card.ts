@@ -7,7 +7,7 @@ type CardState = { type: 'in_hand', visualState: CardVisualState }
                | { type: 'dragging_normal' | 'dragging_play' | 'dragging_wonder' | 'dragging_throw' }
                | { type: 'locked_play' | 'locked_throw' }
                | { type: 'locked_wonder', stage: number }
-               | { type: 'full' | 'effect' | 'flipped', snap: boolean, justPlayed: boolean };
+               | { type: 'full' | 'effect' | 'flipped', justPlayed: boolean };
 
 type DraggingData = {
     offsetx: number;
@@ -238,16 +238,12 @@ class Card extends GameElement {
         } else if (this.state.type === 'full') {
             this.interactable = false;
             this.visualState = 'full';
-            if (this.state.snap) this.effectT = 0;
-            if (this.state.snap) this.flippedT = 0;
         } else if (this.state.type === 'effect') {
             this.interactable = false;
             this.visualState = 'effect';
-            if (this.state.snap) this.effectT = 1;
         } else if (this.state.type === 'flipped') {
             this.interactable = false;
             this.visualState = 'flipped';
-            if (this.state.snap) this.flippedT = 1;
         } else if (this.state.type === 'in_hand_moving') {
             this.zIndex = C.Z_INDEX_CARD_MOVING;
             this.interactable = false;
@@ -447,8 +443,8 @@ class Card extends GameElement {
 
     static flippedCardForAge(age: number, justPlayed: boolean) {
         let card = new Card(-1, { age: age, name: '', color: 'brown', effects: [] }, undefined, undefined, []);
-        card.state = { type: 'flipped', snap: true, justPlayed: justPlayed };
-        card.update();
+        card.state = { type: 'flipped', justPlayed: justPlayed };
+        card.snap();
         return card;
     }
 }
