@@ -27,6 +27,7 @@ namespace API {
         lastMove?: Move;
         currentMove?: Move;
         pointsDistribution: PointsDistribution;
+        totalShields: number;
     }
 
     export type StageBuilt = {
@@ -199,6 +200,7 @@ namespace API {
         return options;
     }
 
+    /* API METHODS */
     export function getgamestate(gameid: string, player: string, callback: (gamestate: GameState, error: string) => any) {
         httpRequest(`${LAMBDA_URL}?operation=getgamestate&gameid=${gameid}&player=${player}`, (responseJson: any, error: string) => {
             if (error) {

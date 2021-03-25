@@ -58,9 +58,8 @@ class EndScreen {
     }
 
     destroy() {
-        let game = document.getElementById('game');
-        while (game.firstChild) {
-            game.removeChild(game.firstChild);
+        while (Main.game.firstChild) {
+            Main.game.removeChild(Main.game.firstChild);
         }
     }
 

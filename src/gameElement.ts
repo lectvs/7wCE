@@ -1,5 +1,4 @@
 class GameElement {
-    game: HTMLElement;
     div: HTMLDivElement;
 
     get x() {
@@ -44,8 +43,14 @@ class GameElement {
         this.div.style.visibility = value ? 'visible' : 'hidden';
     }
 
+    private _alpha: number = 1;
+    get alpha() { return this._alpha; }
+    set alpha(value: number) {
+        this._alpha = value;
+        this.div.style.opacity = `${this._alpha}`;
+    }
+
     constructor() {
-        this.game = document.getElementById('game');
         this.div = document.createElement('div');
         this.div.style.position = 'absolute';
         this.setTransform();

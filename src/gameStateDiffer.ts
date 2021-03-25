@@ -132,7 +132,9 @@ namespace GameStateDiffer {
                 yield* S.wait(0.2)();
             }
 
-            if (gamestate.state === 'LAST_CARD_MOVE') {
+            let isEndOfAge = gamestate.state === 'GAME_COMPLETE' || gamestate.age !== Main.gamestate.age || gamestate.hand.length < 2;
+
+            if (isEndOfAge) {
                 // Discard all non-last-players cards
                 let currentHandPositions = Main.scene.hands.map(hand => hand.getPositionPixels());
                 let targetHandPosition = Main.scene.discardPile.getDiscardLockPoint();
@@ -151,8 +153,10 @@ namespace GameStateDiffer {
                 })();
 
                 yield* S.wait(0.5)();
-            } else if (Main.gamestate.state === 'LAST_CARD_MOVE') {
-                // Last card -> end of age... nothing?
+            }
+
+            if (gamestate.state === 'LAST_CARD_MOVE') {
+                // Nothing
             } else if (gamestate.state === 'DISCARD_MOVE') {
                 if (gamestate.discardMoveQueue[0] === Main.player) {
                     // Replace hand with discard pile
@@ -182,6 +186,73 @@ namespace GameStateDiffer {
                     yield* S.wait(0.4)();
                     Main.scene.discardHand.snap();
                 }
+            } else if (isEndOfAge) {
+                // End of age
+                // Military conflicts
+                let p = gamestate.players.indexOf(Main.player);
+                let l = mod(p-1, gamestate.players.length);
+                let r = mod(p+1, gamestate.players.length);
+
+                let pshields = gamestate.playerData[gamestate.players[p]].totalShields;
+                let lshields = gamestate.playerData[gamestate.players[l]].totalShields;
+                let rshields = gamestate.playerData[gamestate.players[r]].totalShields;
+
+                // Diff left
+                Main.scene.militaryOverlays[p].setShieldDiff(pshields - lshields);
+                Main.scene.militaryOverlays[l].setShieldDiff(lshields - pshields);
+                Main.scene.militaryOverlays[p].setShields(gamestate.playerData[gamestate.players[p]].totalShields);
+                Main.scene.militaryOverlays[l].setShields(gamestate.playerData[gamestate.players[l]].totalShields);
+                yield* S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, t => {
+                    Main.scene.militaryOverlays[p].alpha = t;
+                    Main.scene.militaryOverlays[l].alpha = t;
+                })();
+                yield* S.wait(C.ANIMATION_MILITARY_WAIT_TIME)();
+                yield* S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, t => {
+                    Main.scene.militaryOverlays[p].alpha = 1-t;
+                    Main.scene.militaryOverlays[l].alpha = 1-t;
+                })();
+
+                // Diff right
+                Main.scene.militaryOverlays[p].setShieldDiff(pshields - rshields);
+                Main.scene.militaryOverlays[r].setShieldDiff(rshields - pshields);
+                Main.scene.militaryOverlays[p].setShields(gamestate.playerData[gamestate.players[p]].totalShields);
+                Main.scene.militaryOverlays[r].setShields(gamestate.playerData[gamestate.players[r]].totalShields);
+                yield* S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, t => {
+                    Main.scene.militaryOverlays[p].alpha = t;
+                    Main.scene.militaryOverlays[r].alpha = t;
+                })();
+                yield* S.wait(C.ANIMATION_MILITARY_WAIT_TIME)();
+                yield* S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, t => {
+                    Main.scene.militaryOverlays[p].alpha = 1-t;
+                    Main.scene.militaryOverlays[r].alpha = 1-t;
+                })();
+
+                // Distribute tokens
+                let militaryTokenDistributionScripts = gamestate.players.map(player => {
+                    let pi = gamestate.players.indexOf(player);
+                    let newTokenIndices: number[] = [];
+                    for (let i = Main.gamestate.playerData[player].militaryTokens.length; i < gamestate.playerData[player].militaryTokens.length; i++) {
+                        newTokenIndices.push(i);
+                    }
+                    return S.simul(...newTokenIndices.map(i => function*() {
+                        let token = new MilitaryToken(gamestate.playerData[player].militaryTokens[i]);
+                        token.x = Main.scene.discardPile.x;
+                        token.y = Main.scene.discardPile.y;
+                        token.addToGame();
+                        let targetPosition = Main.scene.wonders[pi].getMilitaryTokenWorldPosition(i);
+                        let lerpt = 0;
+                        yield* S.doOverTime(C.ANIMATION_TOKEN_DISTRIBUTE_TIME, t => {
+                            lerpt = lerp(lerpt, 1, t**2);
+                            token.x = lerp(Main.scene.discardPile.x, targetPosition.x, lerpt);
+                            token.y = lerp(Main.scene.discardPile.y, targetPosition.y, lerpt);
+                        })();
+                    }));
+                });
+
+                yield* S.simul(...militaryTokenDistributionScripts)();
+                yield* S.wait(0.5)();
+
+                // Deal new cards
             } else {  
                 // Rotate all cards  
                 let currentHandPositions = Main.scene.hands.map(hand => hand.getPositionPixels());

@@ -76,7 +76,7 @@ var GameElement = /** @class */ (function () {
         this._scale = 1;
         this._zIndex = 0;
         this._visible = true;
-        this.game = document.getElementById('game');
+        this._alpha = 1;
         this.div = document.createElement('div');
         this.div.style.position = 'absolute';
         this.setTransform();
@@ -136,6 +136,15 @@ var GameElement = /** @class */ (function () {
         set: function (value) {
             this._visible = value;
             this.div.style.visibility = value ? 'visible' : 'hidden';
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(GameElement.prototype, "alpha", {
+        get: function () { return this._alpha; },
+        set: function (value) {
+            this._alpha = value;
+            this.div.style.opacity = "" + this._alpha;
         },
         enumerable: false,
         configurable: true
@@ -344,6 +353,7 @@ var API;
         return options;
     }
     API.minimalPaymentOptions = minimalPaymentOptions;
+    /* API METHODS */
     function getgamestate(gameid, player, callback) {
         httpRequest(LAMBDA_URL + "?operation=getgamestate&gameid=" + gameid + "&player=" + player, function (responseJson, error) {
             if (error) {
@@ -1567,9 +1577,14 @@ var C = /** @class */ (function () {
     C.Z_INDEX_CARD_PLAYED = 11;
     C.Z_INDEX_CARD_MOVING = 12;
     C.Z_INDEX_CARD_DRAGGING = 100;
+    C.Z_INDEX_MILITARY_OVERLAY = 101;
+    C.Z_INDEX_MILITARY_TOKEN = 102;
     C.Z_INDEX_PAYMENT_DIALOG = 1000;
     C.ANIMATION_TURN_REVEAL_TIME = 1;
     C.ANIMATION_TURN_PLAY_TIME = 1;
+    C.ANIMATION_MILITARY_FADE_TIME = 0.5;
+    C.ANIMATION_MILITARY_WAIT_TIME = 1;
+    C.ANIMATION_TOKEN_DISTRIBUTE_TIME = 1;
     C.ERROR_BG_COLOR = '#FF0000';
     C.OK_BG_COLOR = '#FFFFFF';
     C.ERROR_TEXT_COLOR = '#FFFFFF';
@@ -1645,19 +1660,32 @@ var C = /** @class */ (function () {
     C.WONDER_SIDEBAR_WIDTH = 600;
     C.WONDER_SIDEBAR_NAME_X = -18;
     C.WONDER_SIDEBAR_NAME_Y = 25;
+    C.WONDER_SIDEBAR_NAME_SIZE = 20;
+    C.WONDER_SIDEBAR_GOLD_COIN_SCALE = 0.2;
     C.WONDER_SIDEBAR_GOLD_COIN_X = -28;
     C.WONDER_SIDEBAR_GOLD_COIN_Y = 55;
     C.WONDER_SIDEBAR_GOLD_TEXT_X = -43;
     C.WONDER_SIDEBAR_GOLD_TEXT_Y = 55;
-    C.WONDER_SIDEBAR_POINTS_COIN_X = -88;
-    C.WONDER_SIDEBAR_POINTS_COIN_Y = 55;
+    C.WONDER_SIDEBAR_GOLD_TEXT_SIZE = 20;
+    C.WONDER_SIDEBAR_POINTS_WREATH_SCALE = 0.2;
+    C.WONDER_SIDEBAR_POINTS_WREATH_X = -88;
+    C.WONDER_SIDEBAR_POINTS_WREATH_Y = 55;
     C.WONDER_SIDEBAR_POINTS_TEXT_X = -103;
     C.WONDER_SIDEBAR_POINTS_TEXT_Y = 55;
+    C.WONDER_SIDEBAR_POINTS_TEXT_SIZE = 20;
+    C.WONDER_SIDEBAR_CHECKMARK_SCALE = 0.2;
     C.WONDER_SIDEBAR_CHECKMARK_X = -145;
     C.WONDER_SIDEBAR_CHECKMARK_Y = 52;
     C.WONDER_SIDEBAR_TOKENS_X = -28;
     C.WONDER_SIDEBAR_TOKENS_DX = -24;
     C.WONDER_SIDEBAR_TOKENS_Y = 85;
+    C.WONDER_OVERLAY_COLOR_NEUTRAL = 0xFFFFFF;
+    C.WONDER_OVERLAY_COLOR_VICTORY = 0x80FF80;
+    C.WONDER_OVERLAY_COLOR_DEFEAT = 0xFF8080;
+    C.WONDER_OVERLAY_ALPHA = 0.7;
+    C.WONDER_OVERLAY_TEXT_SIZE = 100;
+    C.WONDER_OVERLAY_TEXT_COLOR = '#FF0000';
+    C.TOKEN_SCALE = 0.2;
     C.DISCARD_PILE_AREA_WIDTH = 250;
     C.DISCARD_PILE_AREA_HEIGHT = 300;
     C.DISCARD_PILE_AREA_CORNER_RADIUS = 10;
@@ -1761,9 +1789,8 @@ var EndScreen = /** @class */ (function () {
         }
     };
     EndScreen.prototype.destroy = function () {
-        var game = document.getElementById('game');
-        while (game.firstChild) {
-            game.removeChild(game.firstChild);
+        while (Main.game.firstChild) {
+            Main.game.removeChild(Main.game.firstChild);
         }
     };
     EndScreen.prototype.scoreArt = function (pixiArt, xs, ys) {
@@ -1820,7 +1847,7 @@ var GameStateDiffer;
             return;
         }
         result.scripts.push(function () {
-            var moveScripts, handPosition_1, targetHandPosition_1, discardHandPosition_1, targetDiscardHandPosition_1, lerpt_1, currentHandPositions_1, targetHandPosition_2, lerpt_2, handPosition_2, targetHandPosition_3, discardHandPosition_2, lerpt_3, currentHandPositions_2, targetHandPositions_1, newHandi_1, lerpt_4;
+            var moveScripts, handPosition_1, targetHandPosition_1, discardHandPosition_1, targetDiscardHandPosition_1, lerpt_1, isEndOfAge, currentHandPositions_1, targetHandPosition_2, lerpt_2, handPosition_2, targetHandPosition_3, discardHandPosition_2, lerpt_3, p_1, l_1, r_1, pshields, lshields, rshields, militaryTokenDistributionScripts, currentHandPositions_2, targetHandPositions_1, newHandi_1, lerpt_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -1947,7 +1974,8 @@ var GameStateDiffer;
                         _a.sent();
                         _a.label = 5;
                     case 5:
-                        if (!(gamestate.state === 'LAST_CARD_MOVE')) return [3 /*break*/, 8];
+                        isEndOfAge = gamestate.state === 'GAME_COMPLETE' || gamestate.age !== Main.gamestate.age || gamestate.hand.length < 2;
+                        if (!isEndOfAge) return [3 /*break*/, 8];
                         currentHandPositions_1 = Main.scene.hands.map(function (hand) { return hand.getPositionPixels(); });
                         targetHandPosition_2 = Main.scene.discardPile.getDiscardLockPoint();
                         lerpt_2 = 0;
@@ -1967,10 +1995,10 @@ var GameStateDiffer;
                         return [5 /*yield**/, __values(S.wait(0.5)())];
                     case 7:
                         _a.sent();
-                        return [3 /*break*/, 19];
+                        _a.label = 8;
                     case 8:
-                        if (!(Main.gamestate.state === 'LAST_CARD_MOVE')) return [3 /*break*/, 9];
-                        return [3 /*break*/, 19];
+                        if (!(gamestate.state === 'LAST_CARD_MOVE')) return [3 /*break*/, 9];
+                        return [3 /*break*/, 28];
                     case 9:
                         if (!(gamestate.state === 'DISCARD_MOVE')) return [3 /*break*/, 14];
                         if (!(gamestate.discardMoveQueue[0] === Main.player)) return [3 /*break*/, 13];
@@ -2002,8 +2030,92 @@ var GameStateDiffer;
                         _a.sent();
                         Main.scene.discardHand.snap();
                         _a.label = 13;
-                    case 13: return [3 /*break*/, 19];
+                    case 13: return [3 /*break*/, 28];
                     case 14:
+                        if (!isEndOfAge) return [3 /*break*/, 23];
+                        p_1 = gamestate.players.indexOf(Main.player);
+                        l_1 = mod(p_1 - 1, gamestate.players.length);
+                        r_1 = mod(p_1 + 1, gamestate.players.length);
+                        pshields = gamestate.playerData[gamestate.players[p_1]].totalShields;
+                        lshields = gamestate.playerData[gamestate.players[l_1]].totalShields;
+                        rshields = gamestate.playerData[gamestate.players[r_1]].totalShields;
+                        // Diff left
+                        Main.scene.militaryOverlays[p_1].setShieldDiff(pshields - lshields);
+                        Main.scene.militaryOverlays[l_1].setShieldDiff(lshields - pshields);
+                        Main.scene.militaryOverlays[p_1].setShields(gamestate.playerData[gamestate.players[p_1]].totalShields);
+                        Main.scene.militaryOverlays[l_1].setShields(gamestate.playerData[gamestate.players[l_1]].totalShields);
+                        return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, function (t) {
+                                Main.scene.militaryOverlays[p_1].alpha = t;
+                                Main.scene.militaryOverlays[l_1].alpha = t;
+                            })())];
+                    case 15:
+                        _a.sent();
+                        return [5 /*yield**/, __values(S.wait(C.ANIMATION_MILITARY_WAIT_TIME)())];
+                    case 16:
+                        _a.sent();
+                        return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, function (t) {
+                                Main.scene.militaryOverlays[p_1].alpha = 1 - t;
+                                Main.scene.militaryOverlays[l_1].alpha = 1 - t;
+                            })())];
+                    case 17:
+                        _a.sent();
+                        // Diff right
+                        Main.scene.militaryOverlays[p_1].setShieldDiff(pshields - rshields);
+                        Main.scene.militaryOverlays[r_1].setShieldDiff(rshields - pshields);
+                        Main.scene.militaryOverlays[p_1].setShields(gamestate.playerData[gamestate.players[p_1]].totalShields);
+                        Main.scene.militaryOverlays[r_1].setShields(gamestate.playerData[gamestate.players[r_1]].totalShields);
+                        return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, function (t) {
+                                Main.scene.militaryOverlays[p_1].alpha = t;
+                                Main.scene.militaryOverlays[r_1].alpha = t;
+                            })())];
+                    case 18:
+                        _a.sent();
+                        return [5 /*yield**/, __values(S.wait(C.ANIMATION_MILITARY_WAIT_TIME)())];
+                    case 19:
+                        _a.sent();
+                        return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, function (t) {
+                                Main.scene.militaryOverlays[p_1].alpha = 1 - t;
+                                Main.scene.militaryOverlays[r_1].alpha = 1 - t;
+                            })())];
+                    case 20:
+                        _a.sent();
+                        militaryTokenDistributionScripts = gamestate.players.map(function (player) {
+                            var pi = gamestate.players.indexOf(player);
+                            var newTokenIndices = [];
+                            for (var i = Main.gamestate.playerData[player].militaryTokens.length; i < gamestate.playerData[player].militaryTokens.length; i++) {
+                                newTokenIndices.push(i);
+                            }
+                            return S.simul.apply(S, __spread(newTokenIndices.map(function (i) { return function () {
+                                var token, targetPosition, lerpt;
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0:
+                                            token = new MilitaryToken(gamestate.playerData[player].militaryTokens[i]);
+                                            token.x = Main.scene.discardPile.x;
+                                            token.y = Main.scene.discardPile.y;
+                                            token.addToGame();
+                                            targetPosition = Main.scene.wonders[pi].getMilitaryTokenWorldPosition(i);
+                                            lerpt = 0;
+                                            return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TOKEN_DISTRIBUTE_TIME, function (t) {
+                                                    lerpt = lerp(lerpt, 1, Math.pow(t, 2));
+                                                    token.x = lerp(Main.scene.discardPile.x, targetPosition.x, lerpt);
+                                                    token.y = lerp(Main.scene.discardPile.y, targetPosition.y, lerpt);
+                                                })())];
+                                        case 1:
+                                            _a.sent();
+                                            return [2 /*return*/];
+                                    }
+                                });
+                            }; })));
+                        });
+                        return [5 /*yield**/, __values(S.simul.apply(S, __spread(militaryTokenDistributionScripts))())];
+                    case 21:
+                        _a.sent();
+                        return [5 /*yield**/, __values(S.wait(0.5)())];
+                    case 22:
+                        _a.sent();
+                        return [3 /*break*/, 28];
+                    case 23:
                         currentHandPositions_2 = Main.scene.hands.map(function (hand) { return hand.getPositionPixels(); });
                         targetHandPositions_1 = __spread(currentHandPositions_2);
                         if (Main.gamestate.age % 2 === 0) {
@@ -2016,7 +2128,7 @@ var GameStateDiffer;
                         }
                         Main.scene.hand.state = { type: 'moving' };
                         return [5 /*yield**/, __values(S.wait(0.5)())];
-                    case 15:
+                    case 24:
                         _a.sent();
                         lerpt_4 = 0;
                         return [5 /*yield**/, __values(S.doOverTime(0.3, function (t) {
@@ -2032,21 +2144,21 @@ var GameStateDiffer;
                                     }
                                 }
                             })())];
-                    case 16:
+                    case 25:
                         _a.sent();
                         return [5 /*yield**/, __values(S.wait(0.2)())];
-                    case 17:
+                    case 26:
                         _a.sent();
                         Main.scene.hands[newHandi_1].destroy();
                         Main.scene.hands[newHandi_1].createWithData({ type: 'normal', cardIds: gamestate.hand, activeWonder: Main.scene.hand.activeWonder, validMoves: gamestate.validMoves });
                         Main.scene.hands[newHandi_1].snap();
                         Main.scene.hands[newHandi_1].state = { type: 'normal' };
                         return [5 /*yield**/, __values(S.wait(0.5)())];
-                    case 18:
+                    case 27:
                         _a.sent();
                         Main.scene.hands[newHandi_1].snap();
-                        _a.label = 19;
-                    case 19: return [2 /*return*/];
+                        _a.label = 28;
+                    case 28: return [2 /*return*/];
                 }
             });
         });
@@ -2361,9 +2473,9 @@ var Main = /** @class */ (function () {
         window.addEventListener('mousedown', function () { return _this.mouseDown = true; });
         window.addEventListener('mouseup', function () { return _this.mouseDown = false; });
         this.mouseDown = false;
-        var game = document.getElementById('game');
-        this.gameWidth = game.clientWidth;
-        this.gameHeight = game.clientHeight;
+        this.game = document.getElementById('game');
+        this.gameWidth = this.game.clientWidth;
+        this.gameHeight = this.game.clientHeight;
         this.moveImmuneTime = 0;
         this.scriptManager = new ScriptManager();
         var params = new URLSearchParams(window.location.search);
@@ -2399,9 +2511,8 @@ var Main = /** @class */ (function () {
         document.getElementById('endscreen').style.display = 'block';
     };
     Main.update = function () {
-        var game = document.getElementById('game');
-        this.gameWidth = game.clientWidth;
-        this.gameHeight = game.clientHeight;
+        this.gameWidth = this.game.clientWidth;
+        this.gameHeight = this.game.clientHeight;
         this.moveImmuneTime = clamp(this.moveImmuneTime - Main.delta, 0, Infinity);
         if (this.scene)
             this.scene.update();
@@ -2573,6 +2684,70 @@ var Main = /** @class */ (function () {
     Main.delta = 0;
     return Main;
 }());
+var MilitaryOverlay = /** @class */ (function (_super) {
+    __extends(MilitaryOverlay, _super);
+    function MilitaryOverlay() {
+        var _this = _super.call(this) || this;
+        _this.div.appendChild(_this.draw());
+        _this.setShieldDiff(0);
+        _this.setShields(0);
+        _this.zIndex = C.Z_INDEX_MILITARY_OVERLAY;
+        _this.alpha = 0;
+        return _this;
+    }
+    MilitaryOverlay.prototype.setShieldDiff = function (diff) {
+        this.overlayNeutral.style.visibility = (diff === 0) ? 'visible' : 'hidden';
+        this.overlayVictory.style.visibility = (diff > 0) ? 'visible' : 'hidden';
+        this.overlayDefeat.style.visibility = (diff < 0) ? 'visible' : 'hidden';
+    };
+    MilitaryOverlay.prototype.setShields = function (shields) {
+        this.shieldsText.textContent = "" + shields;
+    };
+    MilitaryOverlay.prototype.draw = function () {
+        var div = document.createElement('div');
+        var pixiOverlayNeutral = Shapes.filledRoundedRect(0, 0, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT, C.WONDER_BOARD_CORNER_RADIUS, C.WONDER_OVERLAY_COLOR_NEUTRAL);
+        pixiOverlayNeutral.alpha = C.WONDER_OVERLAY_ALPHA;
+        this.overlayNeutral = div.appendChild(render(pixiOverlayNeutral, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT));
+        var pixiOverlayVictory = Shapes.filledRoundedRect(0, 0, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT, C.WONDER_BOARD_CORNER_RADIUS, C.WONDER_OVERLAY_COLOR_VICTORY);
+        pixiOverlayVictory.alpha = C.WONDER_OVERLAY_ALPHA;
+        this.overlayVictory = div.appendChild(render(pixiOverlayVictory, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT));
+        var pixiOverlayDefeat = Shapes.filledRoundedRect(0, 0, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT, C.WONDER_BOARD_CORNER_RADIUS, C.WONDER_OVERLAY_COLOR_DEFEAT);
+        pixiOverlayDefeat.alpha = C.WONDER_OVERLAY_ALPHA;
+        this.overlayDefeat = div.appendChild(render(pixiOverlayDefeat, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT));
+        var shield = div.appendChild(ArtCommon.domElementForArt(ArtCommon.shield(), 1));
+        shield.style.position = 'absolute';
+        shield.style.left = '-75px';
+        shield.style.top = '0px';
+        var textDiv = div.appendChild(document.createElement('div'));
+        textDiv.style.width = '50%';
+        textDiv.style.position = 'absolute';
+        textDiv.style.transform = 'translate(-100%, 0)';
+        this.shieldsText = textDiv.appendChild(document.createElement('p'));
+        this.shieldsText.textContent = '0';
+        this.shieldsText.style.fontFamily = "'Courier New', Courier, monospace";
+        this.shieldsText.style.fontSize = C.WONDER_OVERLAY_TEXT_SIZE + "px";
+        this.shieldsText.style.color = C.WONDER_OVERLAY_TEXT_COLOR;
+        this.shieldsText.style.width = '100%';
+        this.shieldsText.style.textAlign = 'right';
+        this.shieldsText.style.transform = 'translate(0, -45%)';
+        return div;
+    };
+    return MilitaryOverlay;
+}(GameElement));
+var MilitaryToken = /** @class */ (function (_super) {
+    __extends(MilitaryToken, _super);
+    function MilitaryToken(amount) {
+        var _this = _super.call(this) || this;
+        _this.amount = amount;
+        _this.div.appendChild(_this.draw());
+        _this.zIndex = C.Z_INDEX_MILITARY_TOKEN;
+        return _this;
+    }
+    MilitaryToken.prototype.draw = function () {
+        return ArtCommon.domElementForArt(ArtCommon.militaryToken(this.amount), C.TOKEN_SCALE);
+    };
+    return MilitaryToken;
+}(GameElement));
 var PaymentDialog = /** @class */ (function (_super) {
     __extends(PaymentDialog, _super);
     function PaymentDialog(card, move, activeWonder) {
@@ -2760,9 +2935,6 @@ var Scene = /** @class */ (function () {
         configurable: true
     });
     Scene.prototype.update = function () {
-        // document.getElementById('game').childNodes.forEach((child: HTMLElement) => {
-        //     child.style.display = 'none';
-        // });
         var e_18, _a, e_19, _b;
         try {
             for (var _c = __values(this.hands), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -2798,44 +2970,51 @@ var Scene = /** @class */ (function () {
             this.paymentDialog.update();
         }
         this.setStatus();
-        // document.getElementById('game').childNodes.forEach((child: HTMLElement) => {
-        //     child.style.display = 'block';
-        // });
     };
     Scene.prototype.create = function () {
         var _this = this;
         var gamestate = Main.gamestate;
         var players = Main.gamestate.players;
-        document.getElementById('game').style.height = C.WONDER_START_Y + C.WONDER_DY * Math.ceil((gamestate.players.length + 1) / 2) + "px";
+        Main.game.style.height = C.WONDER_START_Y + C.WONDER_DY * Math.ceil((gamestate.players.length + 1) / 2) + "px";
         var cardsInHand = this.isMyTurnToBuildFromDiscard() ? gamestate.discardedCards : gamestate.hand;
         this.wonders = players.map(function (player) { return undefined; });
+        this.militaryOverlays = players.map(function (player) { return undefined; });
         this.hands = players.map(function (player) { return undefined; });
         var p = players.indexOf(Main.player);
         var l = mod(p - 1, players.length);
         var r = mod(p + 1, players.length);
-        var playerWonder = new Wonder(Main.player);
-        playerWonder.xs = '50%';
-        playerWonder.y = C.WONDER_START_Y;
-        playerWonder.addToGame();
-        this.wonders[p] = playerWonder;
-        this.hands[p] = new Hand('50%', C.HAND_Y + "px", { type: 'normal', cardIds: cardsInHand, activeWonder: playerWonder, validMoves: Main.gamestate.validMoves });
+        this.wonders[p] = new Wonder(Main.player);
+        this.wonders[p].xs = '50%';
+        this.wonders[p].y = C.WONDER_START_Y;
+        this.wonders[p].addToGame();
+        this.militaryOverlays[p] = new MilitaryOverlay();
+        this.militaryOverlays[p].xs = '50%';
+        this.militaryOverlays[p].y = C.WONDER_START_Y;
+        this.militaryOverlays[p].addToGame();
+        this.hands[p] = new Hand('50%', C.HAND_Y + "px", { type: 'normal', cardIds: cardsInHand, activeWonder: this.wonders[p], validMoves: Main.gamestate.validMoves });
         this.hands[p].snap();
         var i;
         for (i = 1; i < Math.floor((players.length - 1) / 2 + 1); i++) {
-            var wonder_l = new Wonder(players[l]);
-            wonder_l.xs = "calc(50% - " + C.WONDER_DX + "px)";
-            wonder_l.y = C.WONDER_START_Y + C.WONDER_DY * i;
-            wonder_l.addToGame();
-            this.wonders[l] = wonder_l;
+            this.wonders[l] = new Wonder(players[l]);
+            this.wonders[l].xs = "calc(50% - " + C.WONDER_DX + "px)";
+            this.wonders[l].y = C.WONDER_START_Y + C.WONDER_DY * i;
+            this.wonders[l].addToGame();
+            this.militaryOverlays[l] = new MilitaryOverlay();
+            this.militaryOverlays[l].xs = "calc(50% - " + C.WONDER_DX + "px)";
+            this.militaryOverlays[l].y = C.WONDER_START_Y + C.WONDER_DY * i;
+            this.militaryOverlays[l].addToGame();
             this.hands[l] = new Hand("calc(50% - " + C.HAND_FLANK_DX + "px)", C.WONDER_START_Y + C.WONDER_DY * i + C.HAND_FLANK_DY + "px", { type: 'back', player: players[l], age: gamestate.age, flankDirection: -1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].snap();
-            var wonder_r = new Wonder(players[r]);
-            wonder_r.xs = "calc(50% + " + C.WONDER_DX + "px)";
-            wonder_r.y = C.WONDER_START_Y + C.WONDER_DY * i;
-            wonder_r.addToGame();
-            this.wonders[r] = wonder_r;
+            this.wonders[r] = new Wonder(players[r]);
+            this.wonders[r].xs = "calc(50% + " + C.WONDER_DX + "px)";
+            this.wonders[r].y = C.WONDER_START_Y + C.WONDER_DY * i;
+            this.wonders[r].addToGame();
+            this.militaryOverlays[r] = new MilitaryOverlay();
+            this.militaryOverlays[r].xs = "calc(50% + " + C.WONDER_DX + "px)";
+            this.militaryOverlays[r].y = C.WONDER_START_Y + C.WONDER_DY * i;
+            this.militaryOverlays[r].addToGame();
             this.hands[r] = new Hand("calc(50% + " + C.HAND_FLANK_DX + "px)", C.WONDER_START_Y + C.WONDER_DY * i + C.HAND_FLANK_DY + "px", { type: 'back', player: players[r], age: gamestate.age, flankDirection: 1 });
             this.hands[r].state = { type: 'back', moved: !!gamestate.playerData[players[r]].currentMove };
             this.hands[r].scale = C.HAND_FLANK_SCALE;
@@ -2844,11 +3023,14 @@ var Scene = /** @class */ (function () {
             r = mod(r + 1, gamestate.players.length);
         }
         if (players.length % 2 === 0) {
-            var lastWonder = new Wonder(players[l]);
-            lastWonder.xs = '50%';
-            lastWonder.y = C.WONDER_START_Y + C.WONDER_DY * i;
-            lastWonder.addToGame();
-            this.wonders[l] = lastWonder;
+            this.wonders[l] = new Wonder(players[l]);
+            this.wonders[l].xs = '50%';
+            this.wonders[l].y = C.WONDER_START_Y + C.WONDER_DY * i;
+            this.wonders[l].addToGame();
+            this.militaryOverlays[l] = new MilitaryOverlay();
+            this.militaryOverlays[l].xs = '50%';
+            this.militaryOverlays[l].y = C.WONDER_START_Y + C.WONDER_DY * i;
+            this.militaryOverlays[l].addToGame();
             this.hands[l] = new Hand("calc(50% + " + C.HAND_LAST_DX + "px)", C.WONDER_START_Y + C.WONDER_DY * i + C.HAND_FLANK_DY + "px", { type: 'back', player: players[l], age: gamestate.age, flankDirection: 1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
@@ -2867,7 +3049,7 @@ var Scene = /** @class */ (function () {
         this.discardHand = new Hand('50%', discardPoint.y + "px", { type: 'discard', count: this.isMyTurnToBuildFromDiscard() ? 0 : gamestate.discardedCardCount, lastCardAge: gamestate.lastDiscardedCardAge });
         this.discardHand.state = { type: 'moving' };
         this.discardHand.snap();
-        document.getElementById('game').onmousemove = function (event) {
+        Main.game.onmousemove = function (event) {
             event.preventDefault();
             _this.mouseX = event.pageX;
             _this.mouseY = event.pageY - Main.getGameY();
@@ -2875,9 +3057,8 @@ var Scene = /** @class */ (function () {
         this.update();
     };
     Scene.prototype.destroy = function () {
-        var game = document.getElementById('game');
-        while (game.firstChild) {
-            game.removeChild(game.firstChild);
+        while (Main.game.firstChild) {
+            Main.game.removeChild(Main.game.firstChild);
         }
     };
     Scene.prototype.startPaymentDialog = function (card, move) {
@@ -3178,6 +3359,9 @@ var Wonder = /** @class */ (function (_super) {
             return this.overflowCardEffectRolls[0].getNextPosition(card);
         }
     };
+    Wonder.prototype.getMilitaryTokenWorldPosition = function (i) {
+        return new PIXI.Point(this.x + C.WONDER_BOARD_WIDTH / 2 + C.WONDER_SIDEBAR_TOKENS_X + C.WONDER_SIDEBAR_TOKENS_DX * i, this.y - C.WONDER_BOARD_HEIGHT / 2 + C.WONDER_SIDEBAR_TOKENS_Y);
+    };
     Wonder.prototype.addNewCardEffect = function (card) {
         var playerData = Main.gamestate.playerData[this.player];
         var justPlayed = (Main.gamestate.state !== 'GAME_COMPLETE' && playerData.lastMove && playerData.lastMove.action === 'play' && playerData.lastMove.card === card.apiCardId);
@@ -3302,32 +3486,32 @@ var Wonder = /** @class */ (function (_super) {
         sidebar.style.width = C.WONDER_SIDEBAR_WIDTH + "px";
         sidebar.style.height = C.WONDER_BOARD_HEIGHT + "px";
         sidebar.style.position = 'absolute';
-        var nameText = sidebar.appendChild(this.drawSidebarText(this.player, 20));
+        var nameText = sidebar.appendChild(this.drawSidebarText(this.player, C.WONDER_SIDEBAR_NAME_SIZE));
         nameText.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_NAME_X + "px";
         nameText.style.top = C.WONDER_SIDEBAR_NAME_Y + "px";
-        var goldCoin = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.goldCoin(), 0.2));
+        var goldCoin = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.goldCoin(), C.WONDER_SIDEBAR_GOLD_COIN_SCALE));
         goldCoin.style.position = 'absolute';
         goldCoin.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_GOLD_COIN_X + "px";
         goldCoin.style.top = C.WONDER_SIDEBAR_GOLD_COIN_Y + "px";
-        var goldText = sidebar.appendChild(this.drawSidebarText("" + Main.gamestate.playerData[this.player].gold, 20));
+        var goldText = sidebar.appendChild(this.drawSidebarText("" + Main.gamestate.playerData[this.player].gold, C.WONDER_SIDEBAR_GOLD_TEXT_SIZE));
         goldText.style.color = ArtCommon.goldColorHtml;
         goldText.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_GOLD_TEXT_X + "px";
         goldText.style.top = C.WONDER_SIDEBAR_GOLD_TEXT_Y + "px";
         this.goldText = goldText.querySelector('p');
-        var pointsWreath = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.pointsWreath(), 0.2));
+        var pointsWreath = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.pointsWreath(), C.WONDER_SIDEBAR_POINTS_WREATH_SCALE));
         pointsWreath.style.position = 'absolute';
-        pointsWreath.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_POINTS_COIN_X + "px";
-        pointsWreath.style.top = C.WONDER_SIDEBAR_POINTS_COIN_Y + "px";
-        var pointsText = sidebar.appendChild(this.drawSidebarText("" + Main.gamestate.playerData[this.player].pointsDistribution.total, 20));
+        pointsWreath.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_POINTS_WREATH_X + "px";
+        pointsWreath.style.top = C.WONDER_SIDEBAR_POINTS_WREATH_Y + "px";
+        var pointsText = sidebar.appendChild(this.drawSidebarText("" + Main.gamestate.playerData[this.player].pointsDistribution.total, C.WONDER_SIDEBAR_POINTS_TEXT_SIZE));
         pointsText.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_POINTS_TEXT_X + "px";
         pointsText.style.top = C.WONDER_SIDEBAR_POINTS_TEXT_Y + "px";
         this.pointsText = pointsText.querySelector('p');
-        this.moveIndicatorCheck = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.checkMark(), 0.2));
+        this.moveIndicatorCheck = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.checkMark(), C.WONDER_SIDEBAR_CHECKMARK_SCALE));
         this.moveIndicatorCheck.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_CHECKMARK_X + "px";
         this.moveIndicatorCheck.style.top = C.WONDER_SIDEBAR_CHECKMARK_Y + "px";
         this.moveIndicatorCheck.style.visibility = 'hidden';
         for (var i = 0; i < Main.gamestate.playerData[this.player].militaryTokens.length; i++) {
-            var token = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.militaryToken(Main.gamestate.playerData[this.player].militaryTokens[i]), 0.2));
+            var token = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.militaryToken(Main.gamestate.playerData[this.player].militaryTokens[i]), C.TOKEN_SCALE));
             token.style.position = 'absolute';
             token.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_TOKENS_X + C.WONDER_SIDEBAR_TOKENS_DX * i + "px";
             token.style.top = C.WONDER_SIDEBAR_TOKENS_Y + "px";

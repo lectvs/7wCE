@@ -6,6 +6,7 @@ class Main {
 
     static mouseDown: boolean = false;
 
+    static game: HTMLDivElement;
     static scene: Scene;
     static endScreen: EndScreen;
 
@@ -28,9 +29,9 @@ class Main {
         window.addEventListener('mouseup', () => this.mouseDown = false);
 
         this.mouseDown = false;
-        let game = document.getElementById('game');
-        this.gameWidth = game.clientWidth;
-        this.gameHeight = game.clientHeight;
+        this.game = <HTMLDivElement>document.getElementById('game');
+        this.gameWidth = this.game.clientWidth;
+        this.gameHeight = this.game.clientHeight;
         this.moveImmuneTime = 0;
 
         this.scriptManager = new ScriptManager();
@@ -75,9 +76,8 @@ class Main {
     }
 
     static update() {
-        let game = document.getElementById('game');
-        this.gameWidth = game.clientWidth;
-        this.gameHeight = game.clientHeight;
+        this.gameWidth = this.game.clientWidth;
+        this.gameHeight = this.game.clientHeight;
         this.moveImmuneTime = clamp(this.moveImmuneTime - Main.delta, 0, Infinity);
 
         if (this.scene) this.scene.update();

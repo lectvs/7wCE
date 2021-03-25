@@ -4,6 +4,7 @@ class Scene {
     mouseY: number = 0;
 
     wonders: Wonder[];
+    militaryOverlays: MilitaryOverlay[];
     hands: Hand[];
     discardPile: DiscardPile;
     discardHand: Hand;
@@ -19,10 +20,6 @@ class Scene {
     }
 
     update() {
-        // document.getElementById('game').childNodes.forEach((child: HTMLElement) => {
-        //     child.style.display = 'none';
-        // });
-
         for (let hand of this.hands) {
             hand.update();
         }
@@ -40,53 +37,59 @@ class Scene {
             this.paymentDialog.update();
         }
         this.setStatus();
-
-        // document.getElementById('game').childNodes.forEach((child: HTMLElement) => {
-        //     child.style.display = 'block';
-        // });
     }
 
     create() {
         let gamestate = Main.gamestate;
         let players = Main.gamestate.players;
 
-        document.getElementById('game').style.height = `${C.WONDER_START_Y + C.WONDER_DY * Math.ceil((gamestate.players.length + 1) / 2)}px`;
+        Main.game.style.height = `${C.WONDER_START_Y + C.WONDER_DY * Math.ceil((gamestate.players.length + 1) / 2)}px`;
 
         let cardsInHand = this.isMyTurnToBuildFromDiscard() ? gamestate.discardedCards : gamestate.hand;
 
         this.wonders = players.map(player => undefined);
+        this.militaryOverlays = players.map(player => undefined);
         this.hands = players.map(player => undefined);
 
         let p = players.indexOf(Main.player);
         let l = mod(p-1, players.length);
         let r = mod(p+1, players.length);
 
-        let playerWonder = new Wonder(Main.player);
-        playerWonder.xs = '50%';
-        playerWonder.y = C.WONDER_START_Y;
-        playerWonder.addToGame();
-        this.wonders[p] = playerWonder;
-        this.hands[p] = new Hand('50%', `${C.HAND_Y}px`, { type: 'normal', cardIds: cardsInHand, activeWonder: playerWonder, validMoves: Main.gamestate.validMoves });
+        this.wonders[p] = new Wonder(Main.player);
+        this.wonders[p].xs = '50%';
+        this.wonders[p].y = C.WONDER_START_Y;
+        this.wonders[p].addToGame();
+        this.militaryOverlays[p] = new MilitaryOverlay();
+        this.militaryOverlays[p].xs = '50%';
+        this.militaryOverlays[p].y = C.WONDER_START_Y;
+        this.militaryOverlays[p].addToGame();
+        this.hands[p] = new Hand('50%', `${C.HAND_Y}px`, { type: 'normal', cardIds: cardsInHand, activeWonder: this.wonders[p], validMoves: Main.gamestate.validMoves });
         this.hands[p].snap();
 
         let i: number;
         for (i = 1; i < Math.floor((players.length - 1)/2 + 1); i++) {
-            let wonder_l = new Wonder(players[l]);
-            wonder_l.xs = `calc(50% - ${C.WONDER_DX}px)`;
-            wonder_l.y = C.WONDER_START_Y + C.WONDER_DY*i;
-            wonder_l.addToGame();
-            this.wonders[l] = wonder_l;
+            this.wonders[l] = new Wonder(players[l]);
+            this.wonders[l].xs = `calc(50% - ${C.WONDER_DX}px)`;
+            this.wonders[l].y = C.WONDER_START_Y + C.WONDER_DY*i;
+            this.wonders[l].addToGame();
+            this.militaryOverlays[l] = new MilitaryOverlay();
+            this.militaryOverlays[l].xs = `calc(50% - ${C.WONDER_DX}px)`;
+            this.militaryOverlays[l].y = C.WONDER_START_Y + C.WONDER_DY*i;
+            this.militaryOverlays[l].addToGame();
             this.hands[l] = new Hand(`calc(50% - ${C.HAND_FLANK_DX}px)`, `${C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY}px`,
                                         { type: 'back', player: players[l], age: gamestate.age, flankDirection: -1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].snap();
 
-            let wonder_r = new Wonder(players[r]);
-            wonder_r.xs = `calc(50% + ${C.WONDER_DX}px)`;
-            wonder_r.y = C.WONDER_START_Y + C.WONDER_DY*i;
-            wonder_r.addToGame();
-            this.wonders[r] = wonder_r;
+            this.wonders[r] = new Wonder(players[r]);
+            this.wonders[r].xs = `calc(50% + ${C.WONDER_DX}px)`;
+            this.wonders[r].y = C.WONDER_START_Y + C.WONDER_DY*i;
+            this.wonders[r].addToGame();
+            this.militaryOverlays[r] = new MilitaryOverlay();
+            this.militaryOverlays[r].xs = `calc(50% + ${C.WONDER_DX}px)`;
+            this.militaryOverlays[r].y = C.WONDER_START_Y + C.WONDER_DY*i;
+            this.militaryOverlays[r].addToGame();
             this.hands[r] = new Hand(`calc(50% + ${C.HAND_FLANK_DX}px)`, `${C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY}px`,
                                         { type: 'back', player: players[r], age: gamestate.age, flankDirection: 1 });
             this.hands[r].state = { type: 'back', moved: !!gamestate.playerData[players[r]].currentMove };
@@ -98,11 +101,14 @@ class Scene {
         }
 
         if (players.length % 2 === 0) {
-            let lastWonder = new Wonder(players[l]);
-            lastWonder.xs = '50%';
-            lastWonder.y = C.WONDER_START_Y + C.WONDER_DY*i;
-            lastWonder.addToGame();
-            this.wonders[l] = lastWonder;
+            this.wonders[l] = new Wonder(players[l]);
+            this.wonders[l].xs = '50%';
+            this.wonders[l].y = C.WONDER_START_Y + C.WONDER_DY*i;
+            this.wonders[l].addToGame();
+            this.militaryOverlays[l] = new MilitaryOverlay();
+            this.militaryOverlays[l].xs = '50%';
+            this.militaryOverlays[l].y = C.WONDER_START_Y + C.WONDER_DY*i;
+            this.militaryOverlays[l].addToGame();
             this.hands[l] = new Hand(`calc(50% + ${C.HAND_LAST_DX}px)`, `${C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY}px`,
                                         { type: 'back', player: players[l], age: gamestate.age, flankDirection: 1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
@@ -128,7 +134,7 @@ class Scene {
         this.discardHand.state = { type: 'moving' };
         this.discardHand.snap();
 
-        document.getElementById('game').onmousemove = (event: MouseEvent) => {
+        Main.game.onmousemove = (event: MouseEvent) => {
             event.preventDefault();
             this.mouseX = event.pageX;
             this.mouseY = event.pageY - Main.getGameY();
@@ -138,9 +144,8 @@ class Scene {
     }
 
     destroy() {
-        let game = document.getElementById('game');
-        while (game.firstChild) {
-            game.removeChild(game.firstChild);
+        while (Main.game.firstChild) {
+            Main.game.removeChild(Main.game.firstChild);
         }
     }
 

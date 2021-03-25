@@ -7,10 +7,15 @@ class C {
     public static readonly Z_INDEX_CARD_PLAYED = 11;
     public static readonly Z_INDEX_CARD_MOVING = 12;
     public static readonly Z_INDEX_CARD_DRAGGING = 100;
+    public static readonly Z_INDEX_MILITARY_OVERLAY = 101;
+    public static readonly Z_INDEX_MILITARY_TOKEN = 102;
     public static readonly Z_INDEX_PAYMENT_DIALOG = 1000;
 
     public static readonly ANIMATION_TURN_REVEAL_TIME = 1;
     public static readonly ANIMATION_TURN_PLAY_TIME = 1;
+    public static readonly ANIMATION_MILITARY_FADE_TIME = 0.5;
+    public static readonly ANIMATION_MILITARY_WAIT_TIME = 1;
+    public static readonly ANIMATION_TOKEN_DISTRIBUTE_TIME = 1;
 
     public static readonly ERROR_BG_COLOR = '#FF0000';
     public static readonly OK_BG_COLOR = '#FFFFFF';
@@ -91,19 +96,34 @@ class C {
     public static readonly WONDER_SIDEBAR_WIDTH = 600;
     public static readonly WONDER_SIDEBAR_NAME_X = -18;
     public static readonly WONDER_SIDEBAR_NAME_Y = 25;
+    public static readonly WONDER_SIDEBAR_NAME_SIZE = 20;
+    public static readonly WONDER_SIDEBAR_GOLD_COIN_SCALE = 0.2;
     public static readonly WONDER_SIDEBAR_GOLD_COIN_X = -28;
     public static readonly WONDER_SIDEBAR_GOLD_COIN_Y = 55;
     public static readonly WONDER_SIDEBAR_GOLD_TEXT_X = -43;
     public static readonly WONDER_SIDEBAR_GOLD_TEXT_Y = 55;
-    public static readonly WONDER_SIDEBAR_POINTS_COIN_X = -88;
-    public static readonly WONDER_SIDEBAR_POINTS_COIN_Y = 55;
+    public static readonly WONDER_SIDEBAR_GOLD_TEXT_SIZE = 20;
+    public static readonly WONDER_SIDEBAR_POINTS_WREATH_SCALE = 0.2;
+    public static readonly WONDER_SIDEBAR_POINTS_WREATH_X = -88;
+    public static readonly WONDER_SIDEBAR_POINTS_WREATH_Y = 55;
     public static readonly WONDER_SIDEBAR_POINTS_TEXT_X = -103;
     public static readonly WONDER_SIDEBAR_POINTS_TEXT_Y = 55;
+    public static readonly WONDER_SIDEBAR_POINTS_TEXT_SIZE = 20;
+    public static readonly WONDER_SIDEBAR_CHECKMARK_SCALE = 0.2;
     public static readonly WONDER_SIDEBAR_CHECKMARK_X = -145;
     public static readonly WONDER_SIDEBAR_CHECKMARK_Y = 52;
     public static readonly WONDER_SIDEBAR_TOKENS_X = -28;
     public static readonly WONDER_SIDEBAR_TOKENS_DX = -24;
     public static readonly WONDER_SIDEBAR_TOKENS_Y = 85;
+
+    public static readonly WONDER_OVERLAY_COLOR_NEUTRAL = 0xFFFFFF;
+    public static readonly WONDER_OVERLAY_COLOR_VICTORY = 0x80FF80;
+    public static readonly WONDER_OVERLAY_COLOR_DEFEAT = 0xFF8080;
+    public static readonly WONDER_OVERLAY_ALPHA = 0.7;
+    public static readonly WONDER_OVERLAY_TEXT_SIZE = 100;
+    public static readonly WONDER_OVERLAY_TEXT_COLOR = '#FF0000';
+
+    public static readonly TOKEN_SCALE = 0.2;
 
     public static readonly DISCARD_PILE_AREA_WIDTH = 250;
     public static readonly DISCARD_PILE_AREA_HEIGHT = 300;
