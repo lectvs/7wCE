@@ -1,3 +1,4 @@
 todo
+- BIG shift center of game div to be 0??
 - animations
 - hover-infos

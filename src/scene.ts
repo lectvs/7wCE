@@ -63,7 +63,8 @@ class Scene {
         this.militaryOverlays[p].xs = '50%';
         this.militaryOverlays[p].y = C.WONDER_START_Y;
         this.militaryOverlays[p].addToGame();
-        this.hands[p] = new Hand('50%', `${C.HAND_Y}px`, { type: 'normal', cardIds: cardsInHand, activeWonder: this.wonders[p], validMoves: Main.gamestate.validMoves });
+        let handPosition_p = this.getHandPositionS(p);
+        this.hands[p] = new Hand(handPosition_p.xs, handPosition_p.ys, { type: 'normal', cardIds: cardsInHand, activeWonder: this.wonders[p], validMoves: Main.gamestate.validMoves });
         this.hands[p].snap();
 
         let i: number;
@@ -76,8 +77,8 @@ class Scene {
             this.militaryOverlays[l].xs = `calc(50% - ${C.WONDER_DX}px)`;
             this.militaryOverlays[l].y = C.WONDER_START_Y + C.WONDER_DY*i;
             this.militaryOverlays[l].addToGame();
-            this.hands[l] = new Hand(`calc(50% - ${C.HAND_FLANK_DX}px)`, `${C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY}px`,
-                                        { type: 'back', player: players[l], age: gamestate.age, flankDirection: -1 });
+            let handPosition_l = this.getHandPositionS(l);
+            this.hands[l] = new Hand(handPosition_l.xs, handPosition_l.ys, { type: 'back', player: players[l], age: gamestate.age, flankDirection: -1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].snap();
@@ -90,8 +91,8 @@ class Scene {
             this.militaryOverlays[r].xs = `calc(50% + ${C.WONDER_DX}px)`;
             this.militaryOverlays[r].y = C.WONDER_START_Y + C.WONDER_DY*i;
             this.militaryOverlays[r].addToGame();
-            this.hands[r] = new Hand(`calc(50% + ${C.HAND_FLANK_DX}px)`, `${C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY}px`,
-                                        { type: 'back', player: players[r], age: gamestate.age, flankDirection: 1 });
+            let handPosition_r = this.getHandPositionS(r);
+            this.hands[r] = new Hand(handPosition_r.xs, handPosition_r.ys, { type: 'back', player: players[r], age: gamestate.age, flankDirection: 1 });
             this.hands[r].state = { type: 'back', moved: !!gamestate.playerData[players[r]].currentMove };
             this.hands[r].scale = C.HAND_FLANK_SCALE;
             this.hands[r].snap();
@@ -109,8 +110,8 @@ class Scene {
             this.militaryOverlays[l].xs = '50%';
             this.militaryOverlays[l].y = C.WONDER_START_Y + C.WONDER_DY*i;
             this.militaryOverlays[l].addToGame();
-            this.hands[l] = new Hand(`calc(50% + ${C.HAND_LAST_DX}px)`, `${C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY}px`,
-                                        { type: 'back', player: players[l], age: gamestate.age, flankDirection: 1 });
+            let handPosition_last = this.getHandPositionS(l);
+            this.hands[l] = new Hand(handPosition_last.xs, handPosition_last.ys, { type: 'back', player: players[l], age: gamestate.age, flankDirection: 1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].snap();
@@ -189,6 +190,27 @@ class Scene {
         } else if (gamestate.state === 'GAME_COMPLETE') {
             statusText.textContent = "Game complete";
         }
+    }
+
+    getHandPositionS(index: number): { xs: string, ys: string} {
+        let p = Main.gamestate.players.indexOf(Main.player);
+        let l = mod(p-1, Main.gamestate.players.length);
+        let r = mod(p+1, Main.gamestate.players.length);
+
+        if (index === p) return { xs: '50%', ys: `${C.HAND_Y}px` };
+
+        let i: number;
+        for (i = 1; i < Math.floor((Main.gamestate.players.length - 1)/2 + 1); i++) {
+            if (index === l) return { xs: `calc(50% - ${C.HAND_FLANK_DX}px)`, ys :`${C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY}px` };
+            if (index === r) return { xs: `calc(50% + ${C.HAND_FLANK_DX}px)`, ys :`${C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY}px` };
+        }
+
+        if (Main.gamestate.players.length % 2 === 0) {
+            if (index === l) return { xs: `calc(50% + ${C.HAND_LAST_DX}px)`, ys: `${C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY}px` };
+        }
+
+        console.log(`Hand position index ${index} is out of bounds`);
+        return undefined;
     }
 
     private isMyTurnToBuildFromDiscard() {

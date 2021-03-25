@@ -22,4 +22,8 @@ namespace HtmlUtils {
 
         return undefined;
     }
+
+    export function cssStyleGamePositionToPixels(pos: { xs: string, ys: string }) {
+        return new PIXI.Point(cssStylePositionToPixels(pos.xs, Main.gameWidth), cssStylePositionToPixels(pos.ys, Main.gameHeight));
+    }
 }

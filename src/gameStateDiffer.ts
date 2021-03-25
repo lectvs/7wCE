@@ -252,7 +252,59 @@ namespace GameStateDiffer {
                 yield* S.simul(...militaryTokenDistributionScripts)();
                 yield* S.wait(0.5)();
 
-                // Deal new cards
+                if (gamestate.state !== 'GAME_COMPLETE') {
+                    // Deal new cards
+                    let hands: Hand[] = gamestate.players.map(player => undefined);
+
+                    hands[p] = new Hand('50%', `${-Main.getGameY() - 200}px`, { type: 'normal', cardIds: gamestate.hand, activeWonder: Main.scene.topWonder, validMoves: gamestate.validMoves });
+                    hands[p].state = { type: 'moving' };
+                    hands[p].snap();
+
+                    for (let i = 0; i < gamestate.players.length; i++) {
+                        if (i === p) continue;
+                        hands[i] = new Hand('50%', `${-Main.getGameY() - 200}px`, { type: 'back', age: gamestate.age, player: gamestate.players[i], flankDirection: 1 });
+                        hands[i].state = { type: 'back', moved: false };
+                        hands[i].snap();
+                    }
+
+                    let startPosition = hands[0].getPositionPixels();
+                    let endPosition = HtmlUtils.cssStyleGamePositionToPixels(Main.scene.getHandPositionS(p));
+
+                    let lerpt = 0;
+                    yield* S.doOverTime(0.3, t => {
+                        lerpt = lerp(lerpt, 1, t**2);
+                        for (let hand of hands) {
+                            hand.xs = `${lerp(startPosition.x, endPosition.x, lerpt)}px`;
+                            hand.ys = `${lerp(startPosition.y, endPosition.y, lerpt)}px`;
+                            hand.update();
+                        }
+                    })();
+
+                    yield* S.wait(0.2)();
+
+                    let i = l;
+                    for (let count = 0; count < gamestate.players.length-1; count++) {
+                        let startPosition = hands[i].getPositionPixels();
+                        let endPosition = HtmlUtils.cssStyleGamePositionToPixels(Main.scene.getHandPositionS(i));
+
+                        let lerpt = 0;
+                        yield* S.doOverTime(0.2, t => {
+                            lerpt = lerp(lerpt, 1, t**2);
+                            hands[i].xs = `${lerp(startPosition.x, endPosition.x, lerpt)}px`;
+                            hands[i].ys = `${lerp(startPosition.y, endPosition.y, lerpt)}px`;
+                            hands[i].scale = lerp(hands[i].scale, C.HAND_FLANK_SCALE, lerpt);
+                            hands[i].update();
+                        })();
+                        hands[i].snap();
+
+                        i = mod(i-1, gamestate.players.length);
+                    }
+
+                    Main.scene.hands[p] = hands[p];
+                    hands[p].state = { type: 'normal' };
+                    yield* S.wait(0.4)();
+                    hands[p].snap();
+                }
             } else {  
                 // Rotate all cards  
                 let currentHandPositions = Main.scene.hands.map(hand => hand.getPositionPixels());
