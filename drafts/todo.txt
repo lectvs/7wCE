@@ -1,4 +1,6 @@
 todo
+- sort effect rolls
+- zoom out to fit macbook screen
 - art
 - hover-infos
 - choose wonder

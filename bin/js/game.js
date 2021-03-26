@@ -3272,6 +3272,8 @@ var Scene = /** @class */ (function () {
                 return new PIXI.Point(-C.HAND_FLANK_DX, C.WONDER_START_Y + C.WONDER_DY * i + C.HAND_FLANK_DY);
             if (index === r)
                 return new PIXI.Point(C.HAND_FLANK_DX, C.WONDER_START_Y + C.WONDER_DY * i + C.HAND_FLANK_DY);
+            l = mod(l - 1, Main.gamestate.players.length);
+            r = mod(r + 1, Main.gamestate.players.length);
         }
         if (Main.gamestate.players.length % 2 === 0) {
             if (index === l)
