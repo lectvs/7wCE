@@ -58,8 +58,7 @@ class Scene {
         this.militaryOverlays[p] = new MilitaryOverlay();
         this.militaryOverlays[p].y = C.WONDER_START_Y;
         this.militaryOverlays[p].addToGame();
-        let handPosition_p = this.getHandPosition(p);
-        this.hands[p] = new Hand(handPosition_p.x, handPosition_p.y, { type: 'normal', cardIds: cardsInHand, activeWonder: this.wonders[p], validMoves: Main.gamestate.validMoves });
+        this.hands[p] = new Hand(this.getHandPosition(p), { type: 'normal', cardIds: cardsInHand, activeWonder: this.wonders[p], validMoves: Main.gamestate.validMoves });
         this.hands[p].snap();
 
         let i: number;
@@ -72,8 +71,7 @@ class Scene {
             this.militaryOverlays[l].x = -C.WONDER_DX;
             this.militaryOverlays[l].y = C.WONDER_START_Y + C.WONDER_DY*i;
             this.militaryOverlays[l].addToGame();
-            let handPosition_l = this.getHandPosition(l);
-            this.hands[l] = new Hand(handPosition_l.x, handPosition_l.y, { type: 'back', player: players[l], age: gamestate.age, flankDirection: -1 });
+            this.hands[l] = new Hand(this.getHandPosition(l), { type: 'back', player: players[l], age: gamestate.age, flankDirection: -1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].snap();
@@ -86,8 +84,7 @@ class Scene {
             this.militaryOverlays[r].x = C.WONDER_DX;
             this.militaryOverlays[r].y = C.WONDER_START_Y + C.WONDER_DY*i;
             this.militaryOverlays[r].addToGame();
-            let handPosition_r = this.getHandPosition(r);
-            this.hands[r] = new Hand(handPosition_r.x, handPosition_r.y, { type: 'back', player: players[r], age: gamestate.age, flankDirection: 1 });
+            this.hands[r] = new Hand(this.getHandPosition(r), { type: 'back', player: players[r], age: gamestate.age, flankDirection: 1 });
             this.hands[r].state = { type: 'back', moved: !!gamestate.playerData[players[r]].currentMove };
             this.hands[r].scale = C.HAND_FLANK_SCALE;
             this.hands[r].snap();
@@ -105,8 +102,7 @@ class Scene {
             this.militaryOverlays[l].x = 0;
             this.militaryOverlays[l].y = C.WONDER_START_Y + C.WONDER_DY*i;
             this.militaryOverlays[l].addToGame();
-            let handPosition_last = this.getHandPosition(l);
-            this.hands[l] = new Hand(handPosition_last.x, handPosition_last.y, { type: 'back', player: players[l], age: gamestate.age, flankDirection: 1 });
+            this.hands[l] = new Hand(this.getHandPosition(l), { type: 'back', player: players[l], age: gamestate.age, flankDirection: 1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].snap();
@@ -124,8 +120,7 @@ class Scene {
         this.discardPile.y = C.WONDER_START_Y + C.WONDER_DY;
         this.discardPile.addToGame();
 
-        let discardPoint = this.discardPile.getDiscardLockPoint();
-        this.discardHand = new Hand(0, discardPoint.y,
+        this.discardHand = new Hand(this.discardPile.getDiscardLockPoint(),
                             { type: 'discard', count: this.isMyTurnToBuildFromDiscard() ? 0 : gamestate.discardedCardCount, lastCardAge: gamestate.lastDiscardedCardAge });
         this.discardHand.state = { type: 'moving' };
         this.discardHand.snap();
@@ -183,6 +178,10 @@ class Scene {
 
     getSourceSinkPosition() {
         return new PIXI.Point(this.discardPile.x, this.discardPile.y);
+    }
+
+    getHandOffScreenPoint() {
+        return new PIXI.Point(0, -Main.getGameY() - 200);
     }
 
     getHandPosition(index: number) {

@@ -16,7 +16,6 @@ class Wonder extends GameElement {
     } & Dict<PlayedCardEffectRoll>;
     overflowCardEffectRolls: PlayedCardEffectRoll[];
     builtWonderCards: Card[];
-    moveIndicatorCheck: HTMLCanvasElement;
 
     pointsText: HTMLParagraphElement;
     goldText: HTMLParagraphElement;
@@ -144,14 +143,6 @@ class Wonder extends GameElement {
             }
             this.overflowCardEffectRolls[0].addCard(card);
         }
-    }
-
-    makeMove() {
-        this.moveIndicatorCheck.style.visibility = 'visible';
-    }
-
-    undoMove() {
-        this.moveIndicatorCheck.style.visibility = 'hidden';
     }
 
     private getCardEffectRollMaxWidth(color: string) {
@@ -302,11 +293,6 @@ class Wonder extends GameElement {
         pointsText.style.left = `${C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_POINTS_TEXT_X}px`;
         pointsText.style.top = `${C.WONDER_SIDEBAR_POINTS_TEXT_Y}px`;
         this.pointsText = pointsText.querySelector('p');
-
-        this.moveIndicatorCheck = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.checkMark(), C.WONDER_SIDEBAR_CHECKMARK_SCALE));
-        this.moveIndicatorCheck.style.left = `${C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_CHECKMARK_X}px`;
-        this.moveIndicatorCheck.style.top = `${C.WONDER_SIDEBAR_CHECKMARK_Y}px`;
-        this.moveIndicatorCheck.style.visibility = 'hidden';
 
         for (let i = 0; i < Main.gamestate.playerData[this.player].militaryTokens.length; i++) {
             let token = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.militaryToken(Main.gamestate.playerData[this.player].militaryTokens[i]), C.TOKEN_SCALE));

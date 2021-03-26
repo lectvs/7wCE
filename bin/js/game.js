@@ -1840,7 +1840,7 @@ var GameStateDiffer;
             return;
         }
         result.scripts.push(function () {
-            var moveScripts, handPosition_1, targetHandPosition_1, discardHandPosition_1, targetDiscardHandPosition_1, lerpt_1, isEndOfAge, currentHandPositions_1, targetHandPosition_2, lerpt_2, handPosition_2, targetHandPosition_3, discardHandPosition_2, lerpt_3, p_1, l_1, r_1, pshields, lshields, rshields, militaryTokenDistributionScripts, hands_1, i_1, startPosition_1, endPosition_1, lerpt_4, i_2, _loop_1, count, currentHandPositions_2, targetHandPositions_1, newHandi_1, lerpt_5;
+            var moveScripts, handPosition_1, targetHandPosition_1, discardHandPosition_1, targetDiscardHandPosition_1, lerpt_1, isEndOfAge, currentHandPositions_1, targetHandPosition_2, lerpt_2, handPosition_2, targetHandPosition_3, discardHandPosition_2, lerpt_3, p_1, l_1, r_1, pshields, lshields, rshields, militaryTokenDistributionScripts, hands_1, entryPoint, i_1, startPosition_1, endPosition_1, lerpt_4, i_2, _loop_1, count, currentHandPositions_2, targetHandPositions_1, newHandi_1, lerpt_5;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -1967,7 +1967,7 @@ var GameStateDiffer;
                         _a.sent();
                         if (!(Main.gamestate.state === 'DISCARD_MOVE' && Main.gamestate.discardMoveQueue[0] === Main.player)) return [3 /*break*/, 5];
                         Main.scene.discardHand = Main.scene.hand;
-                        Main.scene.hands[Main.gamestate.players.indexOf(Main.player)] = new Hand(0, -Main.getGameY() - 200, { type: 'normal', cardIds: Main.gamestate.hand, activeWonder: Main.scene.topWonder, validMoves: Main.gamestate.validMoves });
+                        Main.scene.hands[Main.gamestate.players.indexOf(Main.player)] = new Hand(Main.scene.getHandOffScreenPoint(), { type: 'normal', cardIds: Main.gamestate.hand, activeWonder: Main.scene.topWonder, validMoves: Main.gamestate.validMoves });
                         Main.scene.hand.snap();
                         handPosition_1 = Main.scene.hand.getPosition();
                         targetHandPosition_1 = Main.scene.discardHand.getPosition();
@@ -2135,13 +2135,14 @@ var GameStateDiffer;
                         _a.sent();
                         if (!(gamestate.state !== 'GAME_COMPLETE')) return [3 /*break*/, 30];
                         hands_1 = gamestate.players.map(function (player) { return undefined; });
-                        hands_1[p_1] = new Hand(0, -Main.getGameY() - 200, { type: 'normal', cardIds: gamestate.hand, activeWonder: Main.scene.topWonder, validMoves: gamestate.validMoves });
+                        entryPoint = Main.scene.getHandOffScreenPoint();
+                        hands_1[p_1] = new Hand(entryPoint, { type: 'normal', cardIds: gamestate.hand, activeWonder: Main.scene.topWonder, validMoves: gamestate.validMoves });
                         hands_1[p_1].state = { type: 'moving' };
                         hands_1[p_1].snap();
                         for (i_1 = 0; i_1 < gamestate.players.length; i_1++) {
                             if (i_1 === p_1)
                                 continue;
-                            hands_1[i_1] = new Hand(0, -Main.getGameY() - 200, { type: 'back', age: gamestate.age, player: gamestate.players[i_1], flankDirection: 1 });
+                            hands_1[i_1] = new Hand(entryPoint, { type: 'back', age: gamestate.age, player: gamestate.players[i_1], flankDirection: 1 });
                             hands_1[i_1].state = { type: 'back', moved: false };
                             hands_1[i_1].snap();
                         }
@@ -2335,12 +2336,10 @@ var GameStateDiffer;
         result.scripts.push(function () {
             return __generator(this, function (_a) {
                 if (!oldMove && newMove) {
-                    Main.scene.wonders[playeri].makeMove();
                     if (Main.gamestate.state !== 'DISCARD_MOVE')
                         Main.scene.hands[playeri].makeMove();
                 }
                 else {
-                    Main.scene.wonders[playeri].undoMove();
                     Main.scene.hands[playeri].undoMove();
                 }
                 return [2 /*return*/];
@@ -2388,10 +2387,10 @@ var GoldCoin = /** @class */ (function (_super) {
     return GoldCoin;
 }(GameElement));
 var Hand = /** @class */ (function () {
-    function Hand(x, y, handData) {
+    function Hand(position, handData) {
         this.state = { type: 'normal' };
-        this.x = x;
-        this.y = y;
+        this.x = position.x;
+        this.y = position.y;
         this.scale = 1;
         this.createWithData(handData);
     }
@@ -2565,9 +2564,6 @@ var Hand = /** @class */ (function () {
         var position = this.getPosition();
         position.x += (cardIndex - (cardsInHand.length - 1) / 2) * C.HAND_CARD_DX;
         return position;
-    };
-    Hand.prototype.getStartMovingPosition = function () {
-        return new PIXI.Point(0, C.HAND_Y);
     };
     return Hand;
 }());
@@ -3106,8 +3102,7 @@ var Scene = /** @class */ (function () {
         this.militaryOverlays[p] = new MilitaryOverlay();
         this.militaryOverlays[p].y = C.WONDER_START_Y;
         this.militaryOverlays[p].addToGame();
-        var handPosition_p = this.getHandPosition(p);
-        this.hands[p] = new Hand(handPosition_p.x, handPosition_p.y, { type: 'normal', cardIds: cardsInHand, activeWonder: this.wonders[p], validMoves: Main.gamestate.validMoves });
+        this.hands[p] = new Hand(this.getHandPosition(p), { type: 'normal', cardIds: cardsInHand, activeWonder: this.wonders[p], validMoves: Main.gamestate.validMoves });
         this.hands[p].snap();
         var i;
         for (i = 1; i < Math.floor((players.length - 1) / 2 + 1); i++) {
@@ -3119,8 +3114,7 @@ var Scene = /** @class */ (function () {
             this.militaryOverlays[l].x = -C.WONDER_DX;
             this.militaryOverlays[l].y = C.WONDER_START_Y + C.WONDER_DY * i;
             this.militaryOverlays[l].addToGame();
-            var handPosition_l = this.getHandPosition(l);
-            this.hands[l] = new Hand(handPosition_l.x, handPosition_l.y, { type: 'back', player: players[l], age: gamestate.age, flankDirection: -1 });
+            this.hands[l] = new Hand(this.getHandPosition(l), { type: 'back', player: players[l], age: gamestate.age, flankDirection: -1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].snap();
@@ -3132,8 +3126,7 @@ var Scene = /** @class */ (function () {
             this.militaryOverlays[r].x = C.WONDER_DX;
             this.militaryOverlays[r].y = C.WONDER_START_Y + C.WONDER_DY * i;
             this.militaryOverlays[r].addToGame();
-            var handPosition_r = this.getHandPosition(r);
-            this.hands[r] = new Hand(handPosition_r.x, handPosition_r.y, { type: 'back', player: players[r], age: gamestate.age, flankDirection: 1 });
+            this.hands[r] = new Hand(this.getHandPosition(r), { type: 'back', player: players[r], age: gamestate.age, flankDirection: 1 });
             this.hands[r].state = { type: 'back', moved: !!gamestate.playerData[players[r]].currentMove };
             this.hands[r].scale = C.HAND_FLANK_SCALE;
             this.hands[r].snap();
@@ -3149,8 +3142,7 @@ var Scene = /** @class */ (function () {
             this.militaryOverlays[l].x = 0;
             this.militaryOverlays[l].y = C.WONDER_START_Y + C.WONDER_DY * i;
             this.militaryOverlays[l].addToGame();
-            var handPosition_last = this.getHandPosition(l);
-            this.hands[l] = new Hand(handPosition_last.x, handPosition_last.y, { type: 'back', player: players[l], age: gamestate.age, flankDirection: 1 });
+            this.hands[l] = new Hand(this.getHandPosition(l), { type: 'back', player: players[l], age: gamestate.age, flankDirection: 1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].snap();
@@ -3164,8 +3156,7 @@ var Scene = /** @class */ (function () {
         this.discardPile.x = 0;
         this.discardPile.y = C.WONDER_START_Y + C.WONDER_DY;
         this.discardPile.addToGame();
-        var discardPoint = this.discardPile.getDiscardLockPoint();
-        this.discardHand = new Hand(0, discardPoint.y, { type: 'discard', count: this.isMyTurnToBuildFromDiscard() ? 0 : gamestate.discardedCardCount, lastCardAge: gamestate.lastDiscardedCardAge });
+        this.discardHand = new Hand(this.discardPile.getDiscardLockPoint(), { type: 'discard', count: this.isMyTurnToBuildFromDiscard() ? 0 : gamestate.discardedCardCount, lastCardAge: gamestate.lastDiscardedCardAge });
         this.discardHand.state = { type: 'moving' };
         this.discardHand.snap();
         this.update();
@@ -3222,6 +3213,9 @@ var Scene = /** @class */ (function () {
     };
     Scene.prototype.getSourceSinkPosition = function () {
         return new PIXI.Point(this.discardPile.x, this.discardPile.y);
+    };
+    Scene.prototype.getHandOffScreenPoint = function () {
+        return new PIXI.Point(0, -Main.getGameY() - 200);
     };
     Scene.prototype.getHandPosition = function (index) {
         var p = Main.gamestate.players.indexOf(Main.player);
@@ -3518,12 +3512,6 @@ var Wonder = /** @class */ (function (_super) {
             this.overflowCardEffectRolls[0].addCard(card);
         }
     };
-    Wonder.prototype.makeMove = function () {
-        this.moveIndicatorCheck.style.visibility = 'visible';
-    };
-    Wonder.prototype.undoMove = function () {
-        this.moveIndicatorCheck.style.visibility = 'hidden';
-    };
     Wonder.prototype.getCardEffectRollMaxWidth = function (color) {
         return {
             'brown': C.WONDER_BOARD_WIDTH,
@@ -3646,10 +3634,6 @@ var Wonder = /** @class */ (function (_super) {
         pointsText.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_POINTS_TEXT_X + "px";
         pointsText.style.top = C.WONDER_SIDEBAR_POINTS_TEXT_Y + "px";
         this.pointsText = pointsText.querySelector('p');
-        this.moveIndicatorCheck = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.checkMark(), C.WONDER_SIDEBAR_CHECKMARK_SCALE));
-        this.moveIndicatorCheck.style.left = C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_CHECKMARK_X + "px";
-        this.moveIndicatorCheck.style.top = C.WONDER_SIDEBAR_CHECKMARK_Y + "px";
-        this.moveIndicatorCheck.style.visibility = 'hidden';
         for (var i = 0; i < Main.gamestate.playerData[this.player].militaryTokens.length; i++) {
             var token = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.militaryToken(Main.gamestate.playerData[this.player].militaryTokens[i]), C.TOKEN_SCALE));
             token.style.position = 'absolute';

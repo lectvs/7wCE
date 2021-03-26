@@ -7,7 +7,6 @@ type HandState = { type: 'normal' }
                | { type: 'moving' };
 
 class Hand {
-
     cardIds: number[];
     activeWonder: Wonder;
     flankDirection: number;
@@ -29,10 +28,10 @@ class Hand {
         return undefined;
     }
 
-    constructor(x: number, y: number, handData: HandData) {
+    constructor(position: PIXI.Point, handData: HandData) {
         this.state = { type: 'normal' };
-        this.x = x;
-        this.y = y;
+        this.x = position.x;
+        this.y = position.y;
         this.scale = 1;
         this.createWithData(handData);
     }
@@ -158,9 +157,5 @@ class Hand {
         let position = this.getPosition();
         position.x += (cardIndex - (cardsInHand.length - 1)/2) * C.HAND_CARD_DX;
         return position;
-    }
-
-    getStartMovingPosition() {
-        return new PIXI.Point(0, C.HAND_Y);
     }
 }

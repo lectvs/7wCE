@@ -140,7 +140,8 @@ namespace GameStateDiffer {
             // Return discard if it was in your hand
             if (Main.gamestate.state === 'DISCARD_MOVE' && Main.gamestate.discardMoveQueue[0] === Main.player) {
                 Main.scene.discardHand = Main.scene.hand;
-                Main.scene.hands[Main.gamestate.players.indexOf(Main.player)] = new Hand(0, -Main.getGameY() - 200, { type: 'normal', cardIds: Main.gamestate.hand, activeWonder: Main.scene.topWonder, validMoves: Main.gamestate.validMoves });
+                Main.scene.hands[Main.gamestate.players.indexOf(Main.player)] = new Hand(Main.scene.getHandOffScreenPoint(),
+                                        { type: 'normal', cardIds: Main.gamestate.hand, activeWonder: Main.scene.topWonder, validMoves: Main.gamestate.validMoves });
                 Main.scene.hand.snap();
 
                 let handPosition = Main.scene.hand.getPosition();
@@ -288,14 +289,15 @@ namespace GameStateDiffer {
                 if (gamestate.state !== 'GAME_COMPLETE') {
                     // Deal new cards
                     let hands: Hand[] = gamestate.players.map(player => undefined);
+                    let entryPoint = Main.scene.getHandOffScreenPoint();
 
-                    hands[p] = new Hand(0, -Main.getGameY() - 200, { type: 'normal', cardIds: gamestate.hand, activeWonder: Main.scene.topWonder, validMoves: gamestate.validMoves });
+                    hands[p] = new Hand(entryPoint, { type: 'normal', cardIds: gamestate.hand, activeWonder: Main.scene.topWonder, validMoves: gamestate.validMoves });
                     hands[p].state = { type: 'moving' };
                     hands[p].snap();
 
                     for (let i = 0; i < gamestate.players.length; i++) {
                         if (i === p) continue;
-                        hands[i] = new Hand(0, -Main.getGameY() - 200, { type: 'back', age: gamestate.age, player: gamestate.players[i], flankDirection: 1 });
+                        hands[i] = new Hand(entryPoint, { type: 'back', age: gamestate.age, player: gamestate.players[i], flankDirection: 1 });
                         hands[i].state = { type: 'back', moved: false };
                         hands[i].snap();
                     }
@@ -443,10 +445,8 @@ namespace GameStateDiffer {
 
         result.scripts.push(function*() {
             if (!oldMove && newMove) {
-                Main.scene.wonders[playeri].makeMove();
                 if (Main.gamestate.state !== 'DISCARD_MOVE') Main.scene.hands[playeri].makeMove();
             } else {
-                Main.scene.wonders[playeri].undoMove();
                 Main.scene.hands[playeri].undoMove();
             }
         });
