@@ -1,25 +1,18 @@
 class GameElement {
     div: HTMLDivElement;
 
-    get x() {
-        return HtmlUtils.cssStylePositionToPixels(this._xs, Main.gameWidth);
-    }
-    get y() {
-        return HtmlUtils.cssStylePositionToPixels(this._ys, Main.gameHeight);
-    }
-    set x(value: number) { this.xs = `${value}px`; }
-    set y(value: number) { this.ys = `${value}px`; }
-
-    private _xs: string = `0px`;
-    set xs(value: string) {
-        this._xs = value;
-        this.div.style.left = value;
+    private _x: number = 0;
+    get x() { return this._x; }
+    set x(value: number) {
+        this._x = value;
+        this.div.style.left = `${this._x}px`;
     }
 
-    private _ys: string = `0px`;
-    set ys(value: string) {
-        this._ys = value;
-        this.div.style.top = value;
+    private _y: number = 0;
+    get y() { return this._y; }
+    set y(value: number) {
+        this._y = value;
+        this.div.style.top = `${this._y}px`;
     }
 
     private _scale: number = 1;

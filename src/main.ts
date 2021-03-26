@@ -4,6 +4,8 @@ class Main {
     static gamestate: API.GameState;
     static currentError: string;
 
+    static mouseX: number = 0;
+    static mouseY: number = 0;
     static mouseDown: boolean = false;
 
     static game: HTMLDivElement;
@@ -15,9 +17,6 @@ class Main {
 
     static scriptManager: ScriptManager;
 
-    static gameWidth: number;
-    static gameHeight: number;
-
     static moveImmuneTime: number;
     static diffing: boolean;
 
@@ -28,10 +27,14 @@ class Main {
         window.addEventListener('mousedown', () => this.mouseDown = true);
         window.addEventListener('mouseup', () => this.mouseDown = false);
 
+        window.onmousemove = (event: MouseEvent) => {
+            event.preventDefault();
+            this.mouseX = event.pageX - window.innerWidth/2;
+            this.mouseY = event.pageY - Main.getGameY();
+        }
+
         this.mouseDown = false;
         this.game = <HTMLDivElement>document.getElementById('game');
-        this.gameWidth = this.game.clientWidth;
-        this.gameHeight = this.game.clientHeight;
         this.moveImmuneTime = 0;
 
         this.scriptManager = new ScriptManager();
@@ -76,8 +79,6 @@ class Main {
     }
 
     static update() {
-        this.gameWidth = this.game.clientWidth;
-        this.gameHeight = this.game.clientHeight;
         this.moveImmuneTime = clamp(this.moveImmuneTime - Main.delta, 0, Infinity);
 
         if (this.scene) this.scene.update();

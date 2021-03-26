@@ -12,8 +12,8 @@ class Hand {
     activeWonder: Wonder;
     flankDirection: number;
 
-    xs: string;
-    ys: string;
+    x: number;
+    y: number;
 
     state: HandState;
     cards: Card[];
@@ -29,10 +29,10 @@ class Hand {
         return undefined;
     }
 
-    constructor(xs: string, ys: string, handData: HandData) {
+    constructor(x: number, y: number, handData: HandData) {
         this.state = { type: 'normal' };
-        this.xs = xs;
-        this.ys = ys;
+        this.x = x;
+        this.y = y;
         this.scale = 1;
         this.createWithData(handData);
     }
@@ -52,7 +52,7 @@ class Hand {
                 }
                 // No, this should NOT be an 'else'
                 if (this.cards[i].state.type === 'in_hand_moving' || this.cards[i].state.type === 'in_discard') {
-                    this.cards[i].targetPosition = this.getPositionPixels();
+                    this.cards[i].targetPosition.set(this.x, this.y);
                     this.cards[i].scale = this.scale;
                 }
 
@@ -142,8 +142,11 @@ class Hand {
         }
     }
 
+    getPosition() {
+        return new PIXI.Point(this.x, this.y);
+    }
+
     getNormalHandPosition(cardIndex: number) {
-        let ppx = this.getPositionPixels();
         let cardsInHand = [];
         for (let i = 0; i < this.cards.length; i++) {
             if (this.cards[i].state.type.startsWith('in_hand')) {
@@ -152,15 +155,12 @@ class Hand {
                 cardIndex--;
             }
         }
-        ppx.x += (cardIndex - (cardsInHand.length - 1)/2) * C.HAND_CARD_DX;
-        return ppx;
+        let position = this.getPosition();
+        position.x += (cardIndex - (cardsInHand.length - 1)/2) * C.HAND_CARD_DX;
+        return position;
     }
 
     getStartMovingPosition() {
-        return new PIXI.Point(Main.gameWidth/2, C.HAND_Y);
-    }
-
-    getPositionPixels() {
-        return new PIXI.Point(HtmlUtils.cssStylePositionToPixels(this.xs, Main.gameWidth), HtmlUtils.cssStylePositionToPixels(this.ys, Main.gameHeight));
+        return new PIXI.Point(0, C.HAND_Y);
     }
 }

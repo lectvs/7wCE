@@ -108,8 +108,8 @@ class Card extends GameElement {
             if (!this.interactable) return;
             if (event.button !== 0) return;
             this.dragging = {
-                offsetx: this.x - Main.scene.mouseX,
-                offsety: this.y - Main.scene.mouseY
+                offsetx: this.x - Main.mouseX,
+                offsety: this.y - Main.mouseY
             };
         };
     }
@@ -150,9 +150,9 @@ class Card extends GameElement {
 
     update() {
         if (this.dragging) {
-            let stage = this.activeWonder.getClosestStageId(Main.scene.mouseX);
+            let stage = this.activeWonder.getClosestStageId(Main.mouseX);
             if (!Main.mouseDown || !this.canBeInteractable()) {
-                if (this.allowPlay && this.activeWonder.getMainRegion().contains(Main.scene.mouseX, Main.scene.mouseY)) {
+                if (this.allowPlay && this.activeWonder.getMainRegion().contains(Main.mouseX, Main.mouseY)) {
                     let move: API.Move = { action: 'play', card: this.apiCardId };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
                         Main.scene.startPaymentDialog(this, move);
@@ -161,7 +161,7 @@ class Card extends GameElement {
                         Main.submitMove(move);
                     }
                     this.select(move);
-                } else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(Main.scene.mouseX, Main.scene.mouseY)) {
+                } else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(Main.mouseX, Main.mouseY)) {
                     let move: API.Move = { action: 'wonder', card: this.apiCardId, stage: stage };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
                         Main.scene.startPaymentDialog(this, move);
@@ -170,7 +170,7 @@ class Card extends GameElement {
                         Main.submitMove(move);
                     }
                     this.select(move);
-                } else if (this.allowThrow && Main.scene.discardPile.getDiscardRegion().contains(Main.scene.mouseX, Main.scene.mouseY)) {
+                } else if (this.allowThrow && Main.scene.discardPile.getDiscardRegion().contains(Main.mouseX, Main.mouseY)) {
                     let move: API.Move = { action: 'throw', card: this.apiCardId, payment: {} };
                     Main.submitMove(move);
                     this.select(move);
@@ -179,11 +179,11 @@ class Card extends GameElement {
                 }
                 this.dragging = null;
             } else {
-                if (this.allowPlay && this.activeWonder.getMainRegion().contains(Main.scene.mouseX, Main.scene.mouseY)) {
+                if (this.allowPlay && this.activeWonder.getMainRegion().contains(Main.mouseX, Main.mouseY)) {
                     this.state = { type: 'dragging_play' };
-                } else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(Main.scene.mouseX, Main.scene.mouseY)) {
+                } else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(Main.mouseX, Main.mouseY)) {
                     this.state = { type: 'dragging_wonder' };
-                } else if (this.allowThrow && Main.scene.discardPile.getDiscardRegion().contains(Main.scene.mouseX, Main.scene.mouseY)) {
+                } else if (this.allowThrow && Main.scene.discardPile.getDiscardRegion().contains(Main.mouseX, Main.mouseY)) {
                     this.state = { type: 'dragging_throw' };
                 } else {
                     this.state = { type: 'dragging_normal' };
@@ -197,24 +197,24 @@ class Card extends GameElement {
             this.interactable = this.canBeInteractable();
             this.visualState = this.state.visualState;
         } else if (this.state.type === 'dragging_normal') {
-            this.targetPosition.set(Main.scene.mouseX + this.dragging.offsetx, Main.scene.mouseY + this.dragging.offsety);
+            this.targetPosition.set(Main.mouseX + this.dragging.offsetx, Main.mouseY + this.dragging.offsety);
             this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = this.canBeInteractable();
             this.visualState = 'full';
         } else if (this.state.type === 'dragging_play') {
-            this.targetPosition.set(Main.scene.mouseX, Main.scene.mouseY);
+            this.targetPosition.set(Main.mouseX, Main.mouseY);
             this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = this.canBeInteractable();
             this.visualState = 'effect';
         } else if (this.state.type === 'dragging_wonder') {
-            let stage = this.activeWonder.getClosestStageId(Main.scene.mouseX);
+            let stage = this.activeWonder.getClosestStageId(Main.mouseX);
             let stagePoint = this.activeWonder.getCardPositionForStage(stage);
             this.targetPosition.set(stagePoint.x, stagePoint.y);
             this.zIndex = C.Z_INDEX_CARD_WONDER;
             this.interactable = this.canBeInteractable();
             this.visualState = 'flipped';
         } else if (this.state.type === 'dragging_throw') {
-            this.targetPosition.set(Main.scene.mouseX + this.dragging.offsetx, Main.scene.mouseY + this.dragging.offsety);
+            this.targetPosition.set(Main.mouseX + this.dragging.offsetx, Main.mouseY + this.dragging.offsety);
             this.zIndex = C.Z_INDEX_CARD_DRAGGING;
             this.interactable = false;
             this.visualState = 'flipped';

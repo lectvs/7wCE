@@ -1,4 +1,5 @@
 todo
-- BIG shift center of game div to be 0??
-- animations
+- art
 - hover-infos
+- choose wonder
+- game lobby

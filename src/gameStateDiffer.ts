@@ -140,12 +140,12 @@ namespace GameStateDiffer {
             // Return discard if it was in your hand
             if (Main.gamestate.state === 'DISCARD_MOVE' && Main.gamestate.discardMoveQueue[0] === Main.player) {
                 Main.scene.discardHand = Main.scene.hand;
-                Main.scene.hands[Main.gamestate.players.indexOf(Main.player)] = new Hand('50%', `${-Main.getGameY() - 200}px`, { type: 'normal', cardIds: Main.gamestate.hand, activeWonder: Main.scene.topWonder, validMoves: Main.gamestate.validMoves });
+                Main.scene.hands[Main.gamestate.players.indexOf(Main.player)] = new Hand(0, -Main.getGameY() - 200, { type: 'normal', cardIds: Main.gamestate.hand, activeWonder: Main.scene.topWonder, validMoves: Main.gamestate.validMoves });
                 Main.scene.hand.snap();
 
-                let handPosition = Main.scene.hand.getPositionPixels();
-                let targetHandPosition = Main.scene.discardHand.getPositionPixels();
-                let discardHandPosition = Main.scene.discardHand.getPositionPixels();
+                let handPosition = Main.scene.hand.getPosition();
+                let targetHandPosition = Main.scene.discardHand.getPosition();
+                let discardHandPosition = Main.scene.discardHand.getPosition();
                 let targetDiscardHandPosition = Main.scene.discardPile.getDiscardLockPoint();
 
                 Main.scene.discardHand.state = { type: 'moving' };
@@ -154,11 +154,11 @@ namespace GameStateDiffer {
                 let lerpt = 0;
                 yield* S.doOverTime(0.3, t => {
                     lerpt = lerp(lerpt, 1, t**2);
-                    Main.scene.hand.xs = `${lerp(handPosition.x, targetHandPosition.x, lerpt)}px`;
-                    Main.scene.hand.ys = `${lerp(handPosition.y, targetHandPosition.y, lerpt)}px`;
+                    Main.scene.hand.x = lerp(handPosition.x, targetHandPosition.x, lerpt);
+                    Main.scene.hand.y = lerp(handPosition.y, targetHandPosition.y, lerpt);
 
-                    Main.scene.discardHand.xs = `${lerp(discardHandPosition.x, targetDiscardHandPosition.x, lerpt)}px`;
-                    Main.scene.discardHand.ys = `${lerp(discardHandPosition.y, targetDiscardHandPosition.y, lerpt)}px`;
+                    Main.scene.discardHand.x = lerp(discardHandPosition.x, targetDiscardHandPosition.x, lerpt);
+                    Main.scene.discardHand.y = lerp(discardHandPosition.y, targetDiscardHandPosition.y, lerpt);
                 })();
 
                 yield* S.wait(0.2)();
@@ -168,7 +168,7 @@ namespace GameStateDiffer {
 
             if (isEndOfAge) {
                 // Discard all non-last-players cards
-                let currentHandPositions = Main.scene.hands.map(hand => hand.getPositionPixels());
+                let currentHandPositions = Main.scene.hands.map(hand => hand.getPosition());
                 let targetHandPosition = Main.scene.discardPile.getDiscardLockPoint();
 
                 let lerpt = 0;
@@ -177,8 +177,8 @@ namespace GameStateDiffer {
                     for (let i = 0; i < Main.scene.hands.length; i++) {
                         if (!contains(gamestate.lastCardPlayers, gamestate.players[i])) {
                             Main.scene.hands[i].state = { type: 'moving' };
-                            Main.scene.hands[i].xs = `${lerp(currentHandPositions[i].x, targetHandPosition.x, lerpt)}px`;
-                            Main.scene.hands[i].ys = `${lerp(currentHandPositions[i].y, targetHandPosition.y, lerpt)}px`;
+                            Main.scene.hands[i].x = lerp(currentHandPositions[i].x, targetHandPosition.x, lerpt);
+                            Main.scene.hands[i].y = lerp(currentHandPositions[i].y, targetHandPosition.y, lerpt);
                             Main.scene.hands[i].scale = lerp(Main.scene.hands[i].scale, 1, lerpt);
                         }
                     }
@@ -193,19 +193,19 @@ namespace GameStateDiffer {
                 if (gamestate.discardMoveQueue[0] === Main.player) {
                     // Replace hand with discard pile
                     Main.scene.discardHand.setAllCardState({ type: 'in_hand_moving' });
-                    let handPosition = Main.scene.hand.getPositionPixels();
+                    let handPosition = Main.scene.hand.getPosition();
                     let targetHandPosition = handPosition.clone();
-                    let discardHandPosition = Main.scene.discardHand.getPositionPixels();
+                    let discardHandPosition = Main.scene.discardHand.getPosition();
                     targetHandPosition.y = -Main.getGameY() - 200;
 
                     let lerpt = 0;
                     yield* S.doOverTime(0.3, t => {
                         lerpt = lerp(lerpt, 1, t**2);
-                        Main.scene.hand.xs = `${lerp(handPosition.x, targetHandPosition.x, lerpt)}px`;
-                        Main.scene.hand.ys = `${lerp(handPosition.y, targetHandPosition.y, lerpt)}px`;
+                        Main.scene.hand.x = lerp(handPosition.x, targetHandPosition.x, lerpt);
+                        Main.scene.hand.y = lerp(handPosition.y, targetHandPosition.y, lerpt);
 
-                        Main.scene.discardHand.xs = `${lerp(discardHandPosition.x, handPosition.x, lerpt)}px`;
-                        Main.scene.discardHand.ys = `${lerp(discardHandPosition.y, handPosition.y, lerpt)}px`;
+                        Main.scene.discardHand.x = lerp(discardHandPosition.x, handPosition.x, lerpt);
+                        Main.scene.discardHand.y = lerp(discardHandPosition.y, handPosition.y, lerpt);
                     })();
     
                     yield* S.wait(0.2)();
@@ -289,26 +289,26 @@ namespace GameStateDiffer {
                     // Deal new cards
                     let hands: Hand[] = gamestate.players.map(player => undefined);
 
-                    hands[p] = new Hand('50%', `${-Main.getGameY() - 200}px`, { type: 'normal', cardIds: gamestate.hand, activeWonder: Main.scene.topWonder, validMoves: gamestate.validMoves });
+                    hands[p] = new Hand(0, -Main.getGameY() - 200, { type: 'normal', cardIds: gamestate.hand, activeWonder: Main.scene.topWonder, validMoves: gamestate.validMoves });
                     hands[p].state = { type: 'moving' };
                     hands[p].snap();
 
                     for (let i = 0; i < gamestate.players.length; i++) {
                         if (i === p) continue;
-                        hands[i] = new Hand('50%', `${-Main.getGameY() - 200}px`, { type: 'back', age: gamestate.age, player: gamestate.players[i], flankDirection: 1 });
+                        hands[i] = new Hand(0, -Main.getGameY() - 200, { type: 'back', age: gamestate.age, player: gamestate.players[i], flankDirection: 1 });
                         hands[i].state = { type: 'back', moved: false };
                         hands[i].snap();
                     }
 
-                    let startPosition = hands[0].getPositionPixels();
-                    let endPosition = HtmlUtils.cssStyleGamePositionToPixels(Main.scene.getHandPositionS(p));
+                    let startPosition = hands[0].getPosition();
+                    let endPosition = Main.scene.getHandPosition(p);
 
                     let lerpt = 0;
                     yield* S.doOverTime(0.3, t => {
                         lerpt = lerp(lerpt, 1, t**2);
                         for (let hand of hands) {
-                            hand.xs = `${lerp(startPosition.x, endPosition.x, lerpt)}px`;
-                            hand.ys = `${lerp(startPosition.y, endPosition.y, lerpt)}px`;
+                            hand.x = lerp(startPosition.x, endPosition.x, lerpt);
+                            hand.y = lerp(startPosition.y, endPosition.y, lerpt);
                             hand.update();
                         }
                     })();
@@ -317,14 +317,14 @@ namespace GameStateDiffer {
 
                     let i = l;
                     for (let count = 0; count < gamestate.players.length-1; count++) {
-                        let startPosition = hands[i].getPositionPixels();
-                        let endPosition = HtmlUtils.cssStyleGamePositionToPixels(Main.scene.getHandPositionS(i));
+                        let startPosition = hands[i].getPosition();
+                        let endPosition = Main.scene.getHandPosition(i);
 
                         let lerpt = 0;
                         yield* S.doOverTime(0.2, t => {
                             lerpt = lerp(lerpt, 1, t**2);
-                            hands[i].xs = `${lerp(startPosition.x, endPosition.x, lerpt)}px`;
-                            hands[i].ys = `${lerp(startPosition.y, endPosition.y, lerpt)}px`;
+                            hands[i].x = lerp(startPosition.x, endPosition.x, lerpt);
+                            hands[i].y = lerp(startPosition.y, endPosition.y, lerpt);
                             hands[i].scale = lerp(hands[i].scale, C.HAND_FLANK_SCALE, lerpt);
                             hands[i].update();
                         })();
@@ -340,7 +340,7 @@ namespace GameStateDiffer {
                 }
             } else {  
                 // Rotate all cards  
-                let currentHandPositions = Main.scene.hands.map(hand => hand.getPositionPixels());
+                let currentHandPositions = Main.scene.hands.map(hand => hand.getPosition());
                 let targetHandPositions = [...currentHandPositions];
                 let newHandi: number;
                 if (Main.gamestate.age % 2 === 0) {
@@ -358,8 +358,8 @@ namespace GameStateDiffer {
                 yield* S.doOverTime(0.3, t => {
                     lerpt = lerp(lerpt, 1, t**2);
                     for (let i = 0; i < Main.scene.hands.length; i++) {
-                        Main.scene.hands[i].xs = `${lerp(currentHandPositions[i].x, targetHandPositions[i].x, lerpt)}px`;
-                        Main.scene.hands[i].ys = `${lerp(currentHandPositions[i].y, targetHandPositions[i].y, lerpt)}px`;
+                        Main.scene.hands[i].x = lerp(currentHandPositions[i].x, targetHandPositions[i].x, lerpt);
+                        Main.scene.hands[i].y = lerp(currentHandPositions[i].y, targetHandPositions[i].y, lerpt);
 
                         if (i === newHandi) {
                             Main.scene.hands[i].scale = lerp(Main.scene.hands[i].scale, 1, lerpt);

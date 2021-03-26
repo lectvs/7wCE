@@ -21,7 +21,7 @@
 
 #game {
     position: relative;
-    height: 2000px;
+    left: 50%;
 }
 
 canvas {

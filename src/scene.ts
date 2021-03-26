@@ -1,8 +1,4 @@
 class Scene {
-
-    mouseX: number = 0;
-    mouseY: number = 0;
-
     wonders: Wonder[];
     militaryOverlays: MilitaryOverlay[];
     hands: Hand[];
@@ -56,43 +52,42 @@ class Scene {
         let r = mod(p+1, players.length);
 
         this.wonders[p] = new Wonder(Main.player);
-        this.wonders[p].xs = '50%';
+        this.wonders[p].x = 0;
         this.wonders[p].y = C.WONDER_START_Y;
         this.wonders[p].addToGame();
         this.militaryOverlays[p] = new MilitaryOverlay();
-        this.militaryOverlays[p].xs = '50%';
         this.militaryOverlays[p].y = C.WONDER_START_Y;
         this.militaryOverlays[p].addToGame();
-        let handPosition_p = this.getHandPositionS(p);
-        this.hands[p] = new Hand(handPosition_p.xs, handPosition_p.ys, { type: 'normal', cardIds: cardsInHand, activeWonder: this.wonders[p], validMoves: Main.gamestate.validMoves });
+        let handPosition_p = this.getHandPosition(p);
+        this.hands[p] = new Hand(handPosition_p.x, handPosition_p.y, { type: 'normal', cardIds: cardsInHand, activeWonder: this.wonders[p], validMoves: Main.gamestate.validMoves });
         this.hands[p].snap();
 
         let i: number;
         for (i = 1; i < Math.floor((players.length - 1)/2 + 1); i++) {
             this.wonders[l] = new Wonder(players[l]);
-            this.wonders[l].xs = `calc(50% - ${C.WONDER_DX}px)`;
+            this.wonders[l].x = -C.WONDER_DX;
             this.wonders[l].y = C.WONDER_START_Y + C.WONDER_DY*i;
             this.wonders[l].addToGame();
             this.militaryOverlays[l] = new MilitaryOverlay();
-            this.militaryOverlays[l].xs = `calc(50% - ${C.WONDER_DX}px)`;
+            this.militaryOverlays[l].x = -C.WONDER_DX;
             this.militaryOverlays[l].y = C.WONDER_START_Y + C.WONDER_DY*i;
             this.militaryOverlays[l].addToGame();
-            let handPosition_l = this.getHandPositionS(l);
-            this.hands[l] = new Hand(handPosition_l.xs, handPosition_l.ys, { type: 'back', player: players[l], age: gamestate.age, flankDirection: -1 });
+            let handPosition_l = this.getHandPosition(l);
+            this.hands[l] = new Hand(handPosition_l.x, handPosition_l.y, { type: 'back', player: players[l], age: gamestate.age, flankDirection: -1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].snap();
 
             this.wonders[r] = new Wonder(players[r]);
-            this.wonders[r].xs = `calc(50% + ${C.WONDER_DX}px)`;
+            this.wonders[r].x = C.WONDER_DX;
             this.wonders[r].y = C.WONDER_START_Y + C.WONDER_DY*i;
             this.wonders[r].addToGame();
             this.militaryOverlays[r] = new MilitaryOverlay();
-            this.militaryOverlays[r].xs = `calc(50% + ${C.WONDER_DX}px)`;
+            this.militaryOverlays[r].x = C.WONDER_DX;
             this.militaryOverlays[r].y = C.WONDER_START_Y + C.WONDER_DY*i;
             this.militaryOverlays[r].addToGame();
-            let handPosition_r = this.getHandPositionS(r);
-            this.hands[r] = new Hand(handPosition_r.xs, handPosition_r.ys, { type: 'back', player: players[r], age: gamestate.age, flankDirection: 1 });
+            let handPosition_r = this.getHandPosition(r);
+            this.hands[r] = new Hand(handPosition_r.x, handPosition_r.y, { type: 'back', player: players[r], age: gamestate.age, flankDirection: 1 });
             this.hands[r].state = { type: 'back', moved: !!gamestate.playerData[players[r]].currentMove };
             this.hands[r].scale = C.HAND_FLANK_SCALE;
             this.hands[r].snap();
@@ -103,43 +98,37 @@ class Scene {
 
         if (players.length % 2 === 0) {
             this.wonders[l] = new Wonder(players[l]);
-            this.wonders[l].xs = '50%';
+            this.wonders[l].x = 0;
             this.wonders[l].y = C.WONDER_START_Y + C.WONDER_DY*i;
             this.wonders[l].addToGame();
             this.militaryOverlays[l] = new MilitaryOverlay();
-            this.militaryOverlays[l].xs = '50%';
+            this.militaryOverlays[l].x = 0;
             this.militaryOverlays[l].y = C.WONDER_START_Y + C.WONDER_DY*i;
             this.militaryOverlays[l].addToGame();
-            let handPosition_last = this.getHandPositionS(l);
-            this.hands[l] = new Hand(handPosition_last.xs, handPosition_last.ys, { type: 'back', player: players[l], age: gamestate.age, flankDirection: 1 });
+            let handPosition_last = this.getHandPosition(l);
+            this.hands[l] = new Hand(handPosition_last.x, handPosition_last.y, { type: 'back', player: players[l], age: gamestate.age, flankDirection: 1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].snap();
         }
 
         this.actionButton = new ActionButton();
-        this.actionButton.xs = '50%';
+        this.actionButton.x = 0;
         this.actionButton.y = C.ACTION_BUTTON_Y;
         this.actionButton.addToGame();
 
         this.hand.reflectMove(gamestate.playerData[Main.player].currentMove);
 
         this.discardPile = new DiscardPile();
-        this.discardPile.xs = '50%';
+        this.discardPile.x = 0;
         this.discardPile.y = C.WONDER_START_Y + C.WONDER_DY;
         this.discardPile.addToGame();
 
         let discardPoint = this.discardPile.getDiscardLockPoint();
-        this.discardHand = new Hand('50%', `${discardPoint.y}px`,
+        this.discardHand = new Hand(0, discardPoint.y,
                             { type: 'discard', count: this.isMyTurnToBuildFromDiscard() ? 0 : gamestate.discardedCardCount, lastCardAge: gamestate.lastDiscardedCardAge });
         this.discardHand.state = { type: 'moving' };
         this.discardHand.snap();
-
-        Main.game.onmousemove = (event: MouseEvent) => {
-            event.preventDefault();
-            this.mouseX = event.pageX;
-            this.mouseY = event.pageY - Main.getGameY();
-        }
 
         this.update();
     }
@@ -196,21 +185,21 @@ class Scene {
         return new PIXI.Point(this.discardPile.x, this.discardPile.y);
     }
 
-    getHandPositionS(index: number): { xs: string, ys: string} {
+    getHandPosition(index: number) {
         let p = Main.gamestate.players.indexOf(Main.player);
         let l = mod(p-1, Main.gamestate.players.length);
         let r = mod(p+1, Main.gamestate.players.length);
 
-        if (index === p) return { xs: '50%', ys: `${C.HAND_Y}px` };
+        if (index === p) return new PIXI.Point(0, C.HAND_Y);
 
         let i: number;
         for (i = 1; i < Math.floor((Main.gamestate.players.length - 1)/2 + 1); i++) {
-            if (index === l) return { xs: `calc(50% - ${C.HAND_FLANK_DX}px)`, ys :`${C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY}px` };
-            if (index === r) return { xs: `calc(50% + ${C.HAND_FLANK_DX}px)`, ys :`${C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY}px` };
+            if (index === l) return new PIXI.Point(-C.HAND_FLANK_DX, C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY);
+            if (index === r) return new PIXI.Point(C.HAND_FLANK_DX, C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY);
         }
 
         if (Main.gamestate.players.length % 2 === 0) {
-            if (index === l) return { xs: `calc(50% + ${C.HAND_LAST_DX}px)`, ys: `${C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY}px` };
+            if (index === l) return new PIXI.Point(C.HAND_LAST_DX, C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY);
         }
 
         console.log(`Hand position index ${index} is out of bounds`);
