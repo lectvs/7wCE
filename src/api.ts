@@ -200,6 +200,10 @@ namespace API {
         return options;
     }
 
+    export function goldGain(oldGold: number, newGold: number, payment: Payment, negPayment: Payment, posPayment: Payment) {
+        return newGold - oldGold + totalPaymentAmount(payment) - (negPayment.pos || 0) - (posPayment.neg || 0);
+    }
+
     /* API METHODS */
     export function getgamestate(gameid: string, player: string, callback: (gamestate: GameState, error: string) => any) {
         httpRequest(`${LAMBDA_URL}?operation=getgamestate&gameid=${gameid}&player=${player}`, (responseJson: any, error: string) => {

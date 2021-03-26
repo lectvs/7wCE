@@ -9,6 +9,7 @@ class C {
     public static readonly Z_INDEX_CARD_DRAGGING = 100;
     public static readonly Z_INDEX_MILITARY_OVERLAY = 101;
     public static readonly Z_INDEX_MILITARY_TOKEN = 102;
+    public static readonly Z_INDEX_GOLD_COIN = 102;
     public static readonly Z_INDEX_PAYMENT_DIALOG = 1000;
 
     public static readonly ANIMATION_TURN_REVEAL_TIME = 1;
@@ -16,6 +17,7 @@ class C {
     public static readonly ANIMATION_MILITARY_FADE_TIME = 0.5;
     public static readonly ANIMATION_MILITARY_WAIT_TIME = 1;
     public static readonly ANIMATION_TOKEN_DISTRIBUTE_TIME = 1;
+    public static readonly ANIMATION_GOLD_COIN_MOVE_TIME = 1;
 
     public static readonly ERROR_BG_COLOR = '#FF0000';
     public static readonly OK_BG_COLOR = '#FFFFFF';
@@ -124,6 +126,7 @@ class C {
     public static readonly WONDER_OVERLAY_TEXT_COLOR = '#FF0000';
 
     public static readonly TOKEN_SCALE = 0.2;
+    public static readonly GOLD_COIN_SCALE = 0.3;
 
     public static readonly DISCARD_PILE_AREA_WIDTH = 250;
     public static readonly DISCARD_PILE_AREA_HEIGHT = 300;

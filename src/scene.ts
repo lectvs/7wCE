@@ -192,6 +192,10 @@ class Scene {
         }
     }
 
+    getSourceSinkPosition() {
+        return new PIXI.Point(this.discardPile.x, this.discardPile.y);
+    }
+
     getHandPositionS(index: number): { xs: string, ys: string} {
         let p = Main.gamestate.players.indexOf(Main.player);
         let l = mod(p-1, Main.gamestate.players.length);

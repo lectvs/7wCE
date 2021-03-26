@@ -121,6 +121,10 @@ class Wonder extends GameElement {
         }
     }
 
+    getGoldCoinWorldPosition() {
+        return new PIXI.Point(this.x + C.WONDER_BOARD_WIDTH/2 + C.WONDER_SIDEBAR_GOLD_COIN_X, this.y - C.WONDER_BOARD_HEIGHT/2 + C.WONDER_SIDEBAR_GOLD_COIN_Y);
+    }
+
     getMilitaryTokenWorldPosition(i: number) {
         return new PIXI.Point(this.x + C.WONDER_BOARD_WIDTH/2 + C.WONDER_SIDEBAR_TOKENS_X + C.WONDER_SIDEBAR_TOKENS_DX*i, this.y - C.WONDER_BOARD_HEIGHT/2 + C.WONDER_SIDEBAR_TOKENS_Y);
     }

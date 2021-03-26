@@ -353,6 +353,10 @@ var API;
         return options;
     }
     API.minimalPaymentOptions = minimalPaymentOptions;
+    function goldGain(oldGold, newGold, payment, negPayment, posPayment) {
+        return newGold - oldGold + totalPaymentAmount(payment) - (negPayment.pos || 0) - (posPayment.neg || 0);
+    }
+    API.goldGain = goldGain;
     /* API METHODS */
     function getgamestate(gameid, player, callback) {
         httpRequest(LAMBDA_URL + "?operation=getgamestate&gameid=" + gameid + "&player=" + player, function (responseJson, error) {
@@ -1579,12 +1583,14 @@ var C = /** @class */ (function () {
     C.Z_INDEX_CARD_DRAGGING = 100;
     C.Z_INDEX_MILITARY_OVERLAY = 101;
     C.Z_INDEX_MILITARY_TOKEN = 102;
+    C.Z_INDEX_GOLD_COIN = 102;
     C.Z_INDEX_PAYMENT_DIALOG = 1000;
     C.ANIMATION_TURN_REVEAL_TIME = 1;
     C.ANIMATION_TURN_PLAY_TIME = 1;
     C.ANIMATION_MILITARY_FADE_TIME = 0.5;
     C.ANIMATION_MILITARY_WAIT_TIME = 1;
     C.ANIMATION_TOKEN_DISTRIBUTE_TIME = 1;
+    C.ANIMATION_GOLD_COIN_MOVE_TIME = 1;
     C.ERROR_BG_COLOR = '#FF0000';
     C.OK_BG_COLOR = '#FFFFFF';
     C.ERROR_TEXT_COLOR = '#FFFFFF';
@@ -1686,6 +1692,7 @@ var C = /** @class */ (function () {
     C.WONDER_OVERLAY_TEXT_SIZE = 100;
     C.WONDER_OVERLAY_TEXT_COLOR = '#FF0000';
     C.TOKEN_SCALE = 0.2;
+    C.GOLD_COIN_SCALE = 0.3;
     C.DISCARD_PILE_AREA_WIDTH = 250;
     C.DISCARD_PILE_AREA_HEIGHT = 300;
     C.DISCARD_PILE_AREA_CORNER_RADIUS = 10;
@@ -1853,25 +1860,50 @@ var GameStateDiffer;
                     case 0:
                         moveScripts = gamestate.players.map(function (player) {
                             return function () {
-                                var i, hand, lastMove, card_1, playedPoint_1, card_2, wonderPoint_1, card_3, discardPoint_1;
-                                return __generator(this, function (_a) {
-                                    switch (_a.label) {
+                                var i, neg, pos, hand, lastMove, paymentScripts, goldGain, card_1, playedPoint_1, card_2, wonderPoint_1, card_3, discardPoint_1;
+                                var _a, _b;
+                                return __generator(this, function (_c) {
+                                    switch (_c.label) {
                                         case 0:
                                             i = gamestate.players.indexOf(player);
+                                            neg = mod(i - 1, gamestate.players.length);
+                                            pos = mod(i + 1, gamestate.players.length);
                                             hand = Main.scene.hands[i];
                                             lastMove = gamestate.playerData[player].lastMove;
-                                            if (player === Main.player) {
-                                                Main.scene.hand.reflectMove(lastMove);
-                                                return [2 /*return*/];
-                                            }
                                             if (!lastMove)
                                                 return [2 /*return*/];
-                                            if (Main.gamestate.state !== 'DISCARD_MOVE') {
-                                                hand.state = { type: 'back', moved: true };
+                                            if (player === Main.player) {
+                                                Main.scene.hand.reflectMove(lastMove);
+                                            }
+                                            else {
+                                                // Make sure move-cards are extended
+                                                if (Main.gamestate.state !== 'DISCARD_MOVE') {
+                                                    hand.state = { type: 'back', moved: true };
+                                                }
                                             }
                                             return [5 /*yield**/, __values(S.wait(0.5)())];
                                         case 1:
-                                            _a.sent();
+                                            _c.sent();
+                                            if (API.totalPaymentAmount(lastMove.payment) > 0) {
+                                                paymentScripts = [];
+                                                if (lastMove.payment.neg) {
+                                                    paymentScripts.push(animateGoldMovement(Main.scene.wonders[i].getGoldCoinWorldPosition(), Main.scene.wonders[neg].getGoldCoinWorldPosition(), lastMove.payment.neg));
+                                                }
+                                                if (lastMove.payment.pos) {
+                                                    paymentScripts.push(animateGoldMovement(Main.scene.wonders[i].getGoldCoinWorldPosition(), Main.scene.wonders[pos].getGoldCoinWorldPosition(), lastMove.payment.pos));
+                                                }
+                                                if (lastMove.payment.bank) {
+                                                    paymentScripts.push(animateGoldMovement(Main.scene.wonders[i].getGoldCoinWorldPosition(), Main.scene.getSourceSinkPosition(), lastMove.payment.bank));
+                                                }
+                                                Main.scriptManager.runScript(S.simul.apply(S, __spread(paymentScripts)));
+                                            }
+                                            goldGain = API.goldGain(Main.gamestate.playerData[player].gold, gamestate.playerData[player].gold, gamestate.playerData[player].lastMove.payment, (_a = gamestate.playerData[gamestate.players[neg]].lastMove) === null || _a === void 0 ? void 0 : _a.payment, (_b = gamestate.playerData[gamestate.players[pos]].lastMove) === null || _b === void 0 ? void 0 : _b.payment);
+                                            if (goldGain > 0) {
+                                                Main.scriptManager.runScript(animateGoldMovement(Main.scene.getSourceSinkPosition(), Main.scene.wonders[i].getGoldCoinWorldPosition(), goldGain));
+                                            }
+                                            // Main player will not participate in the below actions
+                                            if (player === Main.player)
+                                                return [2 /*return*/];
                                             if (!(lastMove.action === 'play')) return [3 /*break*/, 4];
                                             if (Main.gamestate.state === 'DISCARD_MOVE') {
                                                 card_1 = Main.scene.discardHand.cards.pop();
@@ -1885,7 +1917,7 @@ var GameStateDiffer;
                                             card_1.state = { type: 'full', justPlayed: false };
                                             return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, function (t) { card_1.update(); })())];
                                         case 2:
-                                            _a.sent();
+                                            _c.sent();
                                             card_1.state = { type: 'effect', justPlayed: false };
                                             card_1.zIndex = C.Z_INDEX_CARD_PLAYED;
                                             playedPoint_1 = Main.scene.wonders[i].getNewCardEffectWorldPosition(card_1);
@@ -1896,7 +1928,7 @@ var GameStateDiffer;
                                                     card_1.update();
                                                 })())];
                                         case 3:
-                                            _a.sent();
+                                            _c.sent();
                                             card_1.snap();
                                             return [3 /*break*/, 10];
                                         case 4:
@@ -1906,7 +1938,7 @@ var GameStateDiffer;
                                             card_2.checkMarkVisible = false;
                                             return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, function (t) { card_2.update(); })())];
                                         case 5:
-                                            _a.sent();
+                                            _c.sent();
                                             card_2.state = { type: 'flipped', justPlayed: false };
                                             card_2.zIndex = C.Z_INDEX_CARD_WONDER;
                                             wonderPoint_1 = Main.scene.wonders[i].getCardPositionForStage(lastMove.stage);
@@ -1917,7 +1949,7 @@ var GameStateDiffer;
                                                     card_2.update();
                                                 })())];
                                         case 6:
-                                            _a.sent();
+                                            _c.sent();
                                             card_2.snap();
                                             return [3 /*break*/, 10];
                                         case 7:
@@ -1927,7 +1959,7 @@ var GameStateDiffer;
                                             card_3.checkMarkVisible = false;
                                             return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, function (t) { card_3.update(); })())];
                                         case 8:
-                                            _a.sent();
+                                            _c.sent();
                                             discardPoint_1 = Main.scene.discardPile.getDiscardLockPoint();
                                             return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, function (t) {
                                                     card_3.targetPosition.x = lerp(card_3.targetPosition.x, discardPoint_1.x, Math.pow(t, 2));
@@ -1936,9 +1968,9 @@ var GameStateDiffer;
                                                     card_3.update();
                                                 })())];
                                         case 9:
-                                            _a.sent();
+                                            _c.sent();
                                             card_3.snap();
-                                            _a.label = 10;
+                                            _c.label = 10;
                                         case 10: return [2 /*return*/];
                                     }
                                 });
@@ -2086,20 +2118,21 @@ var GameStateDiffer;
                                 newTokenIndices.push(i);
                             }
                             return S.simul.apply(S, __spread(newTokenIndices.map(function (i) { return function () {
-                                var token, targetPosition, lerpt;
+                                var sourceSink, token, targetPosition, lerpt;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
                                         case 0:
+                                            sourceSink = Main.scene.getSourceSinkPosition();
                                             token = new MilitaryToken(gamestate.playerData[player].militaryTokens[i]);
-                                            token.x = Main.scene.discardPile.x;
-                                            token.y = Main.scene.discardPile.y;
+                                            token.x = sourceSink.x;
+                                            token.y = sourceSink.y;
                                             token.addToGame();
                                             targetPosition = Main.scene.wonders[pi].getMilitaryTokenWorldPosition(i);
                                             lerpt = 0;
                                             return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TOKEN_DISTRIBUTE_TIME, function (t) {
                                                     lerpt = lerp(lerpt, 1, Math.pow(t, 2));
-                                                    token.x = lerp(Main.scene.discardPile.x, targetPosition.x, lerpt);
-                                                    token.y = lerp(Main.scene.discardPile.y, targetPosition.y, lerpt);
+                                                    token.x = lerp(sourceSink.x, targetPosition.x, lerpt);
+                                                    token.y = lerp(sourceSink.y, targetPosition.y, lerpt);
                                                 })())];
                                         case 1:
                                             _a.sent();
@@ -2328,7 +2361,46 @@ var GameStateDiffer;
             });
         });
     }
+    function animateGoldMovement(fromPos, toPos, gold) {
+        return S.simul.apply(S, __spread(range(0, gold - 1).map(function (i) { return S.chain(S.wait(0.2 * i), function () {
+            var goldCoin, lerpt;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        goldCoin = new GoldCoin();
+                        goldCoin.x = fromPos.x;
+                        goldCoin.y = fromPos.y;
+                        goldCoin.scale = 0;
+                        goldCoin.addToGame();
+                        lerpt = 0;
+                        return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_GOLD_COIN_MOVE_TIME, function (t) {
+                                lerpt = lerp(lerpt, 1, Math.pow(t, 2));
+                                goldCoin.x = lerp(fromPos.x, toPos.x, lerpt);
+                                goldCoin.y = lerp(fromPos.y, toPos.y, lerpt);
+                                goldCoin.scale = 1 - Math.pow((2 * lerpt - 1), 10);
+                            })())];
+                    case 1:
+                        _a.sent();
+                        goldCoin.removeFromGame();
+                        return [2 /*return*/];
+                }
+            });
+        }); })));
+    }
 })(GameStateDiffer || (GameStateDiffer = {}));
+var GoldCoin = /** @class */ (function (_super) {
+    __extends(GoldCoin, _super);
+    function GoldCoin() {
+        var _this = _super.call(this) || this;
+        _this.div.appendChild(_this.draw());
+        _this.zIndex = C.Z_INDEX_GOLD_COIN;
+        return _this;
+    }
+    GoldCoin.prototype.draw = function () {
+        return ArtCommon.domElementForArt(ArtCommon.goldCoin(), C.GOLD_COIN_SCALE);
+    };
+    return GoldCoin;
+}(GameElement));
 var Hand = /** @class */ (function () {
     function Hand(xs, ys, handData) {
         this.state = { type: 'normal' };
@@ -3196,6 +3268,9 @@ var Scene = /** @class */ (function () {
             statusText.textContent = "Game complete";
         }
     };
+    Scene.prototype.getSourceSinkPosition = function () {
+        return new PIXI.Point(this.discardPile.x, this.discardPile.y);
+    };
     Scene.prototype.getHandPositionS = function (index) {
         var p = Main.gamestate.players.indexOf(Main.player);
         var l = mod(p - 1, Main.gamestate.players.length);
@@ -3468,6 +3543,9 @@ var Wonder = /** @class */ (function (_super) {
             }
             return this.overflowCardEffectRolls[0].getNextPosition(card);
         }
+    };
+    Wonder.prototype.getGoldCoinWorldPosition = function () {
+        return new PIXI.Point(this.x + C.WONDER_BOARD_WIDTH / 2 + C.WONDER_SIDEBAR_GOLD_COIN_X, this.y - C.WONDER_BOARD_HEIGHT / 2 + C.WONDER_SIDEBAR_GOLD_COIN_Y);
     };
     Wonder.prototype.getMilitaryTokenWorldPosition = function (i) {
         return new PIXI.Point(this.x + C.WONDER_BOARD_WIDTH / 2 + C.WONDER_SIDEBAR_TOKENS_X + C.WONDER_SIDEBAR_TOKENS_DX * i, this.y - C.WONDER_BOARD_HEIGHT / 2 + C.WONDER_SIDEBAR_TOKENS_Y);
