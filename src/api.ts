@@ -201,7 +201,7 @@ namespace API {
     }
 
     export function goldGain(oldGold: number, newGold: number, payment: Payment, negPayment: Payment, posPayment: Payment) {
-        return newGold - oldGold + totalPaymentAmount(payment) - (negPayment.pos || 0) - (posPayment.neg || 0);
+        return newGold - oldGold + totalPaymentAmount(payment) - (negPayment?.pos || 0) - (posPayment?.neg || 0);
     }
 
     /* API METHODS */

@@ -38,14 +38,21 @@ namespace GameStateDiffer {
 
                     if (player === Main.player) {
                         Main.scene.hand.reflectMove(lastMove);
+                        yield* S.wait(0.5)();
+                        let selectedCard = Main.scene.hand.selectedCard;
+                        if (selectedCard) {
+                            Main.scene.hand.cards.splice(Main.scene.hand.cards.indexOf(selectedCard), 1);
+                            if (lastMove.action === 'throw') {
+                                Main.scene.discardHand.cards.push(selectedCard);
+                            }
+                        }
                     } else {
                         // Make sure move-cards are extended
                         if (Main.gamestate.state !== 'DISCARD_MOVE') {
                             hand.state = { type: 'back', moved: true };
                         }
+                        yield* S.wait(0.5)();
                     }
-
-                    yield* S.wait(0.5)();
 
                     if (API.totalPaymentAmount(lastMove.payment) > 0) {
                         let paymentScripts: Script.Function[] = [];
@@ -80,7 +87,7 @@ namespace GameStateDiffer {
                         if (Main.gamestate.state === 'DISCARD_MOVE') {
                             card = Main.scene.discardHand.cards.pop();
                         } else {
-                            card = hand.cards.shift();
+                            card = hand.cards.pop();
                             hand.state = { type: 'back', moved: false };
                         }
                         card.destroy();
@@ -100,7 +107,7 @@ namespace GameStateDiffer {
                         })();
                         card.snap();
                     } else if (lastMove.action === 'wonder') {
-                        let card = hand.cards.shift();
+                        let card = hand.cards.pop();
                         hand.state = { type: 'back', moved: false };
 
                         card.checkMarkVisible = false;
@@ -117,12 +124,14 @@ namespace GameStateDiffer {
                         })();
                         card.snap();
                     } else if (lastMove.action === 'throw') {
-                        let card = hand.cards.shift();
+                        let card = hand.cards.pop();
                         hand.state = { type: 'back', moved: false };
 
                         card.checkMarkVisible = false;
                         yield* S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, t => { card.update() })();
 
+                        card.state = { type: 'flipped', justPlayed: false };
+                        card.zIndex = C.Z_INDEX_CARD_MOVING;
                         let discardPoint = Main.scene.discardPile.getDiscardLockPoint();
                         yield* S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, t => {
                             card.targetPosition.x = lerp(card.targetPosition.x, discardPoint.x, t**2);
@@ -131,6 +140,7 @@ namespace GameStateDiffer {
                             card.update();
                         })();
                         card.snap();
+                        Main.scene.discardHand.cards.push(card);
                     }
                 };
             });
@@ -149,7 +159,7 @@ namespace GameStateDiffer {
                 let discardHandPosition = Main.scene.discardHand.getPosition();
                 let targetDiscardHandPosition = Main.scene.discardPile.getDiscardLockPoint();
 
-                Main.scene.discardHand.state = { type: 'moving' };
+                Main.scene.discardHand.state = { type: 'back', moved: false };
                 yield* S.wait(0.4)();
 
                 let lerpt = 0;
@@ -172,18 +182,27 @@ namespace GameStateDiffer {
                 let currentHandPositions = Main.scene.hands.map(hand => hand.getPosition());
                 let targetHandPosition = Main.scene.discardPile.getDiscardLockPoint();
 
-                let lerpt = 0;
-                yield* S.doOverTime(0.3, t => {
-                    lerpt = lerp(lerpt, 1, t**2);
-                    for (let i = 0; i < Main.scene.hands.length; i++) {
-                        if (!contains(gamestate.lastCardPlayers, gamestate.players[i])) {
-                            Main.scene.hands[i].state = { type: 'moving' };
-                            Main.scene.hands[i].x = lerp(currentHandPositions[i].x, targetHandPosition.x, lerpt);
-                            Main.scene.hands[i].y = lerp(currentHandPositions[i].y, targetHandPosition.y, lerpt);
-                            Main.scene.hands[i].scale = lerp(Main.scene.hands[i].scale, 1, lerpt);
-                        }
+                Main.scene.hands.forEach(hand => hand.setZIndex(C.Z_INDEX_CARD_MOVING));
+
+                let discardScripts: Script.Function[] = [];
+
+                for (let i = 0; i < Main.scene.hands.length; i++) {
+                    if (!contains(gamestate.lastCardPlayers, gamestate.players[i])) {
+                        discardScripts.push(function*() {
+                            let lerpt = 0;
+                            yield* S.doOverTime(0.3, t => {
+                                lerpt = lerp(lerpt, 1, t**2);
+                                Main.scene.hands[i].state = { type: 'back', moved: false };
+                                Main.scene.hands[i].x = lerp(currentHandPositions[i].x, targetHandPosition.x, lerpt);
+                                Main.scene.hands[i].y = lerp(currentHandPositions[i].y, targetHandPosition.y, lerpt);
+                                Main.scene.hands[i].scale = lerp(Main.scene.hands[i].scale, 1, lerpt);
+                            })();
+                            Main.scene.discardHand.cards.push(...Main.scene.hands[i].cards.splice(0));
+                        });
                     }
-                })();
+                }
+
+                yield* S.simul(...discardScripts)();
 
                 yield* S.wait(0.5)();
             }
@@ -195,9 +214,9 @@ namespace GameStateDiffer {
                     // Replace hand with discard pile
                     Main.scene.discardHand.setAllCardState({ type: 'in_hand_moving' });
                     let handPosition = Main.scene.hand.getPosition();
-                    let targetHandPosition = handPosition.clone();
+                    let targetHandPosition = Main.scene.getHandOffScreenPoint();
                     let discardHandPosition = Main.scene.discardHand.getPosition();
-                    targetHandPosition.y = -Main.getGameY() - 200;
+                    let discardTargetPosition = Main.scene.getHandPosition(gamestate.players.indexOf(Main.player));
 
                     let lerpt = 0;
                     yield* S.doOverTime(0.3, t => {
@@ -205,8 +224,8 @@ namespace GameStateDiffer {
                         Main.scene.hand.x = lerp(handPosition.x, targetHandPosition.x, lerpt);
                         Main.scene.hand.y = lerp(handPosition.y, targetHandPosition.y, lerpt);
 
-                        Main.scene.discardHand.x = lerp(discardHandPosition.x, handPosition.x, lerpt);
-                        Main.scene.discardHand.y = lerp(discardHandPosition.y, handPosition.y, lerpt);
+                        Main.scene.discardHand.x = lerp(discardHandPosition.x, discardTargetPosition.x, lerpt);
+                        Main.scene.discardHand.y = lerp(discardHandPosition.y, discardTargetPosition.y, lerpt);
                     })();
     
                     yield* S.wait(0.2)();
@@ -292,7 +311,7 @@ namespace GameStateDiffer {
                     let entryPoint = Main.scene.getHandOffScreenPoint();
 
                     hands[p] = new Hand(entryPoint, { type: 'normal', cardIds: gamestate.hand, activeWonder: Main.scene.topWonder, validMoves: gamestate.validMoves });
-                    hands[p].state = { type: 'moving' };
+                    hands[p].state = { type: 'back', moved: false };
                     hands[p].snap();
 
                     for (let i = 0; i < gamestate.players.length; i++) {
@@ -301,6 +320,8 @@ namespace GameStateDiffer {
                         hands[i].state = { type: 'back', moved: false };
                         hands[i].snap();
                     }
+
+                    hands.map(hand => hand.setZIndex(C.Z_INDEX_CARD_MOVING));
 
                     let startPosition = hands[0].getPosition();
                     let endPosition = Main.scene.getHandPosition(p);
@@ -353,8 +374,10 @@ namespace GameStateDiffer {
                     newHandi = mod(Main.gamestate.players.indexOf(Main.player)-1, Main.gamestate.players.length);
                 }
 
-                Main.scene.hand.state = { type: 'moving' };
+                Main.scene.hand.state = { type: 'back', moved: false };
                 yield* S.wait(0.5)();
+
+                Main.scene.hands.forEach(hand => hand.setZIndex(C.Z_INDEX_CARD_MOVING));
 
                 let lerpt = 0;
                 yield* S.doOverTime(0.3, t => {

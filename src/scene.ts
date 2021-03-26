@@ -74,6 +74,7 @@ class Scene {
             this.hands[l] = new Hand(this.getHandPosition(l), { type: 'back', player: players[l], age: gamestate.age, flankDirection: -1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
+            this.hands[l].setZIndex(C.Z_INDEX_CARD_FLANK);
             this.hands[l].snap();
 
             this.wonders[r] = new Wonder(players[r]);
@@ -87,6 +88,7 @@ class Scene {
             this.hands[r] = new Hand(this.getHandPosition(r), { type: 'back', player: players[r], age: gamestate.age, flankDirection: 1 });
             this.hands[r].state = { type: 'back', moved: !!gamestate.playerData[players[r]].currentMove };
             this.hands[r].scale = C.HAND_FLANK_SCALE;
+            this.hands[r].setZIndex(C.Z_INDEX_CARD_FLANK);
             this.hands[r].snap();
 
             l = mod(l-1, gamestate.players.length);
@@ -105,6 +107,7 @@ class Scene {
             this.hands[l] = new Hand(this.getHandPosition(l), { type: 'back', player: players[l], age: gamestate.age, flankDirection: 1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
+            this.hands[l].setZIndex(C.Z_INDEX_CARD_FLANK);
             this.hands[l].snap();
         }
 
@@ -122,7 +125,8 @@ class Scene {
 
         this.discardHand = new Hand(this.discardPile.getDiscardLockPoint(),
                             { type: 'discard', count: this.isMyTurnToBuildFromDiscard() ? 0 : gamestate.discardedCardCount, lastCardAge: gamestate.lastDiscardedCardAge });
-        this.discardHand.state = { type: 'moving' };
+        this.discardHand.state = { type: 'back', moved: false };
+        this.discardHand.setZIndex(C.Z_INDEX_DISCARD_CARDS);
         this.discardHand.snap();
 
         this.update();

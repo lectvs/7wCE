@@ -340,7 +340,7 @@ var API;
     }
     API.minimalPaymentOptions = minimalPaymentOptions;
     function goldGain(oldGold, newGold, payment, negPayment, posPayment) {
-        return newGold - oldGold + totalPaymentAmount(payment) - (negPayment.pos || 0) - (posPayment.neg || 0);
+        return newGold - oldGold + totalPaymentAmount(payment) - ((negPayment === null || negPayment === void 0 ? void 0 : negPayment.pos) || 0) - ((posPayment === null || posPayment === void 0 ? void 0 : posPayment.neg) || 0);
     }
     API.goldGain = goldGain;
     /* API METHODS */
@@ -1360,12 +1360,6 @@ var Card = /** @class */ (function (_super) {
             this.visualState = 'flipped';
         }
         else if (this.state.type === 'in_hand_moving') {
-            this.zIndex = C.Z_INDEX_CARD_MOVING;
-            this.interactable = false;
-            this.visualState = 'flipped';
-        }
-        else if (this.state.type === 'in_discard') {
-            this.zIndex = C.Z_INDEX_DISCARD_CARDS;
             this.interactable = false;
             this.visualState = 'flipped';
         }
@@ -1562,6 +1556,7 @@ var C = /** @class */ (function () {
     C.Z_INDEX_DISCARD_PILE = -10;
     C.Z_INDEX_DISCARD_CARDS = -9;
     C.Z_INDEX_CARD_HAND = 0;
+    C.Z_INDEX_CARD_FLANK = 0;
     C.Z_INDEX_CARD_WONDER = 9;
     C.Z_INDEX_WONDER = 10;
     C.Z_INDEX_CARD_PLAYED = 11;
@@ -1840,13 +1835,13 @@ var GameStateDiffer;
             return;
         }
         result.scripts.push(function () {
-            var moveScripts, handPosition_1, targetHandPosition_1, discardHandPosition_1, targetDiscardHandPosition_1, lerpt_1, isEndOfAge, currentHandPositions_1, targetHandPosition_2, lerpt_2, handPosition_2, targetHandPosition_3, discardHandPosition_2, lerpt_3, p_1, l_1, r_1, pshields, lshields, rshields, militaryTokenDistributionScripts, hands_1, entryPoint, i_1, startPosition_1, endPosition_1, lerpt_4, i_2, _loop_1, count, currentHandPositions_2, targetHandPositions_1, newHandi_1, lerpt_5;
+            var moveScripts, handPosition_1, targetHandPosition_1, discardHandPosition_1, targetDiscardHandPosition_1, lerpt_1, isEndOfAge, currentHandPositions_1, targetHandPosition_2, discardScripts, _loop_1, i, handPosition_2, targetHandPosition_3, discardHandPosition_2, discardTargetPosition_1, lerpt_2, p_1, l_1, r_1, pshields, lshields, rshields, militaryTokenDistributionScripts, hands_1, entryPoint, i_1, startPosition_1, endPosition_1, lerpt_3, i_2, _loop_2, count, currentHandPositions_2, targetHandPositions_1, newHandi_1, lerpt_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         moveScripts = gamestate.players.map(function (player) {
                             return function () {
-                                var i, neg, pos, hand, lastMove, paymentScripts, goldGain, card_1, playedPoint_1, card_2, wonderPoint_1, card_3, discardPoint_1;
+                                var i, neg, pos, hand, lastMove, selectedCard, paymentScripts, goldGain, card_1, playedPoint_1, card_2, wonderPoint_1, card_3, discardPoint_1;
                                 var _a, _b;
                                 return __generator(this, function (_c) {
                                     switch (_c.label) {
@@ -1858,18 +1853,29 @@ var GameStateDiffer;
                                             lastMove = gamestate.playerData[player].lastMove;
                                             if (!lastMove)
                                                 return [2 /*return*/];
-                                            if (player === Main.player) {
-                                                Main.scene.hand.reflectMove(lastMove);
-                                            }
-                                            else {
-                                                // Make sure move-cards are extended
-                                                if (Main.gamestate.state !== 'DISCARD_MOVE') {
-                                                    hand.state = { type: 'back', moved: true };
-                                                }
-                                            }
+                                            if (!(player === Main.player)) return [3 /*break*/, 2];
+                                            Main.scene.hand.reflectMove(lastMove);
                                             return [5 /*yield**/, __values(S.wait(0.5)())];
                                         case 1:
                                             _c.sent();
+                                            selectedCard = Main.scene.hand.selectedCard;
+                                            if (selectedCard) {
+                                                Main.scene.hand.cards.splice(Main.scene.hand.cards.indexOf(selectedCard), 1);
+                                                if (lastMove.action === 'throw') {
+                                                    Main.scene.discardHand.cards.push(selectedCard);
+                                                }
+                                            }
+                                            return [3 /*break*/, 4];
+                                        case 2:
+                                            // Make sure move-cards are extended
+                                            if (Main.gamestate.state !== 'DISCARD_MOVE') {
+                                                hand.state = { type: 'back', moved: true };
+                                            }
+                                            return [5 /*yield**/, __values(S.wait(0.5)())];
+                                        case 3:
+                                            _c.sent();
+                                            _c.label = 4;
+                                        case 4:
                                             if (API.totalPaymentAmount(lastMove.payment) > 0) {
                                                 paymentScripts = [];
                                                 if (lastMove.payment.neg) {
@@ -1890,19 +1896,19 @@ var GameStateDiffer;
                                             // Main player will not participate in the below actions
                                             if (player === Main.player)
                                                 return [2 /*return*/];
-                                            if (!(lastMove.action === 'play')) return [3 /*break*/, 4];
+                                            if (!(lastMove.action === 'play')) return [3 /*break*/, 7];
                                             if (Main.gamestate.state === 'DISCARD_MOVE') {
                                                 card_1 = Main.scene.discardHand.cards.pop();
                                             }
                                             else {
-                                                card_1 = hand.cards.shift();
+                                                card_1 = hand.cards.pop();
                                                 hand.state = { type: 'back', moved: false };
                                             }
                                             card_1.destroy();
                                             card_1.create(lastMove.card, gamestate.cards[lastMove.card], false);
                                             card_1.state = { type: 'full', justPlayed: false };
                                             return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, function (t) { card_1.update(); })())];
-                                        case 2:
+                                        case 5:
                                             _c.sent();
                                             card_1.state = { type: 'effect', justPlayed: false };
                                             card_1.zIndex = C.Z_INDEX_CARD_PLAYED;
@@ -1913,17 +1919,17 @@ var GameStateDiffer;
                                                     card_1.scale = lerp(card_1.scale, 1, Math.pow(t, 2));
                                                     card_1.update();
                                                 })())];
-                                        case 3:
+                                        case 6:
                                             _c.sent();
                                             card_1.snap();
-                                            return [3 /*break*/, 10];
-                                        case 4:
-                                            if (!(lastMove.action === 'wonder')) return [3 /*break*/, 7];
-                                            card_2 = hand.cards.shift();
+                                            return [3 /*break*/, 13];
+                                        case 7:
+                                            if (!(lastMove.action === 'wonder')) return [3 /*break*/, 10];
+                                            card_2 = hand.cards.pop();
                                             hand.state = { type: 'back', moved: false };
                                             card_2.checkMarkVisible = false;
                                             return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, function (t) { card_2.update(); })())];
-                                        case 5:
+                                        case 8:
                                             _c.sent();
                                             card_2.state = { type: 'flipped', justPlayed: false };
                                             card_2.zIndex = C.Z_INDEX_CARD_WONDER;
@@ -1934,18 +1940,20 @@ var GameStateDiffer;
                                                     card_2.scale = lerp(card_2.scale, 1, Math.pow(t, 2));
                                                     card_2.update();
                                                 })())];
-                                        case 6:
+                                        case 9:
                                             _c.sent();
                                             card_2.snap();
-                                            return [3 /*break*/, 10];
-                                        case 7:
-                                            if (!(lastMove.action === 'throw')) return [3 /*break*/, 10];
-                                            card_3 = hand.cards.shift();
+                                            return [3 /*break*/, 13];
+                                        case 10:
+                                            if (!(lastMove.action === 'throw')) return [3 /*break*/, 13];
+                                            card_3 = hand.cards.pop();
                                             hand.state = { type: 'back', moved: false };
                                             card_3.checkMarkVisible = false;
                                             return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, function (t) { card_3.update(); })())];
-                                        case 8:
+                                        case 11:
                                             _c.sent();
+                                            card_3.state = { type: 'flipped', justPlayed: false };
+                                            card_3.zIndex = C.Z_INDEX_CARD_MOVING;
                                             discardPoint_1 = Main.scene.discardPile.getDiscardLockPoint();
                                             return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, function (t) {
                                                     card_3.targetPosition.x = lerp(card_3.targetPosition.x, discardPoint_1.x, Math.pow(t, 2));
@@ -1953,11 +1961,12 @@ var GameStateDiffer;
                                                     card_3.scale = lerp(card_3.scale, 1, Math.pow(t, 2));
                                                     card_3.update();
                                                 })())];
-                                        case 9:
+                                        case 12:
                                             _c.sent();
                                             card_3.snap();
-                                            _c.label = 10;
-                                        case 10: return [2 /*return*/];
+                                            Main.scene.discardHand.cards.push(card_3);
+                                            _c.label = 13;
+                                        case 13: return [2 /*return*/];
                                     }
                                 });
                             };
@@ -1973,7 +1982,7 @@ var GameStateDiffer;
                         targetHandPosition_1 = Main.scene.discardHand.getPosition();
                         discardHandPosition_1 = Main.scene.discardHand.getPosition();
                         targetDiscardHandPosition_1 = Main.scene.discardPile.getDiscardLockPoint();
-                        Main.scene.discardHand.state = { type: 'moving' };
+                        Main.scene.discardHand.state = { type: 'back', moved: false };
                         return [5 /*yield**/, __values(S.wait(0.4)())];
                     case 2:
                         _a.sent();
@@ -1996,18 +2005,37 @@ var GameStateDiffer;
                         if (!isEndOfAge) return [3 /*break*/, 8];
                         currentHandPositions_1 = Main.scene.hands.map(function (hand) { return hand.getPosition(); });
                         targetHandPosition_2 = Main.scene.discardPile.getDiscardLockPoint();
-                        lerpt_2 = 0;
-                        return [5 /*yield**/, __values(S.doOverTime(0.3, function (t) {
-                                lerpt_2 = lerp(lerpt_2, 1, Math.pow(t, 2));
-                                for (var i = 0; i < Main.scene.hands.length; i++) {
-                                    if (!contains(gamestate.lastCardPlayers, gamestate.players[i])) {
-                                        Main.scene.hands[i].state = { type: 'moving' };
-                                        Main.scene.hands[i].x = lerp(currentHandPositions_1[i].x, targetHandPosition_2.x, lerpt_2);
-                                        Main.scene.hands[i].y = lerp(currentHandPositions_1[i].y, targetHandPosition_2.y, lerpt_2);
-                                        Main.scene.hands[i].scale = lerp(Main.scene.hands[i].scale, 1, lerpt_2);
-                                    }
-                                }
-                            })())];
+                        Main.scene.hands.forEach(function (hand) { return hand.setZIndex(C.Z_INDEX_CARD_MOVING); });
+                        discardScripts = [];
+                        _loop_1 = function (i) {
+                            if (!contains(gamestate.lastCardPlayers, gamestate.players[i])) {
+                                discardScripts.push(function () {
+                                    var lerpt;
+                                    var _a;
+                                    return __generator(this, function (_b) {
+                                        switch (_b.label) {
+                                            case 0:
+                                                lerpt = 0;
+                                                return [5 /*yield**/, __values(S.doOverTime(0.3, function (t) {
+                                                        lerpt = lerp(lerpt, 1, Math.pow(t, 2));
+                                                        Main.scene.hands[i].state = { type: 'back', moved: false };
+                                                        Main.scene.hands[i].x = lerp(currentHandPositions_1[i].x, targetHandPosition_2.x, lerpt);
+                                                        Main.scene.hands[i].y = lerp(currentHandPositions_1[i].y, targetHandPosition_2.y, lerpt);
+                                                        Main.scene.hands[i].scale = lerp(Main.scene.hands[i].scale, 1, lerpt);
+                                                    })())];
+                                            case 1:
+                                                _b.sent();
+                                                (_a = Main.scene.discardHand.cards).push.apply(_a, __spread(Main.scene.hands[i].cards.splice(0)));
+                                                return [2 /*return*/];
+                                        }
+                                    });
+                                });
+                            }
+                        };
+                        for (i = 0; i < Main.scene.hands.length; i++) {
+                            _loop_1(i);
+                        }
+                        return [5 /*yield**/, __values(S.simul.apply(S, __spread(discardScripts))())];
                     case 6:
                         _a.sent();
                         return [5 /*yield**/, __values(S.wait(0.5)())];
@@ -2023,16 +2051,16 @@ var GameStateDiffer;
                         // Replace hand with discard pile
                         Main.scene.discardHand.setAllCardState({ type: 'in_hand_moving' });
                         handPosition_2 = Main.scene.hand.getPosition();
-                        targetHandPosition_3 = handPosition_2.clone();
+                        targetHandPosition_3 = Main.scene.getHandOffScreenPoint();
                         discardHandPosition_2 = Main.scene.discardHand.getPosition();
-                        targetHandPosition_3.y = -Main.getGameY() - 200;
-                        lerpt_3 = 0;
+                        discardTargetPosition_1 = Main.scene.getHandPosition(gamestate.players.indexOf(Main.player));
+                        lerpt_2 = 0;
                         return [5 /*yield**/, __values(S.doOverTime(0.3, function (t) {
-                                lerpt_3 = lerp(lerpt_3, 1, Math.pow(t, 2));
-                                Main.scene.hand.x = lerp(handPosition_2.x, targetHandPosition_3.x, lerpt_3);
-                                Main.scene.hand.y = lerp(handPosition_2.y, targetHandPosition_3.y, lerpt_3);
-                                Main.scene.discardHand.x = lerp(discardHandPosition_2.x, handPosition_2.x, lerpt_3);
-                                Main.scene.discardHand.y = lerp(discardHandPosition_2.y, handPosition_2.y, lerpt_3);
+                                lerpt_2 = lerp(lerpt_2, 1, Math.pow(t, 2));
+                                Main.scene.hand.x = lerp(handPosition_2.x, targetHandPosition_3.x, lerpt_2);
+                                Main.scene.hand.y = lerp(handPosition_2.y, targetHandPosition_3.y, lerpt_2);
+                                Main.scene.discardHand.x = lerp(discardHandPosition_2.x, discardTargetPosition_1.x, lerpt_2);
+                                Main.scene.discardHand.y = lerp(discardHandPosition_2.y, discardTargetPosition_1.y, lerpt_2);
                             })())];
                     case 10:
                         _a.sent();
@@ -2137,7 +2165,7 @@ var GameStateDiffer;
                         hands_1 = gamestate.players.map(function (player) { return undefined; });
                         entryPoint = Main.scene.getHandOffScreenPoint();
                         hands_1[p_1] = new Hand(entryPoint, { type: 'normal', cardIds: gamestate.hand, activeWonder: Main.scene.topWonder, validMoves: gamestate.validMoves });
-                        hands_1[p_1].state = { type: 'moving' };
+                        hands_1[p_1].state = { type: 'back', moved: false };
                         hands_1[p_1].snap();
                         for (i_1 = 0; i_1 < gamestate.players.length; i_1++) {
                             if (i_1 === p_1)
@@ -2146,17 +2174,18 @@ var GameStateDiffer;
                             hands_1[i_1].state = { type: 'back', moved: false };
                             hands_1[i_1].snap();
                         }
+                        hands_1.map(function (hand) { return hand.setZIndex(C.Z_INDEX_CARD_MOVING); });
                         startPosition_1 = hands_1[0].getPosition();
                         endPosition_1 = Main.scene.getHandPosition(p_1);
-                        lerpt_4 = 0;
+                        lerpt_3 = 0;
                         return [5 /*yield**/, __values(S.doOverTime(0.3, function (t) {
                                 var e_13, _a;
-                                lerpt_4 = lerp(lerpt_4, 1, Math.pow(t, 2));
+                                lerpt_3 = lerp(lerpt_3, 1, Math.pow(t, 2));
                                 try {
                                     for (var hands_2 = __values(hands_1), hands_2_1 = hands_2.next(); !hands_2_1.done; hands_2_1 = hands_2.next()) {
                                         var hand = hands_2_1.value;
-                                        hand.x = lerp(startPosition_1.x, endPosition_1.x, lerpt_4);
-                                        hand.y = lerp(startPosition_1.y, endPosition_1.y, lerpt_4);
+                                        hand.x = lerp(startPosition_1.x, endPosition_1.x, lerpt_3);
+                                        hand.y = lerp(startPosition_1.y, endPosition_1.y, lerpt_3);
                                         hand.update();
                                     }
                                 }
@@ -2174,19 +2203,19 @@ var GameStateDiffer;
                     case 24:
                         _a.sent();
                         i_2 = l_1;
-                        _loop_1 = function (count) {
-                            var startPosition_2, endPosition_2, lerpt_6;
+                        _loop_2 = function (count) {
+                            var startPosition_2, endPosition_2, lerpt_5;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         startPosition_2 = hands_1[i_2].getPosition();
                                         endPosition_2 = Main.scene.getHandPosition(i_2);
-                                        lerpt_6 = 0;
+                                        lerpt_5 = 0;
                                         return [5 /*yield**/, __values(S.doOverTime(0.2, function (t) {
-                                                lerpt_6 = lerp(lerpt_6, 1, Math.pow(t, 2));
-                                                hands_1[i_2].x = lerp(startPosition_2.x, endPosition_2.x, lerpt_6);
-                                                hands_1[i_2].y = lerp(startPosition_2.y, endPosition_2.y, lerpt_6);
-                                                hands_1[i_2].scale = lerp(hands_1[i_2].scale, C.HAND_FLANK_SCALE, lerpt_6);
+                                                lerpt_5 = lerp(lerpt_5, 1, Math.pow(t, 2));
+                                                hands_1[i_2].x = lerp(startPosition_2.x, endPosition_2.x, lerpt_5);
+                                                hands_1[i_2].y = lerp(startPosition_2.y, endPosition_2.y, lerpt_5);
+                                                hands_1[i_2].scale = lerp(hands_1[i_2].scale, C.HAND_FLANK_SCALE, lerpt_5);
                                                 hands_1[i_2].update();
                                             })())];
                                     case 1:
@@ -2201,7 +2230,7 @@ var GameStateDiffer;
                         _a.label = 25;
                     case 25:
                         if (!(count < gamestate.players.length - 1)) return [3 /*break*/, 28];
-                        return [5 /*yield**/, _loop_1(count)];
+                        return [5 /*yield**/, _loop_2(count)];
                     case 26:
                         _a.sent();
                         _a.label = 27;
@@ -2228,21 +2257,22 @@ var GameStateDiffer;
                             targetHandPositions_1.push(targetHandPositions_1.shift());
                             newHandi_1 = mod(Main.gamestate.players.indexOf(Main.player) - 1, Main.gamestate.players.length);
                         }
-                        Main.scene.hand.state = { type: 'moving' };
+                        Main.scene.hand.state = { type: 'back', moved: false };
                         return [5 /*yield**/, __values(S.wait(0.5)())];
                     case 32:
                         _a.sent();
-                        lerpt_5 = 0;
+                        Main.scene.hands.forEach(function (hand) { return hand.setZIndex(C.Z_INDEX_CARD_MOVING); });
+                        lerpt_4 = 0;
                         return [5 /*yield**/, __values(S.doOverTime(0.3, function (t) {
-                                lerpt_5 = lerp(lerpt_5, 1, Math.pow(t, 2));
+                                lerpt_4 = lerp(lerpt_4, 1, Math.pow(t, 2));
                                 for (var i = 0; i < Main.scene.hands.length; i++) {
-                                    Main.scene.hands[i].x = lerp(currentHandPositions_2[i].x, targetHandPositions_1[i].x, lerpt_5);
-                                    Main.scene.hands[i].y = lerp(currentHandPositions_2[i].y, targetHandPositions_1[i].y, lerpt_5);
+                                    Main.scene.hands[i].x = lerp(currentHandPositions_2[i].x, targetHandPositions_1[i].x, lerpt_4);
+                                    Main.scene.hands[i].y = lerp(currentHandPositions_2[i].y, targetHandPositions_1[i].y, lerpt_4);
                                     if (i === newHandi_1) {
-                                        Main.scene.hands[i].scale = lerp(Main.scene.hands[i].scale, 1, lerpt_5);
+                                        Main.scene.hands[i].scale = lerp(Main.scene.hands[i].scale, 1, lerpt_4);
                                     }
                                     else {
-                                        Main.scene.hands[i].scale = lerp(Main.scene.hands[i].scale, C.HAND_FLANK_SCALE, lerpt_5);
+                                        Main.scene.hands[i].scale = lerp(Main.scene.hands[i].scale, C.HAND_FLANK_SCALE, lerpt_4);
                                     }
                                 }
                             })())];
@@ -2433,18 +2463,11 @@ var Hand = /** @class */ (function () {
                     this.cards[i].state = { type: 'in_hand_moving' };
                 }
                 // No, this should NOT be an 'else'
-                if (this.cards[i].state.type === 'in_hand_moving' || this.cards[i].state.type === 'in_discard') {
+                if (this.cards[i].state.type === 'in_hand_moving') {
                     this.cards[i].targetPosition.set(this.x, this.y);
                     this.cards[i].scale = this.scale;
                 }
-                if (this.state.type === 'back' && this.state.moved && i === 0) {
-                    if (this.cards.length > 1)
-                        this.cards[i].targetPosition.x += C.HAND_FLANK_MOVED_DX * this.flankDirection;
-                    this.cards[i].checkMarkVisible = true;
-                }
-                else {
-                    this.cards[i].checkMarkVisible = false;
-                }
+                this.cards[i].checkMarkVisible = (this.state.moved && i === this.cards.length - 1);
             }
             this.cards[i].update();
         }
@@ -2465,7 +2488,7 @@ var Hand = /** @class */ (function () {
             card.y = handPosition.y;
             card.addToGame();
             this.cards.push(card);
-            card.state = handData.type === 'discard' ? { type: 'in_discard' } : { type: 'in_hand', visualState: 'full' };
+            card.state = { type: 'in_hand', visualState: 'full' };
         }
         if (this.cards.length > 0 && handData.type === 'discard') {
             this.cards[this.cards.length - 1].addDiscardCountText();
@@ -2532,12 +2555,12 @@ var Hand = /** @class */ (function () {
         if (this.state.type === 'back')
             this.state.moved = false;
     };
-    Hand.prototype.setAllCardState = function (state) {
+    Hand.prototype.setZIndex = function (zIndex) {
         var e_17, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
-                card.state = state;
+                card.zIndex = zIndex;
             }
         }
         catch (e_17_1) { e_17 = { error: e_17_1 }; }
@@ -2546,6 +2569,22 @@ var Hand = /** @class */ (function () {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
             finally { if (e_17) throw e_17.error; }
+        }
+    };
+    Hand.prototype.setAllCardState = function (state) {
+        var e_18, _a;
+        try {
+            for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var card = _c.value;
+                card.state = state;
+            }
+        }
+        catch (e_18_1) { e_18 = { error: e_18_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_18) throw e_18.error; }
         }
     };
     Hand.prototype.getPosition = function () {
@@ -2728,11 +2767,11 @@ var Main = /** @class */ (function () {
         this.moveImmuneTime = 2;
     };
     Main.updateBotMoves = function () {
-        var e_18, _a;
+        var e_19, _a;
         var _this = this;
         if (!this.isHost)
             return;
-        var _loop_2 = function (player) {
+        var _loop_3 = function (player) {
             if (player.startsWith('BOT') && !this_1.gamestate.playerData[player].currentMove) {
                 var botPlayer_1 = player;
                 var turn_1 = this_1.gamestate.turn;
@@ -2758,15 +2797,15 @@ var Main = /** @class */ (function () {
         try {
             for (var _b = __values(this.gamestate.players), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var player = _c.value;
-                _loop_2(player);
+                _loop_3(player);
             }
         }
-        catch (e_18_1) { e_18 = { error: e_18_1 }; }
+        catch (e_19_1) { e_19 = { error: e_19_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_18) throw e_18.error; }
+            finally { if (e_19) throw e_19.error; }
         }
     };
     Main.stop = function () {
@@ -2890,7 +2929,7 @@ var PaymentDialog = /** @class */ (function (_super) {
         var dialogTitle = dialogDiv.appendChild(this.drawText(C.PAYMENT_DIALOG_TITLE, C.PAYMENT_DIALOG_TITLE_SIZE));
         dialogTitle.style.padding = C.PAYMENT_DIALOG_TITLE_PADDING + "px";
         var _a = __read(API.getNeighbors(Main.gamestate, Main.player), 2), negPlayer = _a[0], posPlayer = _a[1];
-        var _loop_3 = function (i) {
+        var _loop_4 = function (i) {
             var leftDiv = dialogDiv.appendChild(document.createElement('div'));
             leftDiv.style.width = 50 - C.PAYMENT_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 2 + "%";
             leftDiv.style.height = C.PAYMENT_DIALOG_PAYMENTS_DY + "px";
@@ -2945,7 +2984,7 @@ var PaymentDialog = /** @class */ (function (_super) {
         };
         var this_2 = this;
         for (var i = 0; i < validPayments.length; i++) {
-            _loop_3(i);
+            _loop_4(i);
         }
         var closeButton = dialogDiv.appendChild(this.drawCloseButton());
         closeButton.style.position = 'absolute';
@@ -3048,19 +3087,19 @@ var Scene = /** @class */ (function () {
         configurable: true
     });
     Scene.prototype.update = function () {
-        var e_19, _a, e_20, _b;
+        var e_20, _a, e_21, _b;
         try {
             for (var _c = __values(this.hands), _d = _c.next(); !_d.done; _d = _c.next()) {
                 var hand = _d.value;
                 hand.update();
             }
         }
-        catch (e_19_1) { e_19 = { error: e_19_1 }; }
+        catch (e_20_1) { e_20 = { error: e_20_1 }; }
         finally {
             try {
                 if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
             }
-            finally { if (e_19) throw e_19.error; }
+            finally { if (e_20) throw e_20.error; }
         }
         this.actionButton.setType(this.isMyTurnToBuildFromDiscard() ? 'reject_discard' : 'undo');
         try {
@@ -3069,12 +3108,12 @@ var Scene = /** @class */ (function () {
                 wonder.update();
             }
         }
-        catch (e_20_1) { e_20 = { error: e_20_1 }; }
+        catch (e_21_1) { e_21 = { error: e_21_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_20) throw e_20.error; }
+            finally { if (e_21) throw e_21.error; }
         }
         if (this.discardHand) {
             this.discardHand.update();
@@ -3117,6 +3156,7 @@ var Scene = /** @class */ (function () {
             this.hands[l] = new Hand(this.getHandPosition(l), { type: 'back', player: players[l], age: gamestate.age, flankDirection: -1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
+            this.hands[l].setZIndex(C.Z_INDEX_CARD_FLANK);
             this.hands[l].snap();
             this.wonders[r] = new Wonder(players[r]);
             this.wonders[r].x = C.WONDER_DX;
@@ -3129,6 +3169,7 @@ var Scene = /** @class */ (function () {
             this.hands[r] = new Hand(this.getHandPosition(r), { type: 'back', player: players[r], age: gamestate.age, flankDirection: 1 });
             this.hands[r].state = { type: 'back', moved: !!gamestate.playerData[players[r]].currentMove };
             this.hands[r].scale = C.HAND_FLANK_SCALE;
+            this.hands[r].setZIndex(C.Z_INDEX_CARD_FLANK);
             this.hands[r].snap();
             l = mod(l - 1, gamestate.players.length);
             r = mod(r + 1, gamestate.players.length);
@@ -3145,6 +3186,7 @@ var Scene = /** @class */ (function () {
             this.hands[l] = new Hand(this.getHandPosition(l), { type: 'back', player: players[l], age: gamestate.age, flankDirection: 1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
+            this.hands[l].setZIndex(C.Z_INDEX_CARD_FLANK);
             this.hands[l].snap();
         }
         this.actionButton = new ActionButton();
@@ -3157,7 +3199,8 @@ var Scene = /** @class */ (function () {
         this.discardPile.y = C.WONDER_START_Y + C.WONDER_DY;
         this.discardPile.addToGame();
         this.discardHand = new Hand(this.discardPile.getDiscardLockPoint(), { type: 'discard', count: this.isMyTurnToBuildFromDiscard() ? 0 : gamestate.discardedCardCount, lastCardAge: gamestate.lastDiscardedCardAge });
-        this.discardHand.state = { type: 'moving' };
+        this.discardHand.state = { type: 'back', moved: false };
+        this.discardHand.setZIndex(C.Z_INDEX_DISCARD_CARDS);
         this.discardHand.snap();
         this.update();
     };
@@ -3301,7 +3344,7 @@ function cloneCanvas(canvas) {
     return newCanvas;
 }
 function contains(array, element) {
-    var e_21, _a;
+    var e_22, _a;
     try {
         for (var array_1 = __values(array), array_1_1 = array_1.next(); !array_1_1.done; array_1_1 = array_1.next()) {
             var e = array_1_1.value;
@@ -3309,12 +3352,12 @@ function contains(array, element) {
                 return true;
         }
     }
-    catch (e_21_1) { e_21 = { error: e_21_1 }; }
+    catch (e_22_1) { e_22 = { error: e_22_1 }; }
     finally {
         try {
             if (array_1_1 && !array_1_1.done && (_a = array_1.return)) _a.call(array_1);
         }
-        finally { if (e_21) throw e_21.error; }
+        finally { if (e_22) throw e_22.error; }
     }
     return false;
 }
@@ -3350,7 +3393,7 @@ function range(start, end) {
     return result;
 }
 function sum(array, key) {
-    var e_22, _a;
+    var e_23, _a;
     if (!array || array.length === 0) {
         return 0;
     }
@@ -3361,12 +3404,12 @@ function sum(array, key) {
             result += key(e);
         }
     }
-    catch (e_22_1) { e_22 = { error: e_22_1 }; }
+    catch (e_23_1) { e_23 = { error: e_23_1 }; }
     finally {
         try {
             if (array_2_1 && !array_2_1.done && (_a = array_2.return)) _a.call(array_2);
         }
-        finally { if (e_22) throw e_22.error; }
+        finally { if (e_23) throw e_23.error; }
     }
     return result;
 }
@@ -3374,7 +3417,7 @@ function sum(array, key) {
 var Wonder = /** @class */ (function (_super) {
     __extends(Wonder, _super);
     function Wonder(player) {
-        var e_23, _a, e_24, _b;
+        var e_24, _a, e_25, _b;
         var _this = _super.call(this) || this;
         _this.player = player;
         var playerData = Main.gamestate.playerData[_this.player];
@@ -3404,12 +3447,12 @@ var Wonder = /** @class */ (function (_super) {
                 card.addToGame();
             }
         }
-        catch (e_23_1) { e_23 = { error: e_23_1 }; }
+        catch (e_24_1) { e_24 = { error: e_24_1 }; }
         finally {
             try {
                 if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
             }
-            finally { if (e_23) throw e_23.error; }
+            finally { if (e_24) throw e_24.error; }
         }
         _this.builtWonderCards = [];
         try {
@@ -3422,18 +3465,18 @@ var Wonder = /** @class */ (function (_super) {
                 card.addToGame();
             }
         }
-        catch (e_24_1) { e_24 = { error: e_24_1 }; }
+        catch (e_25_1) { e_25 = { error: e_25_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_24) throw e_24.error; }
+            finally { if (e_25) throw e_25.error; }
         }
         _this.zIndex = C.Z_INDEX_WONDER;
         return _this;
     }
     Wonder.prototype.update = function () {
-        var e_25, _a;
+        var e_26, _a;
         for (var color in this.playedCardEffectRolls) {
             this.playedCardEffectRolls[color].x = this.x + this.playedCardEffectRolls[color].offsetx;
             this.playedCardEffectRolls[color].y = this.y + this.playedCardEffectRolls[color].offsety;
@@ -3447,12 +3490,12 @@ var Wonder = /** @class */ (function (_super) {
                 overflowCardEffectRoll.update();
             }
         }
-        catch (e_25_1) { e_25 = { error: e_25_1 }; }
+        catch (e_26_1) { e_26 = { error: e_26_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_25) throw e_25.error; }
+            finally { if (e_26) throw e_26.error; }
         }
         for (var i = 0; i < this.builtWonderCards.length; i++) {
             this.builtWonderCards[i].targetPosition.set(this.x - C.WONDER_BOARD_WIDTH / 2 + this.stageXs[Main.gamestate.playerData[this.player].stagesBuilt[i].stage], this.y + C.WONDER_BOARD_HEIGHT / 2 + C.WONDER_BUILT_STAGE_OFFSET_Y);
@@ -3528,7 +3571,7 @@ var Wonder = /** @class */ (function (_super) {
         this.overflowCardEffectRolls.unshift(roll);
     };
     Wonder.prototype.draw = function () {
-        var e_26, _a;
+        var e_27, _a;
         var wonder = Main.gamestate.wonders[this.player];
         var playerData = Main.gamestate.playerData[this.player];
         var wonderBoard = new PIXI.Container();
@@ -3564,12 +3607,12 @@ var Wonder = /** @class */ (function (_super) {
                 }
             }
         }
-        catch (e_26_1) { e_26 = { error: e_26_1 }; }
+        catch (e_27_1) { e_27 = { error: e_27_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_26) throw e_26.error; }
+            finally { if (e_27) throw e_27.error; }
         }
         var stagesMiddle = wonder.stages.length === 2 ? C.WONDER_STAGE_MIDDLE_2 : C.WONDER_STAGE_MIDDLE_134;
         var stageDX = wonder.stages.length === 4 ? C.WONDER_STAGE_DX_4 : C.WONDER_STAGE_DX_123;
@@ -3676,8 +3719,8 @@ var S;
             scriptFunctions[_i] = arguments[_i];
         }
         return function () {
-            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_27_1;
-            var e_27, _a;
+            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_28_1;
+            var e_28, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -3696,14 +3739,14 @@ var S;
                         return [3 /*break*/, 1];
                     case 4: return [3 /*break*/, 7];
                     case 5:
-                        e_27_1 = _b.sent();
-                        e_27 = { error: e_27_1 };
+                        e_28_1 = _b.sent();
+                        e_28 = { error: e_28_1 };
                         return [3 /*break*/, 7];
                     case 6:
                         try {
                             if (scriptFunctions_1_1 && !scriptFunctions_1_1.done && (_a = scriptFunctions_1.return)) _a.call(scriptFunctions_1);
                         }
-                        finally { if (e_27) throw e_27.error; }
+                        finally { if (e_28) throw e_28.error; }
                         return [7 /*endfinally*/];
                     case 7: return [2 /*return*/];
                 }

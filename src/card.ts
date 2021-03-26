@@ -3,7 +3,6 @@
 type CardVisualState = 'full' | 'effect' | 'flipped';
 type CardState = { type: 'in_hand', visualState: CardVisualState }
                | { type: 'in_hand_moving' }
-               | { type: 'in_discard' }
                | { type: 'dragging_normal' | 'dragging_play' | 'dragging_wonder' | 'dragging_throw' }
                | { type: 'locked_play' | 'locked_throw' }
                | { type: 'locked_wonder', stage: number }
@@ -246,11 +245,6 @@ class Card extends GameElement {
             this.interactable = false;
             this.visualState = 'flipped';
         } else if (this.state.type === 'in_hand_moving') {
-            this.zIndex = C.Z_INDEX_CARD_MOVING;
-            this.interactable = false;
-            this.visualState = 'flipped';
-        } else if (this.state.type === 'in_discard') {
-            this.zIndex = C.Z_INDEX_DISCARD_CARDS;
             this.interactable = false;
             this.visualState = 'flipped';
         }

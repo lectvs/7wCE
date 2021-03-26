@@ -2,6 +2,7 @@ class C {
     public static readonly Z_INDEX_DISCARD_PILE = -10;
     public static readonly Z_INDEX_DISCARD_CARDS = -9;
     public static readonly Z_INDEX_CARD_HAND = 0;
+    public static readonly Z_INDEX_CARD_FLANK = 0;
     public static readonly Z_INDEX_CARD_WONDER = 9;
     public static readonly Z_INDEX_WONDER = 10;
     public static readonly Z_INDEX_CARD_PLAYED = 11;

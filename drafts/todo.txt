@@ -1,5 +1,4 @@
 todo
-- hand check marks
 - art
 - hover-infos
 - choose wonder

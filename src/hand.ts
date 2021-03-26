@@ -3,8 +3,7 @@ type HandData = { type: 'normal', cardIds: number[], activeWonder: Wonder, valid
               | { type: 'discard', count: number, lastCardAge: number };
 
 type HandState = { type: 'normal' }
-               | { type: 'back', moved: boolean }
-               | { type: 'moving' };
+               | { type: 'back', moved: boolean };
 
 class Hand {
     cardIds: number[];
@@ -50,17 +49,12 @@ class Hand {
                     this.cards[i].state = { type: 'in_hand_moving' };
                 }
                 // No, this should NOT be an 'else'
-                if (this.cards[i].state.type === 'in_hand_moving' || this.cards[i].state.type === 'in_discard') {
+                if (this.cards[i].state.type === 'in_hand_moving') {
                     this.cards[i].targetPosition.set(this.x, this.y);
                     this.cards[i].scale = this.scale;
                 }
 
-                if (this.state.type === 'back' && this.state.moved && i === 0) {
-                    if (this.cards.length > 1) this.cards[i].targetPosition.x += C.HAND_FLANK_MOVED_DX * this.flankDirection;
-                    this.cards[i].checkMarkVisible = true;
-                }  else {
-                    this.cards[i].checkMarkVisible = false;
-                }
+                this.cards[i].checkMarkVisible = (this.state.moved && i === this.cards.length-1);
             }
             this.cards[i].update();
         }
@@ -85,7 +79,7 @@ class Hand {
             card.addToGame();
             this.cards.push(card);
 
-            card.state = handData.type === 'discard' ? { type: 'in_discard' } : { type: 'in_hand', visualState: 'full' };
+            card.state = { type: 'in_hand', visualState: 'full' };
         }
 
         if (this.cards.length > 0 && handData.type === 'discard') {
@@ -133,6 +127,12 @@ class Hand {
 
     undoMove() {
         if (this.state.type === 'back') this.state.moved = false;
+    }
+
+    setZIndex(zIndex: number) {
+        for (let card of this.cards) {
+            card.zIndex = zIndex;
+        }
     }
 
     setAllCardState(state: CardState) {
