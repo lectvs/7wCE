@@ -18,7 +18,9 @@ class Hand {
 
     scale: number;
 
+    private splicedSelectedCard: Card;
     get selectedCard() {
+        if (this.splicedSelectedCard) return this.splicedSelectedCard;
         for (let card of this.cards) {
             if (card.state.type.startsWith('locked')) {
                 return card;
@@ -157,5 +159,13 @@ class Hand {
         let position = this.getPosition();
         position.x += (cardIndex - (cardsInHand.length - 1)/2) * C.HAND_CARD_DX;
         return position;
+    }
+
+    spliceSelectedCard() {
+        let selectedCard = this.selectedCard;
+        if (selectedCard) {
+            [this.splicedSelectedCard] = this.cards.splice(this.cards.indexOf(selectedCard), 1);
+        }
+        return selectedCard;
     }
 }

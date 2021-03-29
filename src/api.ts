@@ -204,6 +204,13 @@ namespace API {
         return newGold - oldGold + totalPaymentAmount(payment) - (negPayment?.pos || 0) - (posPayment?.neg || 0);
     }
 
+    export function getScienceSymbol(card: Card) {
+        for (let effect of card.effects) {
+            if (effect.type === 'science') return effect.symbol;
+        }
+        return undefined;
+    }
+
     /* API METHODS */
     export function getgamestate(gameid: string, player: string, callback: (gamestate: GameState, error: string) => any) {
         httpRequest(`${LAMBDA_URL}?operation=getgamestate&gameid=${gameid}&player=${player}`, (responseJson: any, error: string) => {

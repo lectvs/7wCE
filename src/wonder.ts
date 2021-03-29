@@ -33,13 +33,13 @@ class Wonder extends GameElement {
         sidebar.style.top = `${-C.WONDER_BOARD_HEIGHT/2}px`;
 
         this.playedCardEffectRolls = {
-            brown: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2, -C.WONDER_BOARD_HEIGHT/2 - C.WONDER_RESOURCE_ROLL_OFFSET_Y, false),
-            grey: undefined,
-            red: new PlayedCardEffectRoll(C.WONDER_RED_ROLL_X, -C.WONDER_BOARD_HEIGHT/2 + C.WONDER_RED_ROLL_Y, false),
-            yellow: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2 + C.WONDER_BOARD_BORDER, C.WONDER_YELLOW_ROLL_Y, false),
-            purple: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2 + C.WONDER_BOARD_BORDER, C.WONDER_PURPLE_ROLL_Y, false),
-            blue: new PlayedCardEffectRoll(C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_BORDER, C.WONDER_BLUE_ROLL_Y, true),
-            green: new PlayedCardEffectRoll(C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_BORDER, C.WONDER_GREEN_ROLL_Y, true),
+            brown: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2, -C.WONDER_BOARD_HEIGHT/2 - C.WONDER_RESOURCE_ROLL_OFFSET_Y, false, C.SORT_CMP_RESOURCES),
+            grey: undefined,  // Defined right after this, below.
+            red: new PlayedCardEffectRoll(C.WONDER_RED_ROLL_X, -C.WONDER_BOARD_HEIGHT/2 + C.WONDER_RED_ROLL_Y, false, null),
+            yellow: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2 + C.WONDER_BOARD_BORDER, C.WONDER_YELLOW_ROLL_Y, false, null),
+            purple: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2 + C.WONDER_BOARD_BORDER, C.WONDER_PURPLE_ROLL_Y, false, null),
+            blue: new PlayedCardEffectRoll(C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_BORDER, C.WONDER_BLUE_ROLL_Y, true, null),
+            green: new PlayedCardEffectRoll(C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_BORDER, C.WONDER_GREEN_ROLL_Y, true, C.SORT_CMP_SCIENCE),
         };
         this.playedCardEffectRolls.grey = this.playedCardEffectRolls.brown;
         this.overflowCardEffectRolls = [];
@@ -145,6 +145,29 @@ class Wonder extends GameElement {
         }
     }
 
+    adjustPlaceholdersFor(card: Card) {
+        this.removePlaceholders();
+        if (card && card.state.type === 'locked_play') {
+            this.addPlaceholder(card);
+        }
+    }
+
+    private addPlaceholder(card: Card) {
+        let color = card.apiCard.color;
+        if (this.playedCardEffectRolls[color].canAddCard(card, this.getCardEffectRollMaxWidth(color))) {
+            this.playedCardEffectRolls[color].addPlaceholder(card);
+        }
+    }
+
+    private removePlaceholders() {
+        for (let color in this.playedCardEffectRolls) {
+            this.playedCardEffectRolls[color].removePlaceholder();
+        }
+        for (let roll of this.overflowCardEffectRolls) {
+            roll.removePlaceholder();
+        }
+    }
+
     private getCardEffectRollMaxWidth(color: string) {
         return {
             'brown': C.WONDER_BOARD_WIDTH,
@@ -158,7 +181,7 @@ class Wonder extends GameElement {
     }
 
     private pushNewOverflowCardEffectRoll() {
-        let roll = new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2, C.WONDER_OVERFLOW_ROLL_START_Y + C.WONDER_OVERFLOW_ROLL_DY*(this.overflowCardEffectRolls.length-1), false);
+        let roll = new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2, C.WONDER_OVERFLOW_ROLL_START_Y + C.WONDER_OVERFLOW_ROLL_DY*(this.overflowCardEffectRolls.length-1), false, null);
         this.overflowCardEffectRolls.unshift(roll);
     }
 

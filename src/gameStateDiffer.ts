@@ -39,9 +39,8 @@ namespace GameStateDiffer {
                     if (player === Main.player) {
                         Main.scene.hand.reflectMove(lastMove);
                         yield* S.wait(0.5)();
-                        let selectedCard = Main.scene.hand.selectedCard;
+                        let selectedCard = Main.scene.hand.spliceSelectedCard();
                         if (selectedCard) {
-                            Main.scene.hand.cards.splice(Main.scene.hand.cards.indexOf(selectedCard), 1);
                             if (lastMove.action === 'throw') {
                                 Main.scene.discardHand.cards.push(selectedCard);
                             }

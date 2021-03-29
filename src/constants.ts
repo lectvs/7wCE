@@ -158,4 +158,21 @@ class C {
     public static readonly END_SCREEN_POINTS_Y = 130;
     public static readonly END_SCREEN_POINTS_DX = 150;
     public static readonly END_SCREEN_POINTS_DY = 50;
+
+    public static readonly SORT_CMP_RESOURCES = (card1: Card, card2: Card) => {
+        if (card1.apiCard.color === 'brown' && card2.apiCard.color === 'grey') return -1;
+        if (card1.apiCard.color === 'grey' && card2.apiCard.color === 'brown') return 1;
+        return 0;
+    }
+
+    public static readonly SORT_CMP_SCIENCE = (card1: Card, card2: Card) => {
+        let symbol1 = API.getScienceSymbol(card1.apiCard);
+        let symbol2 = API.getScienceSymbol(card2.apiCard);
+        if (symbol1 === symbol2) return 0;
+        if (symbol1 === 'compass') return -1;
+        if (symbol2 === 'compass') return 1;
+        if (symbol1 === 'gear') return -1;
+        if (symbol2 === 'gear') return 1;
+        return 0;
+    }
 }

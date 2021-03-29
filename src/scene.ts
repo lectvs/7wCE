@@ -25,6 +25,8 @@ class Scene {
             wonder.update();
         }
 
+        this.topWonder.adjustPlaceholdersFor(this.hand.selectedCard);
+        
         if (this.discardHand) {
             this.discardHand.update();
         }
