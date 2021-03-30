@@ -1,5 +1,7 @@
 todo
 - zoom out to fit macbook screen (ratio mac:pc | 50:90 or 80:150)
+    - zoom: 100%
+    - window: 38cm x 18.6cm
 - hover-infos
 - choose wonder
 - game lobby

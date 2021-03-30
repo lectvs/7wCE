@@ -195,24 +195,38 @@ class Scene {
 
     getHandPosition(index: number) {
         let p = Main.gamestate.players.indexOf(Main.player);
-        let l = mod(p-1, Main.gamestate.players.length);
-        let r = mod(p+1, Main.gamestate.players.length);
 
         if (index === p) return new PIXI.Point(0, C.HAND_Y);
 
+        let wonderPosition = this.getWonderPosition(index);
+
+        if (wonderPosition.x < 0) {
+            return new PIXI.Point(wonderPosition.x - (C.WONDER_BOARD_WIDTH/2 + C.HAND_FLANK_DX), wonderPosition.y + C.HAND_FLANK_DY);
+        }
+
+        return new PIXI.Point(wonderPosition.x + (C.WONDER_BOARD_WIDTH/2 + C.HAND_FLANK_DX), wonderPosition.y + C.HAND_FLANK_DY);
+    }
+
+    getWonderPosition(index: number) {
+        let p = Main.gamestate.players.indexOf(Main.player);
+        let l = mod(p-1, Main.gamestate.players.length);
+        let r = mod(p+1, Main.gamestate.players.length);
+
+        if (index === p) return new PIXI.Point(0, C.WONDER_START_Y);
+
         let i: number;
         for (i = 1; i < Math.floor((Main.gamestate.players.length - 1)/2 + 1); i++) {
-            if (index === l) return new PIXI.Point(-C.HAND_FLANK_DX, C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY);
-            if (index === r) return new PIXI.Point(C.HAND_FLANK_DX, C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY);
+            if (index === l) return new PIXI.Point(-C.WONDER_DX, C.WONDER_START_Y + C.WONDER_DY*i);
+            if (index === r) return new PIXI.Point(C.WONDER_DX, C.WONDER_START_Y + C.WONDER_DY*i);
             l = mod(l-1, Main.gamestate.players.length);
             r = mod(r+1, Main.gamestate.players.length);
         }
 
         if (Main.gamestate.players.length % 2 === 0) {
-            if (index === l) return new PIXI.Point(C.HAND_LAST_DX, C.WONDER_START_Y + C.WONDER_DY*i + C.HAND_FLANK_DY);
+            if (index === l) return new PIXI.Point(0, C.WONDER_START_Y + C.WONDER_DY*i);
         }
 
-        console.log(`Hand position index ${index} is out of bounds`);
+        console.log(`Wonder position index ${index} is out of bounds`);
         return undefined;
     }
 

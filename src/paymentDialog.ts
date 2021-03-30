@@ -91,8 +91,8 @@ class PaymentDialog extends GameElement {
 
         let closeButton = dialogDiv.appendChild(this.drawCloseButton());
         closeButton.style.position = 'absolute';
-        closeButton.style.left = 'calc(100% - 20px)';
-        closeButton.style.top = '20px';
+        closeButton.style.left = `calc(100% - ${C.PAYMENT_DIALOG_CLOSE_BUTTON_OFFSET_X}px)`;
+        closeButton.style.top = `${C.PAYMENT_DIALOG_CLOSE_BUTTON_OFFSET_Y}px`;
         closeButton.style.cursor = 'pointer';
         closeButton.onclick = (event: MouseEvent) => {
             this.removeFromGame();
@@ -112,11 +112,11 @@ class PaymentDialog extends GameElement {
 
     private drawCloseButton() {
         let closeButton = new PIXI.Container();
-        let X = ArtCommon.X(0x000000);
-        X.scale.set(0.2);
-        X.position.set(18, 18);
+        let X = ArtCommon.X(C.PAYMENT_DIALOG_CLOSE_BUTTON_COLOR);
+        X.scale.set(C.PAYMENT_DIALOG_CLOSE_BUTTON_SCALE);
+        X.position.set(100*C.PAYMENT_DIALOG_CLOSE_BUTTON_SCALE, 100*C.PAYMENT_DIALOG_CLOSE_BUTTON_SCALE);
         closeButton.addChild(X);
-        return render(closeButton, 36, 36);
+        return render(closeButton, 200*C.PAYMENT_DIALOG_CLOSE_BUTTON_SCALE, 200*C.PAYMENT_DIALOG_CLOSE_BUTTON_SCALE);
     }
 
     removeFromGame(success: boolean = false) {

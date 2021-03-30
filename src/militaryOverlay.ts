@@ -38,9 +38,9 @@ class MilitaryOverlay extends GameElement {
         pixiOverlayDefeat.alpha = C.WONDER_OVERLAY_ALPHA;
         this.overlayDefeat = div.appendChild(render(pixiOverlayDefeat, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT));
 
-        let shield = div.appendChild(ArtCommon.domElementForArt(ArtCommon.shield(), 1));
+        let shield = div.appendChild(ArtCommon.domElementForArt(ArtCommon.shield(), C.WONDER_OVERLAY_SHIELD_SCALE));
         shield.style.position = 'absolute';
-        shield.style.left = '-75px';
+        shield.style.left = `${C.WONDER_OVERLAY_SHIELD_X}px`;
         shield.style.top = '0px';
 
         let textDiv = div.appendChild(document.createElement('div'));

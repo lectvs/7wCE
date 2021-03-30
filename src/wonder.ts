@@ -29,7 +29,7 @@ class Wonder extends GameElement {
         let boardDiv = this.div.appendChild(document.createElement('div'));
         boardDiv.appendChild(this.draw());
         let sidebar = this.div.appendChild(this.drawSidebar());
-        sidebar.style.left = `${C.WONDER_BOARD_WIDTH/2 - C.WONDER_SIDEBAR_WIDTH}px`;
+        sidebar.style.left = `${C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_WIDTH}px`;
         sidebar.style.top = `${-C.WONDER_BOARD_HEIGHT/2}px`;
 
         this.playedCardEffectRolls = {
@@ -181,7 +181,7 @@ class Wonder extends GameElement {
     }
 
     private pushNewOverflowCardEffectRoll() {
-        let roll = new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2, C.WONDER_OVERFLOW_ROLL_START_Y + C.WONDER_OVERFLOW_ROLL_DY*(this.overflowCardEffectRolls.length-1), false, null);
+        let roll = new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2, -C.WONDER_BOARD_HEIGHT/2 - C.WONDER_OVERFLOW_ROLL_OFFSET_Y - C.WONDER_OVERFLOW_ROLL_DY*(this.overflowCardEffectRolls.length-1), false, null);
         this.overflowCardEffectRolls.unshift(roll);
     }
 
@@ -288,39 +288,39 @@ class Wonder extends GameElement {
 
     private drawSidebar() {
         let sidebar = document.createElement('div');
-        sidebar.style.width = `${C.WONDER_SIDEBAR_WIDTH}px`;
+        sidebar.style.width = `${C.WONDER_BOARD_WIDTH}px`;
         sidebar.style.height = `${C.WONDER_BOARD_HEIGHT}px`;
         sidebar.style.position = 'absolute';
 
         let nameText = sidebar.appendChild(this.drawSidebarText(this.player, C.WONDER_SIDEBAR_NAME_SIZE));
-        nameText.style.left = `${C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_NAME_X}px`;
+        nameText.style.left = `${C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_NAME_X}px`;
         nameText.style.top = `${C.WONDER_SIDEBAR_NAME_Y}px`;
 
         let goldCoin = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.goldCoin(), C.WONDER_SIDEBAR_GOLD_COIN_SCALE));
         goldCoin.style.position = 'absolute';
-        goldCoin.style.left = `${C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_GOLD_COIN_X}px`;
+        goldCoin.style.left = `${C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_GOLD_COIN_X}px`;
         goldCoin.style.top = `${C.WONDER_SIDEBAR_GOLD_COIN_Y}px`;
 
         let goldText = sidebar.appendChild(this.drawSidebarText(`${Main.gamestate.playerData[this.player].gold}`, C.WONDER_SIDEBAR_GOLD_TEXT_SIZE));
         goldText.style.color = ArtCommon.goldColorHtml;
-        goldText.style.left = `${C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_GOLD_TEXT_X}px`;
+        goldText.style.left = `${C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_GOLD_TEXT_X}px`;
         goldText.style.top = `${C.WONDER_SIDEBAR_GOLD_TEXT_Y}px`;
         this.goldText = goldText.querySelector('p');
 
         let pointsWreath = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.pointsWreath(), C.WONDER_SIDEBAR_POINTS_WREATH_SCALE));
         pointsWreath.style.position = 'absolute';
-        pointsWreath.style.left = `${C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_POINTS_WREATH_X}px`;
+        pointsWreath.style.left = `${C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_POINTS_WREATH_X}px`;
         pointsWreath.style.top = `${C.WONDER_SIDEBAR_POINTS_WREATH_Y}px`;
 
         let pointsText = sidebar.appendChild(this.drawSidebarText(`${Main.gamestate.playerData[this.player].pointsDistribution.total}`, C.WONDER_SIDEBAR_POINTS_TEXT_SIZE));
-        pointsText.style.left = `${C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_POINTS_TEXT_X}px`;
+        pointsText.style.left = `${C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_POINTS_TEXT_X}px`;
         pointsText.style.top = `${C.WONDER_SIDEBAR_POINTS_TEXT_Y}px`;
         this.pointsText = pointsText.querySelector('p');
 
         for (let i = 0; i < Main.gamestate.playerData[this.player].militaryTokens.length; i++) {
             let token = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.militaryToken(Main.gamestate.playerData[this.player].militaryTokens[i]), C.TOKEN_SCALE));
             token.style.position = 'absolute';
-            token.style.left = `${C.WONDER_SIDEBAR_WIDTH + C.WONDER_SIDEBAR_TOKENS_X + C.WONDER_SIDEBAR_TOKENS_DX*i}px`;
+            token.style.left = `${C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_TOKENS_X + C.WONDER_SIDEBAR_TOKENS_DX*i}px`;
             token.style.top = `${C.WONDER_SIDEBAR_TOKENS_Y}px`;
         }
 
