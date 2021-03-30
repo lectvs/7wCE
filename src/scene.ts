@@ -43,12 +43,11 @@ class Scene {
         let gamestate = Main.gamestate;
         let players = Main.gamestate.players;
 
-        Main.game.style.height = `${C.WONDER_START_Y + C.WONDER_DY * Math.ceil((gamestate.players.length + 1) / 2)}px`;
+        Main.game.style.height = `${C.WONDER_TOP_Y + C.WONDER_OTHERS_DY * Math.ceil((gamestate.players.length + 1) / 2)}px`;
 
         let cardsInHand = this.isMyTurnToBuildFromDiscard() ? gamestate.discardedCards : gamestate.hand;
 
         this.wonders = players.map(player => undefined);
-        this.militaryOverlays = players.map(player => undefined);
         this.hands = players.map(player => undefined);
         this.playedCards = players.map(player => undefined);
 
@@ -57,25 +56,16 @@ class Scene {
         let r = mod(p+1, players.length);
 
         this.wonders[p] = new Wonder(Main.player);
-        this.wonders[p].x = 0;
-        this.wonders[p].y = C.WONDER_START_Y;
+        this.wonders[p].setPosition(this.getWonderPosition(p));
         this.wonders[p].addToGame();
-        this.militaryOverlays[p] = new MilitaryOverlay();
-        this.militaryOverlays[p].y = C.WONDER_START_Y;
-        this.militaryOverlays[p].addToGame();
         this.hands[p] = new Hand(this.getHandPosition(p), { type: 'normal', cardIds: cardsInHand, activeWonder: this.wonders[p], validMoves: Main.gamestate.validMoves });
         this.hands[p].snap();
 
         let i: number;
         for (i = 1; i < Math.floor((players.length - 1)/2 + 1); i++) {
             this.wonders[l] = new Wonder(players[l]);
-            this.wonders[l].x = -C.WONDER_DX;
-            this.wonders[l].y = C.WONDER_START_Y + C.WONDER_DY*i;
+            this.wonders[l].setPosition(this.getWonderPosition(l));
             this.wonders[l].addToGame();
-            this.militaryOverlays[l] = new MilitaryOverlay();
-            this.militaryOverlays[l].x = -C.WONDER_DX;
-            this.militaryOverlays[l].y = C.WONDER_START_Y + C.WONDER_DY*i;
-            this.militaryOverlays[l].addToGame();
             this.hands[l] = new Hand(this.getHandPosition(l), { type: 'back', player: players[l], age: gamestate.age, flankDirection: -1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
@@ -83,13 +73,8 @@ class Scene {
             this.hands[l].snap();
 
             this.wonders[r] = new Wonder(players[r]);
-            this.wonders[r].x = C.WONDER_DX;
-            this.wonders[r].y = C.WONDER_START_Y + C.WONDER_DY*i;
+            this.wonders[r].setPosition(this.getWonderPosition(r));
             this.wonders[r].addToGame();
-            this.militaryOverlays[r] = new MilitaryOverlay();
-            this.militaryOverlays[r].x = C.WONDER_DX;
-            this.militaryOverlays[r].y = C.WONDER_START_Y + C.WONDER_DY*i;
-            this.militaryOverlays[r].addToGame();
             this.hands[r] = new Hand(this.getHandPosition(r), { type: 'back', player: players[r], age: gamestate.age, flankDirection: 1 });
             this.hands[r].state = { type: 'back', moved: !!gamestate.playerData[players[r]].currentMove };
             this.hands[r].scale = C.HAND_FLANK_SCALE;
@@ -102,18 +87,21 @@ class Scene {
 
         if (players.length % 2 === 0) {
             this.wonders[l] = new Wonder(players[l]);
-            this.wonders[l].x = 0;
-            this.wonders[l].y = C.WONDER_START_Y + C.WONDER_DY*i;
+            this.wonders[l].setPosition(this.getWonderPosition(l));
             this.wonders[l].addToGame();
-            this.militaryOverlays[l] = new MilitaryOverlay();
-            this.militaryOverlays[l].x = 0;
-            this.militaryOverlays[l].y = C.WONDER_START_Y + C.WONDER_DY*i;
-            this.militaryOverlays[l].addToGame();
             this.hands[l] = new Hand(this.getHandPosition(l), { type: 'back', player: players[l], age: gamestate.age, flankDirection: 1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].setZIndex(C.Z_INDEX_CARD_FLANK);
             this.hands[l].snap();
+        }
+
+        this.militaryOverlays = players.map(player => undefined);
+        for (let i = 0; i < this.wonders.length; i++) {
+            this.militaryOverlays[i] = new MilitaryOverlay();
+            this.militaryOverlays[i].x = this.wonders[i].x;
+            this.militaryOverlays[i].y = this.wonders[i].y;
+            this.militaryOverlays[i].addToGame();
         }
 
         this.actionButton = new ActionButton();
@@ -124,8 +112,8 @@ class Scene {
         this.hand.reflectMove(gamestate.playerData[Main.player].currentMove);
 
         this.discardPile = new DiscardPile();
-        this.discardPile.x = 0;
-        this.discardPile.y = C.WONDER_START_Y + C.WONDER_DY;
+        this.discardPile.x = C.DISCARD_PILE_X;
+        this.discardPile.y = C.DISCARD_PILE_Y;
         this.discardPile.addToGame();
 
         this.discardHand = new Hand(this.discardPile.getDiscardLockPoint(),
@@ -212,18 +200,21 @@ class Scene {
         let l = mod(p-1, Main.gamestate.players.length);
         let r = mod(p+1, Main.gamestate.players.length);
 
-        if (index === p) return new PIXI.Point(0, C.WONDER_START_Y);
+        if (index === p) return new PIXI.Point(0, C.WONDER_TOP_Y);
 
         let i: number;
-        for (i = 1; i < Math.floor((Main.gamestate.players.length - 1)/2 + 1); i++) {
-            if (index === l) return new PIXI.Point(-C.WONDER_DX, C.WONDER_START_Y + C.WONDER_DY*i);
-            if (index === r) return new PIXI.Point(C.WONDER_DX, C.WONDER_START_Y + C.WONDER_DY*i);
+        for (i = 0; i < Math.floor((Main.gamestate.players.length - 1)/2); i++) {
+            let dx = (Main.gamestate.players.length === 7 && i === 2) ? C.WONDER_OTHERS_DX_LAST_7P : C.WONDER_OTHERS_DX;
+            let y = Main.gamestate.players.length === 4 ? C.WONDER_OTHERS_Y_4P : C.WONDER_OTHERS_Y;
+            if (index === l) return new PIXI.Point(-dx, y + C.WONDER_OTHERS_DY*i);
+            if (index === r) return new PIXI.Point(dx, y + C.WONDER_OTHERS_DY*i);
             l = mod(l-1, Main.gamestate.players.length);
             r = mod(r+1, Main.gamestate.players.length);
         }
 
         if (Main.gamestate.players.length % 2 === 0) {
-            if (index === l) return new PIXI.Point(0, C.WONDER_START_Y + C.WONDER_DY*i);
+            let y = Main.gamestate.players.length === 4 ? C.WONDER_LAST_Y_4P : C.WONDER_LAST_Y_6P;
+            if (index === l) return new PIXI.Point(0, y);
         }
 
         console.log(`Wonder position index ${index} is out of bounds`);

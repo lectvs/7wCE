@@ -58,6 +58,11 @@ class GameElement {
             this.div.parentElement.removeChild(this.div);
         }
     }
+    
+    setPosition(point: PIXI.Point) {
+        this.x = point.x;
+        this.y = point.y;
+    }
 
     private setTransform() {
         this.div.style.transform = `scale(${this._scale})`;

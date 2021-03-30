@@ -25,7 +25,7 @@ class C {
     public static readonly ERROR_TEXT_COLOR = '#FFFFFF';
     public static readonly OK_TEXT_COLOR = '#000000';
 
-    public static readonly ACTION_BUTTON_Y = 214;
+    public static readonly ACTION_BUTTON_Y = 220;
     public static readonly ACTION_BUTTON_WIDTH = 100;
     public static readonly ACTION_BUTTON_HEIGHT = 40;
     public static readonly ACTION_BUTTON_CORNER_RADIUS = 8;
@@ -52,15 +52,20 @@ class C {
     public static readonly CARD_DISCARD_COUNT_TEXT_SIZE = 36;
     public static readonly CARD_CENTER_OFFSET_Y = 45;
 
-    public static readonly HAND_Y = 68;
+    public static readonly HAND_Y = 64;
     public static readonly HAND_CARD_DX = C.CARD_WIDTH + 3;
     public static readonly HAND_FLANK_DX = 40;
     public static readonly HAND_FLANK_DY = -100;
     public static readonly HAND_FLANK_SCALE = 0.5;
 
-    public static readonly WONDER_START_Y = 440;
-    public static readonly WONDER_DX = 375;
-    public static readonly WONDER_DY = 330;
+    public static readonly WONDER_TOP_Y = 440;
+    public static readonly WONDER_OTHERS_Y = 500;
+    public static readonly WONDER_OTHERS_Y_4P = 720;
+    public static readonly WONDER_OTHERS_DX = 470;
+    public static readonly WONDER_OTHERS_DY = 330;
+    public static readonly WONDER_OTHERS_DX_LAST_7P = 270;
+    public static readonly WONDER_LAST_Y_4P = 1040;
+    public static readonly WONDER_LAST_Y_6P = 1120;
     public static readonly WONDER_BOARD_WIDTH = 450;
     public static readonly WONDER_BOARD_HEIGHT = 225;
     public static readonly WONDER_BOARD_CORNER_RADIUS = 22.5;
@@ -92,8 +97,7 @@ class C {
     public static readonly WONDER_PURPLE_ROLL_Y = 18;
     public static readonly WONDER_BLUE_ROLL_Y = -18;
     public static readonly WONDER_GREEN_ROLL_Y = 18;
-    public static readonly WONDER_OVERFLOW_ROLL_DY = 40;
-    public static readonly WONDER_OVERFLOW_ROLL_OFFSET_Y = C.WONDER_RESOURCE_ROLL_OFFSET_Y + C.WONDER_OVERFLOW_ROLL_DY;
+    public static readonly WONDER_OVERFLOW_ROLL_OFFSET_Y = C.WONDER_RESOURCE_ROLL_OFFSET_Y + 38;
     public static readonly WONDER_SIDEBAR_NAME_X = -13.5;
     public static readonly WONDER_SIDEBAR_NAME_Y = 18;
     public static readonly WONDER_SIDEBAR_NAME_SIZE = 15;
@@ -128,6 +132,8 @@ class C {
     public static readonly TOKEN_SCALE = 0.15;
     public static readonly GOLD_COIN_SCALE = 0.225;
 
+    public static readonly DISCARD_PILE_X = 0;
+    public static readonly DISCARD_PILE_Y = 720;
     public static readonly DISCARD_PILE_AREA_WIDTH = 200;
     public static readonly DISCARD_PILE_AREA_HEIGHT = 240;
     public static readonly DISCARD_PILE_AREA_CORNER_RADIUS = 8;
@@ -136,8 +142,8 @@ class C {
     public static readonly DISCARD_PILE_TITLE_SCALE = 0.2;
     public static readonly DISCARD_PILE_TITLE_TEXT = "Discard";
 
-    public static readonly PAYMENT_DIALOG_OFFSET_X = -450;
-    public static readonly PAYMENT_DIALOG_OFFSET_Y = -40;
+    public static readonly PAYMENT_DIALOG_OFFSET_X = -512;
+    public static readonly PAYMENT_DIALOG_OFFSET_Y = -330;
     public static readonly PAYMENT_DIALOG_WIDTH = 375;
     public static readonly PAYMENT_DIALOG_EXTRA_HEIGHT = 60;
     public static readonly PAYMENT_DIALOG_CORNER_RADIUS = 8;

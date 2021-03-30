@@ -143,6 +143,10 @@ var GameElement = /** @class */ (function () {
             this.div.parentElement.removeChild(this.div);
         }
     };
+    GameElement.prototype.setPosition = function (point) {
+        this.x = point.x;
+        this.y = point.y;
+    };
     GameElement.prototype.setTransform = function () {
         this.div.style.transform = "scale(" + this._scale + ")";
     };
@@ -1595,7 +1599,7 @@ var C = /** @class */ (function () {
     C.OK_BG_COLOR = '#FFFFFF';
     C.ERROR_TEXT_COLOR = '#FFFFFF';
     C.OK_TEXT_COLOR = '#000000';
-    C.ACTION_BUTTON_Y = 214;
+    C.ACTION_BUTTON_Y = 220;
     C.ACTION_BUTTON_WIDTH = 100;
     C.ACTION_BUTTON_HEIGHT = 40;
     C.ACTION_BUTTON_CORNER_RADIUS = 8;
@@ -1620,14 +1624,19 @@ var C = /** @class */ (function () {
     C.CARD_PAYMENT_OFFSET_X = -8.25;
     C.CARD_DISCARD_COUNT_TEXT_SIZE = 36;
     C.CARD_CENTER_OFFSET_Y = 45;
-    C.HAND_Y = 68;
+    C.HAND_Y = 64;
     C.HAND_CARD_DX = C.CARD_WIDTH + 3;
     C.HAND_FLANK_DX = 40;
     C.HAND_FLANK_DY = -100;
     C.HAND_FLANK_SCALE = 0.5;
-    C.WONDER_START_Y = 440;
-    C.WONDER_DX = 375;
-    C.WONDER_DY = 330;
+    C.WONDER_TOP_Y = 440;
+    C.WONDER_OTHERS_Y = 500;
+    C.WONDER_OTHERS_Y_4P = 720;
+    C.WONDER_OTHERS_DX = 470;
+    C.WONDER_OTHERS_DY = 330;
+    C.WONDER_OTHERS_DX_LAST_7P = 270;
+    C.WONDER_LAST_Y_4P = 1040;
+    C.WONDER_LAST_Y_6P = 1120;
     C.WONDER_BOARD_WIDTH = 450;
     C.WONDER_BOARD_HEIGHT = 225;
     C.WONDER_BOARD_CORNER_RADIUS = 22.5;
@@ -1659,8 +1668,7 @@ var C = /** @class */ (function () {
     C.WONDER_PURPLE_ROLL_Y = 18;
     C.WONDER_BLUE_ROLL_Y = -18;
     C.WONDER_GREEN_ROLL_Y = 18;
-    C.WONDER_OVERFLOW_ROLL_DY = 40;
-    C.WONDER_OVERFLOW_ROLL_OFFSET_Y = C.WONDER_RESOURCE_ROLL_OFFSET_Y + C.WONDER_OVERFLOW_ROLL_DY;
+    C.WONDER_OVERFLOW_ROLL_OFFSET_Y = C.WONDER_RESOURCE_ROLL_OFFSET_Y + 38;
     C.WONDER_SIDEBAR_NAME_X = -13.5;
     C.WONDER_SIDEBAR_NAME_Y = 18;
     C.WONDER_SIDEBAR_NAME_SIZE = 15;
@@ -1692,6 +1700,8 @@ var C = /** @class */ (function () {
     C.WONDER_OVERLAY_TEXT_COLOR = '#FF0000';
     C.TOKEN_SCALE = 0.15;
     C.GOLD_COIN_SCALE = 0.225;
+    C.DISCARD_PILE_X = 0;
+    C.DISCARD_PILE_Y = 720;
     C.DISCARD_PILE_AREA_WIDTH = 200;
     C.DISCARD_PILE_AREA_HEIGHT = 240;
     C.DISCARD_PILE_AREA_CORNER_RADIUS = 8;
@@ -1699,8 +1709,8 @@ var C = /** @class */ (function () {
     C.DISCARD_PILE_TITLE_Y = 20;
     C.DISCARD_PILE_TITLE_SCALE = 0.2;
     C.DISCARD_PILE_TITLE_TEXT = "Discard";
-    C.PAYMENT_DIALOG_OFFSET_X = -450;
-    C.PAYMENT_DIALOG_OFFSET_Y = -40;
+    C.PAYMENT_DIALOG_OFFSET_X = -512;
+    C.PAYMENT_DIALOG_OFFSET_Y = -330;
     C.PAYMENT_DIALOG_WIDTH = 375;
     C.PAYMENT_DIALOG_EXTRA_HEIGHT = 60;
     C.PAYMENT_DIALOG_CORNER_RADIUS = 8;
@@ -3201,47 +3211,32 @@ var Scene = /** @class */ (function () {
     Scene.prototype.create = function () {
         var gamestate = Main.gamestate;
         var players = Main.gamestate.players;
-        Main.game.style.height = C.WONDER_START_Y + C.WONDER_DY * Math.ceil((gamestate.players.length + 1) / 2) + "px";
+        Main.game.style.height = C.WONDER_TOP_Y + C.WONDER_OTHERS_DY * Math.ceil((gamestate.players.length + 1) / 2) + "px";
         var cardsInHand = this.isMyTurnToBuildFromDiscard() ? gamestate.discardedCards : gamestate.hand;
         this.wonders = players.map(function (player) { return undefined; });
-        this.militaryOverlays = players.map(function (player) { return undefined; });
         this.hands = players.map(function (player) { return undefined; });
         this.playedCards = players.map(function (player) { return undefined; });
         var p = players.indexOf(Main.player);
         var l = mod(p - 1, players.length);
         var r = mod(p + 1, players.length);
         this.wonders[p] = new Wonder(Main.player);
-        this.wonders[p].x = 0;
-        this.wonders[p].y = C.WONDER_START_Y;
+        this.wonders[p].setPosition(this.getWonderPosition(p));
         this.wonders[p].addToGame();
-        this.militaryOverlays[p] = new MilitaryOverlay();
-        this.militaryOverlays[p].y = C.WONDER_START_Y;
-        this.militaryOverlays[p].addToGame();
         this.hands[p] = new Hand(this.getHandPosition(p), { type: 'normal', cardIds: cardsInHand, activeWonder: this.wonders[p], validMoves: Main.gamestate.validMoves });
         this.hands[p].snap();
         var i;
         for (i = 1; i < Math.floor((players.length - 1) / 2 + 1); i++) {
             this.wonders[l] = new Wonder(players[l]);
-            this.wonders[l].x = -C.WONDER_DX;
-            this.wonders[l].y = C.WONDER_START_Y + C.WONDER_DY * i;
+            this.wonders[l].setPosition(this.getWonderPosition(l));
             this.wonders[l].addToGame();
-            this.militaryOverlays[l] = new MilitaryOverlay();
-            this.militaryOverlays[l].x = -C.WONDER_DX;
-            this.militaryOverlays[l].y = C.WONDER_START_Y + C.WONDER_DY * i;
-            this.militaryOverlays[l].addToGame();
             this.hands[l] = new Hand(this.getHandPosition(l), { type: 'back', player: players[l], age: gamestate.age, flankDirection: -1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].setZIndex(C.Z_INDEX_CARD_FLANK);
             this.hands[l].snap();
             this.wonders[r] = new Wonder(players[r]);
-            this.wonders[r].x = C.WONDER_DX;
-            this.wonders[r].y = C.WONDER_START_Y + C.WONDER_DY * i;
+            this.wonders[r].setPosition(this.getWonderPosition(r));
             this.wonders[r].addToGame();
-            this.militaryOverlays[r] = new MilitaryOverlay();
-            this.militaryOverlays[r].x = C.WONDER_DX;
-            this.militaryOverlays[r].y = C.WONDER_START_Y + C.WONDER_DY * i;
-            this.militaryOverlays[r].addToGame();
             this.hands[r] = new Hand(this.getHandPosition(r), { type: 'back', player: players[r], age: gamestate.age, flankDirection: 1 });
             this.hands[r].state = { type: 'back', moved: !!gamestate.playerData[players[r]].currentMove };
             this.hands[r].scale = C.HAND_FLANK_SCALE;
@@ -3252,18 +3247,20 @@ var Scene = /** @class */ (function () {
         }
         if (players.length % 2 === 0) {
             this.wonders[l] = new Wonder(players[l]);
-            this.wonders[l].x = 0;
-            this.wonders[l].y = C.WONDER_START_Y + C.WONDER_DY * i;
+            this.wonders[l].setPosition(this.getWonderPosition(l));
             this.wonders[l].addToGame();
-            this.militaryOverlays[l] = new MilitaryOverlay();
-            this.militaryOverlays[l].x = 0;
-            this.militaryOverlays[l].y = C.WONDER_START_Y + C.WONDER_DY * i;
-            this.militaryOverlays[l].addToGame();
             this.hands[l] = new Hand(this.getHandPosition(l), { type: 'back', player: players[l], age: gamestate.age, flankDirection: 1 });
             this.hands[l].state = { type: 'back', moved: !!gamestate.playerData[players[l]].currentMove };
             this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].setZIndex(C.Z_INDEX_CARD_FLANK);
             this.hands[l].snap();
+        }
+        this.militaryOverlays = players.map(function (player) { return undefined; });
+        for (var i_3 = 0; i_3 < this.wonders.length; i_3++) {
+            this.militaryOverlays[i_3] = new MilitaryOverlay();
+            this.militaryOverlays[i_3].x = this.wonders[i_3].x;
+            this.militaryOverlays[i_3].y = this.wonders[i_3].y;
+            this.militaryOverlays[i_3].addToGame();
         }
         this.actionButton = new ActionButton();
         this.actionButton.x = 0;
@@ -3271,8 +3268,8 @@ var Scene = /** @class */ (function () {
         this.actionButton.addToGame();
         this.hand.reflectMove(gamestate.playerData[Main.player].currentMove);
         this.discardPile = new DiscardPile();
-        this.discardPile.x = 0;
-        this.discardPile.y = C.WONDER_START_Y + C.WONDER_DY;
+        this.discardPile.x = C.DISCARD_PILE_X;
+        this.discardPile.y = C.DISCARD_PILE_Y;
         this.discardPile.addToGame();
         this.discardHand = new Hand(this.discardPile.getDiscardLockPoint(), { type: 'discard', count: this.isMyTurnToBuildFromDiscard() ? 0 : gamestate.discardedCardCount, lastCardAge: gamestate.lastDiscardedCardAge });
         this.discardHand.state = { type: 'back', moved: false };
@@ -3351,19 +3348,22 @@ var Scene = /** @class */ (function () {
         var l = mod(p - 1, Main.gamestate.players.length);
         var r = mod(p + 1, Main.gamestate.players.length);
         if (index === p)
-            return new PIXI.Point(0, C.WONDER_START_Y);
+            return new PIXI.Point(0, C.WONDER_TOP_Y);
         var i;
-        for (i = 1; i < Math.floor((Main.gamestate.players.length - 1) / 2 + 1); i++) {
+        for (i = 0; i < Math.floor((Main.gamestate.players.length - 1) / 2); i++) {
+            var dx = (Main.gamestate.players.length === 7 && i === 2) ? C.WONDER_OTHERS_DX_LAST_7P : C.WONDER_OTHERS_DX;
+            var y = Main.gamestate.players.length === 4 ? C.WONDER_OTHERS_Y_4P : C.WONDER_OTHERS_Y;
             if (index === l)
-                return new PIXI.Point(-C.WONDER_DX, C.WONDER_START_Y + C.WONDER_DY * i);
+                return new PIXI.Point(-dx, y + C.WONDER_OTHERS_DY * i);
             if (index === r)
-                return new PIXI.Point(C.WONDER_DX, C.WONDER_START_Y + C.WONDER_DY * i);
+                return new PIXI.Point(dx, y + C.WONDER_OTHERS_DY * i);
             l = mod(l - 1, Main.gamestate.players.length);
             r = mod(r + 1, Main.gamestate.players.length);
         }
         if (Main.gamestate.players.length % 2 === 0) {
+            var y = Main.gamestate.players.length === 4 ? C.WONDER_LAST_Y_4P : C.WONDER_LAST_Y_6P;
             if (index === l)
-                return new PIXI.Point(0, C.WONDER_START_Y + C.WONDER_DY * i);
+                return new PIXI.Point(0, y);
         }
         console.log("Wonder position index " + index + " is out of bounds");
         return undefined;
@@ -3522,10 +3522,9 @@ var Wonder = /** @class */ (function (_super) {
             purple: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH / 2 + C.WONDER_BOARD_BORDER, C.WONDER_PURPLE_ROLL_Y, false, null),
             blue: new PlayedCardEffectRoll(C.WONDER_BOARD_WIDTH / 2 - C.WONDER_BOARD_BORDER, C.WONDER_BLUE_ROLL_Y, true, null),
             green: new PlayedCardEffectRoll(C.WONDER_BOARD_WIDTH / 2 - C.WONDER_BOARD_BORDER, C.WONDER_GREEN_ROLL_Y, true, C.SORT_CMP_SCIENCE),
+            overflow: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH / 2, -C.WONDER_BOARD_HEIGHT / 2 - C.WONDER_OVERFLOW_ROLL_OFFSET_Y, false, null),
         };
         _this.playedCardEffectRolls.grey = _this.playedCardEffectRolls.brown;
-        _this.overflowCardEffectRolls = [];
-        _this.pushNewOverflowCardEffectRoll();
         try {
             for (var _c = __values(playerData.playedCards), _d = _c.next(); !_d.done; _d = _c.next()) {
                 var apiCardId = _d.value;
@@ -3564,26 +3563,10 @@ var Wonder = /** @class */ (function (_super) {
         return _this;
     }
     Wonder.prototype.update = function () {
-        var e_26, _a;
         for (var color in this.playedCardEffectRolls) {
             this.playedCardEffectRolls[color].x = this.x + this.playedCardEffectRolls[color].offsetx;
             this.playedCardEffectRolls[color].y = this.y + this.playedCardEffectRolls[color].offsety;
             this.playedCardEffectRolls[color].update();
-        }
-        try {
-            for (var _b = __values(this.overflowCardEffectRolls), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var overflowCardEffectRoll = _c.value;
-                overflowCardEffectRoll.x = this.x + overflowCardEffectRoll.offsetx;
-                overflowCardEffectRoll.y = this.y + overflowCardEffectRoll.offsety;
-                overflowCardEffectRoll.update();
-            }
-        }
-        catch (e_26_1) { e_26 = { error: e_26_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_26) throw e_26.error; }
         }
         for (var i = 0; i < this.builtWonderCards.length; i++) {
             this.builtWonderCards[i].targetPosition.set(this.x - C.WONDER_BOARD_WIDTH / 2 + this.stageXs[Main.gamestate.playerData[this.player].stagesBuilt[i].stage], this.y + C.WONDER_BOARD_HEIGHT / 2 + C.WONDER_BUILT_STAGE_OFFSET_Y);
@@ -3615,10 +3598,7 @@ var Wonder = /** @class */ (function (_super) {
             return this.playedCardEffectRolls[color].getNextPosition(card);
         }
         else {
-            if (!this.overflowCardEffectRolls[0].canAddCard(card, C.WONDER_BOARD_WIDTH)) {
-                this.pushNewOverflowCardEffectRoll();
-            }
-            return this.overflowCardEffectRolls[0].getNextPosition(card);
+            return this.playedCardEffectRolls.overflow.getNextPosition(card);
         }
     };
     Wonder.prototype.getGoldCoinWorldPosition = function () {
@@ -3637,10 +3617,7 @@ var Wonder = /** @class */ (function (_super) {
             this.playedCardEffectRolls[color].addCard(card);
         }
         else {
-            if (!this.overflowCardEffectRolls[0].canAddCard(card, C.WONDER_BOARD_WIDTH)) {
-                this.pushNewOverflowCardEffectRoll();
-            }
-            this.overflowCardEffectRolls[0].addCard(card);
+            this.playedCardEffectRolls.overflow.addCard(card);
         }
     };
     Wonder.prototype.adjustPlaceholdersFor = function (card) {
@@ -3656,22 +3633,8 @@ var Wonder = /** @class */ (function (_super) {
         }
     };
     Wonder.prototype.removePlaceholders = function () {
-        var e_27, _a;
         for (var color in this.playedCardEffectRolls) {
             this.playedCardEffectRolls[color].removePlaceholder();
-        }
-        try {
-            for (var _b = __values(this.overflowCardEffectRolls), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var roll = _c.value;
-                roll.removePlaceholder();
-            }
-        }
-        catch (e_27_1) { e_27 = { error: e_27_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_27) throw e_27.error; }
         }
     };
     Wonder.prototype.getCardEffectRollMaxWidth = function (color) {
@@ -3685,12 +3648,8 @@ var Wonder = /** @class */ (function (_super) {
             'green': C.WONDER_BOARD_WIDTH - 2 * C.WONDER_BOARD_BORDER - this.playedCardEffectRolls['purple'].width,
         }[color];
     };
-    Wonder.prototype.pushNewOverflowCardEffectRoll = function () {
-        var roll = new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH / 2, -C.WONDER_BOARD_HEIGHT / 2 - C.WONDER_OVERFLOW_ROLL_OFFSET_Y - C.WONDER_OVERFLOW_ROLL_DY * (this.overflowCardEffectRolls.length - 1), false, null);
-        this.overflowCardEffectRolls.unshift(roll);
-    };
     Wonder.prototype.draw = function () {
-        var e_28, _a;
+        var e_26, _a;
         var wonder = Main.gamestate.wonders[this.player];
         var playerData = Main.gamestate.playerData[this.player];
         var wonderBoard = new PIXI.Container();
@@ -3726,12 +3685,12 @@ var Wonder = /** @class */ (function (_super) {
                 }
             }
         }
-        catch (e_28_1) { e_28 = { error: e_28_1 }; }
+        catch (e_26_1) { e_26 = { error: e_26_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_28) throw e_28.error; }
+            finally { if (e_26) throw e_26.error; }
         }
         var stagesMiddle = wonder.stages.length === 2 ? C.WONDER_STAGE_MIDDLE_2 : C.WONDER_STAGE_MIDDLE_134;
         var stageDX = wonder.stages.length === 4 ? C.WONDER_STAGE_DX_4 : C.WONDER_STAGE_DX_123;
@@ -3838,8 +3797,8 @@ var S;
             scriptFunctions[_i] = arguments[_i];
         }
         return function () {
-            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_29_1;
-            var e_29, _a;
+            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_27_1;
+            var e_27, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -3858,14 +3817,14 @@ var S;
                         return [3 /*break*/, 1];
                     case 4: return [3 /*break*/, 7];
                     case 5:
-                        e_29_1 = _b.sent();
-                        e_29 = { error: e_29_1 };
+                        e_27_1 = _b.sent();
+                        e_27 = { error: e_27_1 };
                         return [3 /*break*/, 7];
                     case 6:
                         try {
                             if (scriptFunctions_1_1 && !scriptFunctions_1_1.done && (_a = scriptFunctions_1.return)) _a.call(scriptFunctions_1);
                         }
-                        finally { if (e_29) throw e_29.error; }
+                        finally { if (e_27) throw e_27.error; }
                         return [7 /*endfinally*/];
                     case 7: return [2 /*return*/];
                 }

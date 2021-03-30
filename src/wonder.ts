@@ -13,8 +13,8 @@ class Wonder extends GameElement {
         purple: PlayedCardEffectRoll;
         blue: PlayedCardEffectRoll;
         green: PlayedCardEffectRoll;
+        overflow: PlayedCardEffectRoll;
     } & Dict<PlayedCardEffectRoll>;
-    overflowCardEffectRolls: PlayedCardEffectRoll[];
     builtWonderCards: Card[];
 
     pointsText: HTMLParagraphElement;
@@ -40,10 +40,9 @@ class Wonder extends GameElement {
             purple: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2 + C.WONDER_BOARD_BORDER, C.WONDER_PURPLE_ROLL_Y, false, null),
             blue: new PlayedCardEffectRoll(C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_BORDER, C.WONDER_BLUE_ROLL_Y, true, null),
             green: new PlayedCardEffectRoll(C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_BORDER, C.WONDER_GREEN_ROLL_Y, true, C.SORT_CMP_SCIENCE),
+            overflow: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2, -C.WONDER_BOARD_HEIGHT/2 - C.WONDER_OVERFLOW_ROLL_OFFSET_Y, false, null),
         };
         this.playedCardEffectRolls.grey = this.playedCardEffectRolls.brown;
-        this.overflowCardEffectRolls = [];
-        this.pushNewOverflowCardEffectRoll();
 
         for (let apiCardId of playerData.playedCards) {
             let apiCard = Main.gamestate.cards[apiCardId];
@@ -70,12 +69,6 @@ class Wonder extends GameElement {
             this.playedCardEffectRolls[color].x = this.x + this.playedCardEffectRolls[color].offsetx;
             this.playedCardEffectRolls[color].y = this.y + this.playedCardEffectRolls[color].offsety;
             this.playedCardEffectRolls[color].update();
-        }
-
-        for (let overflowCardEffectRoll of this.overflowCardEffectRolls) {
-            overflowCardEffectRoll.x = this.x + overflowCardEffectRoll.offsetx;
-            overflowCardEffectRoll.y = this.y + overflowCardEffectRoll.offsety;
-            overflowCardEffectRoll.update();
         }
 
         for (let i = 0; i < this.builtWonderCards.length; i++) {
@@ -113,10 +106,7 @@ class Wonder extends GameElement {
         if (this.playedCardEffectRolls[color].canAddCard(card, this.getCardEffectRollMaxWidth(color))) {
             return this.playedCardEffectRolls[color].getNextPosition(card);
         } else {
-            if (!this.overflowCardEffectRolls[0].canAddCard(card, C.WONDER_BOARD_WIDTH)) {
-                this.pushNewOverflowCardEffectRoll();
-            }
-            return this.overflowCardEffectRolls[0].getNextPosition(card);
+            return this.playedCardEffectRolls.overflow.getNextPosition(card);
         }
     }
 
@@ -138,10 +128,7 @@ class Wonder extends GameElement {
         if (this.playedCardEffectRolls[color].canAddCard(card, this.getCardEffectRollMaxWidth(color))) {
             this.playedCardEffectRolls[color].addCard(card);
         } else {
-            if (!this.overflowCardEffectRolls[0].canAddCard(card, C.WONDER_BOARD_WIDTH)) {
-                this.pushNewOverflowCardEffectRoll();
-            }
-            this.overflowCardEffectRolls[0].addCard(card);
+            this.playedCardEffectRolls.overflow.addCard(card);
         }
     }
 
@@ -163,9 +150,6 @@ class Wonder extends GameElement {
         for (let color in this.playedCardEffectRolls) {
             this.playedCardEffectRolls[color].removePlaceholder();
         }
-        for (let roll of this.overflowCardEffectRolls) {
-            roll.removePlaceholder();
-        }
     }
 
     private getCardEffectRollMaxWidth(color: string) {
@@ -178,11 +162,6 @@ class Wonder extends GameElement {
             'blue': C.WONDER_BOARD_WIDTH - 2*C.WONDER_BOARD_BORDER - this.playedCardEffectRolls['yellow'].width,
             'green': C.WONDER_BOARD_WIDTH - 2*C.WONDER_BOARD_BORDER - this.playedCardEffectRolls['purple'].width,
         }[color];
-    }
-
-    private pushNewOverflowCardEffectRoll() {
-        let roll = new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2, -C.WONDER_BOARD_HEIGHT/2 - C.WONDER_OVERFLOW_ROLL_OFFSET_Y - C.WONDER_OVERFLOW_ROLL_DY*(this.overflowCardEffectRolls.length-1), false, null);
-        this.overflowCardEffectRolls.unshift(roll);
     }
 
     private draw() {
