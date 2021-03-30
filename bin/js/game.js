@@ -1901,7 +1901,9 @@ var GameStateDiffer;
                                             return [5 /*yield**/, __values(S.wait(0.5)())];
                                         case 1:
                                             _c.sent();
-                                            selectedCard = Main.scene.hand.spliceSelectedCard();
+                                            selectedCard = Main.scene.hand.selectedCard;
+                                            Main.scene.hand.cards.splice(Main.scene.hand.cards.indexOf(selectedCard), 1);
+                                            Main.scene.hand.playedCard = selectedCard;
                                             if (selectedCard) {
                                                 if (lastMove.action === 'throw') {
                                                     Main.scene.discardHand.cards.push(selectedCard);
@@ -1952,6 +1954,7 @@ var GameStateDiffer;
                                             return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, function (t) { card_1.update(); })())];
                                         case 5:
                                             _c.sent();
+                                            Main.scene.hands[i].playedCard = card_1;
                                             card_1.state = { type: 'effect', justPlayed: false };
                                             card_1.zIndex = C.Z_INDEX_CARD_PLAYED;
                                             playedPoint_1 = Main.scene.wonders[i].getNewCardEffectWorldPosition(card_1);
@@ -2469,8 +2472,6 @@ var Hand = /** @class */ (function () {
     Object.defineProperty(Hand.prototype, "selectedCard", {
         get: function () {
             var e_15, _a;
-            if (this.splicedSelectedCard)
-                return this.splicedSelectedCard;
             try {
                 for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var card = _c.value;
@@ -2647,14 +2648,6 @@ var Hand = /** @class */ (function () {
         var position = this.getPosition();
         position.x += (cardIndex - (cardsInHand.length - 1) / 2) * C.HAND_CARD_DX;
         return position;
-    };
-    Hand.prototype.spliceSelectedCard = function () {
-        var _a;
-        var selectedCard = this.selectedCard;
-        if (selectedCard) {
-            _a = __read(this.cards.splice(this.cards.indexOf(selectedCard), 1), 1), this.splicedSelectedCard = _a[0];
-        }
-        return selectedCard;
     };
     return Hand;
 }());
@@ -3172,35 +3165,25 @@ var Scene = /** @class */ (function () {
         configurable: true
     });
     Scene.prototype.update = function () {
-        var e_21, _a, e_22, _b;
+        var e_21, _a;
         try {
-            for (var _c = __values(this.hands), _d = _c.next(); !_d.done; _d = _c.next()) {
-                var hand = _d.value;
+            for (var _b = __values(this.hands), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var hand = _c.value;
                 hand.update();
             }
         }
         catch (e_21_1) { e_21 = { error: e_21_1 }; }
         finally {
             try {
-                if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
             finally { if (e_21) throw e_21.error; }
         }
         this.actionButton.setType(this.isMyTurnToBuildFromDiscard() ? 'reject_discard' : 'undo');
-        try {
-            for (var _e = __values(this.wonders), _f = _e.next(); !_f.done; _f = _e.next()) {
-                var wonder = _f.value;
-                wonder.update();
-            }
+        for (var i = 0; i < this.wonders.length; i++) {
+            this.wonders[i].adjustPlaceholdersFor(this.hands[i].playedCard || this.hands[i].selectedCard);
+            this.wonders[i].update();
         }
-        catch (e_22_1) { e_22 = { error: e_22_1 }; }
-        finally {
-            try {
-                if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
-            }
-            finally { if (e_22) throw e_22.error; }
-        }
-        this.topWonder.adjustPlaceholdersFor(this.hand.selectedCard);
         if (this.discardHand) {
             this.discardHand.update();
         }
@@ -3217,6 +3200,7 @@ var Scene = /** @class */ (function () {
         this.wonders = players.map(function (player) { return undefined; });
         this.militaryOverlays = players.map(function (player) { return undefined; });
         this.hands = players.map(function (player) { return undefined; });
+        this.playedCards = players.map(function (player) { return undefined; });
         var p = players.indexOf(Main.player);
         var l = mod(p - 1, players.length);
         var r = mod(p + 1, players.length);
@@ -3432,7 +3416,7 @@ function cloneCanvas(canvas) {
     return newCanvas;
 }
 function contains(array, element) {
-    var e_23, _a;
+    var e_22, _a;
     try {
         for (var array_1 = __values(array), array_1_1 = array_1.next(); !array_1_1.done; array_1_1 = array_1.next()) {
             var e = array_1_1.value;
@@ -3440,12 +3424,12 @@ function contains(array, element) {
                 return true;
         }
     }
-    catch (e_23_1) { e_23 = { error: e_23_1 }; }
+    catch (e_22_1) { e_22 = { error: e_22_1 }; }
     finally {
         try {
             if (array_1_1 && !array_1_1.done && (_a = array_1.return)) _a.call(array_1);
         }
-        finally { if (e_23) throw e_23.error; }
+        finally { if (e_22) throw e_22.error; }
     }
     return false;
 }
@@ -3481,7 +3465,7 @@ function range(start, end) {
     return result;
 }
 function sum(array, key) {
-    var e_24, _a;
+    var e_23, _a;
     if (!array || array.length === 0) {
         return 0;
     }
@@ -3492,12 +3476,12 @@ function sum(array, key) {
             result += key(e);
         }
     }
-    catch (e_24_1) { e_24 = { error: e_24_1 }; }
+    catch (e_23_1) { e_23 = { error: e_23_1 }; }
     finally {
         try {
             if (array_2_1 && !array_2_1.done && (_a = array_2.return)) _a.call(array_2);
         }
-        finally { if (e_24) throw e_24.error; }
+        finally { if (e_23) throw e_23.error; }
     }
     return result;
 }
@@ -3505,7 +3489,7 @@ function sum(array, key) {
 var Wonder = /** @class */ (function (_super) {
     __extends(Wonder, _super);
     function Wonder(player) {
-        var e_25, _a, e_26, _b;
+        var e_24, _a, e_25, _b;
         var _this = _super.call(this) || this;
         _this.player = player;
         var playerData = Main.gamestate.playerData[_this.player];
@@ -3535,12 +3519,12 @@ var Wonder = /** @class */ (function (_super) {
                 card.addToGame();
             }
         }
-        catch (e_25_1) { e_25 = { error: e_25_1 }; }
+        catch (e_24_1) { e_24 = { error: e_24_1 }; }
         finally {
             try {
                 if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
             }
-            finally { if (e_25) throw e_25.error; }
+            finally { if (e_24) throw e_24.error; }
         }
         _this.builtWonderCards = [];
         try {
@@ -3553,18 +3537,18 @@ var Wonder = /** @class */ (function (_super) {
                 card.addToGame();
             }
         }
-        catch (e_26_1) { e_26 = { error: e_26_1 }; }
+        catch (e_25_1) { e_25 = { error: e_25_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_26) throw e_26.error; }
+            finally { if (e_25) throw e_25.error; }
         }
         _this.zIndex = C.Z_INDEX_WONDER;
         return _this;
     }
     Wonder.prototype.update = function () {
-        var e_27, _a;
+        var e_26, _a;
         for (var color in this.playedCardEffectRolls) {
             this.playedCardEffectRolls[color].x = this.x + this.playedCardEffectRolls[color].offsetx;
             this.playedCardEffectRolls[color].y = this.y + this.playedCardEffectRolls[color].offsety;
@@ -3578,12 +3562,12 @@ var Wonder = /** @class */ (function (_super) {
                 overflowCardEffectRoll.update();
             }
         }
-        catch (e_27_1) { e_27 = { error: e_27_1 }; }
+        catch (e_26_1) { e_26 = { error: e_26_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_27) throw e_27.error; }
+            finally { if (e_26) throw e_26.error; }
         }
         for (var i = 0; i < this.builtWonderCards.length; i++) {
             this.builtWonderCards[i].targetPosition.set(this.x - C.WONDER_BOARD_WIDTH / 2 + this.stageXs[Main.gamestate.playerData[this.player].stagesBuilt[i].stage], this.y + C.WONDER_BOARD_HEIGHT / 2 + C.WONDER_BUILT_STAGE_OFFSET_Y);
@@ -3645,7 +3629,7 @@ var Wonder = /** @class */ (function (_super) {
     };
     Wonder.prototype.adjustPlaceholdersFor = function (card) {
         this.removePlaceholders();
-        if (card && card.state.type === 'locked_play') {
+        if (card && (card.state.type === 'effect' || card.state.type === 'locked_play')) {
             this.addPlaceholder(card);
         }
     };
@@ -3656,7 +3640,7 @@ var Wonder = /** @class */ (function (_super) {
         }
     };
     Wonder.prototype.removePlaceholders = function () {
-        var e_28, _a;
+        var e_27, _a;
         for (var color in this.playedCardEffectRolls) {
             this.playedCardEffectRolls[color].removePlaceholder();
         }
@@ -3666,12 +3650,12 @@ var Wonder = /** @class */ (function (_super) {
                 roll.removePlaceholder();
             }
         }
-        catch (e_28_1) { e_28 = { error: e_28_1 }; }
+        catch (e_27_1) { e_27 = { error: e_27_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_28) throw e_28.error; }
+            finally { if (e_27) throw e_27.error; }
         }
     };
     Wonder.prototype.getCardEffectRollMaxWidth = function (color) {
@@ -3690,7 +3674,7 @@ var Wonder = /** @class */ (function (_super) {
         this.overflowCardEffectRolls.unshift(roll);
     };
     Wonder.prototype.draw = function () {
-        var e_29, _a;
+        var e_28, _a;
         var wonder = Main.gamestate.wonders[this.player];
         var playerData = Main.gamestate.playerData[this.player];
         var wonderBoard = new PIXI.Container();
@@ -3726,12 +3710,12 @@ var Wonder = /** @class */ (function (_super) {
                 }
             }
         }
-        catch (e_29_1) { e_29 = { error: e_29_1 }; }
+        catch (e_28_1) { e_28 = { error: e_28_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_29) throw e_29.error; }
+            finally { if (e_28) throw e_28.error; }
         }
         var stagesMiddle = wonder.stages.length === 2 ? C.WONDER_STAGE_MIDDLE_2 : C.WONDER_STAGE_MIDDLE_134;
         var stageDX = wonder.stages.length === 4 ? C.WONDER_STAGE_DX_4 : C.WONDER_STAGE_DX_123;
@@ -3838,8 +3822,8 @@ var S;
             scriptFunctions[_i] = arguments[_i];
         }
         return function () {
-            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_30_1;
-            var e_30, _a;
+            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_29_1;
+            var e_29, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -3858,14 +3842,14 @@ var S;
                         return [3 /*break*/, 1];
                     case 4: return [3 /*break*/, 7];
                     case 5:
-                        e_30_1 = _b.sent();
-                        e_30 = { error: e_30_1 };
+                        e_29_1 = _b.sent();
+                        e_29 = { error: e_29_1 };
                         return [3 /*break*/, 7];
                     case 6:
                         try {
                             if (scriptFunctions_1_1 && !scriptFunctions_1_1.done && (_a = scriptFunctions_1.return)) _a.call(scriptFunctions_1);
                         }
-                        finally { if (e_30) throw e_30.error; }
+                        finally { if (e_29) throw e_29.error; }
                         return [7 /*endfinally*/];
                     case 7: return [2 /*return*/];
                 }

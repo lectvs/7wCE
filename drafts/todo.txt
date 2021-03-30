@@ -3,4 +3,5 @@ todo
 - hover-infos
 - choose wonder
 - game lobby
+- which players are online?
 - BGA move mode

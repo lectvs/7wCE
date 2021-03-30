@@ -147,7 +147,7 @@ class Wonder extends GameElement {
 
     adjustPlaceholdersFor(card: Card) {
         this.removePlaceholders();
-        if (card && card.state.type === 'locked_play') {
+        if (card && (card.state.type === 'effect' || card.state.type === 'locked_play')) {
             this.addPlaceholder(card);
         }
     }

@@ -7,6 +7,8 @@ class Scene {
     paymentDialog: PaymentDialog;
     actionButton: ActionButton;
 
+    playedCards: Card[];
+
     get hand() { return this.hands[Main.gamestate.players.indexOf(Main.player)]; }
     get topWonder() { return this.wonders[Main.gamestate.players.indexOf(Main.player)]; }
     get isPaymentMenuActive() { return !!this.paymentDialog; }
@@ -21,11 +23,11 @@ class Scene {
         }
 
         this.actionButton.setType(this.isMyTurnToBuildFromDiscard() ? 'reject_discard' : 'undo');
-        for (let wonder of this.wonders) {
-            wonder.update();
-        }
 
-        this.topWonder.adjustPlaceholdersFor(this.hand.selectedCard);
+        for (let i = 0; i < this.wonders.length; i++) {
+            this.wonders[i].adjustPlaceholdersFor(this.hands[i].playedCard || this.hands[i].selectedCard);
+            this.wonders[i].update();
+        }
         
         if (this.discardHand) {
             this.discardHand.update();
@@ -48,6 +50,7 @@ class Scene {
         this.wonders = players.map(player => undefined);
         this.militaryOverlays = players.map(player => undefined);
         this.hands = players.map(player => undefined);
+        this.playedCards = players.map(player => undefined);
 
         let p = players.indexOf(Main.player);
         let l = mod(p-1, players.length);

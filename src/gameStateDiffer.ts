@@ -39,7 +39,10 @@ namespace GameStateDiffer {
                     if (player === Main.player) {
                         Main.scene.hand.reflectMove(lastMove);
                         yield* S.wait(0.5)();
-                        let selectedCard = Main.scene.hand.spliceSelectedCard();
+                        
+                        let selectedCard = Main.scene.hand.selectedCard;
+                        Main.scene.hand.cards.splice(Main.scene.hand.cards.indexOf(selectedCard), 1);
+                        Main.scene.hand.playedCard = selectedCard;
                         if (selectedCard) {
                             if (lastMove.action === 'throw') {
                                 Main.scene.discardHand.cards.push(selectedCard);
@@ -95,6 +98,7 @@ namespace GameStateDiffer {
                         card.state = { type: 'full', justPlayed: false };
                         yield* S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, t => { card.update() })();
 
+                        Main.scene.hands[i].playedCard = card;
                         card.state = { type: 'effect', justPlayed: false };
                         card.zIndex = C.Z_INDEX_CARD_PLAYED;
                         let playedPoint = Main.scene.wonders[i].getNewCardEffectWorldPosition(card);
