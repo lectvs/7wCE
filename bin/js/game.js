@@ -3155,11 +3155,22 @@ var PlayedCardEffectRoll = /** @class */ (function () {
     return PlayedCardEffectRoll;
 }());
 var renderer = new PIXI.Renderer({ antialias: true, transparent: true });
+var resolution = 1 * (window.devicePixelRatio || 1);
 function render(object, width, height) {
-    renderer.view.width = width;
-    renderer.view.height = height;
+    renderer.view.width = width * resolution;
+    renderer.view.height = height * resolution;
+    object.x *= resolution;
+    object.y *= resolution;
+    object.scale.x *= resolution;
+    object.scale.y *= resolution;
     renderer.render(object);
-    return cloneCanvas(renderer.view);
+    object.x /= resolution;
+    object.y /= resolution;
+    object.scale.x /= resolution;
+    object.scale.y /= resolution;
+    var canvas = cloneCanvas(renderer.view);
+    canvas.style.width = width + "px";
+    return canvas;
 }
 var Scene = /** @class */ (function () {
     function Scene() {
