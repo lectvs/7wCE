@@ -1,4 +1,5 @@
 type LoaderResource = {
+    load: () => any;
     loaded: boolean;
 }
 
@@ -20,7 +21,7 @@ class Loader {
         for (let resource of this.resources) {
             if (resource.loaded) loaded++;
         }
-        return loaded / this.resources.length;
+        return Math.round(loaded / this.resources.length * 100);
     }
 
     constructor(onFinishedLoading: () => any) {
@@ -31,7 +32,16 @@ class Loader {
 
     update() {
         if (this.complete) return;
-        if (this.isLoaded) {
+
+        let loaded = this.resources.length > 0;
+        for (let resource of this.resources) {
+            if (!resource.loaded) {
+                loaded = false;
+                resource.load();
+                break;
+            }
+        }
+        if (loaded) {
             this.onFinishedLoading();
             this.complete = true;
         }
@@ -61,7 +71,7 @@ class Loader {
     private loadCard(id: string, card: API.Card) {
         let resource = this.addNewResource();
         
-        new Promise(() => {
+        resource.load = () => {
             /* FRONT */
             let front = new PIXI.Container();
 
@@ -129,14 +139,13 @@ class Loader {
                 effectClipRect: effectClipRect,
             }];
             resource.loaded = true;
-            Main.setStatus();
-        });
+        };
     }
 
     private loadWonder(player: string) {
         let resource = this.addNewResource();
 
-        new Promise(() => {
+        resource.load = () => {
             let wonder = Main.gamestate.wonders[player];
     
             let wonderBoard = new PIXI.Container();
@@ -220,14 +229,13 @@ class Loader {
                 stageXs: stageXs,
             }];
             resource.loaded = true;
-            Main.setStatus();
-        });
+        };
     }
 
     private loadDiscardPile() {
         let resource = this.addNewResource();
 
-        new Promise(() => {
+        resource.load = () => {
             let discardPile = new PIXI.Container();
             discardPile.addChild(Shapes.filledRoundedRect(0, 0, C.DISCARD_PILE_AREA_WIDTH, C.DISCARD_PILE_AREA_HEIGHT, C.DISCARD_PILE_AREA_CORNER_RADIUS, ArtCommon.discardPileColor));
             discardPile.addChild(Shapes.filledRoundedRect(C.DISCARD_PILE_AREA_BORDER, C.DISCARD_PILE_AREA_BORDER,
@@ -237,12 +245,12 @@ class Loader {
     
             Resources.DISCARD_PILE = render(discardPile, C.DISCARD_PILE_AREA_WIDTH, C.DISCARD_PILE_AREA_HEIGHT);
             resource.loaded = true;
-            Main.setStatus();
-        });
+        };
     }
 
     private addNewResource() {
         let resource: LoaderResource = {
+            load: undefined,
             loaded: false
         };
         this.resources.push(resource);

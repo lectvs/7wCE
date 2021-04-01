@@ -2693,21 +2693,40 @@ var Loader = /** @class */ (function () {
                 }
                 finally { if (e_21) throw e_21.error; }
             }
-            return loaded / this.resources.length;
+            return Math.round(loaded / this.resources.length * 100);
         },
         enumerable: false,
         configurable: true
     });
     Loader.prototype.update = function () {
+        var e_22, _a;
         if (this.complete)
             return;
-        if (this.isLoaded) {
+        var loaded = this.resources.length > 0;
+        try {
+            for (var _b = __values(this.resources), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var resource = _c.value;
+                if (!resource.loaded) {
+                    loaded = false;
+                    resource.load();
+                    break;
+                }
+            }
+        }
+        catch (e_22_1) { e_22 = { error: e_22_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_22) throw e_22.error; }
+        }
+        if (loaded) {
             this.onFinishedLoading();
             this.complete = true;
         }
     };
     Loader.prototype.loadGamestateResources = function () {
-        var e_22, _a;
+        var e_23, _a;
         // Cards
         for (var cardId in Main.gamestate.cards) {
             var card = Main.gamestate.cards[cardId];
@@ -2724,19 +2743,19 @@ var Loader = /** @class */ (function () {
                 this.loadWonder(player);
             }
         }
-        catch (e_22_1) { e_22 = { error: e_22_1 }; }
+        catch (e_23_1) { e_23 = { error: e_23_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_22) throw e_22.error; }
+            finally { if (e_23) throw e_23.error; }
         }
         // Other
         this.loadDiscardPile();
     };
     Loader.prototype.loadCard = function (id, card) {
         var resource = this.addNewResource();
-        new Promise(function () {
+        resource.load = function () {
             /* FRONT */
             var front = new PIXI.Container();
             var cardBase = Shapes.filledRoundedRect(0, 0, C.CARD_WIDTH, C.CARD_HEIGHT, C.CARD_CORNER_RADIUS, ArtCommon.cardBannerForColor(card.color));
@@ -2782,12 +2801,11 @@ var Loader = /** @class */ (function () {
                     effectClipRect: effectClipRect,
                 }];
             resource.loaded = true;
-            Main.setStatus();
-        });
+        };
     };
     Loader.prototype.loadWonder = function (player) {
         var resource = this.addNewResource();
-        new Promise(function () {
+        resource.load = function () {
             var wonder = Main.gamestate.wonders[player];
             var wonderBoard = new PIXI.Container();
             // Board
@@ -2843,23 +2861,22 @@ var Loader = /** @class */ (function () {
                     stageXs: stageXs,
                 }];
             resource.loaded = true;
-            Main.setStatus();
-        });
+        };
     };
     Loader.prototype.loadDiscardPile = function () {
         var resource = this.addNewResource();
-        new Promise(function () {
+        resource.load = function () {
             var discardPile = new PIXI.Container();
             discardPile.addChild(Shapes.filledRoundedRect(0, 0, C.DISCARD_PILE_AREA_WIDTH, C.DISCARD_PILE_AREA_HEIGHT, C.DISCARD_PILE_AREA_CORNER_RADIUS, ArtCommon.discardPileColor));
             discardPile.addChild(Shapes.filledRoundedRect(C.DISCARD_PILE_AREA_BORDER, C.DISCARD_PILE_AREA_BORDER, C.DISCARD_PILE_AREA_WIDTH - 2 * C.DISCARD_PILE_AREA_BORDER, C.DISCARD_PILE_AREA_HEIGHT - 2 * C.DISCARD_PILE_AREA_BORDER, C.DISCARD_PILE_AREA_CORNER_RADIUS - C.DISCARD_PILE_AREA_BORDER, 0x000000));
             discardPile.addChild(Shapes.centeredText(C.DISCARD_PILE_AREA_WIDTH / 2, C.DISCARD_PILE_TITLE_Y, C.DISCARD_PILE_TITLE_TEXT, C.DISCARD_PILE_TITLE_SCALE, ArtCommon.discardPileColor));
             Resources.DISCARD_PILE = render(discardPile, C.DISCARD_PILE_AREA_WIDTH, C.DISCARD_PILE_AREA_HEIGHT);
             resource.loaded = true;
-            Main.setStatus();
-        });
+        };
     };
     Loader.prototype.addNewResource = function () {
         var resource = {
+            load: undefined,
             loaded: false
         };
         this.resources.push(resource);
@@ -3074,7 +3091,7 @@ var Main = /** @class */ (function () {
         }
     };
     Main.updateBotMoves = function () {
-        var e_23, _a;
+        var e_24, _a;
         var _this = this;
         if (!this.isHost)
             return;
@@ -3107,12 +3124,12 @@ var Main = /** @class */ (function () {
                 _loop_3(player);
             }
         }
-        catch (e_23_1) { e_23 = { error: e_23_1 }; }
+        catch (e_24_1) { e_24 = { error: e_24_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_23) throw e_23.error; }
+            finally { if (e_24) throw e_24.error; }
         }
     };
     Main.stop = function () {
@@ -3347,19 +3364,19 @@ var PlayedCardEffectRoll = /** @class */ (function () {
         configurable: true
     });
     PlayedCardEffectRoll.prototype.destroy = function () {
-        var e_24, _a;
+        var e_25, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
                 card.destroy();
             }
         }
-        catch (e_24_1) { e_24 = { error: e_24_1 }; }
+        catch (e_25_1) { e_25 = { error: e_25_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_24) throw e_24.error; }
+            finally { if (e_25) throw e_25.error; }
         }
     };
     PlayedCardEffectRoll.prototype.update = function () {
@@ -3509,19 +3526,19 @@ var Scene = /** @class */ (function () {
         configurable: true
     });
     Scene.prototype.update = function () {
-        var e_25, _a;
+        var e_26, _a;
         try {
             for (var _b = __values(this.hands), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var hand = _c.value;
                 hand.update();
             }
         }
-        catch (e_25_1) { e_25 = { error: e_25_1 }; }
+        catch (e_26_1) { e_26 = { error: e_26_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_25) throw e_25.error; }
+            finally { if (e_26) throw e_26.error; }
         }
         this.actionButton.setType(this.isMyTurnToBuildFromDiscard() ? 'reject_discard' : 'undo');
         for (var i = 0; i < this.wonders.length; i++) {
@@ -3605,19 +3622,19 @@ var Scene = /** @class */ (function () {
         this.update();
     };
     Scene.prototype.destroy = function () {
-        var e_26, _a, e_27, _b;
+        var e_27, _a, e_28, _b;
         try {
             for (var _c = __values(this.hands), _d = _c.next(); !_d.done; _d = _c.next()) {
                 var hand = _d.value;
                 hand.destroy();
             }
         }
-        catch (e_26_1) { e_26 = { error: e_26_1 }; }
+        catch (e_27_1) { e_27 = { error: e_27_1 }; }
         finally {
             try {
                 if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
             }
-            finally { if (e_26) throw e_26.error; }
+            finally { if (e_27) throw e_27.error; }
         }
         try {
             for (var _e = __values(this.wonders), _f = _e.next(); !_f.done; _f = _e.next()) {
@@ -3625,12 +3642,12 @@ var Scene = /** @class */ (function () {
                 wonder.destroy();
             }
         }
-        catch (e_27_1) { e_27 = { error: e_27_1 }; }
+        catch (e_28_1) { e_28 = { error: e_28_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_27) throw e_27.error; }
+            finally { if (e_28) throw e_28.error; }
         }
         while (Main.game.firstChild) {
             Main.game.removeChild(Main.game.firstChild);
@@ -3754,7 +3771,7 @@ function cloneCanvas(canvas) {
     return newCanvas;
 }
 function contains(array, element) {
-    var e_28, _a;
+    var e_29, _a;
     try {
         for (var array_1 = __values(array), array_1_1 = array_1.next(); !array_1_1.done; array_1_1 = array_1.next()) {
             var e = array_1_1.value;
@@ -3762,12 +3779,12 @@ function contains(array, element) {
                 return true;
         }
     }
-    catch (e_28_1) { e_28 = { error: e_28_1 }; }
+    catch (e_29_1) { e_29 = { error: e_29_1 }; }
     finally {
         try {
             if (array_1_1 && !array_1_1.done && (_a = array_1.return)) _a.call(array_1);
         }
-        finally { if (e_28) throw e_28.error; }
+        finally { if (e_29) throw e_29.error; }
     }
     return false;
 }
@@ -3803,7 +3820,7 @@ function range(start, end) {
     return result;
 }
 function sum(array, key) {
-    var e_29, _a;
+    var e_30, _a;
     if (!array || array.length === 0) {
         return 0;
     }
@@ -3814,12 +3831,12 @@ function sum(array, key) {
             result += key(e);
         }
     }
-    catch (e_29_1) { e_29 = { error: e_29_1 }; }
+    catch (e_30_1) { e_30 = { error: e_30_1 }; }
     finally {
         try {
             if (array_2_1 && !array_2_1.done && (_a = array_2.return)) _a.call(array_2);
         }
-        finally { if (e_29) throw e_29.error; }
+        finally { if (e_30) throw e_30.error; }
     }
     return result;
 }
@@ -3833,7 +3850,7 @@ var Wonder = /** @class */ (function (_super) {
         return _this;
     }
     Wonder.prototype.create = function () {
-        var e_30, _a, e_31, _b;
+        var e_31, _a, e_32, _b;
         var playerData = Main.gamestate.playerData[this.player];
         this.wonderResource = Resources.getWonder(this.player);
         this.stageXs = this.wonderResource.stageXs;
@@ -3863,12 +3880,12 @@ var Wonder = /** @class */ (function (_super) {
                 card.addToGame();
             }
         }
-        catch (e_30_1) { e_30 = { error: e_30_1 }; }
+        catch (e_31_1) { e_31 = { error: e_31_1 }; }
         finally {
             try {
                 if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
             }
-            finally { if (e_30) throw e_30.error; }
+            finally { if (e_31) throw e_31.error; }
         }
         this.builtWonderCards = [];
         try {
@@ -3881,17 +3898,17 @@ var Wonder = /** @class */ (function (_super) {
                 card.addToGame();
             }
         }
-        catch (e_31_1) { e_31 = { error: e_31_1 }; }
+        catch (e_32_1) { e_32 = { error: e_32_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_31) throw e_31.error; }
+            finally { if (e_32) throw e_32.error; }
         }
         this.zIndex = C.Z_INDEX_WONDER;
     };
     Wonder.prototype.destroy = function () {
-        var e_32, _a;
+        var e_33, _a;
         for (var color in this.playedCardEffectRolls) {
             this.playedCardEffectRolls[color].destroy();
         }
@@ -3901,12 +3918,12 @@ var Wonder = /** @class */ (function (_super) {
                 card.destroy();
             }
         }
-        catch (e_32_1) { e_32 = { error: e_32_1 }; }
+        catch (e_33_1) { e_33 = { error: e_33_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_32) throw e_32.error; }
+            finally { if (e_33) throw e_33.error; }
         }
         while (this.div.firstChild) {
             this.div.removeChild(this.div.firstChild);
@@ -4001,7 +4018,7 @@ var Wonder = /** @class */ (function (_super) {
         }[color];
     };
     Wonder.prototype.drawPayments = function () {
-        var e_33, _a;
+        var e_34, _a;
         var wonder = Main.gamestate.wonders[this.player];
         var playerData = Main.gamestate.playerData[this.player];
         var stageIdsBuilt = playerData.stagesBuilt.map(function (stageBuilt) { return stageBuilt.stage; });
@@ -4018,12 +4035,12 @@ var Wonder = /** @class */ (function (_super) {
                 }
             }
         }
-        catch (e_33_1) { e_33 = { error: e_33_1 }; }
+        catch (e_34_1) { e_34 = { error: e_34_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_33) throw e_33.error; }
+            finally { if (e_34) throw e_34.error; }
         }
         var payments = new PIXI.Container();
         for (var i = 0; i < wonder.stages.length; i++) {
@@ -4104,8 +4121,8 @@ var S;
             scriptFunctions[_i] = arguments[_i];
         }
         return function () {
-            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_34_1;
-            var e_34, _a;
+            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_35_1;
+            var e_35, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -4124,14 +4141,14 @@ var S;
                         return [3 /*break*/, 1];
                     case 4: return [3 /*break*/, 7];
                     case 5:
-                        e_34_1 = _b.sent();
-                        e_34 = { error: e_34_1 };
+                        e_35_1 = _b.sent();
+                        e_35 = { error: e_35_1 };
                         return [3 /*break*/, 7];
                     case 6:
                         try {
                             if (scriptFunctions_1_1 && !scriptFunctions_1_1.done && (_a = scriptFunctions_1.return)) _a.call(scriptFunctions_1);
                         }
-                        finally { if (e_34) throw e_34.error; }
+                        finally { if (e_35) throw e_35.error; }
                         return [7 /*endfinally*/];
                     case 7: return [2 /*return*/];
                 }
