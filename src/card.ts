@@ -17,6 +17,7 @@ class Card extends GameElement {
 
     apiCardId: number;
     apiCard: API.Card;
+    cardResource: CardResource;
     handPosition: PIXI.Point;
     activeWonder: Wonder;
 
@@ -86,11 +87,11 @@ class Card extends GameElement {
         this.checkMark.style.visibility = value ? 'visible' : 'hidden';
     }
 
-    constructor(cardId: number, card: API.Card, handPosition: PIXI.Point, activeWonder: Wonder, validMoves: API.Move[]) {
+    constructor(cardId: number, handPosition: PIXI.Point, activeWonder: Wonder, validMoves: API.Move[]) {
         super();
 
         this.apiCardId = cardId;
-        this.apiCard = card;
+        this.apiCard = Main.gamestate.cards[cardId];
         this.handPosition = handPosition;
         this.activeWonder = activeWonder;
 
@@ -100,7 +101,7 @@ class Card extends GameElement {
         this.state = { type: 'in_hand', visualState: 'full' };
         this.configureValidMoves(validMoves);
 
-        this.create(cardId, card, true);
+        this.create(cardId, true);
 
         // Dragging
         this.frontDiv.onmousedown = (event: MouseEvent) => {
@@ -113,19 +114,26 @@ class Card extends GameElement {
         };
     }
 
-    create(cardId: number, card: API.Card, drawPayment: boolean) {
+    create(cardId: number, drawPayment: boolean) {
         this.apiCardId = cardId;
-        this.apiCard = card;
+        this.apiCard = Main.gamestate.cards[cardId];
+
+        this.cardResource = Resources.getCard(cardId);
+        this.fullClipRect = this.cardResource.fullClipRect;
+        this.effectClipRect = this.cardResource.effectClipRect;
 
         this.div.style.transformOrigin = `left top`;
 
         this.frontDiv = this.div.appendChild(document.createElement('div'));
         this.frontDiv.style.transformOrigin = 'left center';
-        let front = this.frontDiv.appendChild(this.drawFront(drawPayment));
-        front.style.transform = `translate(-50%, -${C.CARD_PAYMENT_HEIGHT + C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2}px)`;
+        let front = this.frontDiv.appendChild(this.cardResource.front);
+        front.style.transform = `translate(-50%, -${C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2}px)`;
+        let payment = this.frontDiv.appendChild(this.drawPayment());
+        payment.style.transform = `translate(-50%, -${C.CARD_TITLE_HEIGHT + C.CARD_PAYMENT_HEIGHT + C.CARD_BANNER_HEIGHT/2}px)`;
+        payment.style.visibility = drawPayment ? 'visible' : 'hidden';
         this.backDiv = this.div.appendChild(document.createElement('div'));
         this.backDiv.style.transformOrigin = 'left center';
-        let back = this.backDiv.appendChild(this.drawBack());
+        let back = this.backDiv.appendChild(this.cardResource.back);
         back.style.transform = `translate(-50%, -${C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2}px)`;
         let highlightDiv = this.div.appendChild(document.createElement('div'));
         this.highlight = highlightDiv.appendChild(this.drawHighlight());
@@ -145,6 +153,8 @@ class Card extends GameElement {
         while (this.div.firstChild) {
             this.div.removeChild(this.div.firstChild);
         }
+        Resources.returnCard(this.apiCardId, this.cardResource);
+        this.cardResource = null;
     }
 
     update() {
@@ -281,7 +291,6 @@ class Card extends GameElement {
 
         if (alpha > 0) {
             this.highlight.style.width = `${this._width}px`;
-            this.highlight.style.height = `${lerp(this.height - C.CARD_PAYMENT_HEIGHT, this.height, this.effectT)}px`;
             this.highlight.style.transform = `translate(-50%, -${lerp(C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2, C.CARD_EFFECT_HEIGHT/2 + C.CARD_EFFECT_CLIP_PADDING, this.effectT)}px)`;
         }
         this.highlight.style.boxShadow = `inset 0px 0px 0px 4px rgba(255, 0, 0, ${alpha})`;
@@ -360,76 +369,12 @@ class Card extends GameElement {
         discardCount.style.transform = 'translate(-50%, -50%)';
     }
 
-    private drawFront(drawPayment: boolean) {
-        let front = new PIXI.Container();
-
-        let cardBase = Shapes.filledRoundedRect(0, 0, C.CARD_WIDTH, C.CARD_HEIGHT, C.CARD_CORNER_RADIUS, ArtCommon.cardBannerForColor(this.apiCard.color));
-        front.addChild(cardBase);
-
-        let cardBg = Shapes.filledRoundedRect(C.CARD_BORDER, C.CARD_BORDER,
-                                              C.CARD_WIDTH - 2*C.CARD_BORDER, C.CARD_HEIGHT - 2*C.CARD_BORDER,
-                                              C.CARD_CORNER_RADIUS - C.CARD_BORDER, ArtCommon.cardBg);
-        front.addChild(cardBg);
-
-        let cardMask = cardBase.clone();
-        front.addChild(cardMask);
-
-        let costContainer = ArtCommon.getArtForCost(this.apiCard.cost);
-        if (costContainer) {
-            costContainer.scale.set(C.CARD_COST_SCALE);
-            costContainer.position.set(C.CARD_COST_X, C.CARD_COST_Y);
-
-            let costBanner = Shapes.filledRoundedRect(-costContainer.width/2 - C.CARD_COST_PADDING, -C.CARD_COST_PADDING,
-                                                      costContainer.width + 2*C.CARD_COST_PADDING, costContainer.height + 2*C.CARD_COST_PADDING,
-                                                      C.CARD_COST_PADDING, ArtCommon.cardBannerForColor(this.apiCard.color));
-            costBanner.position.set(C.CARD_COST_X, C.CARD_COST_Y);
-            costBanner.mask = cardMask;
-
-            front.addChild(costBanner);
-            front.addChild(costContainer);
-        }
-
-        let cardBanner = Shapes.filledRect(0, 0, C.CARD_WIDTH, C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT, ArtCommon.cardBannerForColor(this.apiCard.color));
-        cardBanner.mask = cardMask;
-        front.addChild(cardBanner);
-
-        let effectContainer = ArtCommon.getArtForEffects(this.apiCard.effects);
-        effectContainer.position.set(C.CARD_WIDTH/2, C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2);
-        effectContainer.scale.set(C.CARD_EFFECT_SCALE);
-        front.addChild(effectContainer);
-
-        this.fullClipRect = new PIXI.Rectangle(0, -C.CARD_PAYMENT_HEIGHT, C.CARD_WIDTH, C.CARD_PAYMENT_HEIGHT + C.CARD_HEIGHT);
-        let effectBounds = effectContainer.getBounds();
-        let effectHalfWidth = Math.max(C.CARD_WIDTH/2 - effectBounds.left, effectBounds.right - C.CARD_WIDTH/2);
-        this.effectClipRect = new PIXI.Rectangle(C.CARD_WIDTH/2 - effectHalfWidth - C.CARD_EFFECT_CLIP_PADDING, C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2 - C.CARD_EFFECT_HEIGHT/2 - C.CARD_EFFECT_CLIP_PADDING,
-                                                 2*effectHalfWidth + 2*C.CARD_EFFECT_CLIP_PADDING, C.CARD_EFFECT_HEIGHT + 2*C.CARD_EFFECT_CLIP_PADDING);
-
-        let title = Shapes.centeredText(C.CARD_WIDTH/2, C.CARD_TITLE_Y, this.apiCard.name, C.CARD_TITLE_SCALE, C.CARD_TITLE_COLOR);
-        title.anchor.y = 0;
-        front.addChild(title);
-
+    private drawPayment() {
         let payment = ArtCommon.payment(this.allowPlay ? this.minPlayCost : Infinity);
         payment.scale.set(C.CARD_PAYMENT_SCALE);
-        payment.position.set(C.CARD_WIDTH + C.CARD_PAYMENT_OFFSET_X, -C.CARD_PAYMENT_HEIGHT/2);
-        if (!drawPayment) payment.visible = false;
-        front.addChild(payment);
+        payment.position.set(C.CARD_WIDTH + C.CARD_PAYMENT_OFFSET_X, C.CARD_PAYMENT_HEIGHT/2);
 
-        front.position.set(0, C.CARD_PAYMENT_HEIGHT);
-        return render(front, C.CARD_WIDTH, C.CARD_PAYMENT_HEIGHT + C.CARD_HEIGHT);
-    }
-
-    private drawBack() {
-        let back = new PIXI.Container();
-
-        let cardBase = Shapes.filledRoundedRect(0, 0, C.CARD_WIDTH, C.CARD_HEIGHT, C.CARD_CORNER_RADIUS, ArtCommon.ageBacks[this.apiCard.age]);
-        back.addChild(cardBase);
-
-        let cardBg = Shapes.filledRoundedRect(C.CARD_BORDER, C.CARD_BORDER,
-                                              C.CARD_WIDTH - 2*C.CARD_BORDER, C.CARD_HEIGHT - 2*C.CARD_BORDER,
-                                              C.CARD_CORNER_RADIUS - C.CARD_BORDER, ArtCommon.cardBg);
-        back.addChild(cardBg);
-
-        return render(back, C.CARD_WIDTH, C.CARD_HEIGHT);
+        return render(payment, C.CARD_WIDTH, C.CARD_PAYMENT_HEIGHT);
     }
 
     private drawHighlight() {
@@ -439,7 +384,7 @@ class Card extends GameElement {
     }
 
     static flippedCardForAge(age: number, justPlayed: boolean) {
-        let card = new Card(-1, { age: age, name: '', color: 'brown', effects: [] }, undefined, undefined, []);
+        let card = new Card(-age, undefined, undefined, []);
         card.state = { type: 'flipped', justPlayed: justPlayed };
         card.snap();
         return card;

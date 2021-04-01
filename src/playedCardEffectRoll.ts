@@ -25,6 +25,12 @@ class PlayedCardEffectRoll {
         this.placeholderWidth = 0;
     }
 
+    destroy() {
+        for (let card of this.cards) {
+            card.destroy();
+        }
+    }
+
     update() {
         let d = this.reverse ? -1 : 1;
         for (let i = 0; i < this.cards.length; i++) {

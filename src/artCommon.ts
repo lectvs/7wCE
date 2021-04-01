@@ -37,6 +37,18 @@ namespace ArtCommon {
         return 0xFF00FF;
     }
 
+    export function cardBannerForColorHtml(color: string) {
+        if (color === 'brown') return '#9F441C';
+        if (color === 'grey') return '#ADB1B0';
+        if (color === 'red') return '#D51939';
+        if (color === 'green') return '#4FA53A';
+        if (color === 'blue') return '#2A95D7';
+        if (color === 'yellow') return '#F2AA0C';
+        if (color === 'purple') return '#7054AB';
+        console.error('Could not find color:', color);
+        return '#FF00FF';
+    }
+
     export function getArtForEffects(effects: API.Effect[]) {
         let effectArts = effects.map(effect => {
             if (effect.type === 'resource') {

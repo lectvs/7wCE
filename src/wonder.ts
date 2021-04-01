@@ -4,6 +4,7 @@ class Wonder extends GameElement {
 
     private player: string;
 
+    wonderResource: WonderResource;
     stageXs: number[];
     playedCardEffectRolls: {
         brown: PlayedCardEffectRoll;
@@ -24,10 +25,21 @@ class Wonder extends GameElement {
         super();
 
         this.player = player;
+        this.create();
+    }
+
+    create() {
         let playerData = Main.gamestate.playerData[this.player];
 
+        this.wonderResource = Resources.getWonder(this.player);
+        this.stageXs = this.wonderResource.stageXs;
+
         let boardDiv = this.div.appendChild(document.createElement('div'));
-        boardDiv.appendChild(this.draw());
+        boardDiv.appendChild(this.wonderResource.board);
+
+        let payments = boardDiv.appendChild(this.drawPayments());
+        payments.style.transform = `translate(-50%, ${C.WONDER_BOARD_HEIGHT/2 - C.WONDER_STAGE_HEIGHT + C.WONDER_STAGE_PAYMENT_OFFSET_Y}px)`
+
         let sidebar = this.div.appendChild(this.drawSidebar());
         sidebar.style.left = `${C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_WIDTH}px`;
         sidebar.style.top = `${-C.WONDER_BOARD_HEIGHT/2}px`;
@@ -45,8 +57,7 @@ class Wonder extends GameElement {
         this.playedCardEffectRolls.grey = this.playedCardEffectRolls.brown;
 
         for (let apiCardId of playerData.playedCards) {
-            let apiCard = Main.gamestate.cards[apiCardId];
-            let card = new Card(apiCardId, apiCard, undefined, this, []);
+            let card = new Card(apiCardId, undefined, this, []);
             this.addNewCardEffect(card);
             card.addToGame();
         }
@@ -62,6 +73,22 @@ class Wonder extends GameElement {
         }
 
         this.zIndex = C.Z_INDEX_WONDER;
+    }
+
+    destroy() {
+        for (let color in this.playedCardEffectRolls) {
+            this.playedCardEffectRolls[color].destroy();
+        }
+
+        for (let card of this.builtWonderCards) {
+            card.destroy();
+        }
+
+        while (this.div.firstChild) {
+            this.div.removeChild(this.div.firstChild);
+        }
+        Resources.returnWonder(this.player, this.wonderResource);
+        this.wonderResource = null;
     }
 
     update() {
@@ -164,40 +191,10 @@ class Wonder extends GameElement {
         }[color];
     }
 
-    private draw() {
+    private drawPayments() {
         let wonder = Main.gamestate.wonders[this.player];
         let playerData = Main.gamestate.playerData[this.player];
 
-        let wonderBoard = new PIXI.Container();
-
-        // Board
-        let boardBase = Shapes.filledRoundedRect(0, 0, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT, C.WONDER_BOARD_CORNER_RADIUS, wonder.outline_color);
-        wonderBoard.addChild(boardBase);
-
-        let boardBg = Shapes.filledRoundedRect(C.WONDER_BOARD_BORDER, C.WONDER_BOARD_BORDER,
-                                               C.WONDER_BOARD_WIDTH - 2*C.WONDER_BOARD_BORDER, C.WONDER_BOARD_HEIGHT - 2*C.WONDER_BOARD_BORDER,
-                                               C.WONDER_BOARD_CORNER_RADIUS - C.WONDER_BOARD_BORDER, ArtCommon.wonderBg);
-        wonderBoard.addChild(boardBg);
-
-        let boardBgMask = boardBg.clone();
-        wonderBoard.addChild(boardBgMask);
-
-        // Starting effects
-        let startingEffects = ArtCommon.getArtForEffects(wonder.starting_effects);
-        startingEffects.scale.set(C.WONDER_STARTING_EFFECTS_SCALE);
-        let startingEffectsBounds = startingEffects.getBounds();
-        startingEffects.position.set(C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.left - startingEffects.x),
-                                     C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.top - startingEffects.y));
-
-        startingEffectsBounds = startingEffects.getBounds();
-        let startingEffectBanner = Shapes.filledRect(startingEffectsBounds.left - C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.top - C.WONDER_STARTING_EFFECTS_PADDING,
-                                                     startingEffectsBounds.width + 2*C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.height + 2*C.WONDER_STARTING_EFFECTS_PADDING,
-                                                     ArtCommon.cardBannerForColor(wonder.starting_effect_color));
-        startingEffectBanner.mask = boardBgMask;
-        wonderBoard.addChild(startingEffectBanner);
-        wonderBoard.addChild(startingEffects);
-
-        // Wonder stages
         let stageIdsBuilt = playerData.stagesBuilt.map(stageBuilt => stageBuilt.stage);
         let wonderStageMinCosts = wonder.stages.map(stage => Infinity);
         for (let validMove of Main.gamestate.validMoves) {
@@ -209,60 +206,19 @@ class Wonder extends GameElement {
             }
         }
 
-        let stagesMiddle = wonder.stages.length === 2 ? C.WONDER_STAGE_MIDDLE_2 : C.WONDER_STAGE_MIDDLE_134;
-        let stageDX = wonder.stages.length === 4 ? C.WONDER_STAGE_DX_4 : C.WONDER_STAGE_DX_123;
-
-        this.stageXs = [];
+        let payments = new PIXI.Container();
         for (let i = 0; i < wonder.stages.length; i++) {
-            this.stageXs.push(stagesMiddle + stageDX * (i - (wonder.stages.length - 1)/2));
-
-            let stageBase = Shapes.filledRoundedRect(-C.WONDER_STAGE_WIDTH/2, C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT,
-                                                     C.WONDER_STAGE_WIDTH, C.WONDER_STAGE_HEIGHT*2, C.WONDER_STAGE_CORNER_RADIUS, wonder.outline_color);
-            stageBase.mask = boardBgMask;
-            stageBase.x = this.stageXs[i];
-            wonderBoard.addChild(stageBase);
-
-            let stageBg = Shapes.filledRoundedRect(-C.WONDER_STAGE_WIDTH/2 + C.WONDER_BOARD_BORDER, C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT + C.WONDER_BOARD_BORDER,
-                                                   C.WONDER_STAGE_WIDTH - 2*C.WONDER_BOARD_BORDER, C.WONDER_STAGE_HEIGHT*2 - 2*C.WONDER_BOARD_BORDER,
-                                                   C.WONDER_STAGE_CORNER_RADIUS - C.WONDER_BOARD_BORDER, ArtCommon.wonderBg);
-            stageBg.mask = boardBgMask;
-            stageBg.x = this.stageXs[i];
-            wonderBoard.addChild(stageBg);
-
-            let stageEffects = ArtCommon.getArtForEffects(wonder.stages[i].effects);
-            stageEffects.scale.set(C.WONDER_STAGE_EFFECT_SCALE);
-            stageEffects.position.set(this.stageXs[i], C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT/2);
-            wonderBoard.addChild(stageEffects);
-
-            let stageCost = ArtCommon.getArtForStageCost(wonder.stages[i].cost);
-            if (stageCost) {
-                stageCost.scale.set(C.WONDER_STAGE_COST_SCALE);
-                stageCost.position.set(this.stageXs[i] - C.WONDER_STAGE_WIDTH/2 + C.WONDER_STAGE_COST_OFFSET_X, C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_COST_OFFSET_Y);
-
-                let costBanner = Shapes.filledRoundedRect(-stageCost.width/2 - C.WONDER_STAGE_COST_PADDING, -C.WONDER_STAGE_COST_PADDING,
-                                                          stageCost.width + 2*C.WONDER_STAGE_COST_PADDING, stageCost.height + 2*C.WONDER_STAGE_COST_PADDING,
-                                                          C.WONDER_STAGE_COST_PADDING, wonder.outline_color);
-                costBanner.position.set(stageCost.x, stageCost.y);
-
-                let costBannerBg = Shapes.filledRoundedRect(-stageCost.width/2 - (C.WONDER_STAGE_COST_PADDING - C.WONDER_STAGE_COST_BORDER), -(C.WONDER_STAGE_COST_PADDING - C.WONDER_STAGE_COST_BORDER),
-                                                            stageCost.width + 2*(C.WONDER_STAGE_COST_PADDING - C.WONDER_STAGE_COST_BORDER), stageCost.height + 2*(C.WONDER_STAGE_COST_PADDING - C.WONDER_STAGE_COST_BORDER),
-                                                            C.WONDER_STAGE_COST_PADDING - C.WONDER_STAGE_COST_BORDER, ArtCommon.wonderBg);
-                costBannerBg.position.set(stageCost.x, stageCost.y);
-
-                wonderBoard.addChild(costBanner);
-                wonderBoard.addChild(costBannerBg);
-                wonderBoard.addChild(stageCost);
-            }
-
             if (this.player === Main.player && !contains(stageIdsBuilt, i)) {
                 let stagePayment = ArtCommon.payment(wonderStageMinCosts[i]);
                 stagePayment.scale.set(C.WONDER_STAGE_PAYMENT_SCALE);
-                stagePayment.position.set(this.stageXs[i] + C.WONDER_STAGE_WIDTH/2 + C.WONDER_STAGE_PAYMENT_OFFSET_X, C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT + C.WONDER_STAGE_PAYMENT_OFFSET_Y);
-                wonderBoard.addChild(stagePayment);
+                stagePayment.position.set(this.stageXs[i] + C.WONDER_STAGE_PAYMENT_OFFSET_X, 0);
+                payments.addChild(stagePayment);
             }
         }
 
-        return render(wonderBoard, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT);
+        payments.position.set(C.WONDER_STAGE_WIDTH/2, C.WONDER_PAYMENT_HEIGHT/2);
+
+        return render(payments, C.WONDER_BOARD_WIDTH, C.WONDER_PAYMENT_HEIGHT);
     }
 
     private drawSidebar() {

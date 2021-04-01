@@ -86,9 +86,10 @@ class C {
     public static readonly WONDER_STAGE_COST_BORDER = 2.25;
     public static readonly WONDER_STAGE_COST_SCALE = 0.08;
     public static readonly WONDER_STAGE_PAYMENT_OFFSET_X = -7.5;
-    public static readonly WONDER_STAGE_PAYMENT_OFFSET_Y = -10;
+    public static readonly WONDER_STAGE_PAYMENT_OFFSET_Y = -22;
     public static readonly WONDER_STAGE_PAYMENT_SCALE = 0.12;
     public static readonly WONDER_BUILT_STAGE_OFFSET_Y = -100;
+    public static readonly WONDER_PAYMENT_HEIGHT = 24;
     public static readonly WONDER_RESOURCE_ROLL_OFFSET_Y = 22.5;
     public static readonly WONDER_RED_ROLL_X = -150;
     public static readonly WONDER_RED_ROLL_Y = C.WONDER_BOARD_BORDER + C.CARD_EFFECT_CLIP_PADDING + C.CARD_EFFECT_HEIGHT/2;

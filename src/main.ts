@@ -15,6 +15,7 @@ class Main {
     static time: number = 0;
     static delta: number = 0;
 
+    static loader: Loader;
     static scriptManager: ScriptManager;
 
     static moveImmuneTime: number;
@@ -43,6 +44,10 @@ class Main {
         this.gameid = params.get('gameid');
         this.player = params.get('player');
 
+        this.loader = new Loader(() => {
+            this.setupGame();
+        });
+
         PIXI.Ticker.shared.add(delta => {
             this.delta = delta / 60;
             this.time += this.delta;
@@ -61,12 +66,12 @@ class Main {
             }
 
             console.log('Got game state:', gamestate);
-            this.setupGame(gamestate);
+            this.gamestate = gamestate;
+            this.loader.loadGamestateResources();
         });
     }
 
-    static setupGame(gamestate: API.GameState) {
-        this.gamestate = gamestate;
+    static setupGame() {
         this.scene = new Scene();
         this.scene.create();
         this.sendUpdate();
@@ -79,21 +84,12 @@ class Main {
     }
 
     static update() {
+        this.loader.update();
         this.moveImmuneTime = clamp(this.moveImmuneTime - Main.delta, 0, Infinity);
 
         if (this.scene) this.scene.update();
         this.scriptManager.update();
-
-        let status = <HTMLParagraphElement>document.querySelector('#status');
-        let statusText = <HTMLParagraphElement>document.querySelector('#status > p');
-        if (Main.currentError) {
-            status.style.backgroundColor = C.ERROR_BG_COLOR;
-            status.style.color = C.ERROR_TEXT_COLOR;
-            statusText.textContent = Main.currentError;
-        } else if (this.scene) {
-            status.style.backgroundColor = C.OK_BG_COLOR;
-            status.style.color = C.OK_TEXT_COLOR;
-        }
+        this.setStatus();
     }
 
     static sendUpdate() {
@@ -183,6 +179,57 @@ class Main {
             this.moveImmuneTime = 1;
         });
         this.moveImmuneTime = 2;
+    }
+
+    static setStatus() {
+        let status = <HTMLParagraphElement>document.querySelector('#status');
+        let statusText = <HTMLParagraphElement>document.querySelector('#status > p');
+
+        if (Main.currentError) {
+            status.style.backgroundColor = C.ERROR_BG_COLOR;
+            status.style.color = C.ERROR_TEXT_COLOR;
+            statusText.textContent = Main.currentError;
+            return;
+        } 
+
+        if (this.scene) {
+            status.style.backgroundColor = C.OK_BG_COLOR;
+            status.style.color = C.OK_TEXT_COLOR;
+        }
+    
+        if (!this.loader.isLoaded) {
+            statusText.textContent = `Loading... ${this.loader.loadPercentage}%`;
+            return;
+        }
+
+        let gamestate = this.gamestate;
+        let playerData = gamestate.playerData[this.player];
+
+        if (gamestate.state === 'NORMAL_MOVE') {
+            if (playerData.currentMove) {
+                statusText.textContent = "Waiting for others to move";
+            } else {
+                statusText.textContent = "You must play a card";
+            }
+        } else if (gamestate.state === 'LAST_CARD_MOVE') {
+            if (playerData.currentMove || gamestate.validMoves.length === 0) {
+                if (gamestate.lastCardPlayers.length === 1) {
+                    statusText.textContent = `Waiting for ${gamestate.lastCardPlayers[0]} to play their last card`;
+                } else {
+                    statusText.textContent = "Waiting for others to play their last cards";
+                }
+            } else {
+                statusText.textContent = "You may play your last card";
+            }
+        } else if (gamestate.state === 'DISCARD_MOVE') {
+            if (gamestate.discardMoveQueue[0] === this.player) {
+                statusText.textContent = "You may build a card from the discard pile";
+            } else {
+                statusText.textContent = `Waiting for ${gamestate.discardMoveQueue[0]} to build a card from the discard pile`;
+            }
+        } else if (gamestate.state === 'GAME_COMPLETE') {
+            statusText.textContent = "Game complete";
+        }
     }
 
     static updateBotMoves() {

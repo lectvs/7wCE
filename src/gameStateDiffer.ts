@@ -93,7 +93,7 @@ namespace GameStateDiffer {
                             hand.state = { type: 'back', moved: false };
                         }
                         card.destroy();
-                        card.create(lastMove.card, gamestate.cards[lastMove.card], false);
+                        card.create(lastMove.card, false);
 
                         card.state = { type: 'full', justPlayed: false };
                         yield* S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, t => { card.update() })();

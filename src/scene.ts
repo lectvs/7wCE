@@ -36,7 +36,6 @@ class Scene {
         if (this.paymentDialog) {
             this.paymentDialog.update();
         }
-        this.setStatus();
     }
 
     create() {
@@ -126,6 +125,14 @@ class Scene {
     }
 
     destroy() {
+        for (let hand of this.hands) {
+            hand.destroy();
+        }
+
+        for (let wonder of this.wonders) {
+            wonder.destroy();
+        }
+
         while (Main.game.firstChild) {
             Main.game.removeChild(Main.game.firstChild);
         }
@@ -138,39 +145,6 @@ class Scene {
         this.paymentDialog = new PaymentDialog(card, move, this.wonders[Main.gamestate.players.indexOf(Main.player)]);
         this.paymentDialog.zIndex = C.Z_INDEX_PAYMENT_DIALOG;
         this.paymentDialog.addToGame();
-    }
-
-    setStatus() {
-        let gamestate = Main.gamestate;
-        let playerData = gamestate.playerData[Main.player];
-
-        let statusText = <HTMLParagraphElement>document.querySelector('#status > p');
-
-        if (gamestate.state === 'NORMAL_MOVE') {
-            if (playerData.currentMove) {
-                statusText.textContent = "Waiting for others to move";
-            } else {
-                statusText.textContent = "You must play a card";
-            }
-        } else if (gamestate.state === 'LAST_CARD_MOVE') {
-            if (playerData.currentMove || gamestate.validMoves.length === 0) {
-                if (gamestate.lastCardPlayers.length === 1) {
-                    statusText.textContent = `Waiting for ${gamestate.lastCardPlayers[0]} to play their last card`;
-                } else {
-                    statusText.textContent = "Waiting for others to play their last cards";
-                }
-            } else {
-                statusText.textContent = "You may play your last card";
-            }
-        } else if (gamestate.state === 'DISCARD_MOVE') {
-            if (gamestate.discardMoveQueue[0] === Main.player) {
-                statusText.textContent = "You may build a card from the discard pile";
-            } else {
-                statusText.textContent = `Waiting for ${gamestate.discardMoveQueue[0]} to build a card from the discard pile`;
-            }
-        } else if (gamestate.state === 'GAME_COMPLETE') {
-            statusText.textContent = "Game complete";
-        }
     }
 
     getSourceSinkPosition() {

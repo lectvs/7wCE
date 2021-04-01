@@ -1,5 +1,4 @@
 todo
-- draw art at a higher resolution
 - art
 - hover-infos
 - choose wonder

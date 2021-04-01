@@ -6,11 +6,17 @@ function clamp(n: number, min: number, max: number) {
     return n;
 }
 
+function cloneArray<T>(array: T[]): T[] {
+    return array.slice();
+}
+
 function cloneCanvas(canvas: HTMLCanvasElement) {
     let newCanvas = document.createElement('canvas');
     newCanvas.width = canvas.width;
     newCanvas.height = canvas.height;
     newCanvas.getContext('2d').drawImage(canvas, 0, 0);
+    newCanvas.style.width = canvas.style.width;
+    newCanvas.style.height = canvas.style.height;
     return newCanvas;
 }
 

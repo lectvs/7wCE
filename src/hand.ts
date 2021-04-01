@@ -73,7 +73,7 @@ class Hand {
         for (let i = 0; i < this.cardIds.length; i++) {
             let handPosition = this.getNormalHandPosition(i);
             let card = handData.type === 'normal'
-                        ? new Card(this.cardIds[i], Main.gamestate.cards[this.cardIds[i]], handPosition, this.activeWonder, handData.validMoves)
+                        ? new Card(this.cardIds[i], handPosition, this.activeWonder, handData.validMoves)
                         : Card.flippedCardForAge(handData.type === 'back' ? handData.age : handData.lastCardAge, false);
             card.x = handPosition.x;
             card.y = handPosition.y;
@@ -90,6 +90,7 @@ class Hand {
 
     destroy() {
         for (let i = 0; i < this.cards.length; i++) {
+            this.cards[i].destroy();
             this.cards[i].removeFromGame();
         }
     }
