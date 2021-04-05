@@ -67,7 +67,26 @@ class Main {
 
             console.log('Got game state:', gamestate);
             this.gamestate = gamestate;
-            this.loader.loadGamestateResources();
+
+            PIXI.Loader.shared.add('wood', 'assets/wood.svg');
+            PIXI.Loader.shared.add('stone', 'assets/stone.svg');
+            PIXI.Loader.shared.add('ore', 'assets/ore.svg');
+            PIXI.Loader.shared.add('clay', 'assets/clay.svg');
+            PIXI.Loader.shared.add('glass', 'assets/glass.svg');
+            PIXI.Loader.shared.add('press', 'assets/press.svg');
+            PIXI.Loader.shared.add('loom', 'assets/loom.svg');
+            PIXI.Loader.shared.add('shield', 'assets/shield.svg');
+            PIXI.Loader.shared.add('goldcoin', 'assets/goldcoin.svg');
+            PIXI.Loader.shared.add('pointswreath', 'assets/pointswreath.svg');
+            PIXI.Loader.shared.add('compass', 'assets/compass.svg');
+            PIXI.Loader.shared.add('tablet', 'assets/tablet.svg');
+            PIXI.Loader.shared.add('gear', 'assets/gear.svg');
+            PIXI.Loader.shared.load((loader: any, resources: Dict<PIXI.LoaderResource>) => {
+                for (let resource in resources) {
+                    Resources.PIXI_TEXTURES[resource] = resources[resource].texture;
+                }
+                this.loader.loadGamestateResources();
+            });
         });
     }
 

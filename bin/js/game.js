@@ -455,6 +455,7 @@ var ArtCommon;
     ArtCommon.goldColor = 0xFBE317;
     ArtCommon.goldColorHtml = '#FBE317';
     ArtCommon.discardPileColor = 0x888888;
+    ArtCommon.resourceOuterColor = 0xD89846;
     function domElementForArt(art, scale) {
         if (scale === void 0) { scale = 1; }
         art.scale.set(art.scale.x * scale, art.scale.y * scale);
@@ -669,7 +670,10 @@ var ArtCommon;
     }
     ArtCommon.multiResource = multiResource;
     function shield() {
-        return debugEffect(0x81181A);
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('shield'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        return sprite;
     }
     ArtCommon.shield = shield;
     function science(symbol) {
@@ -707,7 +711,7 @@ var ArtCommon;
     ArtCommon.multiScience = multiScience;
     function victoryPoints(points) {
         var container = new PIXI.Container();
-        container.addChild(debugEffect(0xFFFFFF));
+        container.addChild(pointsWreath());
         container.addChild(Shapes.centeredText(0, 0, "" + points, 0.7, 0x000000));
         return container;
     }
@@ -913,49 +917,101 @@ var ArtCommon;
     }
     ArtCommon.buildFreeLastCard = buildFreeLastCard;
     function wood() {
-        return debugEffect(0x6D9F2F);
+        var container = new PIXI.Container();
+        container.addChild(Shapes.filledCircle(0, 0, 50, ArtCommon.resourceOuterColor));
+        container.addChild(Shapes.filledCircle(0, 0, 44, 0x6D9F2F));
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('wood'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.5);
+        container.addChild(sprite);
+        return container;
     }
     ArtCommon.wood = wood;
     function stone() {
-        return debugEffect(0xC3BBBE);
+        var container = new PIXI.Container();
+        container.addChild(Shapes.filledCircle(0, 0, 50, ArtCommon.resourceOuterColor));
+        container.addChild(Shapes.filledCircle(0, 0, 44, 0xC3BBBE));
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('stone'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.5);
+        container.addChild(sprite);
+        return container;
     }
     ArtCommon.stone = stone;
     function ore() {
-        return debugEffect(0x363936);
+        var container = new PIXI.Container();
+        container.addChild(Shapes.filledCircle(0, 0, 50, ArtCommon.resourceOuterColor));
+        container.addChild(Shapes.filledCircle(0, 0, 44, 0x404340));
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('ore'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.4);
+        container.addChild(sprite);
+        return container;
     }
     ArtCommon.ore = ore;
     function clay() {
-        return debugEffect(0xE35B1E);
+        var container = new PIXI.Container();
+        container.addChild(Shapes.filledCircle(0, 0, 50, ArtCommon.resourceOuterColor));
+        container.addChild(Shapes.filledCircle(0, 0, 44, 0xE35B1E));
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('clay'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.5);
+        container.addChild(sprite);
+        return container;
     }
     ArtCommon.clay = clay;
     function glass() {
-        return debugEffect(0x36A1D6);
+        var container = new PIXI.Container();
+        container.addChild(Shapes.filledOctagon(0, 0, 50, ArtCommon.resourceOuterColor));
+        container.addChild(Shapes.filledOctagon(0, 0, 44, 0x36A1D6));
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('glass'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.45);
+        container.addChild(sprite);
+        return container;
     }
     ArtCommon.glass = glass;
     function press() {
-        return debugEffect(0xD9A86B);
+        var container = new PIXI.Container();
+        container.addChild(Shapes.filledOctagon(0, 0, 50, ArtCommon.resourceOuterColor));
+        container.addChild(Shapes.filledOctagon(0, 0, 44, 0xD9A86B));
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('press'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.4);
+        container.addChild(sprite);
+        return container;
     }
     ArtCommon.press = press;
     function loom() {
-        return debugEffect(0xA5186A);
+        var container = new PIXI.Container();
+        container.addChild(Shapes.filledOctagon(0, 0, 50, ArtCommon.resourceOuterColor));
+        container.addChild(Shapes.filledOctagon(0, 0, 44, 0xA5186A));
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('loom'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.5);
+        container.addChild(sprite);
+        return container;
     }
     ArtCommon.loom = loom;
     function gear() {
-        return Shapes.filledCircle(0, 0, 50, 0xB75C30);
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('gear'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.65);
+        return sprite;
     }
     ArtCommon.gear = gear;
     function tablet() {
-        var shape = Shapes.filledRoundedRect(-30, -40, 60, 80, 8, 0xC8827A);
-        shape.angle = -30;
-        return shape;
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('tablet'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.65);
+        return sprite;
     }
     ArtCommon.tablet = tablet;
     function compass() {
-        var graphics = new PIXI.Graphics();
-        graphics.beginFill(0xF0CB6F, 1);
-        graphics.drawPolygon([-50, 50, -8, -50, 8, -50, 50, 50, 48, 50, 0, -36, -48, 50]);
-        graphics.endFill();
-        return graphics;
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('compass'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.65);
+        return sprite;
     }
     ArtCommon.compass = compass;
     function pyramidStages() {
@@ -969,15 +1025,17 @@ var ArtCommon;
     }
     ArtCommon.pyramidStages = pyramidStages;
     function goldCoin() {
-        var container = new PIXI.Container();
-        container.addChild(debugEffect(ArtCommon.goldColor));
-        return container;
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('goldcoin'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        return sprite;
     }
     ArtCommon.goldCoin = goldCoin;
     function pointsWreath() {
-        var container = new PIXI.Container();
-        container.addChild(debugEffect(0xFFFFFF));
-        return container;
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('pointswreath'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        return sprite;
     }
     ArtCommon.pointsWreath = pointsWreath;
     function militaryToken(amount) {
@@ -2932,7 +2990,25 @@ var Main = /** @class */ (function () {
             }
             console.log('Got game state:', gamestate);
             _this.gamestate = gamestate;
-            _this.loader.loadGamestateResources();
+            PIXI.Loader.shared.add('wood', 'assets/wood.svg');
+            PIXI.Loader.shared.add('stone', 'assets/stone.svg');
+            PIXI.Loader.shared.add('ore', 'assets/ore.svg');
+            PIXI.Loader.shared.add('clay', 'assets/clay.svg');
+            PIXI.Loader.shared.add('glass', 'assets/glass.svg');
+            PIXI.Loader.shared.add('press', 'assets/press.svg');
+            PIXI.Loader.shared.add('loom', 'assets/loom.svg');
+            PIXI.Loader.shared.add('shield', 'assets/shield.svg');
+            PIXI.Loader.shared.add('goldcoin', 'assets/goldcoin.svg');
+            PIXI.Loader.shared.add('pointswreath', 'assets/pointswreath.svg');
+            PIXI.Loader.shared.add('compass', 'assets/compass.svg');
+            PIXI.Loader.shared.add('tablet', 'assets/tablet.svg');
+            PIXI.Loader.shared.add('gear', 'assets/gear.svg');
+            PIXI.Loader.shared.load(function (loader, resources) {
+                for (var resource in resources) {
+                    Resources.PIXI_TEXTURES[resource] = resources[resource].texture;
+                }
+                _this.loader.loadGamestateResources();
+            });
         });
     };
     Main.setupGame = function () {
@@ -3502,6 +3578,7 @@ var Resources = /** @class */ (function () {
             return;
         this.WONDER_CACHE[player].push(wonderResource);
     };
+    Resources.PIXI_TEXTURES = {};
     Resources.CARD_CACHE = {};
     Resources.WONDER_CACHE = {};
     return Resources;
@@ -3739,6 +3816,13 @@ var Shapes = /** @class */ (function () {
         var graphics = new PIXI.Graphics();
         graphics.beginFill(color, 1);
         graphics.drawPolygon(shiftedPoints);
+        graphics.endFill();
+        return graphics;
+    };
+    Shapes.filledOctagon = function (x, y, apothem, color) {
+        var graphics = new PIXI.Graphics();
+        graphics.beginFill(color, 1);
+        graphics.drawStar(x, y, 8, apothem, apothem / Math.cos(Math.PI / 8));
         graphics.endFill();
         return graphics;
     };

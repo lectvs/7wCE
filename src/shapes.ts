@@ -35,6 +35,14 @@ class Shapes {
         return graphics;
     }
 
+    static filledOctagon(x: number, y: number, apothem: number, color: number) {
+        let graphics = new PIXI.Graphics();
+        graphics.beginFill(color, 1);
+        graphics.drawStar(x, y, 8, apothem, apothem/Math.cos(Math.PI/8));
+        graphics.endFill();
+        return graphics;
+    }
+
     static centeredText(x: number, y: number, text: string, scale: number, color: number) {
         let pixiText = new PIXI.Text(text, { fontFamily : 'Courier New', fontWeight: 'bold', fontSize: 100, fill : color });
         pixiText.anchor.set(0.5, 0.5);

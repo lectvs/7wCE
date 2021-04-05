@@ -11,6 +11,7 @@ type WonderResource = {
 }
 
 class Resources {
+    static readonly PIXI_TEXTURES: Dict<PIXI.Texture> = {};
     static readonly CARD_CACHE: Dict<CardResource[]> = {};
     static readonly WONDER_CACHE: Dict<WonderResource[]> = {};
     static DISCARD_PILE: HTMLCanvasElement;

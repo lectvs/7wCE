@@ -17,6 +17,7 @@ namespace ArtCommon {
     export const goldColor = 0xFBE317;
     export const goldColorHtml = '#FBE317';
     export const discardPileColor = 0x888888;
+    export const resourceOuterColor = 0xD89846;
 
     export function domElementForArt(art: PIXI.DisplayObject, scale: number = 1) {
         art.scale.set(art.scale.x * scale, art.scale.y * scale);
@@ -166,7 +167,10 @@ namespace ArtCommon {
     }
 
     export function shield() {
-        return debugEffect(0x81181A);
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('shield'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        return sprite;
     }
 
     export function science(symbol: string) {
@@ -193,7 +197,7 @@ namespace ArtCommon {
 
     export function victoryPoints(points: number) {
         let container = new PIXI.Container();
-        container.addChild(debugEffect(0xFFFFFF));
+        container.addChild(pointsWreath());
         container.addChild(Shapes.centeredText(0, 0, `${points}`, 0.7, 0x000000));
         return container;
     }
@@ -397,49 +401,101 @@ namespace ArtCommon {
     }
 
     export function wood() {
-        return debugEffect(0x6D9F2F);
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledCircle(0, 0, 50, ArtCommon.resourceOuterColor));
+        container.addChild(Shapes.filledCircle(0, 0, 44, 0x6D9F2F));
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('wood'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.5);
+        container.addChild(sprite);
+        return container;
     }
 
     export function stone() {
-        return debugEffect(0xC3BBBE);
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledCircle(0, 0, 50, ArtCommon.resourceOuterColor));
+        container.addChild(Shapes.filledCircle(0, 0, 44, 0xC3BBBE));
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('stone'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.5);
+        container.addChild(sprite);
+        return container;
     }
 
     export function ore() {
-        return debugEffect(0x363936);
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledCircle(0, 0, 50, ArtCommon.resourceOuterColor));
+        container.addChild(Shapes.filledCircle(0, 0, 44, 0x404340));
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('ore'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.4);
+        container.addChild(sprite);
+        return container;
     }
 
     export function clay() {
-        return debugEffect(0xE35B1E);
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledCircle(0, 0, 50, ArtCommon.resourceOuterColor));
+        container.addChild(Shapes.filledCircle(0, 0, 44, 0xE35B1E));
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('clay'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.5);
+        container.addChild(sprite);
+        return container;
     }
 
     export function glass() {
-        return debugEffect(0x36A1D6);
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledOctagon(0, 0, 50, ArtCommon.resourceOuterColor));
+        container.addChild(Shapes.filledOctagon(0, 0, 44, 0x36A1D6));
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('glass'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.45);
+        container.addChild(sprite);
+        return container;
     }
 
     export function press() {
-        return debugEffect(0xD9A86B);
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledOctagon(0, 0, 50, ArtCommon.resourceOuterColor));
+        container.addChild(Shapes.filledOctagon(0, 0, 44, 0xD9A86B));
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('press'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.4);
+        container.addChild(sprite);
+        return container;
     }
 
     export function loom() {
-        return debugEffect(0xA5186A);
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledOctagon(0, 0, 50, ArtCommon.resourceOuterColor));
+        container.addChild(Shapes.filledOctagon(0, 0, 44, 0xA5186A));
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('loom'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.5);
+        container.addChild(sprite);
+        return container;
     }
 
     export function gear() {
-        return Shapes.filledCircle(0, 0, 50, 0xB75C30);
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('gear'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.65);
+        return sprite;
     }
 
     export function tablet() {
-        let shape = Shapes.filledRoundedRect(-30, -40, 60, 80, 8, 0xC8827A);
-        shape.angle = -30;
-        return shape;
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('tablet'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.65);
+        return sprite;
     }
 
     export function compass() {
-        let graphics = new PIXI.Graphics();
-        graphics.beginFill(0xF0CB6F, 1);
-        graphics.drawPolygon([ -50, 50, -8, -50, 8, -50, 50, 50, 48, 50, 0, -36, -48, 50 ]);
-        graphics.endFill();
-        return graphics;
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('compass'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.65);
+        return sprite;
     }
 
     export function pyramidStages() {
@@ -453,15 +509,17 @@ namespace ArtCommon {
     }
 
     export function goldCoin() {
-        let container = new PIXI.Container();
-        container.addChild(debugEffect(ArtCommon.goldColor));
-        return container;
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('goldcoin'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        return sprite;
     }
 
     export function pointsWreath() {
-        let container = new PIXI.Container();
-        container.addChild(debugEffect(0xFFFFFF));
-        return container;
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('pointswreath'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        return sprite;
     }
 
     export function militaryToken(amount: number) {
