@@ -105,7 +105,9 @@ class Loader {
             cardBanner.mask = cardMask;
             front.addChild(cardBanner);
 
-            let effectContainer = ArtCommon.getArtForEffects(card.effects);
+            let effectContainer = new PIXI.Container();
+            effectContainer.addChild(ArtCommon.getShadowForEffects(card.effects, 'dark'));
+            effectContainer.addChild(ArtCommon.getArtForEffects(card.effects));
             effectContainer.position.set(C.CARD_WIDTH/2, C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2);
             effectContainer.scale.set(C.CARD_EFFECT_SCALE);
             front.addChild(effectContainer);
@@ -163,19 +165,21 @@ class Loader {
             wonderBoard.addChild(boardBgMask);
     
             // Starting effects
-            let startingEffects = ArtCommon.getArtForEffects(wonder.starting_effects);
-            startingEffects.scale.set(C.WONDER_STARTING_EFFECTS_SCALE);
-            let startingEffectsBounds = startingEffects.getBounds();
-            startingEffects.position.set(C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.left - startingEffects.x),
-                                         C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.top - startingEffects.y));
+            let startingEffectContainer = new PIXI.Container();
+            startingEffectContainer.addChild(ArtCommon.getShadowForEffects(wonder.starting_effects, 'dark'));
+            startingEffectContainer.addChild(ArtCommon.getArtForEffects(wonder.starting_effects));
+            startingEffectContainer.scale.set(C.WONDER_STARTING_EFFECTS_SCALE);
+            let startingEffectsBounds = startingEffectContainer.getBounds();
+            startingEffectContainer.position.set(C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.left - startingEffectContainer.x),
+                                         C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.top - startingEffectContainer.y));
     
-            startingEffectsBounds = startingEffects.getBounds();
+            startingEffectsBounds = startingEffectContainer.getBounds();
             let startingEffectBanner = Shapes.filledRect(startingEffectsBounds.left - C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.top - C.WONDER_STARTING_EFFECTS_PADDING,
                                                          startingEffectsBounds.width + 2*C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.height + 2*C.WONDER_STARTING_EFFECTS_PADDING,
                                                          ArtCommon.cardBannerForColor(wonder.starting_effect_color));
             startingEffectBanner.mask = boardBgMask;
             wonderBoard.addChild(startingEffectBanner);
-            wonderBoard.addChild(startingEffects);
+            wonderBoard.addChild(startingEffectContainer);
     
             // Wonder stages    
             let stagesMiddle = wonder.stages.length === 2 ? C.WONDER_STAGE_MIDDLE_2 : C.WONDER_STAGE_MIDDLE_134;
@@ -198,10 +202,12 @@ class Loader {
                 stageBg.x = stageXs[i];
                 wonderBoard.addChild(stageBg);
     
-                let stageEffects = ArtCommon.getArtForEffects(wonder.stages[i].effects);
-                stageEffects.scale.set(C.WONDER_STAGE_EFFECT_SCALE);
-                stageEffects.position.set(stageXs[i], C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT/2);
-                wonderBoard.addChild(stageEffects);
+                let stageEffectContainer = new PIXI.Container();
+                stageEffectContainer.addChild(ArtCommon.getShadowForEffects(wonder.stages[i].effects, 'light'));
+                stageEffectContainer.addChild(ArtCommon.getArtForEffects(wonder.stages[i].effects));
+                stageEffectContainer.scale.set(C.WONDER_STAGE_EFFECT_SCALE);
+                stageEffectContainer.position.set(stageXs[i], C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT/2);
+                wonderBoard.addChild(stageEffectContainer);
     
                 let stageCost = ArtCommon.getArtForStageCost(wonder.stages[i].cost);
                 if (stageCost) {

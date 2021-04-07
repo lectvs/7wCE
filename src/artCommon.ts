@@ -102,6 +102,17 @@ namespace ArtCommon {
         return combineEffectArt(effectArts, 8);
     }
 
+    export function getShadowForEffects(effects: API.Effect[], type: 'light' | 'dark', dx: number = 5, dy: number = 5) {
+        let container = new PIXI.Container();
+        let shadow = ArtCommon.getArtForEffects(effects);
+        let silhouetteFilter = new PIXI.filters.ColorMatrixFilter();
+        silhouetteFilter.brightness(type === 'dark' ? 0 : 10, false);
+        shadow.filters = [silhouetteFilter, new PIXI.filters.BlurFilter(16 * resolution, 100)];
+        shadow.position.set(dx, dy);
+        container.addChild(shadow);
+        return container;
+    }
+
     export function getArtForCost(cost: API.Cost) {
         if (!cost) {
             return undefined;

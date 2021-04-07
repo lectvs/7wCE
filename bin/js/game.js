@@ -573,6 +573,19 @@ var ArtCommon;
         return combineEffectArt(effectArts, 8);
     }
     ArtCommon.getArtForEffects = getArtForEffects;
+    function getShadowForEffects(effects, type, dx, dy) {
+        if (dx === void 0) { dx = 5; }
+        if (dy === void 0) { dy = 5; }
+        var container = new PIXI.Container();
+        var shadow = ArtCommon.getArtForEffects(effects);
+        var silhouetteFilter = new PIXI.filters.ColorMatrixFilter();
+        silhouetteFilter.brightness(type === 'dark' ? 0 : 10, false);
+        shadow.filters = [silhouetteFilter, new PIXI.filters.BlurFilter(16 * resolution, 100)];
+        shadow.position.set(dx, dy);
+        container.addChild(shadow);
+        return container;
+    }
+    ArtCommon.getShadowForEffects = getShadowForEffects;
     function getArtForCost(cost) {
         var e_5, _a;
         if (!cost) {
@@ -2971,7 +2984,9 @@ var Loader = /** @class */ (function () {
             var cardBanner = Shapes.filledRect(0, 0, C.CARD_WIDTH, C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT, ArtCommon.cardBannerForColor(card.color));
             cardBanner.mask = cardMask;
             front.addChild(cardBanner);
-            var effectContainer = ArtCommon.getArtForEffects(card.effects);
+            var effectContainer = new PIXI.Container();
+            effectContainer.addChild(ArtCommon.getShadowForEffects(card.effects, 'dark'));
+            effectContainer.addChild(ArtCommon.getArtForEffects(card.effects));
             effectContainer.position.set(C.CARD_WIDTH / 2, C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2);
             effectContainer.scale.set(C.CARD_EFFECT_SCALE);
             front.addChild(effectContainer);
@@ -3010,15 +3025,17 @@ var Loader = /** @class */ (function () {
             var boardBgMask = boardBg.clone();
             wonderBoard.addChild(boardBgMask);
             // Starting effects
-            var startingEffects = ArtCommon.getArtForEffects(wonder.starting_effects);
-            startingEffects.scale.set(C.WONDER_STARTING_EFFECTS_SCALE);
-            var startingEffectsBounds = startingEffects.getBounds();
-            startingEffects.position.set(C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.left - startingEffects.x), C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.top - startingEffects.y));
-            startingEffectsBounds = startingEffects.getBounds();
+            var startingEffectContainer = new PIXI.Container();
+            startingEffectContainer.addChild(ArtCommon.getShadowForEffects(wonder.starting_effects, 'dark'));
+            startingEffectContainer.addChild(ArtCommon.getArtForEffects(wonder.starting_effects));
+            startingEffectContainer.scale.set(C.WONDER_STARTING_EFFECTS_SCALE);
+            var startingEffectsBounds = startingEffectContainer.getBounds();
+            startingEffectContainer.position.set(C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.left - startingEffectContainer.x), C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.top - startingEffectContainer.y));
+            startingEffectsBounds = startingEffectContainer.getBounds();
             var startingEffectBanner = Shapes.filledRect(startingEffectsBounds.left - C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.top - C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.width + 2 * C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.height + 2 * C.WONDER_STARTING_EFFECTS_PADDING, ArtCommon.cardBannerForColor(wonder.starting_effect_color));
             startingEffectBanner.mask = boardBgMask;
             wonderBoard.addChild(startingEffectBanner);
-            wonderBoard.addChild(startingEffects);
+            wonderBoard.addChild(startingEffectContainer);
             // Wonder stages    
             var stagesMiddle = wonder.stages.length === 2 ? C.WONDER_STAGE_MIDDLE_2 : C.WONDER_STAGE_MIDDLE_134;
             var stageDX = wonder.stages.length === 4 ? C.WONDER_STAGE_DX_4 : C.WONDER_STAGE_DX_123;
@@ -3033,10 +3050,12 @@ var Loader = /** @class */ (function () {
                 stageBg.mask = boardBgMask;
                 stageBg.x = stageXs[i];
                 wonderBoard.addChild(stageBg);
-                var stageEffects = ArtCommon.getArtForEffects(wonder.stages[i].effects);
-                stageEffects.scale.set(C.WONDER_STAGE_EFFECT_SCALE);
-                stageEffects.position.set(stageXs[i], C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT / 2);
-                wonderBoard.addChild(stageEffects);
+                var stageEffectContainer = new PIXI.Container();
+                stageEffectContainer.addChild(ArtCommon.getShadowForEffects(wonder.stages[i].effects, 'light'));
+                stageEffectContainer.addChild(ArtCommon.getArtForEffects(wonder.stages[i].effects));
+                stageEffectContainer.scale.set(C.WONDER_STAGE_EFFECT_SCALE);
+                stageEffectContainer.position.set(stageXs[i], C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT / 2);
+                wonderBoard.addChild(stageEffectContainer);
                 var stageCost = ArtCommon.getArtForStageCost(wonder.stages[i].cost);
                 if (stageCost) {
                     stageCost.scale.set(C.WONDER_STAGE_COST_SCALE);
