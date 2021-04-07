@@ -529,25 +529,25 @@ var ArtCommon;
                 return marketplace();
             }
             else if (effect.type === 'gold_for_cards') {
-                return goldForCards(effect.color);
+                return goldForCards(effect.color, effect.gold_per_card);
             }
             else if (effect.type === 'gold_and_points_for_cards') {
-                return goldAndPointsForCards(effect.color);
+                return goldAndPointsForCards(effect.color, effect.gold_per_card, effect.points_per_card);
             }
             else if (effect.type === 'gold_and_points_for_stages') {
-                return goldAndPointsForStages();
+                return goldAndPointsForStages(effect.gold_per_stage, effect.points_per_stage);
             }
             else if (effect.type === 'points_for_cards') {
-                return pointsForCards(effect.color);
+                return pointsForCards(effect.color, effect.points_per_card);
             }
             else if (effect.type === 'points_for_stages') {
-                return pointsForStages();
+                return pointsForStages(effect.points_per_stage);
             }
             else if (effect.type === 'points_for_finished_wonder') {
-                return pointsForFinishedWonder();
+                return pointsForFinishedWonder(effect.points);
             }
             else if (effect.type === 'points_for_self_cards') {
-                return pointsForSelfCards(effect.color);
+                return pointsForSelfCards(effect.color, effect.points_per_card);
             }
             else if (effect.type === 'multi_science') {
                 return multiScience(effect.symbols.split('/'));
@@ -718,13 +718,17 @@ var ArtCommon;
     ArtCommon.victoryPoints = victoryPoints;
     function gold(gold) {
         var container = new PIXI.Container();
-        container.addChild(debugEffect(ArtCommon.goldColor));
+        container.addChild(goldCoin());
         container.addChild(Shapes.centeredText(0, 0, "" + gold, 0.7, 0x000000));
         return container;
     }
     ArtCommon.gold = gold;
     function tradingPost(direction) {
         var container = new PIXI.Container();
+        var coin = gold(1);
+        coin.scale.set(0.7);
+        coin.position.set(0, -27);
+        container.addChild(coin);
         var woodArt = wood();
         woodArt.scale.set(0.5);
         var stoneArt = stone();
@@ -733,19 +737,20 @@ var ArtCommon;
         oreArt.scale.set(0.5);
         var clayArt = clay();
         clayArt.scale.set(0.5);
-        container.addChild(Shapes.filledRoundedRect(-120, -30, 240, 60, 30, cardBannerForColor('brown')));
+        container.addChild(Shapes.filledRoundedRect(-120, -5, 240, 60, 30, cardBannerForColor('brown')));
         var resources = combineEffectArt([woodArt, stoneArt, oreArt, clayArt], 8);
+        resources.position.set(0, 25);
         container.addChild(resources);
         if (direction === 'pos') {
             var arrow = arrowRight();
             arrow.scale.set(0.5);
-            arrow.position.set(150, 0);
+            arrow.position.set(150, 25);
             container.addChild(arrow);
         }
         else if (direction === 'neg') {
             var arrow = arrowLeft();
             arrow.scale.set(0.5);
-            arrow.position.set(-150, 0);
+            arrow.position.set(-150, 25);
             container.addChild(arrow);
         }
         else {
@@ -756,123 +761,164 @@ var ArtCommon;
     ArtCommon.tradingPost = tradingPost;
     function marketplace() {
         var container = new PIXI.Container();
+        var coin = gold(1);
+        coin.scale.set(0.7);
+        coin.position.set(0, -27);
+        container.addChild(coin);
         var glassArt = glass();
         glassArt.scale.set(0.5);
         var loomArt = loom();
         loomArt.scale.set(0.5);
         var pressArt = press();
         pressArt.scale.set(0.5);
-        container.addChild(Shapes.filledRoundedRect(-90, -30, 180, 60, 30, cardBannerForColor('grey')));
+        container.addChild(Shapes.filledRoundedRect(-90, -5, 180, 60, 30, cardBannerForColor('grey')));
         var resources = combineEffectArt([glassArt, loomArt, pressArt], 8);
+        resources.position.set(0, 25);
         container.addChild(resources);
         var arrowR = arrowRight();
         arrowR.scale.set(0.5);
-        arrowR.position.set(120, 0);
+        arrowR.position.set(120, 25);
         container.addChild(arrowR);
         var arrowL = arrowLeft();
         arrowL.scale.set(0.5);
-        arrowL.position.set(-120, 0);
+        arrowL.position.set(-120, 25);
         container.addChild(arrowL);
         return container;
     }
     ArtCommon.marketplace = marketplace;
-    function goldForCards(color) {
+    function goldForCards(color, goldPerCard) {
         var container = new PIXI.Container();
-        container.addChild(Shapes.filledRoundedRect(-20, -48, 40, 60, 4, ArtCommon.cardBannerForColor(color)));
+        var card = cardGoldPoints(color, goldPerCard, 0);
+        card.scale.set(0.7);
+        card.position.set(0, -10);
+        container.addChild(card);
         var arrowL = arrowLeft();
         arrowL.scale.set(0.4);
-        arrowL.position.set(-70, 0);
+        arrowL.position.set(-70, 5);
         container.addChild(arrowL);
         var arrowR = arrowRight();
         arrowR.scale.set(0.4);
-        arrowR.position.set(70, 0);
+        arrowR.position.set(70, 5);
         container.addChild(arrowR);
         var arrowD = arrowDown();
         arrowD.scale.set(0.4);
-        arrowD.position.set(0, 40);
+        arrowD.position.set(0, 45);
         container.addChild(arrowD);
         return container;
     }
     ArtCommon.goldForCards = goldForCards;
-    function goldAndPointsForCards(color) {
+    function goldAndPointsForCards(color, goldPerCard, pointsPerCard) {
         var container = new PIXI.Container();
-        container.addChild(Shapes.filledRoundedRect(-25, -40, 50, 80, 8, 0xFFFFFF));
-        container.addChild(Shapes.filledRoundedRect(-21, -36, 42, 72, 4, ArtCommon.cardBannerForColor(color)));
+        var card = cardGoldPoints(color, goldPerCard, pointsPerCard);
+        card.scale.set(0.8);
+        container.addChild(card);
         return container;
     }
     ArtCommon.goldAndPointsForCards = goldAndPointsForCards;
-    function goldAndPointsForStages() {
+    function goldAndPointsForStages(goldAmount, pointsAmount) {
         var container = new PIXI.Container();
         container.addChild(pyramidStages());
+        var goldCoin = gold(goldAmount);
+        goldCoin.scale.set(0.48);
+        goldCoin.position.set(-60, 30);
+        container.addChild(goldCoin);
+        var pointsWreath = victoryPoints(pointsAmount);
+        pointsWreath.scale.set(0.48);
+        pointsWreath.position.set(60, 30);
+        container.addChild(pointsWreath);
         return container;
     }
     ArtCommon.goldAndPointsForStages = goldAndPointsForStages;
-    function pointsForCards(color) {
+    function pointsForCards(color, pointsPerCard) {
         var container = new PIXI.Container();
-        container.addChild(Shapes.filledRoundedRect(-25, -40, 50, 80, 6, ArtCommon.cardBannerForColor(color)));
+        var card = cardGoldPoints(color, 0, pointsPerCard);
+        card.scale.set(0.8);
+        container.addChild(card);
         var arrowL = arrowLeft();
-        arrowL.scale.set(0.5);
-        arrowL.position.set(-80, 0);
+        arrowL.scale.set(0.4);
+        arrowL.position.set(-85, 20);
         container.addChild(arrowL);
         var arrowR = arrowRight();
-        arrowR.scale.set(0.5);
-        arrowR.position.set(80, 0);
+        arrowR.scale.set(0.4);
+        arrowR.position.set(85, 20);
         container.addChild(arrowR);
         return container;
     }
     ArtCommon.pointsForCards = pointsForCards;
-    function pointsForStages() {
+    function pointsForStages(pointsAmount) {
         var container = new PIXI.Container();
         var pyramid = pyramidStages();
-        pyramid.position.set(0, -20);
-        pyramid.scale.set(0.7);
+        pyramid.position.set(0, -15);
+        pyramid.scale.set(0.85);
         container.addChild(pyramid);
+        var pointsWreath = victoryPoints(pointsAmount);
+        pointsWreath.scale.set(0.48);
+        pointsWreath.position.set(36, 10);
+        container.addChild(pointsWreath);
         var arrowL = arrowLeft();
         arrowL.scale.set(0.4);
-        arrowL.position.set(-70, 0);
+        arrowL.position.set(-80, 10);
         container.addChild(arrowL);
         var arrowR = arrowRight();
         arrowR.scale.set(0.4);
-        arrowR.position.set(70, 0);
+        arrowR.position.set(80, 10);
         container.addChild(arrowR);
         var arrowD = arrowDown();
         arrowD.scale.set(0.4);
-        arrowD.position.set(0, 40);
+        arrowD.position.set(0, 45);
         container.addChild(arrowD);
         return container;
     }
     ArtCommon.pointsForStages = pointsForStages;
-    function pointsForFinishedWonder() {
+    function pointsForFinishedWonder(pointsAmount) {
         var container = new PIXI.Container();
-        var graphics = new PIXI.Graphics();
-        graphics.beginFill(0xFFFF00, 1);
-        graphics.drawPolygon([-50, 45, 50, 45, 0, -45]);
-        graphics.endFill();
-        container.addChild(graphics);
+        var pyramid = pyramidFull();
+        container.addChild(pyramid);
+        var pointsWreath = victoryPoints(pointsAmount);
+        pointsWreath.scale.set(0.48);
+        pointsWreath.position.set(40, 30);
+        container.addChild(pointsWreath);
         return container;
     }
     ArtCommon.pointsForFinishedWonder = pointsForFinishedWonder;
-    function pointsForSelfCards(color) {
+    function pointsForSelfCards(color, pointsPerCard) {
         var container = new PIXI.Container();
-        container.addChild(Shapes.filledRoundedRect(-25, -40, 50, 80, 8, 0xFFFFFF));
-        container.addChild(Shapes.filledRoundedRect(-21, -36, 42, 72, 4, ArtCommon.cardBannerForColor(color)));
+        var card = cardGoldPoints(color, 0, pointsPerCard);
+        card.scale.set(0.8);
+        container.addChild(card);
         return container;
     }
     ArtCommon.pointsForSelfCards = pointsForSelfCards;
     function playLastCard() {
         var container = new PIXI.Container();
-        container.addChild(Shapes.filledRoundedRect(-65, -50, 60, 100, 8, ArtCommon.cardBannerForColor("grey")));
-        container.addChild(Shapes.filledRoundedRect(15, -50, 60, 100, 8, ArtCommon.cardBannerForColor("grey")));
-        var check = checkMark();
-        check.position.set(50, 0);
-        container.addChild(check);
+        var card1 = cardForEffect(0x686B6A);
+        card1.position.set(-35, 0);
+        card1.angle = -25;
+        container.addChild(card1);
+        var check1 = checkMark();
+        check1.position.set(-30, -15);
+        check1.scale.set(0.7);
+        container.addChild(check1);
+        var card2 = cardForEffect(0x686B6A);
+        card2.position.set(35, 0);
+        card2.angle = 25;
+        container.addChild(card2);
+        var check2 = checkMark();
+        check2.position.set(45, -15);
+        check2.scale.set(0.7);
+        container.addChild(check2);
         return container;
     }
     ArtCommon.playLastCard = playLastCard;
     function buildFromDiscard() {
         var container = new PIXI.Container();
-        container.addChild(Shapes.filledRoundedRect(-40, -50, 70, 100, 8, 0x888888)).angle = -20;
-        container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, ArtCommon.cardBannerForColor("grey")));
+        var backCard = cardForEffect(0x444444);
+        backCard.position.set(-15, 0);
+        backCard.angle = -20;
+        backCard.alpha = 0.8;
+        container.addChild(backCard);
+        var frontCard = cardForEffect(ArtCommon.cardBannerForColor("grey"));
+        container.addChild(frontCard);
         var cross = X(0xFF0000);
         cross.scale.set(0.3);
         cross.position.set(-30, -20);
@@ -882,10 +928,10 @@ var ArtCommon;
     ArtCommon.buildFromDiscard = buildFromDiscard;
     function buildFreeFirstColor() {
         var container = new PIXI.Container();
-        container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, ArtCommon.cardBannerForColor("grey")));
+        container.addChild(cardForEffect(0x686B6A));
         var colors = ['brown', 'grey', 'blue', 'yellow', 'red', 'green', 'purple'];
         for (var i = 0; i < colors.length; i++) {
-            container.addChild(Shapes.filledRect(-35 + 10 * i, -50, 10, 100, ArtCommon.cardBannerForColor(colors[i])));
+            container.addChild(Shapes.filledRect(-31 + 62 / 7 * i, -46, 62 / 7, 92, ArtCommon.cardBannerForColor(colors[i])));
         }
         var cross = X(0xFF0000);
         cross.scale.set(0.3);
@@ -896,8 +942,8 @@ var ArtCommon;
     ArtCommon.buildFreeFirstColor = buildFreeFirstColor;
     function buildFreeFirstCard() {
         var container = new PIXI.Container();
-        container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, ArtCommon.cardBannerForColor("grey")));
-        container.addChild(Shapes.centeredText(0, 14, '\u03B1', 0.56, 0x000000));
+        container.addChild(cardForEffect(0x686B6A));
+        container.addChild(Shapes.centeredText(0, 14, '\u03B1', 0.56, 0xFFFFFF));
         var cross = X(0xFF0000);
         cross.scale.set(0.3);
         cross.position.set(-30, -20);
@@ -907,8 +953,8 @@ var ArtCommon;
     ArtCommon.buildFreeFirstCard = buildFreeFirstCard;
     function buildFreeLastCard() {
         var container = new PIXI.Container();
-        container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, ArtCommon.cardBannerForColor("grey")));
-        container.addChild(Shapes.centeredText(0, 16, '\u03A9', 0.56, 0x000000));
+        container.addChild(cardForEffect(0x686B6A));
+        container.addChild(Shapes.centeredText(0, 16, '\u03A9', 0.56, 0xFFFFFF));
         var cross = X(0xFF0000);
         cross.scale.set(0.3);
         cross.position.set(-30, -20);
@@ -994,57 +1040,130 @@ var ArtCommon;
     }
     ArtCommon.loom = loom;
     function gear() {
+        var container = new PIXI.Container();
         var sprite = new PIXI.Sprite(PIXI.Texture.from('gear'));
         sprite.anchor.set(0.5, 0.5);
         sprite.scale.set(0.65);
-        return sprite;
+        container.addChild(sprite);
+        return container;
     }
     ArtCommon.gear = gear;
     function tablet() {
+        var container = new PIXI.Container();
         var sprite = new PIXI.Sprite(PIXI.Texture.from('tablet'));
         sprite.anchor.set(0.5, 0.5);
         sprite.scale.set(0.65);
-        return sprite;
+        container.addChild(sprite);
+        return container;
     }
     ArtCommon.tablet = tablet;
     function compass() {
+        var container = new PIXI.Container();
         var sprite = new PIXI.Sprite(PIXI.Texture.from('compass'));
         sprite.anchor.set(0.5, 0.5);
         sprite.scale.set(0.65);
-        return sprite;
+        container.addChild(sprite);
+        return container;
     }
     ArtCommon.compass = compass;
+    function cardGoldPoints(color, goldAmount, pointsAmount) {
+        var container = new PIXI.Container();
+        container.addChild(cardForEffect(ArtCommon.cardBannerForColor(color)));
+        if (goldAmount > 0) {
+            var goldCoin_1 = gold(goldAmount);
+            goldCoin_1.scale.set(0.6);
+            goldCoin_1.position.set(-45, 30);
+            container.addChild(goldCoin_1);
+        }
+        if (pointsAmount > 0) {
+            var pointsWreath_1 = victoryPoints(pointsAmount);
+            pointsWreath_1.scale.set(0.6);
+            pointsWreath_1.position.set(45, 30);
+            container.addChild(pointsWreath_1);
+        }
+        return container;
+    }
+    ArtCommon.cardGoldPoints = cardGoldPoints;
+    function cardForEffect(color) {
+        var container = new PIXI.Container();
+        container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, 0xFFFFFF));
+        container.addChild(Shapes.filledRoundedRect(-31, -46, 62, 92, 4, color));
+        return container;
+    }
+    ArtCommon.cardForEffect = cardForEffect;
+    function pyramidFull() {
+        var container = new PIXI.Container();
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('pyramid_full'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        container.addChild(sprite);
+        return container;
+    }
+    ArtCommon.pyramidFull = pyramidFull;
     function pyramidStages() {
-        var graphics = new PIXI.Graphics();
-        graphics.beginFill(0xFFFF00, 1);
-        graphics.drawPolygon([0, -48, -16, -20, 16, -20]);
-        graphics.drawPolygon([-16, -12, 16, -12, 32, 12, -32, 12]);
-        graphics.drawPolygon([-32, 20, 32, 20, 48, 48, -48, 48]);
-        graphics.endFill();
-        return graphics;
+        var container = new PIXI.Container();
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('pyramid_stages'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        container.addChild(sprite);
+        return container;
     }
     ArtCommon.pyramidStages = pyramidStages;
     function goldCoin() {
+        var container = new PIXI.Container();
         var sprite = new PIXI.Sprite(PIXI.Texture.from('goldcoin'));
         sprite.anchor.set(0.5, 0.5);
         sprite.scale.set(0.7);
-        return sprite;
+        container.addChild(sprite);
+        return container;
     }
     ArtCommon.goldCoin = goldCoin;
     function pointsWreath() {
+        var container = new PIXI.Container();
         var sprite = new PIXI.Sprite(PIXI.Texture.from('pointswreath'));
         sprite.anchor.set(0.5, 0.5);
         sprite.scale.set(0.7);
-        return sprite;
+        container.addChild(sprite);
+        return container;
     }
     ArtCommon.pointsWreath = pointsWreath;
     function militaryToken(amount) {
-        var container = new PIXI.Container();
-        container.addChild(debugEffect(0xD51939));
-        container.addChild(Shapes.centeredText(0, 0, "" + amount, 0.7, 0xFFFFFF));
-        return container;
+        if (amount < 0) {
+            return militaryTokenNegative(-amount);
+        }
+        return militaryTokenPositive(amount);
     }
     ArtCommon.militaryToken = militaryToken;
+    function militaryTokenPositive(amount) {
+        var container = new PIXI.Container();
+        var innerContainer = new PIXI.Container();
+        innerContainer.addChild(Shapes.filledRect(-50, -20, 100, 80, 0xCC1D17));
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('falcon'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.65);
+        sprite.position.set(-1, -20);
+        innerContainer.addChild(sprite);
+        var wreath = pointsWreath();
+        wreath.scale.set(0.6);
+        wreath.position.set(0, 20);
+        innerContainer.addChild(wreath);
+        innerContainer.addChild(Shapes.centeredText(0, 20, "" + amount, 0.5, 0x000000));
+        innerContainer.scale.set(0.775);
+        container.addChild(innerContainer);
+        return container;
+    }
+    ArtCommon.militaryTokenPositive = militaryTokenPositive;
+    function militaryTokenNegative(amount) {
+        var container = new PIXI.Container();
+        container.addChild(Shapes.filledOctagon(0, 0, 50, 0xCC1D17));
+        var wreath = pointsWreath();
+        wreath.scale.set(0.7);
+        container.addChild(wreath);
+        container.addChild(Shapes.filledRect(-26, 0, 12, 6, 0xCC1D17));
+        container.addChild(Shapes.centeredText(2, 0, "" + amount, 0.6, 0xCC1D17));
+        return container;
+    }
+    ArtCommon.militaryTokenNegative = militaryTokenNegative;
     function payment(amount) {
         if (!isFinite(amount)) {
             return ArtCommon.X(0xFF0000);
@@ -1083,30 +1202,33 @@ var ArtCommon;
     }
     ArtCommon.X = X;
     function slash() {
+        var container = new PIXI.Container();
         var graphics = new PIXI.Graphics();
         graphics.beginFill(0xFFFFFF, 1);
-        graphics.drawPolygon([0, -20, 12, -20, 0, 20, -12, 20]);
+        graphics.drawRect(-4, -20, 8, 40);
         graphics.endFill();
-        return graphics;
+        graphics.angle = 20;
+        container.addChild(graphics);
+        return container;
     }
     function arrowLeft() {
         var graphics = new PIXI.Graphics();
         graphics.beginFill(0xFFFFFF, 1);
-        graphics.drawPolygon([45, -50, 45, 50, -45, 0]);
+        graphics.drawPolygon([45, -40, 35, 0, 45, 40, -45, 0]);
         graphics.endFill();
         return graphics;
     }
     function arrowRight() {
         var graphics = new PIXI.Graphics();
         graphics.beginFill(0xFFFFFF, 1);
-        graphics.drawPolygon([-45, -50, -45, 50, 45, 0]);
+        graphics.drawPolygon([-45, -40, -35, 0, -45, 40, 45, 0]);
         graphics.endFill();
         return graphics;
     }
     function arrowDown() {
         var graphics = new PIXI.Graphics();
         graphics.beginFill(0xFFFFFF, 1);
-        graphics.drawPolygon([-50, -45, 50, -45, 0, 45]);
+        graphics.drawPolygon([-40, -35, 0, -25, 40, -35, 0, 35]);
         graphics.endFill();
         return graphics;
     }
@@ -1847,14 +1969,28 @@ var EndScreen = /** @class */ (function () {
             }
         }
         var endscreen = document.getElementById('endscreen');
+        var shield = ArtCommon.shield();
+        shield.scale.set(0.25);
+        var goldCoin = ArtCommon.goldCoin();
+        goldCoin.scale.set(0.25);
+        var pyramid = ArtCommon.pyramidFull();
+        pyramid.scale.set(0.25);
+        var blueCard = ArtCommon.cardForEffect(ArtCommon.cardBannerForColor('blue'));
+        blueCard.scale.set(0.25);
+        var greenCard = ArtCommon.cardForEffect(ArtCommon.cardBannerForColor('green'));
+        greenCard.scale.set(0.25);
+        var yellowCard = ArtCommon.cardForEffect(ArtCommon.cardBannerForColor('yellow'));
+        yellowCard.scale.set(0.25);
+        var purpleCard = ArtCommon.cardForEffect(ArtCommon.cardBannerForColor('purple'));
+        purpleCard.scale.set(0.25);
         var x = (-1 - (players.length - 1) / 2) * C.END_SCREEN_POINTS_DX;
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, C.END_SCREEN_SYMBOL_SIZE, C.END_SCREEN_SYMBOL_SIZE, ArtCommon.cardBannerForColor('red')), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 0 + "px"));
-        endscreen.appendChild(this.scoreArt(Shapes.filledCircle(0, 0, C.END_SCREEN_SYMBOL_SIZE / 2, ArtCommon.goldColor), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 1 + "px"));
-        endscreen.appendChild(this.scoreArt(Shapes.filledPolygon(0, 0, [-C.END_SCREEN_SYMBOL_SIZE * 9 / 16, C.END_SCREEN_SYMBOL_SIZE / 2, C.END_SCREEN_SYMBOL_SIZE * 9 / 16, C.END_SCREEN_SYMBOL_SIZE / 2, 0, -C.END_SCREEN_SYMBOL_SIZE / 2], 0xFFFF00), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 2 + "px"));
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, C.END_SCREEN_SYMBOL_SIZE, C.END_SCREEN_SYMBOL_SIZE, ArtCommon.cardBannerForColor('blue')), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 3 + "px"));
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, C.END_SCREEN_SYMBOL_SIZE, C.END_SCREEN_SYMBOL_SIZE, ArtCommon.cardBannerForColor('green')), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 4 + "px"));
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, C.END_SCREEN_SYMBOL_SIZE, C.END_SCREEN_SYMBOL_SIZE, ArtCommon.cardBannerForColor('yellow')), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 5 + "px"));
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, C.END_SCREEN_SYMBOL_SIZE, C.END_SCREEN_SYMBOL_SIZE, ArtCommon.cardBannerForColor('purple')), "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 6 + "px"));
+        endscreen.appendChild(this.scoreArt(shield, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 0 + "px"));
+        endscreen.appendChild(this.scoreArt(goldCoin, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 1 + "px"));
+        endscreen.appendChild(this.scoreArt(pyramid, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 2 + "px"));
+        endscreen.appendChild(this.scoreArt(blueCard, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 3 + "px"));
+        endscreen.appendChild(this.scoreArt(greenCard, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 4 + "px"));
+        endscreen.appendChild(this.scoreArt(yellowCard, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 5 + "px"));
+        endscreen.appendChild(this.scoreArt(purpleCard, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 6 + "px"));
         endscreen.appendChild(this.scoreText('Total', "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 7 + "px"));
         for (var i = 0; i < players.length; i++) {
             var x_1 = (i - (players.length - 1) / 2) * C.END_SCREEN_POINTS_DX;
@@ -2841,7 +2977,7 @@ var Loader = /** @class */ (function () {
             front.addChild(effectContainer);
             var fullClipRect = new PIXI.Rectangle(0, -C.CARD_PAYMENT_HEIGHT, C.CARD_WIDTH, C.CARD_HEIGHT + C.CARD_PAYMENT_HEIGHT);
             var effectBounds = effectContainer.getBounds();
-            var effectHalfWidth = Math.max(C.CARD_WIDTH / 2 - effectBounds.left, effectBounds.right - C.CARD_WIDTH / 2);
+            var effectHalfWidth = Math.max(C.CARD_WIDTH / 2 - effectBounds.left, effectBounds.right - C.CARD_WIDTH / 2, C.CARD_EFFECT_HEIGHT / 2);
             var effectClipRect = new PIXI.Rectangle(C.CARD_WIDTH / 2 - effectHalfWidth - C.CARD_EFFECT_CLIP_PADDING, C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2 - C.CARD_EFFECT_HEIGHT / 2 - C.CARD_EFFECT_CLIP_PADDING, 2 * effectHalfWidth + 2 * C.CARD_EFFECT_CLIP_PADDING, C.CARD_EFFECT_HEIGHT + 2 * C.CARD_EFFECT_CLIP_PADDING);
             var title = Shapes.centeredText(C.CARD_WIDTH / 2, C.CARD_TITLE_Y, card.name, C.CARD_TITLE_SCALE, C.CARD_TITLE_COLOR);
             title.anchor.y = 0;
@@ -3003,6 +3139,9 @@ var Main = /** @class */ (function () {
             PIXI.Loader.shared.add('compass', 'assets/compass.svg');
             PIXI.Loader.shared.add('tablet', 'assets/tablet.svg');
             PIXI.Loader.shared.add('gear', 'assets/gear.svg');
+            PIXI.Loader.shared.add('pyramid_full', 'assets/pyramid_full.svg');
+            PIXI.Loader.shared.add('pyramid_stages', 'assets/pyramid_stages.svg');
+            PIXI.Loader.shared.add('falcon', 'assets/falcon.svg');
             PIXI.Loader.shared.load(function (loader, resources) {
                 for (var resource in resources) {
                     Resources.PIXI_TEXTURES[resource] = resources[resource].texture;

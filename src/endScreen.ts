@@ -34,14 +34,29 @@ class EndScreen {
 
         let endscreen = document.getElementById('endscreen');
 
+        let shield = ArtCommon.shield();
+        shield.scale.set(0.25);
+        let goldCoin = ArtCommon.goldCoin();
+        goldCoin.scale.set(0.25);
+        let pyramid = ArtCommon.pyramidFull();
+        pyramid.scale.set(0.25);
+        let blueCard = ArtCommon.cardForEffect(ArtCommon.cardBannerForColor('blue'));
+        blueCard.scale.set(0.25);
+        let greenCard = ArtCommon.cardForEffect(ArtCommon.cardBannerForColor('green'));
+        greenCard.scale.set(0.25);
+        let yellowCard = ArtCommon.cardForEffect(ArtCommon.cardBannerForColor('yellow'));
+        yellowCard.scale.set(0.25);
+        let purpleCard = ArtCommon.cardForEffect(ArtCommon.cardBannerForColor('purple'));
+        purpleCard.scale.set(0.25);
+
         let x = (-1 - (players.length - 1) / 2) * C.END_SCREEN_POINTS_DX;
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, C.END_SCREEN_SYMBOL_SIZE, C.END_SCREEN_SYMBOL_SIZE, ArtCommon.cardBannerForColor('red')), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*0}px`));
-        endscreen.appendChild(this.scoreArt(Shapes.filledCircle(0, 0, C.END_SCREEN_SYMBOL_SIZE/2, ArtCommon.goldColor), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*1}px`));
-        endscreen.appendChild(this.scoreArt(Shapes.filledPolygon(0, 0, [ -C.END_SCREEN_SYMBOL_SIZE*9/16, C.END_SCREEN_SYMBOL_SIZE/2, C.END_SCREEN_SYMBOL_SIZE*9/16, C.END_SCREEN_SYMBOL_SIZE/2, 0, -C.END_SCREEN_SYMBOL_SIZE/2 ], 0xFFFF00), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*2}px`));
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, C.END_SCREEN_SYMBOL_SIZE, C.END_SCREEN_SYMBOL_SIZE, ArtCommon.cardBannerForColor('blue')), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*3}px`));
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, C.END_SCREEN_SYMBOL_SIZE, C.END_SCREEN_SYMBOL_SIZE, ArtCommon.cardBannerForColor('green')), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*4}px`));
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, C.END_SCREEN_SYMBOL_SIZE, C.END_SCREEN_SYMBOL_SIZE, ArtCommon.cardBannerForColor('yellow')), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*5}px`));
-        endscreen.appendChild(this.scoreArt(Shapes.filledRect(0, 0, C.END_SCREEN_SYMBOL_SIZE, C.END_SCREEN_SYMBOL_SIZE, ArtCommon.cardBannerForColor('purple')), `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*6}px`));
+        endscreen.appendChild(this.scoreArt(shield, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*0}px`));
+        endscreen.appendChild(this.scoreArt(goldCoin, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*1}px`));
+        endscreen.appendChild(this.scoreArt(pyramid, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*2}px`));
+        endscreen.appendChild(this.scoreArt(blueCard, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*3}px`));
+        endscreen.appendChild(this.scoreArt(greenCard, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*4}px`));
+        endscreen.appendChild(this.scoreArt(yellowCard, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*5}px`));
+        endscreen.appendChild(this.scoreArt(purpleCard, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*6}px`));
         endscreen.appendChild(this.scoreText('Total', `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*7}px`));
 
         for (let i = 0; i < players.length; i++) {

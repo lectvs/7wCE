@@ -81,6 +81,9 @@ class Main {
             PIXI.Loader.shared.add('compass', 'assets/compass.svg');
             PIXI.Loader.shared.add('tablet', 'assets/tablet.svg');
             PIXI.Loader.shared.add('gear', 'assets/gear.svg');
+            PIXI.Loader.shared.add('pyramid_full', 'assets/pyramid_full.svg');
+            PIXI.Loader.shared.add('pyramid_stages', 'assets/pyramid_stages.svg');
+            PIXI.Loader.shared.add('falcon', 'assets/falcon.svg');
             PIXI.Loader.shared.load((loader: any, resources: Dict<PIXI.LoaderResource>) => {
                 for (let resource in resources) {
                     Resources.PIXI_TEXTURES[resource] = resources[resource].texture;
