@@ -1,16 +1,16 @@
 /// <reference path="./popup.ts" />
 
-class StageInfoPopup extends Popup {
-    stage: API.WonderStage;
+class StartingEffectsInfoPopup extends Popup {
+    wonder: API.Wonder;
 
-    constructor(stage: API.WonderStage) {
+    constructor(wonder: API.Wonder) {
         super();
-        this.stage = stage;
+        this.wonder = wonder;
         this.div.appendChild(this.draw());
     }
 
     getSource() {
-        return this.stage;
+        return this.wonder;
     }
 
     private draw() {
@@ -21,45 +21,14 @@ class StageInfoPopup extends Popup {
         let currentY = 16;
 
         // Name
-        box.appendChild(this.infoText('<span style="font-weight:bold">Wonder Stage</span>', '10px', `${currentY}px`));
+        box.appendChild(this.infoText('<span style="font-weight:bold">Starting Effects</span>', '10px', `${currentY}px`));
         currentY += 24;
-
-        // Cost
-        let resourceCost = this.stage.cost?.resources || [];
-        let goldCost = this.stage.cost?.gold || 0;
-        let isFree = resourceCost.length === 0 && goldCost === 0;
-        box.appendChild(this.infoText(`Cost:${isFree ? ' None' : ''}`, '10px', `${currentY}px`));
-
-        if (this.stage.cost) {
-            let currentX = 60;
-            for (let i = 0; i < resourceCost.length; i++) {
-                let resource = box.appendChild(document.createElement('div'));
-                resource.appendChild(ArtCommon.domElementForArt(ArtCommon.resource(resourceCost[i])));
-                resource.style.transform = 'scale(0.2)';
-                resource.style.position = 'absolute';
-                resource.style.left = `${currentX}px`;
-                resource.style.top = `${currentY}px`;
-                currentX += 20;
-            }
-
-            if (goldCost > 0) {
-                let gold = box.appendChild(document.createElement('div'));
-                gold.appendChild(ArtCommon.domElementForArt(ArtCommon.gold(goldCost)));
-                gold.style.transform = 'scale(0.2)';
-                gold.style.position = 'absolute';
-                gold.style.left = `${currentX}px`;
-                gold.style.top = `${currentY}px`;
-                currentX += 20;
-            }
-        }
-        currentY += 24;
-
 
         // Effects
         box.appendChild(this.infoText('Effects:', '10px', `${currentY}px`));
         currentY += 20;
 
-        let effects = this.stage.effects;
+        let effects = this.wonder.starting_effects;
         for (let i = 0; i < effects.length; i++) {
             let effect = box.appendChild(document.createElement('div'));
             let effectArt = new PIXI.Container();

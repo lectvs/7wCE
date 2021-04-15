@@ -158,7 +158,7 @@ class Scene {
             this.popup.zIndex = C.Z_INDEX_CARD_POPUP;
             this.popup.addToGame();
         }
-        this.popup.x = clamp(x, -window.innerWidth/2, window.innerWidth/2 - this.popup.width);
+        this.popup.x = clamp(x, -window.innerWidth/2 + window.pageXOffset, window.innerWidth/2 + window.pageXOffset - this.popup.width);
         this.popup.y = y;
     }
 

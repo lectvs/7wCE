@@ -35,29 +35,37 @@ class CardInfoPopup extends Popup {
             let currentX = 60;
             for (let i = 0; i < resourceCost.length; i++) {
                 let resource = box.appendChild(document.createElement('div'));
-                resource.appendChild(ArtCommon.domElementForArt(ArtCommon.resource(resourceCost[i])));
+                let resourceArt = new PIXI.Container();
+                resourceArt.addChild(ArtCommon.getShadowForArt(() => ArtCommon.resource(resourceCost[i]), 'dark'));
+                resourceArt.addChild(ArtCommon.resource(resourceCost[i]));
+                resource.appendChild(ArtCommon.domElementForArt(resourceArt, 1, 10));
                 resource.style.transform = 'scale(0.2)';
                 resource.style.position = 'absolute';
                 resource.style.left = `${currentX}px`;
                 resource.style.top = `${currentY}px`;
-                currentX += 20;
+                currentX += 22;
             }
 
             if (goldCost > 0) {
                 let gold = box.appendChild(document.createElement('div'));
-                gold.appendChild(ArtCommon.domElementForArt(ArtCommon.gold(goldCost)));
+                let goldArt = new PIXI.Container();
+                goldArt.addChild(ArtCommon.getShadowForArt(() => ArtCommon.gold(goldCost), 'dark'));
+                goldArt.addChild(ArtCommon.gold(goldCost));
+                gold.appendChild(ArtCommon.domElementForArt(goldArt, 1, 10));
                 gold.style.transform = 'scale(0.2)';
                 gold.style.position = 'absolute';
                 gold.style.left = `${currentX}px`;
                 gold.style.top = `${currentY}px`;
-                currentX += 20;
+                currentX += 22;
             }
 
             let chain = this.card.apiCard.cost.chain;
             if (chain) {
                 let cardsProducingChain = API.getCardsProducingChain(Main.gamestate, chain);
                 let cardNames = cardsProducingChain.map(card => this.cardName(card)).join(', ');
-                box.appendChild(this.infoText(`(free chain from ${cardNames})`, `${currentX}px`, `${currentY}px`));
+                let chainText = this.infoText(`(or free chain from ${cardNames})`, `${currentX-4}px`, `${currentY}px`);
+                chainText.style.fontSize = '10px';
+                box.appendChild(chainText);
             }
         }
         currentY += 24;

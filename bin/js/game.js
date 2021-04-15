@@ -594,17 +594,23 @@ var ArtCommon;
         return combineEffectArt(effectArts, 8);
     }
     ArtCommon.getArtForEffects = getArtForEffects;
-    function getShadowForEffects(effects, type, dx, dy) {
+    function getShadowForArt(artFactory, type, dx, dy) {
         if (dx === void 0) { dx = 5; }
         if (dy === void 0) { dy = 5; }
         var container = new PIXI.Container();
-        var shadow = ArtCommon.getArtForEffects(effects);
+        var shadow = artFactory();
         var silhouetteFilter = new PIXI.filters.ColorMatrixFilter();
         silhouetteFilter.brightness(type === 'dark' ? 0 : 10, false);
         shadow.filters = [silhouetteFilter, new PIXI.filters.BlurFilter(16 * resolution, 100)];
         shadow.position.set(dx, dy);
         container.addChild(shadow);
         return container;
+    }
+    ArtCommon.getShadowForArt = getShadowForArt;
+    function getShadowForEffects(effects, type, dx, dy) {
+        if (dx === void 0) { dx = 5; }
+        if (dy === void 0) { dy = 5; }
+        return getShadowForArt(function () { return ArtCommon.getArtForEffects(effects); }, type, dx, dy);
     }
     ArtCommon.getShadowForEffects = getShadowForEffects;
     function getArtForCost(cost) {
@@ -1871,29 +1877,40 @@ var CardInfoPopup = /** @class */ (function (_super) {
         box.appendChild(this.infoText("Cost:" + (isFree ? ' None' : ''), '10px', currentY + "px"));
         if (this.card.apiCard.cost) {
             var currentX = 60;
-            for (var i = 0; i < resourceCost.length; i++) {
+            var _loop_1 = function (i) {
                 var resource = box.appendChild(document.createElement('div'));
-                resource.appendChild(ArtCommon.domElementForArt(ArtCommon.resource(resourceCost[i])));
+                var resourceArt = new PIXI.Container();
+                resourceArt.addChild(ArtCommon.getShadowForArt(function () { return ArtCommon.resource(resourceCost[i]); }, 'dark'));
+                resourceArt.addChild(ArtCommon.resource(resourceCost[i]));
+                resource.appendChild(ArtCommon.domElementForArt(resourceArt, 1, 10));
                 resource.style.transform = 'scale(0.2)';
                 resource.style.position = 'absolute';
                 resource.style.left = currentX + "px";
                 resource.style.top = currentY + "px";
-                currentX += 20;
+                currentX += 22;
+            };
+            for (var i = 0; i < resourceCost.length; i++) {
+                _loop_1(i);
             }
             if (goldCost > 0) {
                 var gold = box.appendChild(document.createElement('div'));
-                gold.appendChild(ArtCommon.domElementForArt(ArtCommon.gold(goldCost)));
+                var goldArt = new PIXI.Container();
+                goldArt.addChild(ArtCommon.getShadowForArt(function () { return ArtCommon.gold(goldCost); }, 'dark'));
+                goldArt.addChild(ArtCommon.gold(goldCost));
+                gold.appendChild(ArtCommon.domElementForArt(goldArt, 1, 10));
                 gold.style.transform = 'scale(0.2)';
                 gold.style.position = 'absolute';
                 gold.style.left = currentX + "px";
                 gold.style.top = currentY + "px";
-                currentX += 20;
+                currentX += 22;
             }
             var chain = this.card.apiCard.cost.chain;
             if (chain) {
                 var cardsProducingChain = API.getCardsProducingChain(Main.gamestate, chain);
                 var cardNames = cardsProducingChain.map(function (card) { return _this.cardName(card); }).join(', ');
-                box.appendChild(this.infoText("(free chain from " + cardNames + ")", currentX + "px", currentY + "px"));
+                var chainText = this.infoText("(or free chain from " + cardNames + ")", currentX - 4 + "px", currentY + "px");
+                chainText.style.fontSize = '10px';
+                box.appendChild(chainText);
             }
         }
         currentY += 24;
@@ -2357,7 +2374,7 @@ var GameStateDiffer;
             return;
         }
         result.scripts.push(function () {
-            var moveScripts, handPosition_1, targetHandPosition_1, discardHandPosition_1, targetDiscardHandPosition_1, lerpt_1, isEndOfAge, currentHandPositions_1, targetHandPosition_2, discardScripts, _loop_1, i, handPosition_2, targetHandPosition_3, discardHandPosition_2, discardTargetPosition_1, lerpt_2, p_1, l_1, r_1, pshields, lshields, rshields, militaryTokenDistributionScripts, hands_1, entryPoint, i_1, startPosition_1, endPosition_1, lerpt_3, i_2, _loop_2, count, currentHandPositions_2, targetHandPositions_1, newHandi_1, lerpt_4;
+            var moveScripts, handPosition_1, targetHandPosition_1, discardHandPosition_1, targetDiscardHandPosition_1, lerpt_1, isEndOfAge, currentHandPositions_1, targetHandPosition_2, discardScripts, _loop_2, i, handPosition_2, targetHandPosition_3, discardHandPosition_2, discardTargetPosition_1, lerpt_2, p_1, l_1, r_1, pshields, lshields, rshields, militaryTokenDistributionScripts, hands_1, entryPoint, i_1, startPosition_1, endPosition_1, lerpt_3, i_2, _loop_3, count, currentHandPositions_2, targetHandPositions_1, newHandi_1, lerpt_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -2531,7 +2548,7 @@ var GameStateDiffer;
                         targetHandPosition_2 = Main.scene.discardPile.getDiscardLockPoint();
                         Main.scene.hands.forEach(function (hand) { return hand.setZIndex(C.Z_INDEX_CARD_MOVING); });
                         discardScripts = [];
-                        _loop_1 = function (i) {
+                        _loop_2 = function (i) {
                             if (!contains(gamestate.lastCardPlayers, gamestate.players[i])) {
                                 discardScripts.push(function () {
                                     var lerpt;
@@ -2557,7 +2574,7 @@ var GameStateDiffer;
                             }
                         };
                         for (i = 0; i < Main.scene.hands.length; i++) {
-                            _loop_1(i);
+                            _loop_2(i);
                         }
                         return [5 /*yield**/, __values(S.simul.apply(S, __spread(discardScripts))())];
                     case 6:
@@ -2727,7 +2744,7 @@ var GameStateDiffer;
                     case 24:
                         _a.sent();
                         i_2 = l_1;
-                        _loop_2 = function (count) {
+                        _loop_3 = function (count) {
                             var startPosition_2, endPosition_2, lerpt_5;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
@@ -2754,7 +2771,7 @@ var GameStateDiffer;
                         _a.label = 25;
                     case 25:
                         if (!(count < gamestate.players.length - 1)) return [3 /*break*/, 28];
-                        return [5 /*yield**/, _loop_2(count)];
+                        return [5 /*yield**/, _loop_3(count)];
                     case 26:
                         _a.sent();
                         _a.label = 27;
@@ -3610,7 +3627,7 @@ var Main = /** @class */ (function () {
         var _this = this;
         if (!this.isHost)
             return;
-        var _loop_3 = function (player) {
+        var _loop_4 = function (player) {
             if (player.startsWith('BOT') && !this_1.gamestate.playerData[player].currentMove) {
                 var botPlayer_1 = player;
                 var turn_1 = this_1.gamestate.turn;
@@ -3636,7 +3653,7 @@ var Main = /** @class */ (function () {
         try {
             for (var _b = __values(this.gamestate.players), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var player = _c.value;
-                _loop_3(player);
+                _loop_4(player);
             }
         }
         catch (e_26_1) { e_26 = { error: e_26_1 }; }
@@ -3769,7 +3786,7 @@ var PaymentDialog = /** @class */ (function (_super) {
         var dialogTitle = dialogDiv.appendChild(this.drawText(C.PAYMENT_DIALOG_TITLE, C.PAYMENT_DIALOG_TITLE_SIZE));
         dialogTitle.style.padding = C.PAYMENT_DIALOG_TITLE_PADDING + "px";
         var _a = __read(API.getNeighbors(Main.gamestate, Main.player), 2), negPlayer = _a[0], posPlayer = _a[1];
-        var _loop_4 = function (i) {
+        var _loop_5 = function (i) {
             var leftDiv = dialogDiv.appendChild(document.createElement('div'));
             leftDiv.style.width = 50 - C.PAYMENT_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 2 + "%";
             leftDiv.style.height = C.PAYMENT_DIALOG_PAYMENTS_DY + "px";
@@ -3824,7 +3841,7 @@ var PaymentDialog = /** @class */ (function (_super) {
         };
         var this_2 = this;
         for (var i = 0; i < validPayments.length; i++) {
-            _loop_4(i);
+            _loop_5(i);
         }
         var closeButton = dialogDiv.appendChild(this.drawCloseButton());
         closeButton.style.position = 'absolute';
@@ -4189,7 +4206,7 @@ var Scene = /** @class */ (function () {
             this.popup.zIndex = C.Z_INDEX_CARD_POPUP;
             this.popup.addToGame();
         }
-        this.popup.x = clamp(x, -window.innerWidth / 2, window.innerWidth / 2 - this.popup.width);
+        this.popup.x = clamp(x, -window.innerWidth / 2 + window.pageXOffset, window.innerWidth / 2 + window.pageXOffset - this.popup.width);
         this.popup.y = y;
     };
     Scene.prototype.stopPopup = function (source) {
@@ -4298,6 +4315,91 @@ var Shapes = /** @class */ (function () {
     return Shapes;
 }());
 /// <reference path="./popup.ts" />
+var StageInfoPopup = /** @class */ (function (_super) {
+    __extends(StageInfoPopup, _super);
+    function StageInfoPopup(stage) {
+        var _this = _super.call(this) || this;
+        _this.stage = stage;
+        _this.div.appendChild(_this.draw());
+        return _this;
+    }
+    StageInfoPopup.prototype.getSource = function () {
+        return this.stage;
+    };
+    StageInfoPopup.prototype.draw = function () {
+        var _a, _b;
+        var box = document.createElement('div');
+        box.style.backgroundColor = '#FFFFFF';
+        box.style.position = 'absolute';
+        var currentY = 16;
+        // Name
+        box.appendChild(this.infoText('<span style="font-weight:bold">Wonder Stage</span>', '10px', currentY + "px"));
+        currentY += 24;
+        // Cost
+        var resourceCost = ((_a = this.stage.cost) === null || _a === void 0 ? void 0 : _a.resources) || [];
+        var goldCost = ((_b = this.stage.cost) === null || _b === void 0 ? void 0 : _b.gold) || 0;
+        var isFree = resourceCost.length === 0 && goldCost === 0;
+        box.appendChild(this.infoText("Cost:" + (isFree ? ' None' : ''), '10px', currentY + "px"));
+        if (this.stage.cost) {
+            var currentX = 60;
+            var _loop_6 = function (i) {
+                var resource = box.appendChild(document.createElement('div'));
+                var resourceArt = new PIXI.Container();
+                resourceArt.addChild(ArtCommon.getShadowForArt(function () { return ArtCommon.resource(resourceCost[i]); }, 'dark'));
+                resourceArt.addChild(ArtCommon.resource(resourceCost[i]));
+                resource.appendChild(ArtCommon.domElementForArt(resourceArt, 1, 10));
+                resource.style.transform = 'scale(0.2)';
+                resource.style.position = 'absolute';
+                resource.style.left = currentX + "px";
+                resource.style.top = currentY + "px";
+                currentX += 22;
+            };
+            for (var i = 0; i < resourceCost.length; i++) {
+                _loop_6(i);
+            }
+            if (goldCost > 0) {
+                var gold = box.appendChild(document.createElement('div'));
+                var goldArt = new PIXI.Container();
+                goldArt.addChild(ArtCommon.getShadowForArt(function () { return ArtCommon.gold(goldCost); }, 'dark'));
+                goldArt.addChild(ArtCommon.gold(goldCost));
+                gold.appendChild(ArtCommon.domElementForArt(goldArt, 1, 10));
+                gold.style.transform = 'scale(0.2)';
+                gold.style.position = 'absolute';
+                gold.style.left = currentX + "px";
+                gold.style.top = currentY + "px";
+                currentX += 22;
+            }
+        }
+        currentY += 24;
+        // Effects
+        box.appendChild(this.infoText('Effects:', '10px', currentY + "px"));
+        currentY += 20;
+        var effects = this.stage.effects;
+        for (var i = 0; i < effects.length; i++) {
+            var effect = box.appendChild(document.createElement('div'));
+            var effectArt = new PIXI.Container();
+            effectArt.addChild(ArtCommon.getShadowForEffects([effects[0]], 'dark'));
+            effectArt.addChild(ArtCommon.getArtForEffects([effects[0]]));
+            effect.appendChild(ArtCommon.domElementForArt(effectArt, 1, 10));
+            effect.style.transform = 'scale(0.2)';
+            effect.style.position = 'absolute';
+            effect.style.left = 10 + effectArt.width / 10 + "px";
+            effect.style.top = currentY + "px";
+            var description = this.infoText(getDescriptionForEffect(effects[i]), 20 + effectArt.width / 5 + "px", currentY + "px");
+            description.style.fontSize = C.CARD_INFO_EFFECT_DESCRIPTION_SIZE + "px";
+            description.style.marginRight = '10px';
+            box.appendChild(description);
+            currentY += 20;
+        }
+        var padding = 10;
+        box.style.width = this.width - padding + "px";
+        box.style.height = currentY + "px";
+        box.style.paddingRight = padding + "px";
+        return box;
+    };
+    return StageInfoPopup;
+}(Popup));
+/// <reference path="./popup.ts" />
 var StartingEffectsInfoPopup = /** @class */ (function (_super) {
     __extends(StartingEffectsInfoPopup, _super);
     function StartingEffectsInfoPopup(wonder) {
@@ -4344,82 +4446,6 @@ var StartingEffectsInfoPopup = /** @class */ (function (_super) {
         return box;
     };
     return StartingEffectsInfoPopup;
-}(Popup));
-/// <reference path="./popup.ts" />
-var StageInfoPopup = /** @class */ (function (_super) {
-    __extends(StageInfoPopup, _super);
-    function StageInfoPopup(stage) {
-        var _this = _super.call(this) || this;
-        _this.stage = stage;
-        _this.div.appendChild(_this.draw());
-        return _this;
-    }
-    StageInfoPopup.prototype.getSource = function () {
-        return this.stage;
-    };
-    StageInfoPopup.prototype.draw = function () {
-        var _a, _b;
-        var box = document.createElement('div');
-        box.style.backgroundColor = '#FFFFFF';
-        box.style.position = 'absolute';
-        var currentY = 16;
-        // Name
-        box.appendChild(this.infoText('<span style="font-weight:bold">Wonder Stage</span>', '10px', currentY + "px"));
-        currentY += 24;
-        // Cost
-        var resourceCost = ((_a = this.stage.cost) === null || _a === void 0 ? void 0 : _a.resources) || [];
-        var goldCost = ((_b = this.stage.cost) === null || _b === void 0 ? void 0 : _b.gold) || 0;
-        var isFree = resourceCost.length === 0 && goldCost === 0;
-        box.appendChild(this.infoText("Cost:" + (isFree ? ' None' : ''), '10px', currentY + "px"));
-        if (this.stage.cost) {
-            var currentX = 60;
-            for (var i = 0; i < resourceCost.length; i++) {
-                var resource = box.appendChild(document.createElement('div'));
-                resource.appendChild(ArtCommon.domElementForArt(ArtCommon.resource(resourceCost[i])));
-                resource.style.transform = 'scale(0.2)';
-                resource.style.position = 'absolute';
-                resource.style.left = currentX + "px";
-                resource.style.top = currentY + "px";
-                currentX += 20;
-            }
-            if (goldCost > 0) {
-                var gold = box.appendChild(document.createElement('div'));
-                gold.appendChild(ArtCommon.domElementForArt(ArtCommon.gold(goldCost)));
-                gold.style.transform = 'scale(0.2)';
-                gold.style.position = 'absolute';
-                gold.style.left = currentX + "px";
-                gold.style.top = currentY + "px";
-                currentX += 20;
-            }
-        }
-        currentY += 24;
-        // Effects
-        box.appendChild(this.infoText('Effects:', '10px', currentY + "px"));
-        currentY += 20;
-        var effects = this.stage.effects;
-        for (var i = 0; i < effects.length; i++) {
-            var effect = box.appendChild(document.createElement('div'));
-            var effectArt = new PIXI.Container();
-            effectArt.addChild(ArtCommon.getShadowForEffects([effects[0]], 'dark'));
-            effectArt.addChild(ArtCommon.getArtForEffects([effects[0]]));
-            effect.appendChild(ArtCommon.domElementForArt(effectArt, 1, 10));
-            effect.style.transform = 'scale(0.2)';
-            effect.style.position = 'absolute';
-            effect.style.left = 10 + effectArt.width / 10 + "px";
-            effect.style.top = currentY + "px";
-            var description = this.infoText(getDescriptionForEffect(effects[i]), 20 + effectArt.width / 5 + "px", currentY + "px");
-            description.style.fontSize = C.CARD_INFO_EFFECT_DESCRIPTION_SIZE + "px";
-            description.style.marginRight = '10px';
-            box.appendChild(description);
-            currentY += 20;
-        }
-        var padding = 10;
-        box.style.width = this.width - padding + "px";
-        box.style.height = currentY + "px";
-        box.style.paddingRight = padding + "px";
-        return box;
-    };
-    return StageInfoPopup;
 }(Popup));
 function clamp(n, min, max) {
     if (n < min)
@@ -4594,7 +4620,7 @@ var Wonder = /** @class */ (function (_super) {
         popupDiv.onmouseleave = function () {
             Main.scene.stopPopup(wonder);
         };
-        var _loop_5 = function (i) {
+        var _loop_7 = function (i) {
             var stageX = this_3.wonderResource.stageXs[i];
             var wonderStage = wonder.stages[i];
             var popupDiv_1 = this_3.div.appendChild(document.createElement('div'));
@@ -4617,7 +4643,7 @@ var Wonder = /** @class */ (function (_super) {
         var this_3 = this;
         // Stage popups
         for (var i = 0; i < wonder.stages.length; i++) {
-            _loop_5(i);
+            _loop_7(i);
         }
         this.zIndex = C.Z_INDEX_WONDER;
     };
