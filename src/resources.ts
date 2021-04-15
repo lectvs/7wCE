@@ -7,6 +7,7 @@ type CardResource = {
 
 type WonderResource = {
     board: HTMLCanvasElement;
+    startingEffectsRect: PIXI.Rectangle;
     stageXs: number[];
 }
 
@@ -56,6 +57,7 @@ class Resources {
         if (cache.length === 1) {
             return {
                 board: cloneCanvas(cache[0].board),
+                startingEffectsRect: cache[0].startingEffectsRect.clone(),
                 stageXs: cloneArray(cache[0].stageXs),
             };
         }

@@ -9,6 +9,7 @@ class MilitaryOverlay extends GameElement {
         super();
 
         this.div.appendChild(this.draw());
+        this.div.className = 'wonderoverlay';
         this.setShieldDiff(0);
         this.setShields(0);
         this.zIndex = C.Z_INDEX_MILITARY_OVERLAY;

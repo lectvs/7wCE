@@ -366,6 +366,26 @@ var API;
         return undefined;
     }
     API.getScienceSymbol = getScienceSymbol;
+    function getCardsProducingChain(gamestate, chain) {
+        var cards = [];
+        for (var cardId in gamestate.cards) {
+            var card = gamestate.cards[cardId];
+            if (card.chains && contains(card.chains, chain))
+                cards.push(card);
+        }
+        return cards;
+    }
+    API.getCardsProducingChain = getCardsProducingChain;
+    function getCardsConsumingChain(gamestate, chain) {
+        var cards = [];
+        for (var cardId in gamestate.cards) {
+            var card = gamestate.cards[cardId];
+            if (card.cost && card.cost.chain === chain)
+                cards.push(card);
+        }
+        return cards;
+    }
+    API.getCardsConsumingChain = getCardsConsumingChain;
     /* API METHODS */
     function getgamestate(gameid, player, callback) {
         httpRequest(LAMBDA_URL + "?operation=getgamestate&gameid=" + gameid + "&player=" + player, function (responseJson, error) {
@@ -456,12 +476,13 @@ var ArtCommon;
     ArtCommon.goldColorHtml = '#FBE317';
     ArtCommon.discardPileColor = 0x888888;
     ArtCommon.resourceOuterColor = 0xD89846;
-    function domElementForArt(art, scale) {
+    function domElementForArt(art, scale, padding) {
         if (scale === void 0) { scale = 1; }
+        if (padding === void 0) { padding = 0; }
         art.scale.set(art.scale.x * scale, art.scale.y * scale);
         var bounds = art.getBounds();
-        art.position.set(art.x - bounds.left, art.y - bounds.top);
-        return render(art, bounds.width, bounds.height);
+        art.position.set(art.x - bounds.left + padding, art.y - bounds.top + padding);
+        return render(art, bounds.width + 2 * padding, bounds.height + 2 * padding);
     }
     ArtCommon.domElementForArt = domElementForArt;
     function cardBannerForColor(color) {
@@ -1380,6 +1401,18 @@ var Card = /** @class */ (function (_super) {
                 offsety: _this.y - Main.mouseY
             };
         };
+        // Popup
+        _this.frontDiv.onmousemove = function () {
+            if (_this.visualState === 'flipped' || _this.state.type.startsWith('dragging')) {
+                Main.scene.stopPopup(_this);
+                return;
+            }
+            var bounds = _this.bounds;
+            Main.scene.updatePopup(_this, _this.x + bounds.left, _this.y + bounds.bottom);
+        };
+        _this.frontDiv.onmouseleave = function () {
+            Main.scene.stopPopup(_this);
+        };
         return _this;
     }
     Object.defineProperty(Card.prototype, "width", {
@@ -1417,13 +1450,21 @@ var Card = /** @class */ (function (_super) {
         get: function () { return this._effectT; },
         set: function (value) {
             this._effectT = value;
+            var bounds = this.bounds;
+            this.frontDiv.style.clipPath = "polygon(" + bounds.left + "px " + bounds.top + "px, " + bounds.right + "px " + bounds.top + "px, " + bounds.right + "px " + bounds.bottom + "px, " + bounds.left + "px " + bounds.bottom + "px)";
+            this._width = bounds.right - bounds.left;
+            this._height = bounds.bottom - bounds.top;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Card.prototype, "bounds", {
+        get: function () {
             var left = lerp(this.fullClipRect.left, this.effectClipRect.left, this._effectT) - C.CARD_WIDTH / 2;
             var right = lerp(this.fullClipRect.right, this.effectClipRect.right, this._effectT) - C.CARD_WIDTH / 2;
             var top = lerp(this.fullClipRect.top, this.effectClipRect.top, this._effectT) - C.CARD_TITLE_HEIGHT - C.CARD_BANNER_HEIGHT / 2;
             var bottom = lerp(this.fullClipRect.bottom, this.effectClipRect.bottom, this._effectT) - C.CARD_TITLE_HEIGHT - C.CARD_BANNER_HEIGHT / 2;
-            this.frontDiv.style.clipPath = "polygon(" + left + "px " + top + "px, " + right + "px " + top + "px, " + right + "px " + bottom + "px, " + left + "px " + bottom + "px)";
-            this._width = right - left;
-            this._height = bottom - top;
+            return new PIXI.Rectangle(left, top, right - left, bottom - top);
         },
         enumerable: false,
         configurable: true
@@ -1749,6 +1790,173 @@ var Card = /** @class */ (function (_super) {
     };
     return Card;
 }(GameElement));
+var Popup = /** @class */ (function (_super) {
+    __extends(Popup, _super);
+    function Popup() {
+        var _this = _super.call(this) || this;
+        _this.width = 400;
+        _this.div.className = 'popup';
+        return _this;
+    }
+    Popup.prototype.addToGame = function () {
+        var _this = this;
+        this.alpha = 0;
+        _super.prototype.addToGame.call(this);
+        this.currentScript = Main.scriptManager.runScript(S.chain(S.wait(0.5), S.doOverTime(0.1, function (t) {
+            _this.alpha = t;
+        })));
+    };
+    Popup.prototype.removeFromGame = function () {
+        var _this = this;
+        if (this.currentScript)
+            this.currentScript.stop();
+        var startAlpha = this.alpha;
+        this.currentScript = Main.scriptManager.runScript(S.chain(S.doOverTime(0.1, function (t) {
+            _this.alpha = (1 - t) * startAlpha;
+        }), S.call(function () {
+            _super.prototype.removeFromGame.call(_this);
+            if (Main.scene.popup && Main.scene.popup.getSource() === _this.getSource()) {
+                Main.scene.popup = null;
+            }
+        })));
+    };
+    Popup.prototype.getSource = function () {
+        return undefined;
+    };
+    Popup.prototype.infoText = function (text, xs, ys) {
+        var p = document.createElement('p');
+        p.innerHTML = text;
+        p.style.fontFamily = "'Courier New', Courier, monospace";
+        p.style.fontSize = C.CARD_INFO_TEXT_SIZE + "px";
+        p.style.color = C.CARD_INFO_TEXT_COLOR;
+        p.style.transform = 'translate(0%, -50%)';
+        p.style.position = 'absolute';
+        p.style.left = xs;
+        p.style.top = ys;
+        return p;
+    };
+    Popup.prototype.cardName = function (card) {
+        return "<span style=\"color:" + ArtCommon.cardBannerForColorHtml(card.color) + "; font-weight:bold\">" + card.name + "</span>";
+    };
+    return Popup;
+}(GameElement));
+/// <reference path="./popup.ts" />
+var CardInfoPopup = /** @class */ (function (_super) {
+    __extends(CardInfoPopup, _super);
+    function CardInfoPopup(card) {
+        var _this = _super.call(this) || this;
+        _this.card = card;
+        _this.div.appendChild(_this.draw());
+        _this.div.className = 'popup';
+        return _this;
+    }
+    CardInfoPopup.prototype.getSource = function () {
+        return this.card;
+    };
+    CardInfoPopup.prototype.draw = function () {
+        var e_13, _a, e_14, _b;
+        var _this = this;
+        var _c, _d;
+        var box = document.createElement('div');
+        box.style.backgroundColor = '#FFFFFF';
+        box.style.position = 'absolute';
+        var currentY = 16;
+        // Name
+        box.appendChild(this.infoText(this.cardName(this.card.apiCard), '10px', currentY + "px"));
+        currentY += 24;
+        // Cost
+        var resourceCost = ((_c = this.card.apiCard.cost) === null || _c === void 0 ? void 0 : _c.resources) || [];
+        var goldCost = ((_d = this.card.apiCard.cost) === null || _d === void 0 ? void 0 : _d.gold) || 0;
+        var isFree = resourceCost.length === 0 && goldCost === 0;
+        box.appendChild(this.infoText("Cost:" + (isFree ? ' None' : ''), '10px', currentY + "px"));
+        if (this.card.apiCard.cost) {
+            var currentX = 60;
+            for (var i = 0; i < resourceCost.length; i++) {
+                var resource = box.appendChild(document.createElement('div'));
+                resource.appendChild(ArtCommon.domElementForArt(ArtCommon.resource(resourceCost[i])));
+                resource.style.transform = 'scale(0.2)';
+                resource.style.position = 'absolute';
+                resource.style.left = currentX + "px";
+                resource.style.top = currentY + "px";
+                currentX += 20;
+            }
+            if (goldCost > 0) {
+                var gold = box.appendChild(document.createElement('div'));
+                gold.appendChild(ArtCommon.domElementForArt(ArtCommon.gold(goldCost)));
+                gold.style.transform = 'scale(0.2)';
+                gold.style.position = 'absolute';
+                gold.style.left = currentX + "px";
+                gold.style.top = currentY + "px";
+                currentX += 20;
+            }
+            var chain = this.card.apiCard.cost.chain;
+            if (chain) {
+                var cardsProducingChain = API.getCardsProducingChain(Main.gamestate, chain);
+                var cardNames = cardsProducingChain.map(function (card) { return _this.cardName(card); }).join(', ');
+                box.appendChild(this.infoText("(free chain from " + cardNames + ")", currentX + "px", currentY + "px"));
+            }
+        }
+        currentY += 24;
+        // Effects
+        box.appendChild(this.infoText('Effects:', '10px', currentY + "px"));
+        currentY += 24;
+        var effects = this.card.apiCard.effects;
+        for (var i = 0; i < effects.length; i++) {
+            var effect = box.appendChild(document.createElement('div'));
+            var effectArt = new PIXI.Container();
+            effectArt.addChild(ArtCommon.getShadowForEffects([effects[0]], 'dark'));
+            effectArt.addChild(ArtCommon.getArtForEffects([effects[0]]));
+            effect.appendChild(ArtCommon.domElementForArt(effectArt, 1, 10));
+            effect.style.transform = 'scale(0.2)';
+            effect.style.position = 'absolute';
+            effect.style.left = 10 + effectArt.width / 10 + "px";
+            effect.style.top = currentY + "px";
+            var description = this.infoText(getDescriptionForEffect(effects[i]), 20 + effectArt.width / 5 + "px", currentY + "px");
+            description.style.fontSize = C.CARD_INFO_EFFECT_DESCRIPTION_SIZE + "px";
+            description.style.marginRight = '10px';
+            box.appendChild(description);
+            currentY += 20;
+        }
+        // Chains
+        var chains = this.card.apiCard.chains;
+        if (chains && chains.length > 0) {
+            currentY += 16;
+            box.appendChild(this.infoText('Future chains:', '10px', currentY + "px"));
+            currentY += 16;
+            try {
+                for (var chains_1 = __values(chains), chains_1_1 = chains_1.next(); !chains_1_1.done; chains_1_1 = chains_1.next()) {
+                    var chain = chains_1_1.value;
+                    var cardsConsumingChain = API.getCardsConsumingChain(Main.gamestate, chain);
+                    try {
+                        for (var cardsConsumingChain_1 = (e_14 = void 0, __values(cardsConsumingChain)), cardsConsumingChain_1_1 = cardsConsumingChain_1.next(); !cardsConsumingChain_1_1.done; cardsConsumingChain_1_1 = cardsConsumingChain_1.next()) {
+                            var card = cardsConsumingChain_1_1.value;
+                            box.appendChild(this.infoText("- " + this.cardName(card), '18px', currentY + "px"));
+                            currentY += 16;
+                        }
+                    }
+                    catch (e_14_1) { e_14 = { error: e_14_1 }; }
+                    finally {
+                        try {
+                            if (cardsConsumingChain_1_1 && !cardsConsumingChain_1_1.done && (_b = cardsConsumingChain_1.return)) _b.call(cardsConsumingChain_1);
+                        }
+                        finally { if (e_14) throw e_14.error; }
+                    }
+                }
+            }
+            catch (e_13_1) { e_13 = { error: e_13_1 }; }
+            finally {
+                try {
+                    if (chains_1_1 && !chains_1_1.done && (_a = chains_1.return)) _a.call(chains_1);
+                }
+                finally { if (e_13) throw e_13.error; }
+            }
+        }
+        box.style.width = this.width + "px";
+        box.style.height = currentY + "px";
+        return box;
+    };
+    return CardInfoPopup;
+}(Popup));
 var C = /** @class */ (function () {
     function C() {
     }
@@ -1765,6 +1973,7 @@ var C = /** @class */ (function () {
     C.Z_INDEX_MILITARY_TOKEN = 102;
     C.Z_INDEX_GOLD_COIN = 102;
     C.Z_INDEX_PAYMENT_DIALOG = 1000;
+    C.Z_INDEX_CARD_POPUP = 1001;
     C.ANIMATION_TURN_REVEAL_TIME = 1;
     C.ANIMATION_TURN_PLAY_TIME = 1;
     C.ANIMATION_MILITARY_FADE_TIME = 0.5;
@@ -1875,6 +2084,9 @@ var C = /** @class */ (function () {
     C.WONDER_OVERLAY_SHIELD_SCALE = 0.75;
     C.WONDER_OVERLAY_TEXT_SIZE = 75;
     C.WONDER_OVERLAY_TEXT_COLOR = '#FF0000';
+    C.CARD_INFO_TEXT_COLOR = '#000000';
+    C.CARD_INFO_TEXT_SIZE = 12;
+    C.CARD_INFO_EFFECT_DESCRIPTION_SIZE = 10;
     C.TOKEN_SCALE = 0.15;
     C.GOLD_COIN_SCALE = 0.225;
     C.DISCARD_PILE_X = 0;
@@ -1953,6 +2165,73 @@ var DiscardPile = /** @class */ (function (_super) {
     };
     return DiscardPile;
 }(GameElement));
+function getDescriptionForEffect(effect) {
+    if (effect.type === 'resource') {
+        return "Gives " + effect.resource + " each turn";
+    }
+    else if (effect.type === 'multi_resource') {
+        return "Gives one of " + effect.resources + " each turn";
+    }
+    else if (effect.type === 'shield') {
+        return "Military shield";
+    }
+    else if (effect.type === 'science') {
+        return "Science symbol";
+    }
+    else if (effect.type === 'points') {
+        return effect.points + " VP";
+    }
+    else if (effect.type === 'gold') {
+        return effect.gold + " gold";
+    }
+    else if (effect.type === 'trading_post') {
+        return "Pay 1 gold instead of 2 for brown resources traded from your " + (effect.direction === 'neg' ? 'left' : 'right') + " neighbor";
+    }
+    else if (effect.type === 'marketplace') {
+        return "Pay 1 gold instead of 2 for grey resources traded from either neighbor";
+    }
+    else if (effect.type === 'gold_for_cards') {
+        return effect.gold_per_card + " gold for each " + effect.color + " card played by you or your neighbors";
+    }
+    else if (effect.type === 'gold_and_points_for_cards') {
+        return effect.gold_per_card + " gold and " + effect.points_per_card + " VP for each " + effect.color + " card played by you";
+    }
+    else if (effect.type === 'gold_and_points_for_stages') {
+        return effect.gold_per_stage + " gold and " + effect.points_per_stage + " VP for each wonder stage you have built";
+    }
+    else if (effect.type === 'points_for_cards') {
+        return effect.points_per_card + " VP for each " + effect.color + " card played by your neighbors";
+    }
+    else if (effect.type === 'points_for_stages') {
+        return effect.points_per_stage + " VP for each wonder stage you or your neighbors have built";
+    }
+    else if (effect.type === 'points_for_finished_wonder') {
+        return effect.points + " VP if you build all of your wonder stages";
+    }
+    else if (effect.type === 'points_for_self_cards') {
+        return effect.points_per_card + " VP for each " + effect.color + " card played by you";
+    }
+    else if (effect.type === 'multi_science') {
+        return "At the end of the game, becomes the science symbol which gives you the most points";
+    }
+    else if (effect.type === 'play_last_card') {
+        return "You may play your last card instead of discarding it at the end of each age";
+    }
+    else if (effect.type === 'build_from_discard') {
+        return "Play one card from the discard pile for free";
+    }
+    else if (effect.type === 'build_free_first_color') {
+        return "You may ignore the cost of any card, provided you have not already played one of the same color";
+    }
+    else if (effect.type === 'build_free_first_card') {
+        return "You may ignore the cost of any card in your first hand of each age";
+    }
+    else if (effect.type === 'build_free_last_card') {
+        return "You may ignore the cost of any card in your last hand of each age";
+    }
+    console.error('Effect type not found:', effect.type);
+    return "Description not found";
+}
 var EndScreen = /** @class */ (function () {
     function EndScreen() {
     }
@@ -2048,7 +2327,7 @@ var EndScreen = /** @class */ (function () {
 var GameStateDiffer;
 (function (GameStateDiffer) {
     function diffNonTurn(gamestate, midturn) {
-        var e_13, _a;
+        var e_15, _a;
         var result = {
             scripts: []
         };
@@ -2061,12 +2340,12 @@ var GameStateDiffer;
                     diffCurrentMove(gamestate, player, result);
             }
         }
-        catch (e_13_1) { e_13 = { error: e_13_1 }; }
+        catch (e_15_1) { e_15 = { error: e_15_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_13) throw e_13.error; }
+            finally { if (e_15) throw e_15.error; }
         }
         return result;
     }
@@ -2424,7 +2703,7 @@ var GameStateDiffer;
                         endPosition_1 = Main.scene.getHandPosition(p_1);
                         lerpt_3 = 0;
                         return [5 /*yield**/, __values(S.doOverTime(0.3, function (t) {
-                                var e_14, _a;
+                                var e_16, _a;
                                 lerpt_3 = lerp(lerpt_3, 1, Math.pow(t, 2));
                                 try {
                                     for (var hands_2 = __values(hands_1), hands_2_1 = hands_2.next(); !hands_2_1.done; hands_2_1 = hands_2.next()) {
@@ -2434,12 +2713,12 @@ var GameStateDiffer;
                                         hand.update();
                                     }
                                 }
-                                catch (e_14_1) { e_14 = { error: e_14_1 }; }
+                                catch (e_16_1) { e_16 = { error: e_16_1 }; }
                                 finally {
                                     try {
                                         if (hands_2_1 && !hands_2_1.done && (_a = hands_2.return)) _a.call(hands_2);
                                     }
-                                    finally { if (e_14) throw e_14.error; }
+                                    finally { if (e_16) throw e_16.error; }
                                 }
                             })())];
                     case 23:
@@ -2671,7 +2950,7 @@ var Hand = /** @class */ (function () {
     }
     Object.defineProperty(Hand.prototype, "selectedCard", {
         get: function () {
-            var e_15, _a;
+            var e_17, _a;
             try {
                 for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var card = _c.value;
@@ -2680,12 +2959,12 @@ var Hand = /** @class */ (function () {
                     }
                 }
             }
-            catch (e_15_1) { e_15 = { error: e_15_1 }; }
+            catch (e_17_1) { e_17 = { error: e_17_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_15) throw e_15.error; }
+                finally { if (e_17) throw e_17.error; }
             }
             return undefined;
         },
@@ -2753,7 +3032,7 @@ var Hand = /** @class */ (function () {
         this.update();
     };
     Hand.prototype.reflectMove = function (move) {
-        var e_16, _a, e_17, _b;
+        var e_18, _a, e_19, _b;
         if (!move || move.action === 'reject') {
             try {
                 for (var _c = __values(this.cards), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -2761,12 +3040,12 @@ var Hand = /** @class */ (function () {
                     card.deselect();
                 }
             }
-            catch (e_16_1) { e_16 = { error: e_16_1 }; }
+            catch (e_18_1) { e_18 = { error: e_18_1 }; }
             finally {
                 try {
                     if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                 }
-                finally { if (e_16) throw e_16.error; }
+                finally { if (e_18) throw e_18.error; }
             }
             return;
         }
@@ -2783,12 +3062,12 @@ var Hand = /** @class */ (function () {
                 }
             }
         }
-        catch (e_17_1) { e_17 = { error: e_17_1 }; }
+        catch (e_19_1) { e_19 = { error: e_19_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_17) throw e_17.error; }
+            finally { if (e_19) throw e_19.error; }
         }
         if (!moved)
             console.error('Move card not found in hand:', move);
@@ -2802,35 +3081,35 @@ var Hand = /** @class */ (function () {
             this.state.moved = false;
     };
     Hand.prototype.setZIndex = function (zIndex) {
-        var e_18, _a;
+        var e_20, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
                 card.zIndex = zIndex;
             }
         }
-        catch (e_18_1) { e_18 = { error: e_18_1 }; }
+        catch (e_20_1) { e_20 = { error: e_20_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_18) throw e_18.error; }
+            finally { if (e_20) throw e_20.error; }
         }
     };
     Hand.prototype.setAllCardState = function (state) {
-        var e_19, _a;
+        var e_21, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
                 card.state = state;
             }
         }
-        catch (e_19_1) { e_19 = { error: e_19_1 }; }
+        catch (e_21_1) { e_21 = { error: e_21_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_19) throw e_19.error; }
+            finally { if (e_21) throw e_21.error; }
         }
     };
     Hand.prototype.getPosition = function () {
@@ -2860,7 +3139,7 @@ var Loader = /** @class */ (function () {
     }
     Object.defineProperty(Loader.prototype, "isLoaded", {
         get: function () {
-            var e_20, _a;
+            var e_22, _a;
             try {
                 for (var _b = __values(this.resources), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var resource = _c.value;
@@ -2868,12 +3147,12 @@ var Loader = /** @class */ (function () {
                         return false;
                 }
             }
-            catch (e_20_1) { e_20 = { error: e_20_1 }; }
+            catch (e_22_1) { e_22 = { error: e_22_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_20) throw e_20.error; }
+                finally { if (e_22) throw e_22.error; }
             }
             return this.resources.length > 0;
         },
@@ -2882,7 +3161,7 @@ var Loader = /** @class */ (function () {
     });
     Object.defineProperty(Loader.prototype, "loadPercentage", {
         get: function () {
-            var e_21, _a;
+            var e_23, _a;
             if (this.resources.length === 0)
                 return 0;
             var loaded = 0;
@@ -2893,12 +3172,12 @@ var Loader = /** @class */ (function () {
                         loaded++;
                 }
             }
-            catch (e_21_1) { e_21 = { error: e_21_1 }; }
+            catch (e_23_1) { e_23 = { error: e_23_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_21) throw e_21.error; }
+                finally { if (e_23) throw e_23.error; }
             }
             return Math.round(loaded / this.resources.length * 100);
         },
@@ -2906,7 +3185,7 @@ var Loader = /** @class */ (function () {
         configurable: true
     });
     Loader.prototype.update = function () {
-        var e_22, _a;
+        var e_24, _a;
         if (this.complete)
             return;
         var loaded = this.resources.length > 0;
@@ -2920,12 +3199,12 @@ var Loader = /** @class */ (function () {
                 }
             }
         }
-        catch (e_22_1) { e_22 = { error: e_22_1 }; }
+        catch (e_24_1) { e_24 = { error: e_24_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_22) throw e_22.error; }
+            finally { if (e_24) throw e_24.error; }
         }
         if (loaded) {
             this.onFinishedLoading();
@@ -2933,7 +3212,7 @@ var Loader = /** @class */ (function () {
         }
     };
     Loader.prototype.loadGamestateResources = function () {
-        var e_23, _a;
+        var e_25, _a;
         // Cards
         for (var cardId in Main.gamestate.cards) {
             var card = Main.gamestate.cards[cardId];
@@ -2950,12 +3229,12 @@ var Loader = /** @class */ (function () {
                 this.loadWonder(player);
             }
         }
-        catch (e_23_1) { e_23 = { error: e_23_1 }; }
+        catch (e_25_1) { e_25 = { error: e_25_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_23) throw e_23.error; }
+            finally { if (e_25) throw e_25.error; }
         }
         // Other
         this.loadDiscardPile();
@@ -3032,7 +3311,8 @@ var Loader = /** @class */ (function () {
             var startingEffectsBounds = startingEffectContainer.getBounds();
             startingEffectContainer.position.set(C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.left - startingEffectContainer.x), C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.top - startingEffectContainer.y));
             startingEffectsBounds = startingEffectContainer.getBounds();
-            var startingEffectBanner = Shapes.filledRect(startingEffectsBounds.left - C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.top - C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.width + 2 * C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.height + 2 * C.WONDER_STARTING_EFFECTS_PADDING, ArtCommon.cardBannerForColor(wonder.starting_effect_color));
+            var startingEffectsPaddedBounds = new PIXI.Rectangle(startingEffectsBounds.left - C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.top - C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.width + 2 * C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.height + 2 * C.WONDER_STARTING_EFFECTS_PADDING);
+            var startingEffectBanner = Shapes.filledRect(startingEffectsPaddedBounds.x, startingEffectsPaddedBounds.y, startingEffectsPaddedBounds.width, startingEffectsPaddedBounds.height, ArtCommon.cardBannerForColor(wonder.starting_effect_color));
             startingEffectBanner.mask = boardBgMask;
             wonderBoard.addChild(startingEffectBanner);
             wonderBoard.addChild(startingEffectContainer);
@@ -3071,6 +3351,7 @@ var Loader = /** @class */ (function () {
             }
             Resources.WONDER_CACHE[player] = [{
                     board: render(wonderBoard, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT),
+                    startingEffectsRect: startingEffectsPaddedBounds,
                     stageXs: stageXs,
                 }];
             resource.loaded = true;
@@ -3325,7 +3606,7 @@ var Main = /** @class */ (function () {
         }
     };
     Main.updateBotMoves = function () {
-        var e_24, _a;
+        var e_26, _a;
         var _this = this;
         if (!this.isHost)
             return;
@@ -3358,12 +3639,12 @@ var Main = /** @class */ (function () {
                 _loop_3(player);
             }
         }
-        catch (e_24_1) { e_24 = { error: e_24_1 }; }
+        catch (e_26_1) { e_26 = { error: e_26_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_24) throw e_24.error; }
+            finally { if (e_26) throw e_26.error; }
         }
     };
     Main.stop = function () {
@@ -3401,6 +3682,7 @@ var MilitaryOverlay = /** @class */ (function (_super) {
     function MilitaryOverlay() {
         var _this = _super.call(this) || this;
         _this.div.appendChild(_this.draw());
+        _this.div.className = 'wonderoverlay';
         _this.setShieldDiff(0);
         _this.setShields(0);
         _this.zIndex = C.Z_INDEX_MILITARY_OVERLAY;
@@ -3598,19 +3880,19 @@ var PlayedCardEffectRoll = /** @class */ (function () {
         configurable: true
     });
     PlayedCardEffectRoll.prototype.destroy = function () {
-        var e_25, _a;
+        var e_27, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
                 card.destroy();
             }
         }
-        catch (e_25_1) { e_25 = { error: e_25_1 }; }
+        catch (e_27_1) { e_27 = { error: e_27_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_25) throw e_25.error; }
+            finally { if (e_27) throw e_27.error; }
         }
     };
     PlayedCardEffectRoll.prototype.update = function () {
@@ -3722,6 +4004,7 @@ var Resources = /** @class */ (function () {
         if (cache.length === 1) {
             return {
                 board: cloneCanvas(cache[0].board),
+                startingEffectsRect: cache[0].startingEffectsRect.clone(),
                 stageXs: cloneArray(cache[0].stageXs),
             };
         }
@@ -3761,19 +4044,19 @@ var Scene = /** @class */ (function () {
         configurable: true
     });
     Scene.prototype.update = function () {
-        var e_26, _a;
+        var e_28, _a;
         try {
             for (var _b = __values(this.hands), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var hand = _c.value;
                 hand.update();
             }
         }
-        catch (e_26_1) { e_26 = { error: e_26_1 }; }
+        catch (e_28_1) { e_28 = { error: e_28_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_26) throw e_26.error; }
+            finally { if (e_28) throw e_28.error; }
         }
         this.actionButton.setType(this.isMyTurnToBuildFromDiscard() ? 'reject_discard' : 'undo');
         for (var i = 0; i < this.wonders.length; i++) {
@@ -3857,19 +4140,19 @@ var Scene = /** @class */ (function () {
         this.update();
     };
     Scene.prototype.destroy = function () {
-        var e_27, _a, e_28, _b;
+        var e_29, _a, e_30, _b;
         try {
             for (var _c = __values(this.hands), _d = _c.next(); !_d.done; _d = _c.next()) {
                 var hand = _d.value;
                 hand.destroy();
             }
         }
-        catch (e_27_1) { e_27 = { error: e_27_1 }; }
+        catch (e_29_1) { e_29 = { error: e_29_1 }; }
         finally {
             try {
                 if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
             }
-            finally { if (e_27) throw e_27.error; }
+            finally { if (e_29) throw e_29.error; }
         }
         try {
             for (var _e = __values(this.wonders), _f = _e.next(); !_f.done; _f = _e.next()) {
@@ -3877,12 +4160,12 @@ var Scene = /** @class */ (function () {
                 wonder.destroy();
             }
         }
-        catch (e_28_1) { e_28 = { error: e_28_1 }; }
+        catch (e_30_1) { e_30 = { error: e_30_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_28) throw e_28.error; }
+            finally { if (e_30) throw e_30.error; }
         }
         while (Main.game.firstChild) {
             Main.game.removeChild(Main.game.firstChild);
@@ -3895,6 +4178,24 @@ var Scene = /** @class */ (function () {
         this.paymentDialog = new PaymentDialog(card, move, this.wonders[Main.gamestate.players.indexOf(Main.player)]);
         this.paymentDialog.zIndex = C.Z_INDEX_PAYMENT_DIALOG;
         this.paymentDialog.addToGame();
+    };
+    Scene.prototype.updatePopup = function (source, x, y) {
+        if (this.popup && this.popup.getSource() !== source) {
+            this.popup.removeFromGame();
+            this.popup = null;
+        }
+        if (!this.popup) {
+            this.popup = (source instanceof Card) ? new CardInfoPopup(source) : (('name' in source) ? new StartingEffectsInfoPopup(source) : new StageInfoPopup(source));
+            this.popup.zIndex = C.Z_INDEX_CARD_POPUP;
+            this.popup.addToGame();
+        }
+        this.popup.x = clamp(x, -window.innerWidth / 2, window.innerWidth / 2 - this.popup.width);
+        this.popup.y = y;
+    };
+    Scene.prototype.stopPopup = function (source) {
+        if (this.popup && this.popup.getSource() === source) {
+            this.popup.removeFromGame();
+        }
     };
     Scene.prototype.getSourceSinkPosition = function () {
         return new PIXI.Point(this.discardPile.x, this.discardPile.y);
@@ -3936,6 +4237,9 @@ var Scene = /** @class */ (function () {
         }
         console.log("Wonder position index " + index + " is out of bounds");
         return undefined;
+    };
+    Scene.prototype.isCurrentlyDragging = function () {
+        return this.hand && this.hand.cards.some(function (card) { return card.state.type.startsWith('dragging'); });
     };
     Scene.prototype.isMyTurnToBuildFromDiscard = function () {
         return Main.gamestate.state === 'DISCARD_MOVE' && Main.gamestate.discardMoveQueue[0] === Main.player;
@@ -3993,6 +4297,130 @@ var Shapes = /** @class */ (function () {
     };
     return Shapes;
 }());
+/// <reference path="./popup.ts" />
+var StartingEffectsInfoPopup = /** @class */ (function (_super) {
+    __extends(StartingEffectsInfoPopup, _super);
+    function StartingEffectsInfoPopup(wonder) {
+        var _this = _super.call(this) || this;
+        _this.wonder = wonder;
+        _this.div.appendChild(_this.draw());
+        return _this;
+    }
+    StartingEffectsInfoPopup.prototype.getSource = function () {
+        return this.wonder;
+    };
+    StartingEffectsInfoPopup.prototype.draw = function () {
+        var box = document.createElement('div');
+        box.style.backgroundColor = '#FFFFFF';
+        box.style.position = 'absolute';
+        var currentY = 16;
+        // Name
+        box.appendChild(this.infoText('<span style="font-weight:bold">Starting Effects</span>', '10px', currentY + "px"));
+        currentY += 24;
+        // Effects
+        box.appendChild(this.infoText('Effects:', '10px', currentY + "px"));
+        currentY += 20;
+        var effects = this.wonder.starting_effects;
+        for (var i = 0; i < effects.length; i++) {
+            var effect = box.appendChild(document.createElement('div'));
+            var effectArt = new PIXI.Container();
+            effectArt.addChild(ArtCommon.getShadowForEffects([effects[0]], 'dark'));
+            effectArt.addChild(ArtCommon.getArtForEffects([effects[0]]));
+            effect.appendChild(ArtCommon.domElementForArt(effectArt, 1, 10));
+            effect.style.transform = 'scale(0.2)';
+            effect.style.position = 'absolute';
+            effect.style.left = 10 + effectArt.width / 10 + "px";
+            effect.style.top = currentY + "px";
+            var description = this.infoText(getDescriptionForEffect(effects[i]), 20 + effectArt.width / 5 + "px", currentY + "px");
+            description.style.fontSize = C.CARD_INFO_EFFECT_DESCRIPTION_SIZE + "px";
+            description.style.marginRight = '10px';
+            box.appendChild(description);
+            currentY += 20;
+        }
+        var padding = 10;
+        box.style.width = this.width - padding + "px";
+        box.style.height = currentY + "px";
+        box.style.paddingRight = padding + "px";
+        return box;
+    };
+    return StartingEffectsInfoPopup;
+}(Popup));
+/// <reference path="./popup.ts" />
+var StageInfoPopup = /** @class */ (function (_super) {
+    __extends(StageInfoPopup, _super);
+    function StageInfoPopup(stage) {
+        var _this = _super.call(this) || this;
+        _this.stage = stage;
+        _this.div.appendChild(_this.draw());
+        return _this;
+    }
+    StageInfoPopup.prototype.getSource = function () {
+        return this.stage;
+    };
+    StageInfoPopup.prototype.draw = function () {
+        var _a, _b;
+        var box = document.createElement('div');
+        box.style.backgroundColor = '#FFFFFF';
+        box.style.position = 'absolute';
+        var currentY = 16;
+        // Name
+        box.appendChild(this.infoText('<span style="font-weight:bold">Wonder Stage</span>', '10px', currentY + "px"));
+        currentY += 24;
+        // Cost
+        var resourceCost = ((_a = this.stage.cost) === null || _a === void 0 ? void 0 : _a.resources) || [];
+        var goldCost = ((_b = this.stage.cost) === null || _b === void 0 ? void 0 : _b.gold) || 0;
+        var isFree = resourceCost.length === 0 && goldCost === 0;
+        box.appendChild(this.infoText("Cost:" + (isFree ? ' None' : ''), '10px', currentY + "px"));
+        if (this.stage.cost) {
+            var currentX = 60;
+            for (var i = 0; i < resourceCost.length; i++) {
+                var resource = box.appendChild(document.createElement('div'));
+                resource.appendChild(ArtCommon.domElementForArt(ArtCommon.resource(resourceCost[i])));
+                resource.style.transform = 'scale(0.2)';
+                resource.style.position = 'absolute';
+                resource.style.left = currentX + "px";
+                resource.style.top = currentY + "px";
+                currentX += 20;
+            }
+            if (goldCost > 0) {
+                var gold = box.appendChild(document.createElement('div'));
+                gold.appendChild(ArtCommon.domElementForArt(ArtCommon.gold(goldCost)));
+                gold.style.transform = 'scale(0.2)';
+                gold.style.position = 'absolute';
+                gold.style.left = currentX + "px";
+                gold.style.top = currentY + "px";
+                currentX += 20;
+            }
+        }
+        currentY += 24;
+        // Effects
+        box.appendChild(this.infoText('Effects:', '10px', currentY + "px"));
+        currentY += 20;
+        var effects = this.stage.effects;
+        for (var i = 0; i < effects.length; i++) {
+            var effect = box.appendChild(document.createElement('div'));
+            var effectArt = new PIXI.Container();
+            effectArt.addChild(ArtCommon.getShadowForEffects([effects[0]], 'dark'));
+            effectArt.addChild(ArtCommon.getArtForEffects([effects[0]]));
+            effect.appendChild(ArtCommon.domElementForArt(effectArt, 1, 10));
+            effect.style.transform = 'scale(0.2)';
+            effect.style.position = 'absolute';
+            effect.style.left = 10 + effectArt.width / 10 + "px";
+            effect.style.top = currentY + "px";
+            var description = this.infoText(getDescriptionForEffect(effects[i]), 20 + effectArt.width / 5 + "px", currentY + "px");
+            description.style.fontSize = C.CARD_INFO_EFFECT_DESCRIPTION_SIZE + "px";
+            description.style.marginRight = '10px';
+            box.appendChild(description);
+            currentY += 20;
+        }
+        var padding = 10;
+        box.style.width = this.width - padding + "px";
+        box.style.height = currentY + "px";
+        box.style.paddingRight = padding + "px";
+        return box;
+    };
+    return StageInfoPopup;
+}(Popup));
 function clamp(n, min, max) {
     if (n < min)
         return min;
@@ -4013,7 +4441,7 @@ function cloneCanvas(canvas) {
     return newCanvas;
 }
 function contains(array, element) {
-    var e_29, _a;
+    var e_31, _a;
     try {
         for (var array_1 = __values(array), array_1_1 = array_1.next(); !array_1_1.done; array_1_1 = array_1.next()) {
             var e = array_1_1.value;
@@ -4021,12 +4449,12 @@ function contains(array, element) {
                 return true;
         }
     }
-    catch (e_29_1) { e_29 = { error: e_29_1 }; }
+    catch (e_31_1) { e_31 = { error: e_31_1 }; }
     finally {
         try {
             if (array_1_1 && !array_1_1.done && (_a = array_1.return)) _a.call(array_1);
         }
-        finally { if (e_29) throw e_29.error; }
+        finally { if (e_31) throw e_31.error; }
     }
     return false;
 }
@@ -4062,7 +4490,7 @@ function range(start, end) {
     return result;
 }
 function sum(array, key) {
-    var e_30, _a;
+    var e_32, _a;
     if (!array || array.length === 0) {
         return 0;
     }
@@ -4073,12 +4501,12 @@ function sum(array, key) {
             result += key(e);
         }
     }
-    catch (e_30_1) { e_30 = { error: e_30_1 }; }
+    catch (e_32_1) { e_32 = { error: e_32_1 }; }
     finally {
         try {
             if (array_2_1 && !array_2_1.done && (_a = array_2.return)) _a.call(array_2);
         }
-        finally { if (e_30) throw e_30.error; }
+        finally { if (e_32) throw e_32.error; }
     }
     return result;
 }
@@ -4092,8 +4520,10 @@ var Wonder = /** @class */ (function (_super) {
         return _this;
     }
     Wonder.prototype.create = function () {
-        var e_31, _a, e_32, _b;
+        var e_33, _a, e_34, _b;
+        var _this = this;
         var playerData = Main.gamestate.playerData[this.player];
+        var wonder = Main.gamestate.wonders[this.player];
         this.wonderResource = Resources.getWonder(this.player);
         this.stageXs = this.wonderResource.stageXs;
         var boardDiv = this.div.appendChild(document.createElement('div'));
@@ -4122,12 +4552,12 @@ var Wonder = /** @class */ (function (_super) {
                 card.addToGame();
             }
         }
-        catch (e_31_1) { e_31 = { error: e_31_1 }; }
+        catch (e_33_1) { e_33 = { error: e_33_1 }; }
         finally {
             try {
                 if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
             }
-            finally { if (e_31) throw e_31.error; }
+            finally { if (e_33) throw e_33.error; }
         }
         this.builtWonderCards = [];
         try {
@@ -4140,17 +4570,59 @@ var Wonder = /** @class */ (function (_super) {
                 card.addToGame();
             }
         }
-        catch (e_32_1) { e_32 = { error: e_32_1 }; }
+        catch (e_34_1) { e_34 = { error: e_34_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_32) throw e_32.error; }
+            finally { if (e_34) throw e_34.error; }
+        }
+        // Starting effects popup
+        var popupDiv = this.div.appendChild(document.createElement('div'));
+        popupDiv.style.position = 'absolute';
+        popupDiv.style.left = -C.WONDER_BOARD_WIDTH / 2 + this.wonderResource.startingEffectsRect.left + "px";
+        popupDiv.style.top = -C.WONDER_BOARD_HEIGHT / 2 + this.wonderResource.startingEffectsRect.top + "px";
+        popupDiv.style.width = this.wonderResource.startingEffectsRect.width + "px";
+        popupDiv.style.height = this.wonderResource.startingEffectsRect.height + "px";
+        popupDiv.onmousemove = function () {
+            if (Main.scene.isCurrentlyDragging()) {
+                Main.scene.stopPopup(wonder);
+                return;
+            }
+            Main.scene.updatePopup(wonder, _this.x - C.WONDER_BOARD_WIDTH / 2 + _this.wonderResource.startingEffectsRect.left, _this.y - C.WONDER_BOARD_HEIGHT / 2 + _this.wonderResource.startingEffectsRect.top + _this.wonderResource.startingEffectsRect.height);
+        };
+        popupDiv.onmouseleave = function () {
+            Main.scene.stopPopup(wonder);
+        };
+        var _loop_5 = function (i) {
+            var stageX = this_3.wonderResource.stageXs[i];
+            var wonderStage = wonder.stages[i];
+            var popupDiv_1 = this_3.div.appendChild(document.createElement('div'));
+            popupDiv_1.style.position = 'absolute';
+            popupDiv_1.style.left = -C.WONDER_BOARD_WIDTH / 2 + stageX - C.WONDER_STAGE_WIDTH / 2 + "px";
+            popupDiv_1.style.top = C.WONDER_BOARD_HEIGHT / 2 - C.WONDER_STAGE_HEIGHT + "px";
+            popupDiv_1.style.width = C.WONDER_STAGE_WIDTH + "px";
+            popupDiv_1.style.height = C.WONDER_STAGE_HEIGHT + "px";
+            popupDiv_1.onmousemove = function () {
+                if (Main.scene.isCurrentlyDragging()) {
+                    Main.scene.stopPopup(wonderStage);
+                    return;
+                }
+                Main.scene.updatePopup(wonderStage, _this.x - C.WONDER_BOARD_WIDTH / 2 + stageX - C.WONDER_STAGE_WIDTH / 2, _this.y + C.WONDER_BOARD_HEIGHT / 2);
+            };
+            popupDiv_1.onmouseleave = function () {
+                Main.scene.stopPopup(wonderStage);
+            };
+        };
+        var this_3 = this;
+        // Stage popups
+        for (var i = 0; i < wonder.stages.length; i++) {
+            _loop_5(i);
         }
         this.zIndex = C.Z_INDEX_WONDER;
     };
     Wonder.prototype.destroy = function () {
-        var e_33, _a;
+        var e_35, _a;
         for (var color in this.playedCardEffectRolls) {
             this.playedCardEffectRolls[color].destroy();
         }
@@ -4160,12 +4632,12 @@ var Wonder = /** @class */ (function (_super) {
                 card.destroy();
             }
         }
-        catch (e_33_1) { e_33 = { error: e_33_1 }; }
+        catch (e_35_1) { e_35 = { error: e_35_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_33) throw e_33.error; }
+            finally { if (e_35) throw e_35.error; }
         }
         while (this.div.firstChild) {
             this.div.removeChild(this.div.firstChild);
@@ -4260,7 +4732,7 @@ var Wonder = /** @class */ (function (_super) {
         }[color];
     };
     Wonder.prototype.drawPayments = function () {
-        var e_34, _a;
+        var e_36, _a;
         var wonder = Main.gamestate.wonders[this.player];
         var playerData = Main.gamestate.playerData[this.player];
         var stageIdsBuilt = playerData.stagesBuilt.map(function (stageBuilt) { return stageBuilt.stage; });
@@ -4277,12 +4749,12 @@ var Wonder = /** @class */ (function (_super) {
                 }
             }
         }
-        catch (e_34_1) { e_34 = { error: e_34_1 }; }
+        catch (e_36_1) { e_36 = { error: e_36_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_34) throw e_34.error; }
+            finally { if (e_36) throw e_36.error; }
         }
         var payments = new PIXI.Container();
         for (var i = 0; i < wonder.stages.length; i++) {
@@ -4363,8 +4835,8 @@ var S;
             scriptFunctions[_i] = arguments[_i];
         }
         return function () {
-            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_35_1;
-            var e_35, _a;
+            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_37_1;
+            var e_37, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -4383,14 +4855,14 @@ var S;
                         return [3 /*break*/, 1];
                     case 4: return [3 /*break*/, 7];
                     case 5:
-                        e_35_1 = _b.sent();
-                        e_35 = { error: e_35_1 };
+                        e_37_1 = _b.sent();
+                        e_37 = { error: e_37_1 };
                         return [3 /*break*/, 7];
                     case 6:
                         try {
                             if (scriptFunctions_1_1 && !scriptFunctions_1_1.done && (_a = scriptFunctions_1.return)) _a.call(scriptFunctions_1);
                         }
-                        finally { if (e_35) throw e_35.error; }
+                        finally { if (e_37) throw e_37.error; }
                         return [7 /*endfinally*/];
                     case 7: return [2 /*return*/];
                 }

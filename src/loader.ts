@@ -174,8 +174,9 @@ class Loader {
                                          C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.top - startingEffectContainer.y));
     
             startingEffectsBounds = startingEffectContainer.getBounds();
-            let startingEffectBanner = Shapes.filledRect(startingEffectsBounds.left - C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.top - C.WONDER_STARTING_EFFECTS_PADDING,
-                                                         startingEffectsBounds.width + 2*C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.height + 2*C.WONDER_STARTING_EFFECTS_PADDING,
+            let startingEffectsPaddedBounds = new PIXI.Rectangle(startingEffectsBounds.left - C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.top - C.WONDER_STARTING_EFFECTS_PADDING,
+                                                                 startingEffectsBounds.width + 2*C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.height + 2*C.WONDER_STARTING_EFFECTS_PADDING);
+            let startingEffectBanner = Shapes.filledRect(startingEffectsPaddedBounds.x, startingEffectsPaddedBounds.y, startingEffectsPaddedBounds.width, startingEffectsPaddedBounds.height,
                                                          ArtCommon.cardBannerForColor(wonder.starting_effect_color));
             startingEffectBanner.mask = boardBgMask;
             wonderBoard.addChild(startingEffectBanner);
@@ -232,6 +233,7 @@ class Loader {
     
             Resources.WONDER_CACHE[player] = [{
                 board: render(wonderBoard, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT),
+                startingEffectsRect: startingEffectsPaddedBounds,
                 stageXs: stageXs,
             }];
             resource.loaded = true;

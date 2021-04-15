@@ -19,11 +19,11 @@ namespace ArtCommon {
     export const discardPileColor = 0x888888;
     export const resourceOuterColor = 0xD89846;
 
-    export function domElementForArt(art: PIXI.DisplayObject, scale: number = 1) {
+    export function domElementForArt(art: PIXI.DisplayObject, scale: number = 1, padding: number = 0) {
         art.scale.set(art.scale.x * scale, art.scale.y * scale);
         let bounds = art.getBounds();
-        art.position.set(art.x - bounds.left, art.y - bounds.top);
-        return render(art, bounds.width, bounds.height);
+        art.position.set(art.x - bounds.left + padding, art.y - bounds.top + padding);
+        return render(art, bounds.width + 2*padding, bounds.height + 2*padding);
     }
 
     export function cardBannerForColor(color: string) {

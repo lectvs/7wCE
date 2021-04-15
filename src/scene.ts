@@ -5,6 +5,7 @@ class Scene {
     discardPile: DiscardPile;
     discardHand: Hand;
     paymentDialog: PaymentDialog;
+    popup: Popup;
     actionButton: ActionButton;
 
     playedCards: Card[];
@@ -147,6 +148,26 @@ class Scene {
         this.paymentDialog.addToGame();
     }
 
+    updatePopup(source: Card | API.WonderStage | API.Wonder, x: number, y: number) {
+        if (this.popup && this.popup.getSource() !== source) {
+            this.popup.removeFromGame();
+            this.popup = null;
+        }
+        if (!this.popup) {
+            this.popup = (source instanceof Card) ? new CardInfoPopup(source) : (('name' in source) ? new StartingEffectsInfoPopup(source) : new StageInfoPopup(source));
+            this.popup.zIndex = C.Z_INDEX_CARD_POPUP;
+            this.popup.addToGame();
+        }
+        this.popup.x = clamp(x, -window.innerWidth/2, window.innerWidth/2 - this.popup.width);
+        this.popup.y = y;
+    }
+
+    stopPopup(source: Card | API.WonderStage | API.Wonder) {
+        if (this.popup && this.popup.getSource() === source) {
+            this.popup.removeFromGame();
+        }
+    }
+
     getSourceSinkPosition() {
         return new PIXI.Point(this.discardPile.x, this.discardPile.y);
     }
@@ -193,6 +214,10 @@ class Scene {
 
         console.log(`Wonder position index ${index} is out of bounds`);
         return undefined;
+    }
+
+    isCurrentlyDragging() {
+        return this.hand && this.hand.cards.some(card => card.state.type.startsWith('dragging'));
     }
 
     private isMyTurnToBuildFromDiscard() {

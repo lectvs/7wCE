@@ -56,9 +56,9 @@ namespace API {
     }
 
     export type Cost = {
-        gold: number;
-        resources: string[];
-        chain: string;
+        gold?: number;
+        resources?: string[];
+        chain?: string;
     }
 
     export type Effect = {
@@ -209,6 +209,24 @@ namespace API {
             if (effect.type === 'science') return effect.symbol;
         }
         return undefined;
+    }
+
+    export function getCardsProducingChain(gamestate: GameState, chain: string) {
+        let cards: Card[] = [];
+        for (let cardId in gamestate.cards) {
+            let card = gamestate.cards[cardId];
+            if (card.chains && contains(card.chains, chain)) cards.push(card);
+        }
+        return cards;
+    }
+
+    export function getCardsConsumingChain(gamestate: GameState, chain: string) {
+        let cards: Card[] = [];
+        for (let cardId in gamestate.cards) {
+            let card = gamestate.cards[cardId];
+            if (card.cost && card.cost.chain === chain) cards.push(card);
+        }
+        return cards;
     }
 
     /* API METHODS */

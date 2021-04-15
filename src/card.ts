@@ -64,13 +64,18 @@ class Card extends GameElement {
     get effectT() { return this._effectT; }
     set effectT(value: number) {
         this._effectT = value;
+        let bounds = this.bounds;
+        this.frontDiv.style.clipPath = `polygon(${bounds.left}px ${bounds.top}px, ${bounds.right}px ${bounds.top}px, ${bounds.right}px ${bounds.bottom}px, ${bounds.left}px ${bounds.bottom}px)`;
+        this._width = bounds.right - bounds.left;
+        this._height = bounds.bottom - bounds.top;
+    }
+
+    get bounds() {
         let left = lerp(this.fullClipRect.left, this.effectClipRect.left, this._effectT) - C.CARD_WIDTH/2;
         let right = lerp(this.fullClipRect.right, this.effectClipRect.right, this._effectT) - C.CARD_WIDTH/2;
         let top = lerp(this.fullClipRect.top, this.effectClipRect.top, this._effectT) - C.CARD_TITLE_HEIGHT - C.CARD_BANNER_HEIGHT/2;
         let bottom = lerp(this.fullClipRect.bottom, this.effectClipRect.bottom, this._effectT) - C.CARD_TITLE_HEIGHT - C.CARD_BANNER_HEIGHT/2;
-        this.frontDiv.style.clipPath = `polygon(${left}px ${top}px, ${right}px ${top}px, ${right}px ${bottom}px, ${left}px ${bottom}px)`;
-        this._width = right - left;
-        this._height = bottom - top;
+        return new PIXI.Rectangle(left, top, right-left, bottom-top);
     }
 
     private _interactable: boolean = false;
@@ -111,6 +116,20 @@ class Card extends GameElement {
                 offsetx: this.x - Main.mouseX,
                 offsety: this.y - Main.mouseY
             };
+        };
+
+        // Popup
+        this.frontDiv.onmousemove = () => {
+            if (this.visualState === 'flipped' || this.state.type.startsWith('dragging')) {
+                Main.scene.stopPopup(this);
+                return;
+            }
+            let bounds = this.bounds;
+            Main.scene.updatePopup(this, this.x + bounds.left, this.y + bounds.bottom);
+        };
+
+        this.frontDiv.onmouseleave = () => {
+            Main.scene.stopPopup(this);
         };
     }
 

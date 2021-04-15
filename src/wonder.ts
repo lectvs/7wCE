@@ -30,6 +30,7 @@ class Wonder extends GameElement {
 
     create() {
         let playerData = Main.gamestate.playerData[this.player];
+        let wonder = Main.gamestate.wonders[this.player];
 
         this.wonderResource = Resources.getWonder(this.player);
         this.stageXs = this.wonderResource.stageXs;
@@ -70,6 +71,52 @@ class Wonder extends GameElement {
             card.zIndex = C.Z_INDEX_CARD_WONDER;
             this.builtWonderCards.push(card);
             card.addToGame();
+        }
+
+        // Starting effects popup
+        let popupDiv = this.div.appendChild(document.createElement('div'));
+        popupDiv.style.position = 'absolute';
+        popupDiv.style.left = `${-C.WONDER_BOARD_WIDTH/2 + this.wonderResource.startingEffectsRect.left}px`;
+        popupDiv.style.top = `${-C.WONDER_BOARD_HEIGHT/2 + this.wonderResource.startingEffectsRect.top}px`;
+        popupDiv.style.width = `${this.wonderResource.startingEffectsRect.width}px`;
+        popupDiv.style.height = `${this.wonderResource.startingEffectsRect.height}px`;
+
+        popupDiv.onmousemove = () => {
+            if (Main.scene.isCurrentlyDragging()) {
+                Main.scene.stopPopup(wonder);
+                return;
+            }
+            Main.scene.updatePopup(wonder, this.x - C.WONDER_BOARD_WIDTH/2 + this.wonderResource.startingEffectsRect.left,
+                                           this.y - C.WONDER_BOARD_HEIGHT/2 + this.wonderResource.startingEffectsRect.top + this.wonderResource.startingEffectsRect.height);
+        };
+
+        popupDiv.onmouseleave = () => {
+            Main.scene.stopPopup(wonder);
+        };
+
+        // Stage popups
+        for (let i = 0; i < wonder.stages.length; i++) {
+            let stageX = this.wonderResource.stageXs[i];
+            let wonderStage = wonder.stages[i];
+
+            let popupDiv = this.div.appendChild(document.createElement('div'));
+            popupDiv.style.position = 'absolute';
+            popupDiv.style.left = `${-C.WONDER_BOARD_WIDTH/2 + stageX - C.WONDER_STAGE_WIDTH/2}px`;
+            popupDiv.style.top = `${C.WONDER_BOARD_HEIGHT/2 - C.WONDER_STAGE_HEIGHT}px`;
+            popupDiv.style.width = `${C.WONDER_STAGE_WIDTH}px`;
+            popupDiv.style.height = `${C.WONDER_STAGE_HEIGHT}px`;
+
+            popupDiv.onmousemove = () => {
+                if (Main.scene.isCurrentlyDragging()) {
+                    Main.scene.stopPopup(wonderStage);
+                    return;
+                }
+                Main.scene.updatePopup(wonderStage, this.x - C.WONDER_BOARD_WIDTH/2 + stageX - C.WONDER_STAGE_WIDTH/2, this.y + C.WONDER_BOARD_HEIGHT/2);
+            };
+    
+            popupDiv.onmouseleave = () => {
+                Main.scene.stopPopup(wonderStage);
+            };
         }
 
         this.zIndex = C.Z_INDEX_WONDER;

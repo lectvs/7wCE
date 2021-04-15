@@ -15,6 +15,14 @@
     border-bottom-right-radius: 8px;
 }
 
+.popup {
+    pointer-events: none;
+}
+
+.wonderoverlay {
+    pointer-events: none;
+}
+
 #endscreen {
     position: relative;
     height: 250px;

@@ -1,6 +1,12 @@
 todo
-- hover-infos
+- debug firefox issues
+- speed difference based on framerate
+- names bleeding into other names
+- identical cards swapping
+- indicator borders
+- error reporting on invalid player name
 - choose wonder
+- card/chain list
 - game lobby
 - which players are online?
 - BGA move mode

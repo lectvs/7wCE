@@ -12,6 +12,7 @@ class C {
     public static readonly Z_INDEX_MILITARY_TOKEN = 102;
     public static readonly Z_INDEX_GOLD_COIN = 102;
     public static readonly Z_INDEX_PAYMENT_DIALOG = 1000;
+    public static readonly Z_INDEX_CARD_POPUP = 1001;
 
     public static readonly ANIMATION_TURN_REVEAL_TIME = 1;
     public static readonly ANIMATION_TURN_PLAY_TIME = 1;
@@ -129,6 +130,10 @@ class C {
     public static readonly WONDER_OVERLAY_SHIELD_SCALE = 0.75;
     public static readonly WONDER_OVERLAY_TEXT_SIZE = 75;
     public static readonly WONDER_OVERLAY_TEXT_COLOR = '#FF0000';
+
+    public static readonly CARD_INFO_TEXT_COLOR = '#000000';
+    public static readonly CARD_INFO_TEXT_SIZE = 12;
+    public static readonly CARD_INFO_EFFECT_DESCRIPTION_SIZE = 10;
 
     public static readonly TOKEN_SCALE = 0.15;
     public static readonly GOLD_COIN_SCALE = 0.225;
