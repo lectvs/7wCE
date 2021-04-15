@@ -1,4 +1,5 @@
 todo
+- consolidate loading percentage
 - debug firefox issues
 - speed difference based on framerate
 - names bleeding into other names

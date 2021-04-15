@@ -1921,8 +1921,8 @@ var CardInfoPopup = /** @class */ (function (_super) {
         for (var i = 0; i < effects.length; i++) {
             var effect = box.appendChild(document.createElement('div'));
             var effectArt = new PIXI.Container();
-            effectArt.addChild(ArtCommon.getShadowForEffects([effects[0]], 'dark'));
-            effectArt.addChild(ArtCommon.getArtForEffects([effects[0]]));
+            effectArt.addChild(ArtCommon.getShadowForEffects([effects[i]], 'dark'));
+            effectArt.addChild(ArtCommon.getArtForEffects([effects[i]]));
             effect.appendChild(ArtCommon.domElementForArt(effectArt, 1, 10));
             effect.style.transform = 'scale(0.2)';
             effect.style.position = 'absolute';
@@ -1932,7 +1932,7 @@ var CardInfoPopup = /** @class */ (function (_super) {
             description.style.fontSize = C.CARD_INFO_EFFECT_DESCRIPTION_SIZE + "px";
             description.style.marginRight = '10px';
             box.appendChild(description);
-            currentY += 20;
+            currentY += 24;
         }
         // Chains
         var chains = this.card.apiCard.chains;
@@ -4378,8 +4378,8 @@ var StageInfoPopup = /** @class */ (function (_super) {
         for (var i = 0; i < effects.length; i++) {
             var effect = box.appendChild(document.createElement('div'));
             var effectArt = new PIXI.Container();
-            effectArt.addChild(ArtCommon.getShadowForEffects([effects[0]], 'dark'));
-            effectArt.addChild(ArtCommon.getArtForEffects([effects[0]]));
+            effectArt.addChild(ArtCommon.getShadowForEffects([effects[i]], 'dark'));
+            effectArt.addChild(ArtCommon.getArtForEffects([effects[i]]));
             effect.appendChild(ArtCommon.domElementForArt(effectArt, 1, 10));
             effect.style.transform = 'scale(0.2)';
             effect.style.position = 'absolute';
@@ -4389,7 +4389,7 @@ var StageInfoPopup = /** @class */ (function (_super) {
             description.style.fontSize = C.CARD_INFO_EFFECT_DESCRIPTION_SIZE + "px";
             description.style.marginRight = '10px';
             box.appendChild(description);
-            currentY += 20;
+            currentY += 24;
         }
         var padding = 10;
         box.style.width = this.width - padding + "px";
@@ -4426,8 +4426,8 @@ var StartingEffectsInfoPopup = /** @class */ (function (_super) {
         for (var i = 0; i < effects.length; i++) {
             var effect = box.appendChild(document.createElement('div'));
             var effectArt = new PIXI.Container();
-            effectArt.addChild(ArtCommon.getShadowForEffects([effects[0]], 'dark'));
-            effectArt.addChild(ArtCommon.getArtForEffects([effects[0]]));
+            effectArt.addChild(ArtCommon.getShadowForEffects([effects[i]], 'dark'));
+            effectArt.addChild(ArtCommon.getArtForEffects([effects[i]]));
             effect.appendChild(ArtCommon.domElementForArt(effectArt, 1, 10));
             effect.style.transform = 'scale(0.2)';
             effect.style.position = 'absolute';
@@ -4437,7 +4437,7 @@ var StartingEffectsInfoPopup = /** @class */ (function (_super) {
             description.style.fontSize = C.CARD_INFO_EFFECT_DESCRIPTION_SIZE + "px";
             description.style.marginRight = '10px';
             box.appendChild(description);
-            currentY += 20;
+            currentY += 24;
         }
         var padding = 10;
         box.style.width = this.width - padding + "px";

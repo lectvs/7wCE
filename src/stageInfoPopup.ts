@@ -69,8 +69,8 @@ class StageInfoPopup extends Popup {
         for (let i = 0; i < effects.length; i++) {
             let effect = box.appendChild(document.createElement('div'));
             let effectArt = new PIXI.Container();
-            effectArt.addChild(ArtCommon.getShadowForEffects([effects[0]], 'dark'));
-            effectArt.addChild(ArtCommon.getArtForEffects([effects[0]]));
+            effectArt.addChild(ArtCommon.getShadowForEffects([effects[i]], 'dark'));
+            effectArt.addChild(ArtCommon.getArtForEffects([effects[i]]));
             effect.appendChild(ArtCommon.domElementForArt(effectArt, 1, 10));
             effect.style.transform = 'scale(0.2)';
             effect.style.position = 'absolute';
@@ -81,7 +81,7 @@ class StageInfoPopup extends Popup {
             description.style.fontSize = `${C.CARD_INFO_EFFECT_DESCRIPTION_SIZE}px`;
             description.style.marginRight = '10px';
             box.appendChild(description);
-            currentY += 20;
+            currentY += 24;
         }
 
         let padding = 10;
