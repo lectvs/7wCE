@@ -1,11 +1,13 @@
 class PaymentDialog extends GameElement {
 
+    private scene: GameScene;
     private card: Card;
     private move: API.Move;
     private activeWonder: Wonder;
 
-    constructor(card: Card, move: API.Move, activeWonder: Wonder) {
+    constructor(scene: GameScene, card: Card, move: API.Move, activeWonder: Wonder) {
         super();
+        this.scene = scene;
         this.card = card;
         this.move = move;
         this.activeWonder = activeWonder;
@@ -121,7 +123,7 @@ class PaymentDialog extends GameElement {
 
     removeFromGame(success: boolean = false) {
         super.removeFromGame();
-        Main.scene.paymentDialog = null;
+        this.scene.paymentDialog = null;
         if (!success) {
             this.card.deselect();
         }

@@ -1,3 +1,7 @@
+namespace Popup {
+    export type Source = Card | API.WonderStage | API.Wonder;
+}
+
 class Popup extends GameElement {
     width: number = 400;
     private currentScript: Script;

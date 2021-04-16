@@ -8,6 +8,7 @@ launch
 - game lobby
 
 post-launch
+- fix scene cannot scroll left when zoomed in
 - delay military points until after animation end
 - consolidate loading percentage
 - speed difference based on framerate

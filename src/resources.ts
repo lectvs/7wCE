@@ -46,13 +46,14 @@ class Resources {
         this.CARD_CACHE[cardId].push(cardResource);
     }
 
-    static getWonder(player: string): WonderResource {
-        if (!this.WONDER_CACHE[player] || this.WONDER_CACHE[player].length === 0) {
-            console.error(`Player ${player} not found in wonder cache`, this.WONDER_CACHE);
+    static getWonder(name: string, side: string): WonderResource {
+        let key = `${name}/${side}`;
+        if (!this.WONDER_CACHE[key] || this.WONDER_CACHE[key].length === 0) {
+            console.error(`Wonder ${key} not found in wonder cache`, this.WONDER_CACHE);
             return undefined;
         }
 
-        let cache = this.WONDER_CACHE[player];
+        let cache = this.WONDER_CACHE[key];
 
         if (cache.length === 1) {
             return {
@@ -65,12 +66,13 @@ class Resources {
         return cache.pop();
     }
 
-    static returnWonder(player: string, wonderResource: WonderResource) {
-        if (!this.WONDER_CACHE[player] || this.WONDER_CACHE[player].length === 0) {
-            console.error(`Player ${player} not found in wonder cache`, this.WONDER_CACHE);
+    static returnWonder(name: string, side: string, wonderResource: WonderResource) {
+        let key = `${name}/${side}`;
+        if (!this.WONDER_CACHE[key] || this.WONDER_CACHE[key].length === 0) {
+            console.error(`Wonder ${key} not found in wonder cache`, this.WONDER_CACHE);
             return undefined;
         }
         if (!wonderResource) return;
-        this.WONDER_CACHE[player].push(wonderResource);
+        this.WONDER_CACHE[key].push(wonderResource);
     }
 }

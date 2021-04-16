@@ -1,4 +1,8 @@
 namespace Bot {
+    export function chooseSide(wonderChoices: API.Wonder[]) {
+        return randInt(0, wonderChoices.length-1);
+    }
+
     export function getMove(validMoves: API.Move[]) {
         let wonderMoves = validMoves.filter(move => move.action === 'wonder');
         let playMoves = validMoves.filter(move => move.action === 'play');

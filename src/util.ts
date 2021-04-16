@@ -45,6 +45,7 @@ function mod(n: number, mod: number) {
     return n;
 }
 
+/** Inclusive */
 function randInt(min: number, max: number) {
     return min + Math.floor(Math.random() * (max+1 - min));
 }

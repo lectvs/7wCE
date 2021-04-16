@@ -6,6 +6,8 @@ type HandState = { type: 'normal' }
                | { type: 'back', moved: boolean };
 
 class Hand {
+    private scene: GameScene;
+
     cardIds: number[];
     activeWonder: Wonder;
     flankDirection: number;
@@ -28,7 +30,8 @@ class Hand {
         return undefined;
     }
 
-    constructor(position: PIXI.Point, handData: HandData) {
+    constructor(scene: GameScene, position: PIXI.Point, handData: HandData) {
+        this.scene = scene;
         this.state = { type: 'normal' };
         this.x = position.x;
         this.y = position.y;
@@ -73,8 +76,8 @@ class Hand {
         for (let i = 0; i < this.cardIds.length; i++) {
             let handPosition = this.getNormalHandPosition(i);
             let card = handData.type === 'normal'
-                        ? new Card(this.cardIds[i], handPosition, this.activeWonder, handData.validMoves)
-                        : Card.flippedCardForAge(handData.type === 'back' ? handData.age : handData.lastCardAge, false);
+                        ? new Card(this.scene, this.cardIds[i], handPosition, this.activeWonder, handData.validMoves)
+                        : Card.flippedCardForAge(this.scene, handData.type === 'back' ? handData.age : handData.lastCardAge, false);
             card.x = handPosition.x;
             card.y = handPosition.y;
             card.addToGame();

@@ -94,7 +94,7 @@ class Main {
     }
 
     static setupGame() {
-        this.scene = new Scene();
+        this.scene = this.gamestate.state === 'CHOOSE_WONDER_SIDE' ? new ChooseWonderScene() : new GameScene();
         this.scene.create();
         this.sendUpdate();
     }
@@ -141,6 +141,23 @@ class Main {
                 Main.error(`Error: local turn (${Main.gamestate.turn}) is greater than the game's (${gamestate.turn})?`);
                 this.sendUpdate();
                 return;
+            } else if (Main.gamestate.state === 'CHOOSE_WONDER_SIDE') {
+                if (gamestate.state === 'CHOOSE_WONDER_SIDE') {
+                    let diffResult = GameStateDiffer.diffChooseSide(gamestate);
+                    this.scriptManager.runScript(S.chain(
+                        S.simul(...diffResult.scripts),
+                        S.call(() => {
+                            this.gamestate = gamestate;
+                            this.sendUpdate();
+                        })
+                    ));
+                } else {
+                    this.gamestate = gamestate;
+                    this.scene.destroy();
+                    this.scene = new GameScene();
+                    this.scene.create();
+                    this.sendUpdate();
+                }
             } else if (gamestate.turn === Main.gamestate.turn) {
                 let diffResult = GameStateDiffer.diffNonTurn(gamestate, true);
                 this.scriptManager.runScript(S.chain(
@@ -188,7 +205,7 @@ class Main {
             console.log('Submitted move:', move);
             this.moveImmuneTime = 1;
         });
-        this.moveImmuneTime = 2;
+        this.moveImmuneTime = 1;
     }
 
     static undoMove() {
@@ -200,7 +217,19 @@ class Main {
             console.log('Undo move successful');
             this.moveImmuneTime = 1;
         });
-        this.moveImmuneTime = 2;
+        this.moveImmuneTime = 1;
+    }
+
+    static chooseSide(side: number) {
+        API.chooseside(Main.gameid, Main.player, side, (error: string) => {
+            if (error) {
+                Main.error(error);
+                return;
+            }
+            console.log('Chose wonder side:', side);
+            this.moveImmuneTime = 1;
+        });
+        this.moveImmuneTime = 1;
     }
 
     static setStatus() {
@@ -227,7 +256,13 @@ class Main {
         let gamestate = this.gamestate;
         let playerData = gamestate.playerData[this.player];
 
-        if (gamestate.state === 'NORMAL_MOVE') {
+        if (gamestate.state === 'CHOOSE_WONDER_SIDE') {
+            if (playerData.currentMove) {
+                statusText.textContent = "Waiting for others to choose their wonder side";
+            } else {
+                statusText.textContent = "You must choose your wonder side";
+            }
+        } else if (gamestate.state === 'NORMAL_MOVE') {
             if (playerData.currentMove) {
                 statusText.textContent = "Waiting for others to move";
             } else {
@@ -259,24 +294,35 @@ class Main {
         for (let player of this.gamestate.players) {
             if (player.startsWith('BOT') && !this.gamestate.playerData[player].currentMove) {
                 let botPlayer = player;
-                let turn = this.gamestate.turn;
-                API.getvalidmoves(this.gameid, this.gamestate.turn, botPlayer, (validMoves: API.Move[], error: string) => {
-                    if (error) {
-                        Main.error(error);
-                        return;
-                    }
-
-                    if (turn !== this.gamestate.turn || validMoves.length === 0) return;
-
-                    let move = Bot.getMove(validMoves);
-                    API.submitmove(this.gameid, this.gamestate.turn, botPlayer, move, (error: string) => {
+                if (this.gamestate.state === 'CHOOSE_WONDER_SIDE') {
+                    let side = Bot.chooseSide(this.gamestate.wonderChoices[botPlayer]);
+                    API.chooseside(this.gameid, botPlayer, side, (error: string) => {
                         if (error) {
                             Main.error(error);
                             return;
                         }
-                        console.log('Successfully submitted bot move:', move);
-                    })
-                });
+                        console.log('Successfully chose bot wonder side:', side);
+                    });
+                } else {
+                    let turn = this.gamestate.turn;
+                    API.getvalidmoves(this.gameid, this.gamestate.turn, botPlayer, (validMoves: API.Move[], error: string) => {
+                        if (error) {
+                            Main.error(error);
+                            return;
+                        }
+    
+                        if (turn !== this.gamestate.turn || validMoves.length === 0) return;
+    
+                        let move = Bot.getMove(validMoves);
+                        API.submitmove(this.gameid, this.gamestate.turn, botPlayer, move, (error: string) => {
+                            if (error) {
+                                Main.error(error);
+                                return;
+                            }
+                            console.log('Successfully submitted bot move:', move);
+                        })
+                    });
+                }
             }
         }
     }

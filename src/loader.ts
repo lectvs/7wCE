@@ -60,8 +60,18 @@ class Loader {
         this.loadCard('-3', { age: 3, color: 'brown', name: '', effects: [] });
 
         // Wonders
-        for (let player of Main.gamestate.players) {
-            this.loadWonder(player);
+        if (Main.gamestate.state === 'CHOOSE_WONDER_SIDE') {
+            for (let player in Main.gamestate.wonderChoices) {
+                let wonderChoice = Main.gamestate.wonderChoices[player];
+                for (let wonder of wonderChoice) {
+                    this.loadWonder(wonder);
+                }
+            }
+        } else {
+            for (let player in Main.gamestate.wonders) {
+                let wonder = Main.gamestate.wonders[player];
+                this.loadWonder(wonder);
+            }
         }
 
         // Other
@@ -144,12 +154,10 @@ class Loader {
         };
     }
 
-    private loadWonder(player: string) {
+    private loadWonder(wonder: API.Wonder) {
         let resource = this.addNewResource();
 
         resource.load = () => {
-            let wonder = Main.gamestate.wonders[player];
-    
             let wonderBoard = new PIXI.Container();
     
             // Board
@@ -231,7 +239,7 @@ class Loader {
                 }
             }
     
-            Resources.WONDER_CACHE[player] = [{
+            Resources.WONDER_CACHE[`${wonder.name}/${wonder.side}`] = [{
                 board: render(wonderBoard, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT),
                 startingEffectsRect: startingEffectsPaddedBounds,
                 stageXs: stageXs,

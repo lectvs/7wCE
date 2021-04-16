@@ -1,6 +1,6 @@
 namespace API {
     export type GameState = {
-        state: 'NORMAL_MOVE' | 'LAST_CARD_MOVE' | 'DISCARD_MOVE' | 'GAME_COMPLETE';
+        state: 'CHOOSE_WONDER_SIDE' | 'NORMAL_MOVE' | 'LAST_CARD_MOVE' | 'DISCARD_MOVE' | 'GAME_COMPLETE';
         discardMoveQueue: string[];
         lastCardPlayers: string[];
         players: string[];
@@ -16,6 +16,7 @@ namespace API {
         validMoves: Move[];
         cards: Dict<Card>;
         wonders: Dict<Wonder>;
+        wonderChoices?: Dict<Wonder[]>;
     }
 
     export type PlayerData = {
@@ -99,6 +100,7 @@ namespace API {
         card: number;
         stage?: number;
         payment?: Payment;
+        side?: number;
     }
 
     export type Payment = {
@@ -258,6 +260,12 @@ namespace API {
 
     export function undomove(gameid: string, turn: number, player: string, callback: (error: string) => any) {
         httpRequest(`${LAMBDA_URL}?operation=undomove&gameid=${gameid}&turn=${turn}&player=${player}`, (responseJson: any, error: string) => {
+            callback(error);
+        });
+    }
+
+    export function chooseside(gameid: string, player: string, side: number, callback: (error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=chooseside&gameid=${gameid}&player=${player}&side=${side}`, (responseJson: any, error: string) => {
             callback(error);
         });
     }

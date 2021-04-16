@@ -122,6 +122,10 @@ class C {
     public static readonly WONDER_SIDEBAR_TOKENS_DX = -18;
     public static readonly WONDER_SIDEBAR_TOKENS_Y = 63;
 
+    public static readonly WONDER_SIDE_CHOICE_DY = C.WONDER_BOARD_HEIGHT + 10;
+    public static readonly WONDER_SIDE_CHOICE_TOP_ADJUST_DY = -C.WONDER_SIDE_CHOICE_DY;
+    public static readonly WONDER_SIDE_CHOICE_GROUP_ADJUST_DY = -50;
+
     public static readonly WONDER_OVERLAY_COLOR_NEUTRAL = 0xFFFFFF;
     public static readonly WONDER_OVERLAY_COLOR_VICTORY = 0x80FF80;
     public static readonly WONDER_OVERLAY_COLOR_DEFEAT = 0xFF8080;

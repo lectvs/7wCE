@@ -2,6 +2,8 @@
 
 class Wonder extends GameElement {
 
+    private scene: GameScene;
+    private wonder: API.Wonder;
     private player: string;
 
     wonderResource: WonderResource;
@@ -21,18 +23,19 @@ class Wonder extends GameElement {
     pointsText: HTMLParagraphElement;
     goldText: HTMLParagraphElement;
 
-    constructor(player: string) {
+    constructor(scene: GameScene, wonder: API.Wonder, player: string) {
         super();
 
+        this.scene = scene;
+        this.wonder = wonder;
         this.player = player;
         this.create();
     }
 
     create() {
         let playerData = Main.gamestate.playerData[this.player];
-        let wonder = Main.gamestate.wonders[this.player];
 
-        this.wonderResource = Resources.getWonder(this.player);
+        this.wonderResource = Resources.getWonder(this.wonder.name, this.wonder.side);
         this.stageXs = this.wonderResource.stageXs;
 
         let boardDiv = this.div.appendChild(document.createElement('div'));
@@ -58,7 +61,7 @@ class Wonder extends GameElement {
         this.playedCardEffectRolls.grey = this.playedCardEffectRolls.brown;
 
         for (let apiCardId of playerData.playedCards) {
-            let card = new Card(apiCardId, undefined, this, []);
+            let card = new Card(this.scene, apiCardId, undefined, this, []);
             this.addNewCardEffect(card);
             card.addToGame();
         }
@@ -66,7 +69,7 @@ class Wonder extends GameElement {
         this.builtWonderCards = [];
         for (let stageBuilt of playerData.stagesBuilt) {
             let justPlayed = (Main.gamestate.state !== 'GAME_COMPLETE' && playerData.lastMove && playerData.lastMove.action === 'wonder' && playerData.lastMove.stage === stageBuilt.stage);
-            let card = Card.flippedCardForAge(stageBuilt.cardAge, justPlayed);
+            let card = Card.flippedCardForAge(this.scene, stageBuilt.cardAge, justPlayed);
             
             card.zIndex = C.Z_INDEX_CARD_WONDER;
             this.builtWonderCards.push(card);
@@ -83,21 +86,21 @@ class Wonder extends GameElement {
 
         popupDiv.onmousemove = () => {
             if (Main.scene.isCurrentlyDragging()) {
-                Main.scene.stopPopup(wonder);
+                Main.scene.stopPopup(this.wonder);
                 return;
             }
-            Main.scene.updatePopup(wonder, this.x - C.WONDER_BOARD_WIDTH/2 + this.wonderResource.startingEffectsRect.left,
-                                           this.y - C.WONDER_BOARD_HEIGHT/2 + this.wonderResource.startingEffectsRect.top + this.wonderResource.startingEffectsRect.height);
+            Main.scene.updatePopup(this.wonder, this.x - C.WONDER_BOARD_WIDTH/2 + this.wonderResource.startingEffectsRect.left,
+                                                this.y - C.WONDER_BOARD_HEIGHT/2 + this.wonderResource.startingEffectsRect.top + this.wonderResource.startingEffectsRect.height);
         };
 
         popupDiv.onmouseleave = () => {
-            Main.scene.stopPopup(wonder);
+            Main.scene.stopPopup(this.wonder);
         };
 
         // Stage popups
-        for (let i = 0; i < wonder.stages.length; i++) {
+        for (let i = 0; i < this.wonder.stages.length; i++) {
             let stageX = this.wonderResource.stageXs[i];
-            let wonderStage = wonder.stages[i];
+            let wonderStage = this.wonder.stages[i];
 
             let popupDiv = this.div.appendChild(document.createElement('div'));
             popupDiv.style.position = 'absolute';
@@ -134,7 +137,7 @@ class Wonder extends GameElement {
         while (this.div.firstChild) {
             this.div.removeChild(this.div.firstChild);
         }
-        Resources.returnWonder(this.player, this.wonderResource);
+        Resources.returnWonder(this.wonder.name, this.wonder.side, this.wonderResource);
         this.wonderResource = null;
     }
 

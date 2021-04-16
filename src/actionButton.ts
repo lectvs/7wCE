@@ -2,11 +2,14 @@
 
 class ActionButton extends GameElement {
 
+    private scene: GameScene;
     private textElement: HTMLParagraphElement;
     private type: 'undo' | 'reject_discard';
 
-    constructor() {
+    constructor(scene: GameScene) {
         super();
+
+        this.scene = scene;
 
         let button = this.div.appendChild(document.createElement('div'));
         button.style.backgroundColor = 'white';
@@ -29,7 +32,7 @@ class ActionButton extends GameElement {
         button.onclick = (event: MouseEvent) => {
             if (this.type === 'undo') {
                 Main.undoMove();
-                if (Main.scene.isPaymentMenuActive) Main.scene.paymentDialog.removeFromGame();
+                if (this.scene.isPaymentMenuActive) this.scene.paymentDialog.removeFromGame();
             } else if (this.type === 'reject_discard') {
                 Main.submitMove({ action: 'reject', card: -1, payment: {} });
             }
