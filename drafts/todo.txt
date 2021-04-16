@@ -3,7 +3,6 @@ launch
 - indicator borders
 - point totals for guilds
 - error reporting on invalid player name
-- choose wonder
 - card/chain list
 - game lobby
 
@@ -11,6 +10,7 @@ post-launch
 - fix scene cannot scroll left when zoomed in
 - delay military points until after animation end
 - consolidate loading percentage
+- combine identical effects on info popups
 - speed difference based on framerate
 - debug firefox issues
 - names bleeding into other names

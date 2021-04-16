@@ -26,6 +26,10 @@ class WonderBoardForChoose extends GameElement {
         let boardDiv = this.div.appendChild(document.createElement('div'));
         boardDiv.appendChild(this.wonderResource.board);
 
+        let sidebar = this.div.appendChild(this.drawSidebar());
+        sidebar.style.left = `${C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_WIDTH}px`;
+        sidebar.style.top = `${-C.WONDER_BOARD_HEIGHT/2}px`;
+
         // Starting effects popup
         let popupDiv = this.div.appendChild(document.createElement('div'));
         popupDiv.style.position = 'absolute';
@@ -108,13 +112,42 @@ class WonderBoardForChoose extends GameElement {
     private drawSelection() {
         let graphics = new PIXI.Graphics();
         graphics.beginFill(ArtCommon.selectionColor, 1);
-        graphics.drawRoundedRect(0, 0, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT, C.WONDER_BOARD_CORNER_RADIUS);
+        graphics.drawRoundedRect(0, 0,
+                                 C.WONDER_BOARD_WIDTH + 2*C.WONDER_BOARD_BORDER, C.WONDER_BOARD_HEIGHT + 2*C.WONDER_BOARD_BORDER,
+                                 C.WONDER_BOARD_CORNER_RADIUS + C.WONDER_BOARD_BORDER);
         graphics.endFill();
         graphics.beginHole();
-        graphics.drawRoundedRect(C.WONDER_BOARD_BORDER, C.WONDER_BOARD_BORDER,
-                                 C.WONDER_BOARD_WIDTH - 2*C.WONDER_BOARD_BORDER, C.WONDER_BOARD_HEIGHT - 2*C.WONDER_BOARD_BORDER,
-                                 C.WONDER_BOARD_CORNER_RADIUS - C.WONDER_BOARD_BORDER);
+        graphics.drawRoundedRect(C.WONDER_BOARD_BORDER, C.WONDER_BOARD_BORDER, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT, C.WONDER_BOARD_CORNER_RADIUS);
         graphics.endHole();
-        return render(graphics, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT);
+        return render(graphics, C.WONDER_BOARD_WIDTH + 2*C.WONDER_BOARD_BORDER, C.WONDER_BOARD_HEIGHT + 2*C.WONDER_BOARD_BORDER);
+    }
+
+    private drawSidebar() {
+        let sidebar = document.createElement('div');
+        sidebar.style.width = `${C.WONDER_BOARD_WIDTH}px`;
+        sidebar.style.height = `${C.WONDER_BOARD_HEIGHT}px`;
+        sidebar.style.position = 'absolute';
+
+        let nameText = sidebar.appendChild(this.drawSidebarText(this.player, C.WONDER_SIDEBAR_NAME_SIZE));
+        nameText.style.left = `${C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_NAME_X}px`;
+        nameText.style.top = `${C.WONDER_SIDEBAR_NAME_Y}px`;
+
+        return sidebar;
+    }
+
+    private drawSidebarText(text: string, size: number) {
+        let div = document.createElement('div');
+        div.style.width = '50%';
+        div.style.position = 'absolute';
+        div.style.transform = 'translate(-100%, 0)';
+        let p = div.appendChild(document.createElement('p'));
+        p.textContent = text;
+        p.style.fontFamily = "'Courier New', Courier, monospace";
+        p.style.fontSize = `${size}px`;
+        p.style.color = `#FFFFFF`;
+        p.style.width = '100%';
+        p.style.textAlign = 'right';
+        p.style.transform = 'translate(0, -50%)';
+        return div;
     }
 }
