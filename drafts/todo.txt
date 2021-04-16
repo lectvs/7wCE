@@ -1,13 +1,18 @@
-todo
-- consolidate loading percentage
-- debug firefox issues
-- speed difference based on framerate
-- names bleeding into other names
-- identical cards swapping
+launch
+- fix stuck popups
 - indicator borders
+- point totals for guilds
 - error reporting on invalid player name
 - choose wonder
 - card/chain list
 - game lobby
+
+post-launch
+- delay military points until after animation end
+- consolidate loading percentage
+- speed difference based on framerate
+- debug firefox issues
+- names bleeding into other names
+- identical cards swapping
 - which players are online?
 - BGA move mode
