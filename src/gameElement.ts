@@ -49,8 +49,8 @@ class GameElement {
         this.setTransform();
     }
 
-    addToGame() {
-        document.querySelector('#game').appendChild(this.div);
+    addToGame(gameDiv: HTMLDivElement = Main.game) {
+        gameDiv.appendChild(this.div);
     }
 
     removeFromGame() {

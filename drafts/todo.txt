@@ -7,6 +7,7 @@ launch
 - game lobby
 
 post-launch
+- custom blur filter
 - fix scene cannot scroll left when zoomed in
 - delay military points until after animation end
 - consolidate loading percentage

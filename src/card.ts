@@ -123,15 +123,15 @@ class Card extends GameElement {
         // Popup
         this.frontDiv.onmousemove = () => {
             if (this.visualState === 'flipped' || this.state.type.startsWith('dragging')) {
-                Main.scene.stopPopup(this);
+                this.scene.stopPopup(this);
                 return;
             }
             let bounds = this.bounds;
-            Main.scene.updatePopup(this, this.x + bounds.left, this.y + bounds.bottom);
+            this.scene.updatePopup(this, this.x + bounds.left, this.y + bounds.bottom);
         };
 
         this.frontDiv.onmouseleave = () => {
-            Main.scene.stopPopup(this);
+            this.scene.stopPopup(this);
         };
     }
 
@@ -370,7 +370,7 @@ class Card extends GameElement {
     }
 
     canBeInteractable() {
-        if (Main.scene && this.scene.isPaymentMenuActive) return false;
+        if (this.scene.isPaymentMenuActive) return false;
         if (Main.diffing) return false;
         if (!this.allowPlay && this.allowBuildStages.length === 0 && !this.allowThrow) return false;
         return true;

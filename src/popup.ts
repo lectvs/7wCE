@@ -1,5 +1,5 @@
 namespace Popup {
-    export type Source = Card | API.WonderStage | API.Wonder;
+    export type Source = Card | CardForList | API.WonderStage | API.Wonder;
 }
 
 class Popup extends GameElement {
@@ -11,9 +11,9 @@ class Popup extends GameElement {
         this.div.className = 'popup';
     }
 
-    addToGame() {
+    addToGame(gameDiv: HTMLDivElement = Main.game) {
         this.alpha = 0;
-        super.addToGame();
+        super.addToGame(gameDiv);
         this.currentScript = Main.scriptManager.runScript(S.chain(
             S.wait(0.5),
             S.doOverTime(0.1, t => {

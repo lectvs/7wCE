@@ -34,6 +34,43 @@
     left: 50%;
 }
 
+#cardlisttitle {
+    height: 60px;
+    position: relative;
+    text-align: center;
+    margin: auto;
+}
+
+.cardlisttitle {
+    color: #FFFFFF !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 36px !important;    
+}
+
+#cardlistheaders {
+    height: 55px;
+    position: relative;
+}
+
+.cardlistheader {
+    position: absolute !important;
+    color: #FFFFFF !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 24px !important;
+}
+.cardlistlabel {
+    position: absolute !important;
+    top: 5px !important;
+    color: #FFFFFF !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 18px !important;
+}
+
+#cardlist {
+    position: relative;
+    left: 50%;
+}
+
 canvas {
     position: absolute;
     transform: translate(-50%, -50%);

@@ -1,9 +1,9 @@
 /// <reference path="./popup.ts" />
 
 class CardInfoPopup extends Popup {
-    card: Card;
+    card: Card | CardForList;
 
-    constructor(card: Card) {
+    constructor(card: Card | CardForList) {
         super();
         this.card = card;
         this.div.appendChild(this.draw());

@@ -19,7 +19,13 @@ abstract class Scene {
             this.popup = null;
         }
         if (!this.popup) {
-            this.popup = (source instanceof Card) ? new CardInfoPopup(source) : (('name' in source) ? new StartingEffectsInfoPopup(source) : new StageInfoPopup(source));
+            if (source instanceof Card || source instanceof CardForList) {
+                this.popup = new CardInfoPopup(source)
+            } else if ('name' in source) {
+                this.popup = new StartingEffectsInfoPopup(source);
+            } else {
+                this.popup = new StageInfoPopup(source);
+            }
             this.popup.zIndex = C.Z_INDEX_CARD_POPUP;
             this.popup.addToGame();
         }

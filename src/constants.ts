@@ -14,6 +14,9 @@ class C {
     public static readonly Z_INDEX_PAYMENT_DIALOG = 1000;
     public static readonly Z_INDEX_CARD_POPUP = 1001;
 
+    public static readonly GAME_HEIGHT_PADDING_3P = 400;
+    public static readonly GAME_HEIGHT_PADDING_4567P = 200;
+
     public static readonly ANIMATION_TURN_REVEAL_TIME = 1;
     public static readonly ANIMATION_TURN_PLAY_TIME = 1;
     public static readonly ANIMATION_MILITARY_FADE_TIME = 0.5;
@@ -180,6 +183,14 @@ class C {
     public static readonly END_SCREEN_SYMBOL_SIZE = 24;
     public static readonly END_SCREEN_TEXT_SIZE = 18;
     public static readonly END_SCREEN_TEXT_COLOR = '#FFFFFF';
+
+    public static readonly CARD_LIST_HEADER_TEXT_SIZE = 24;
+    public static readonly CARD_LIST_HEADER_TEXT_COLOR = '#FFFFFF';
+    public static readonly CARD_LIST_CARD_WIDTH = 96;
+    public static readonly CARD_LIST_CARD_HEIGHT = 40;
+    public static readonly CARD_LIST_EFFECT_SCALE = 0.24;
+    public static readonly CARD_LIST_CARD_DX = 400;
+    public static readonly CARD_LIST_CARD_DY = C.CARD_LIST_CARD_HEIGHT;
 
     public static readonly SORT_CMP_RESOURCES = (card1: Card, card2: Card) => {
         if (card1.apiCard.color === 'brown' && card2.apiCard.color === 'grey') return -1;

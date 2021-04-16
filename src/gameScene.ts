@@ -46,8 +46,6 @@ class GameScene extends Scene {
         let gamestate = Main.gamestate;
         let players = Main.gamestate.players;
 
-        Main.game.style.height = `${C.WONDER_TOP_Y + C.WONDER_OTHERS_DY * Math.ceil((gamestate.players.length + 1) / 2)}px`;
-
         let cardsInHand = this.isMyTurnToBuildFromDiscard() ? gamestate.discardedCards : gamestate.hand;
 
         this.wonders = players.map(player => undefined);
@@ -57,12 +55,14 @@ class GameScene extends Scene {
         let p = players.indexOf(Main.player);
         let l = mod(p-1, players.length);
         let r = mod(p+1, players.length);
+        let finalY = C.WONDER_TOP_Y;
 
         this.wonders[p] = new Wonder(this, gamestate.wonders[players[p]], players[p]);
         this.wonders[p].setPosition(this.getWonderPosition(p));
         this.wonders[p].addToGame();
         this.hands[p] = new Hand(this, this.getHandPosition(p), { type: 'normal', cardIds: cardsInHand, activeWonder: this.wonders[p], validMoves: Main.gamestate.validMoves });
         this.hands[p].snap();
+        finalY = this.wonders[p].y;
 
         let i: number;
         for (i = 1; i < Math.floor((players.length - 1)/2 + 1); i++) {
@@ -74,6 +74,7 @@ class GameScene extends Scene {
             this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].setZIndex(C.Z_INDEX_CARD_FLANK);
             this.hands[l].snap();
+            finalY = this.wonders[l].y;
 
             this.wonders[r] = new Wonder(this, gamestate.wonders[players[r]], players[r]);
             this.wonders[r].setPosition(this.getWonderPosition(r));
@@ -83,6 +84,7 @@ class GameScene extends Scene {
             this.hands[r].scale = C.HAND_FLANK_SCALE;
             this.hands[r].setZIndex(C.Z_INDEX_CARD_FLANK);
             this.hands[r].snap();
+            finalY = this.wonders[r].y;
 
             l = mod(l-1, gamestate.players.length);
             r = mod(r+1, gamestate.players.length);
@@ -97,7 +99,11 @@ class GameScene extends Scene {
             this.hands[l].scale = C.HAND_FLANK_SCALE;
             this.hands[l].setZIndex(C.Z_INDEX_CARD_FLANK);
             this.hands[l].snap();
+            finalY = this.wonders[l].y;
         }
+
+        let padding = gamestate.players.length === 3 ? C.GAME_HEIGHT_PADDING_3P : C.GAME_HEIGHT_PADDING_4567P;
+        Main.game.style.height = `${finalY + C.WONDER_BOARD_HEIGHT/2 + padding}px`;
 
         this.militaryOverlays = players.map(player => undefined);
         for (let i = 0; i < this.wonders.length; i++) {

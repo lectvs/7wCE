@@ -9,7 +9,9 @@ class Main {
     static mouseDown: boolean = false;
 
     static game: HTMLDivElement;
+    static cardList: HTMLDivElement;
     static scene: Scene;
+    static cardListScene: CardListScene;
     static endScreen: EndScreen;
 
     static time: number = 0;
@@ -36,6 +38,7 @@ class Main {
 
         this.mouseDown = false;
         this.game = <HTMLDivElement>document.getElementById('game');
+        this.cardList = <HTMLDivElement>document.getElementById('cardlist');
         this.moveImmuneTime = 0;
 
         this.scriptManager = new ScriptManager();
@@ -96,6 +99,9 @@ class Main {
     static setupGame() {
         this.scene = this.gamestate.state === 'CHOOSE_WONDER_SIDE' ? new ChooseWonderScene() : new GameScene();
         this.scene.create();
+        document.getElementById('cardlistelems').style.visibility = 'visible';
+        this.cardListScene = new CardListScene();
+        this.cardListScene.create();
         this.sendUpdate();
     }
 
@@ -110,6 +116,7 @@ class Main {
         this.moveImmuneTime = clamp(this.moveImmuneTime - Main.delta, 0, Infinity);
 
         if (this.scene) this.scene.update();
+        if (this.cardListScene) this.cardListScene.update();
         this.scriptManager.update();
         this.setStatus();
     }
