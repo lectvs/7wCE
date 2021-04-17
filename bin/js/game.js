@@ -1906,7 +1906,9 @@ var Popup = /** @class */ (function (_super) {
         if (gameDiv === void 0) { gameDiv = Main.game; }
         this.alpha = 0;
         _super.prototype.addToGame.call(this, gameDiv);
-        this.currentScript = Main.scriptManager.runScript(S.chain(S.wait(0.5), S.doOverTime(0.1, function (t) {
+        this.currentScript = Main.scriptManager.runScript(S.chain(S.wait(0.7), S.call(function () {
+            _this.div.appendChild(_this.draw());
+        }), S.doOverTime(0.1, function (t) {
             _this.alpha = t;
         })));
     };
@@ -1919,12 +1921,12 @@ var Popup = /** @class */ (function (_super) {
             _this.alpha = (1 - t) * startAlpha;
         }), S.call(function () {
             _super.prototype.removeFromGame.call(_this);
-            if (Main.scene.popup && Main.scene.popup.getSource() === _this.getSource()) {
-                Main.scene.popup = null;
-            }
         })));
     };
     Popup.prototype.getSource = function () {
+        return undefined;
+    };
+    Popup.prototype.draw = function () {
         return undefined;
     };
     Popup.prototype.infoText = function (text, xs, ys) {
@@ -1950,7 +1952,6 @@ var CardInfoPopup = /** @class */ (function (_super) {
     function CardInfoPopup(card) {
         var _this = _super.call(this) || this;
         _this.card = card;
-        _this.div.appendChild(_this.draw());
         _this.div.className = 'popup';
         return _this;
     }
@@ -2187,6 +2188,7 @@ var Scene = /** @class */ (function () {
     Scene.prototype.stopPopup = function (source) {
         if (this.popup && this.popup.getSource() === source) {
             this.popup.removeFromGame();
+            this.popup = null;
         }
     };
     Scene.prototype.getWonderPosition = function (index, additionalY) {
@@ -3987,6 +3989,8 @@ var Loader = /** @class */ (function () {
             resource.loaded = true;
         };
     };
+    Loader.prototype.loadCardList = function () {
+    };
     Loader.prototype.addNewResource = function () {
         var resource = {
             load: undefined,
@@ -4757,7 +4761,7 @@ var StageInfoPopup = /** @class */ (function (_super) {
     function StageInfoPopup(stage) {
         var _this = _super.call(this) || this;
         _this.stage = stage;
-        _this.div.appendChild(_this.draw());
+        _this.div.className = 'popup';
         return _this;
     }
     StageInfoPopup.prototype.getSource = function () {
@@ -4842,7 +4846,7 @@ var StartingEffectsInfoPopup = /** @class */ (function (_super) {
     function StartingEffectsInfoPopup(wonder) {
         var _this = _super.call(this) || this;
         _this.wonder = wonder;
-        _this.div.appendChild(_this.draw());
+        _this.div.className = 'popup';
         return _this;
     }
     StartingEffectsInfoPopup.prototype.getSource = function () {

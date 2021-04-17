@@ -6,14 +6,14 @@ class StageInfoPopup extends Popup {
     constructor(stage: API.WonderStage) {
         super();
         this.stage = stage;
-        this.div.appendChild(this.draw());
+        this.div.className = 'popup';
     }
 
     getSource() {
         return this.stage;
     }
 
-    private draw() {
+    protected draw() {
         let box = document.createElement('div');
         box.style.backgroundColor = '#FFFFFF';
         box.style.position = 'absolute';

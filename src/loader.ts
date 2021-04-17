@@ -264,6 +264,10 @@ class Loader {
         };
     }
 
+    private loadCardList() {
+        
+    }
+
     private addNewResource() {
         let resource: LoaderResource = {
             load: undefined,

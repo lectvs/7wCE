@@ -6,7 +6,6 @@ class CardInfoPopup extends Popup {
     constructor(card: Card | CardForList) {
         super();
         this.card = card;
-        this.div.appendChild(this.draw());
         this.div.className = 'popup';
     }
 
@@ -14,7 +13,7 @@ class CardInfoPopup extends Popup {
         return this.card;
     }
 
-    private draw() {
+    protected draw() {
         let box = document.createElement('div');
         box.style.backgroundColor = '#FFFFFF';
         box.style.position = 'absolute';

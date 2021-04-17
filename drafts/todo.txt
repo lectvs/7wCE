@@ -1,9 +1,10 @@
 launch
+- randomly order players
 - fix stuck popups
+    - potentially fixed?
 - indicator borders
 - point totals for guilds
 - error reporting on invalid player name
-- card/chain list
 - game lobby
 
 post-launch

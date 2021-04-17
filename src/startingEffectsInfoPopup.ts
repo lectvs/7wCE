@@ -6,14 +6,14 @@ class StartingEffectsInfoPopup extends Popup {
     constructor(wonder: API.Wonder) {
         super();
         this.wonder = wonder;
-        this.div.appendChild(this.draw());
+        this.div.className = 'popup';
     }
 
     getSource() {
         return this.wonder;
     }
 
-    private draw() {
+    protected draw() {
         let box = document.createElement('div');
         box.style.backgroundColor = '#FFFFFF';
         box.style.position = 'absolute';

@@ -15,7 +15,10 @@ class Popup extends GameElement {
         this.alpha = 0;
         super.addToGame(gameDiv);
         this.currentScript = Main.scriptManager.runScript(S.chain(
-            S.wait(0.5),
+            S.wait(0.7),
+            S.call(() => {
+                this.div.appendChild(this.draw());
+            }),
             S.doOverTime(0.1, t => {
                 this.alpha = t;
             })
@@ -31,14 +34,15 @@ class Popup extends GameElement {
             }),
             S.call(() => {
                 super.removeFromGame();
-                if (Main.scene.popup && Main.scene.popup.getSource() === this.getSource()) {
-                    Main.scene.popup = null;
-                }
             })
         ));
     }
 
     getSource(): any {
+        return undefined;
+    }
+
+    protected draw(): HTMLElement {
         return undefined;
     }
 

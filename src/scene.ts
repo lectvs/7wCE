@@ -36,6 +36,7 @@ abstract class Scene {
     stopPopup(source: Popup.Source) {
         if (this.popup && this.popup.getSource() === source) {
             this.popup.removeFromGame();
+            this.popup = null;
         }
     }
 
