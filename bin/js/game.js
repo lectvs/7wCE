@@ -440,6 +440,35 @@ var API;
         });
     }
     API.updategame = updategame;
+    function getuser(username, callback) {
+        httpRequest(LAMBDA_URL + "?operation=getuser&username=" + username, function (responseJson, error) {
+            if (error) {
+                callback(undefined, error);
+            }
+            else {
+                callback(responseJson, undefined);
+            }
+        });
+    }
+    API.getuser = getuser;
+    function getinvites(username, callback) {
+        httpRequest(LAMBDA_URL + "?operation=getinvites&username=" + username, function (responseJson, error) {
+            if (error) {
+                callback(undefined, error);
+            }
+            else {
+                callback(responseJson, undefined);
+            }
+        });
+    }
+    API.getinvites = getinvites;
+    function setwonderpreferences(username, preferences, callback) {
+        var preferencesString = preferences.map(function (pref) { return pref.id; }).join(',');
+        httpRequest(LAMBDA_URL + "?operation=setwonderpreferences&username=" + username + "&preferences=" + preferencesString, function (responseJson, error) {
+            callback(error);
+        });
+    }
+    API.setwonderpreferences = setwonderpreferences;
     function httpRequest(url, callback) {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url, true);
@@ -4027,7 +4056,7 @@ var Main = /** @class */ (function () {
         this.game = document.getElementById('game');
         this.cardList = document.getElementById('cardlist');
         this.moveImmuneTime = 0;
-        this.scriptManager = new ScriptManager();
+        this.scriptManager = new ScriptManager(function () { return _this.delta; });
         var params = new URLSearchParams(window.location.search);
         this.gameid = params.get('gameid');
         this.player = params.get('player');
@@ -5414,8 +5443,206 @@ var WonderBoardForChoose = /** @class */ (function (_super) {
     };
     return WonderBoardForChoose;
 }(GameElement));
+var LobbyMain = /** @class */ (function () {
+    function LobbyMain() {
+    }
+    LobbyMain.start = function () {
+        var _this = this;
+        window.addEventListener('mousedown', function () { return _this.mouseDown = true; });
+        window.addEventListener('mouseup', function () { return _this.mouseDown = false; });
+        window.onmousemove = function (event) {
+            event.preventDefault();
+            _this.mouseX = event.pageX;
+            _this.mouseY = event.pageY;
+        };
+        this.mouseDown = false;
+        this.scriptManager = new ScriptManager(function () { return _this.delta; });
+        var params = new URLSearchParams(window.location.search);
+        this.username = params.get('player');
+        if (!this.username) {
+            this.error('player must be passed in queryParameters', true);
+            return;
+        }
+        PIXI.Ticker.shared.add(function (delta) {
+            _this.delta = delta / 60;
+            _this.update();
+        });
+        API.getuser(this.username, function (user, error) {
+            if (error) {
+                _this.error(error, true);
+                return;
+            }
+            console.log('Fetched user:', user);
+            _this.user = user;
+            _this.load();
+        });
+    };
+    LobbyMain.load = function () {
+        this.wonderPreferenceList = new WonderPreferenceList();
+        this.wonderPreferenceList.create();
+        this.getInvites();
+    };
+    LobbyMain.update = function () {
+        this.scriptManager.update();
+        if (this.wonderPreferenceList)
+            this.wonderPreferenceList.update();
+    };
+    LobbyMain.sendUpdate = function () {
+        var _this = this;
+        this.scriptManager.runScript(S.chain(S.wait(2), S.call(function () {
+            _this.getInvites();
+        })));
+    };
+    LobbyMain.getInvites = function () {
+        var _this = this;
+        API.getinvites(this.username, function (result, error) {
+            if (error) {
+                _this.error(error);
+                _this.sendUpdate();
+                return;
+            }
+            _this.inviteGameids = result.gameids;
+            _this.setStatus();
+            _this.sendUpdate();
+        });
+    };
+    LobbyMain.setWonderPreferences = function (preferences) {
+        var _this = this;
+        API.setwonderpreferences(this.username, preferences, function (error) {
+            console.log(preferences);
+            if (error) {
+                _this.error(error);
+                return;
+            }
+            console.log('Successfully set wonder preferences');
+        });
+    };
+    LobbyMain.setStatus = function () {
+        var _this = this;
+        var status = document.querySelector('#status');
+        var statusText = document.querySelector('#status > p');
+        if (this.currentError) {
+            status.style.backgroundColor = C.ERROR_BG_COLOR;
+            status.style.color = C.ERROR_TEXT_COLOR;
+            statusText.textContent = this.currentError;
+            return;
+        }
+        status.style.backgroundColor = C.OK_BG_COLOR;
+        status.style.color = C.OK_TEXT_COLOR;
+        if (this.inviteGameids && this.inviteGameids.length > 0) {
+            var links = this.inviteGameids.map(function (gameid) { return "<a href=\"./game.html?gameid=" + gameid + "&player=" + _this.username + "\">" + gameid + "</a>"; });
+            var text = "Current Games: " + links.join(', ');
+            if (statusText.innerHTML !== text)
+                statusText.innerHTML = text;
+        }
+        else {
+            statusText.textContent = "No current games";
+        }
+    };
+    LobbyMain.error = function (error, fatal) {
+        if (fatal === void 0) { fatal = false; }
+        console.error(error);
+        this.scriptManager.runScript(function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        LobbyMain.currentError = error;
+                        LobbyMain.setStatus();
+                        return [5 /*yield**/, __values(S.wait(3)())];
+                    case 1:
+                        _a.sent();
+                        if (!fatal) {
+                            LobbyMain.currentError = undefined;
+                            LobbyMain.setStatus();
+                        }
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    LobbyMain.delta = 0;
+    LobbyMain.mouseX = 0;
+    LobbyMain.mouseY = 0;
+    LobbyMain.mouseDown = false;
+    return LobbyMain;
+}());
+var WonderPreference = /** @class */ (function (_super) {
+    __extends(WonderPreference, _super);
+    function WonderPreference(wonderPreferenceList, preference, snapPosition) {
+        var _this = _super.call(this) || this;
+        _this.wonderPreferenceList = wonderPreferenceList;
+        _this.preference = preference;
+        _this.snapPosition = snapPosition;
+        _this.div.className = 'preferenceelement';
+        var p = _this.div.appendChild(document.createElement('p'));
+        p.className = 'preferenceelementtext';
+        p.innerText = preference.name;
+        // Dragging
+        _this.div.onmousedown = function (event) {
+            if (event.button !== 0)
+                return;
+            _this.dragging = {
+                offsetx: _this.x - LobbyMain.mouseX,
+                offsety: _this.y - LobbyMain.mouseY
+            };
+        };
+        return _this;
+    }
+    WonderPreference.prototype.update = function () {
+        if (this.dragging) {
+            this.x = LobbyMain.mouseX + this.dragging.offsetx;
+            this.y = LobbyMain.mouseY + this.dragging.offsety;
+            this.zIndex = C.Z_INDEX_CARD_DRAGGING;
+            if (!LobbyMain.mouseDown) {
+                this.dragging = null;
+                this.wonderPreferenceList.setWonderPreferences();
+            }
+        }
+        else {
+            this.x = this.snapPosition.x;
+            this.y = this.snapPosition.y;
+            this.zIndex = C.Z_INDEX_CARD_HAND;
+        }
+    };
+    WonderPreference.prototype.addToPage = function () {
+        this.addToGame(document.getElementById('preferencelist'));
+    };
+    return WonderPreference;
+}(GameElement));
+var WonderPreferenceList = /** @class */ (function () {
+    function WonderPreferenceList() {
+        this.wonderPreferences = [];
+    }
+    WonderPreferenceList.prototype.update = function () {
+        this.wonderPreferences.sort(function (wp1, wp2) { return wp1.y - wp2.y; });
+        for (var i = 0; i < this.wonderPreferences.length; i++) {
+            this.wonderPreferences[i].snapPosition = this.getPreferenceElementPos(i);
+            this.wonderPreferences[i].update();
+        }
+    };
+    WonderPreferenceList.prototype.create = function () {
+        this.wonderPreferences = [];
+        for (var i = 0; i < LobbyMain.user.wonder_preferences.length; i++) {
+            var pos = this.getPreferenceElementPos(i);
+            var wonderPreference = new WonderPreference(this, LobbyMain.user.wonder_preferences[i], pos);
+            wonderPreference.x = pos.x;
+            wonderPreference.y = pos.y;
+            wonderPreference.addToPage();
+            this.wonderPreferences.push(wonderPreference);
+        }
+    };
+    WonderPreferenceList.prototype.setWonderPreferences = function () {
+        LobbyMain.setWonderPreferences(this.wonderPreferences.map(function (wp) { return wp.preference; }));
+    };
+    WonderPreferenceList.prototype.getPreferenceElementPos = function (i) {
+        return new PIXI.Point(0, 32 * i);
+    };
+    return WonderPreferenceList;
+}());
 var S;
 (function (S) {
+    S.getDelta = function () { return 0; };
+    S.getScriptManager = function () { return undefined; };
     function call(callback) {
         return function () {
             return __generator(this, function (_a) {
@@ -5475,8 +5702,8 @@ var S;
                         t = 0;
                         _a.label = 1;
                     case 1:
-                        if (!(t + Main.delta < duration)) return [3 /*break*/, 3];
-                        t += Main.delta;
+                        if (!(t + S.getDelta() < duration)) return [3 /*break*/, 3];
+                        t += S.getDelta();
                         callback(t / duration);
                         return [4 /*yield*/];
                     case 2:
@@ -5526,7 +5753,7 @@ var S;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        scripts = scriptFunctions.map(function (sf) { return Main.scriptManager.runScript(sf); });
+                        scripts = scriptFunctions.map(function (sf) { return S.getScriptManager().runScript(sf); });
                         _a.label = 1;
                     case 1:
                         if (!scripts.some(function (s) { return !s.done; })) return [3 /*break*/, 3];
@@ -5612,10 +5839,14 @@ var Script = /** @class */ (function () {
     Script.instant = instant;
 })(Script || (Script = {}));
 var ScriptManager = /** @class */ (function () {
-    function ScriptManager() {
+    function ScriptManager(getDelta) {
         this.activeScripts = [];
+        this.getDelta = getDelta;
     }
     ScriptManager.prototype.update = function () {
+        var _this = this;
+        S.getDelta = this.getDelta;
+        S.getScriptManager = function () { return _this; };
         for (var i = this.activeScripts.length - 1; i >= 0; i--) {
             this.activeScripts[i].update();
             if (this.activeScripts[i].done) {

@@ -5,31 +5,25 @@
         <meta charset="utf-8">
         <script src="js/pixi.min.js"></script>
         <script src="js/game.js"></script>
-        <!--<link rel="preload" href="assets/cafeteria-black.ttf" as="font" type="font/ttf">-->
-        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="index.css">
         <script>
-            window.onload = function () { Main.start(); }
+            window.onload = function() { LobbyMain.start(); }
         </script>
     </head>
     <body style="background-color: black;">
         <div id="status">
             <p>Loading...</p>
         </div>
-        <div id="endscreen"></div>
-        <div id="game"></div>
-        <div id="cardlistelems" style="visibility: hidden;">
-            <div id="cardlisttitle">
-                <p class="cardlisttitle">Card List</p>
+        <p class="title"><span style="color: gold;">7 WONDERS</span> <span style="color: white;">CE</span></p>
+        <div id="main">
+            <div id="preferencesection" class="section">
+                <p class="sectiontitle">Wonder Preferences</p>
+                <div id="preferencelist"></div>
             </div>
-            <div id="cardlistheaders">
-                <p class="cardlistheader" style="left: calc(50% - 440px);">Age 1</p>
-                <p class="cardlistlabel" style="left: calc(50% - 340px);">Cost</p>
-                <p class="cardlistheader" style="left: calc(50% - 40px);">Age 2</p>
-                <p class="cardlistlabel" style="left: calc(50% + 60px);">Cost</p>
-                <p class="cardlistheader" style="left: calc(50% + 360px);">Age 3</p>
-                <p class="cardlistlabel" style="left: calc(50% + 460px);">Cost</p>
+            <div id="createsection" class="section">
+                <p class="sectiontitle">Create Game</p>
+                <p class="createsectioncontent">WIP</p>
             </div>
-            <div id="cardlist"></div>
         </div>
     </body>
 </html>

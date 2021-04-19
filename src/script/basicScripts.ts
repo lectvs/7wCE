@@ -1,4 +1,7 @@
 namespace S {
+    export var getDelta: () => number = () => 0;
+    export var getScriptManager: () => ScriptManager = () => undefined;
+
     export function call(callback: () => any) {
         return function*() {
             callback();
@@ -16,8 +19,8 @@ namespace S {
     export function doOverTime(duration: number, callback: (t: number) => any) {
         return function*() {
             let t = 0;
-            while (t + Main.delta < duration) {
-                t += Main.delta;
+            while (t + getDelta() < duration) {
+                t += getDelta();
                 callback(t/duration);
                 yield;
             }
@@ -36,7 +39,7 @@ namespace S {
 
     export function simul(...scriptFunctions: Script.Function[]) {
         return function*() {
-            let scripts = scriptFunctions.map(sf => Main.scriptManager.runScript(sf));
+            let scripts = scriptFunctions.map(sf => getScriptManager().runScript(sf));
             while (scripts.some(s => !s.done)) {
                 yield;
             }

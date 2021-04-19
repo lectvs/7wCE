@@ -1,0 +1,114 @@
+@font-face {
+    font-family: Possum Saltare;
+    src: url(assets/possum-saltare-nf.regular.otf);
+}
+
+body {
+    color: #FFFFFF;
+}
+
+#status {
+    background-color: white;
+    color: black;
+    font-family: 'Courier New', Courier, monospace;
+    width: 800px;
+    text-align: center;
+    margin: auto;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.title {
+    text-align: center;
+    margin: auto;
+    font-family: Possum Saltare;
+    font-size: 40px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+#main {
+    width: 1200px;
+    height: 550px;
+    position: relative;
+    left: 50%;
+    top: 10px;
+    transform: translate(-50%, 0%);
+}
+
+.section {
+    box-shadow: 0px 0px 0px 4px white inset;
+    border-radius: 20px;
+    position: absolute;
+}
+
+.sectiontitle {
+    text-align: center;
+    margin: auto;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    font-size: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+#preferencesection {
+    left: 0%;
+    top: 0%;
+    width: 39.5%;
+    height: 100%;
+}
+
+#preferencelist {
+    position: absolute;
+    left: 50%;
+    top: 15%;
+}
+
+.preferenceelement {
+    width: 200px;
+    height: 24px;
+    position: absolute;
+    transform: translate(-50%, -50%) !important;
+    background-color: black;
+    box-shadow: 0px 0px 0px 2px white inset;
+    cursor: pointer;
+}
+
+.preferenceelementtext {
+    position: relative;
+    left: 10%;
+    top: 50%;
+    font-family: 'Courier New', Courier, monospace;
+    transform: translate(0%, -50%);
+}
+
+#createsection {
+    left: 40.5%;
+    top: 0%;
+    width: 59.5%;
+    height: 100%;
+}
+
+.createsectioncontent {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 60px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+    background: transparent;
+}

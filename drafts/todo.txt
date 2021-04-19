@@ -1,5 +1,5 @@
 launch
-- randomly order players
+- handle duplicates in card list
 - fix stuck popups
     - potentially fixed?
 - indicator borders

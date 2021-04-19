@@ -41,7 +41,7 @@ class Main {
         this.cardList = <HTMLDivElement>document.getElementById('cardlist');
         this.moveImmuneTime = 0;
 
-        this.scriptManager = new ScriptManager();
+        this.scriptManager = new ScriptManager(() => this.delta);
 
         let params = new URLSearchParams(window.location.search);
         this.gameid = params.get('gameid');

@@ -110,6 +110,20 @@ namespace API {
         bank?: number;
     }
 
+    export type User = {
+        username: string;
+        wonder_preferences: WonderPreference[];
+    }
+
+    export type WonderPreference = {
+        id: string;
+        name: string;
+    }
+
+    export type GetInvitesResponse = {
+        gameids: string[];
+    }
+
     export function eqMove(move1: Move, move2: Move) {
         if (!move1 && !move2) return true;
         if (!move1 || !move2) return false;
@@ -278,6 +292,33 @@ namespace API {
             } else {
                 callback(responseJson['result'] === "SUCCESS", undefined);
             }
+        });
+    }
+
+    export function getuser(username: string, callback: (user: User, error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=getuser&username=${username}`, (responseJson: any, error: string) => {
+            if (error) {
+                callback(undefined, error);
+            } else {
+                callback(responseJson, undefined);
+            }
+        });
+    }
+
+    export function getinvites(username: string, callback: (result: GetInvitesResponse, error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=getinvites&username=${username}`, (responseJson: any, error: string) => {
+            if (error) {
+                callback(undefined, error);
+            } else {
+                callback(responseJson, undefined);
+            }
+        });
+    }
+
+    export function setwonderpreferences(username: string, preferences: WonderPreference[], callback: (error: string) => any) {
+        let preferencesString = preferences.map(pref => pref.id).join(',');
+        httpRequest(`${LAMBDA_URL}?operation=setwonderpreferences&username=${username}&preferences=${preferencesString}`, (responseJson: any, error: string) => {
+            callback(error);
         });
     }
 
