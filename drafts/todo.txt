@@ -1,8 +1,8 @@
 launch
+- pre-game join
 - handle duplicates in card list
 - point totals for guilds
-- error reporting on invalid player name
-- game creation
+- friend system
 
 post-launch
 - fix issue with science sorted rolls collapsing briefly during animation (when play gear?)

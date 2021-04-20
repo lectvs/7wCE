@@ -446,7 +446,7 @@ var API;
                 callback(undefined, error);
             }
             else {
-                callback(responseJson, undefined);
+                callback(responseJson['users'], undefined);
             }
         });
     }
@@ -457,7 +457,7 @@ var API;
                 callback(undefined, error);
             }
             else {
-                callback(responseJson, undefined);
+                callback(responseJson['gameids'], undefined);
             }
         });
     }
@@ -469,6 +469,17 @@ var API;
         });
     }
     API.setwonderpreferences = setwonderpreferences;
+    function creategame(options, callback) {
+        httpRequest(LAMBDA_URL + "?operation=creategame&players=" + options.players.join(',') + "&flags=" + options.flags.join(','), function (responseJson, error) {
+            if (error) {
+                callback(undefined, error);
+            }
+            else {
+                callback(responseJson['gameid'], undefined);
+            }
+        });
+    }
+    API.creategame = creategame;
     function httpRequest(url, callback) {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url, true);
@@ -4112,13 +4123,13 @@ var Main = /** @class */ (function () {
             }
             console.log('Got game state:', gamestate);
             _this.gamestate = gamestate;
-            API.getusers(_this.gamestate.players, function (response, error) {
+            API.getusers(_this.gamestate.players, function (users, error) {
                 if (error) {
                     Main.error('Failed to get user info: ' + error);
                     return;
                 }
-                console.log('Got user info:', response.users);
-                _this.users = response.users;
+                console.log('Got user info:', users);
+                _this.users = users;
                 PIXI.Loader.shared.add('wood', 'assets/wood.svg');
                 PIXI.Loader.shared.add('stone', 'assets/stone.svg');
                 PIXI.Loader.shared.add('ore', 'assets/ore.svg');
@@ -5486,6 +5497,66 @@ var WonderBoardForChoose = /** @class */ (function (_super) {
     };
     return WonderBoardForChoose;
 }(GameElement));
+var CreateGameSection = /** @class */ (function () {
+    function CreateGameSection() {
+    }
+    CreateGameSection.prototype.create = function () {
+        var TOP_Y = 80;
+        var DY = 32;
+        this.playersElement = document.getElementById('createsectionplayers');
+        this.optionsElement = document.getElementById('createsectionoptions');
+        // Players
+        var players = ["Dartm", "jamesn", "pittmang", "djbfox1115", "CuongManh", "TonyWu-", "LaterGator", "BOT1", "BOT2", "BOT3", "BOT4", "BOT5", "BOT6"];
+        players.splice(players.indexOf(LobbyMain.username), 1);
+        for (var i = 0; i < players.length; i++) {
+            this.playersElement.appendChild(this.checkbox('player', players[i], players[i], 32, TOP_Y + DY * i, false));
+        }
+        // Options
+        this.optionsElement.appendChild(this.checkbox('option', 'Use wonder preferences', 'respect_preferences', 32, TOP_Y, true));
+    };
+    CreateGameSection.prototype.getOptions = function () {
+        var players = [LobbyMain.username];
+        var flags = [];
+        document.querySelectorAll('input[id^=player_]').forEach(function (node) {
+            var input = node;
+            var player = input.getAttribute('data');
+            if (input.checked) {
+                players.push(player);
+            }
+        });
+        document.querySelectorAll('input[id^=option_]').forEach(function (node) {
+            var input = node;
+            var flag = input.getAttribute('data');
+            if (input.checked) {
+                flags.push(flag);
+            }
+        });
+        return {
+            players: players,
+            flags: flags
+        };
+    };
+    CreateGameSection.prototype.checkbox = function (type, label, data, x, y, checked) {
+        var element = document.createElement('div');
+        element.className = 'createsectioncheckbox';
+        element.style.left = x + "px";
+        element.style.top = y + "px";
+        var input = document.createElement('input');
+        input.id = type + "_" + label;
+        input.setAttribute('data', data);
+        input.className = 'createsectioncheckboxbox';
+        input.type = 'checkbox';
+        input.checked = checked;
+        var labelE = document.createElement('label');
+        labelE.setAttribute('for', type + "_" + label);
+        labelE.className = 'createsectioncheckboxtext';
+        labelE.innerText = label;
+        element.appendChild(input);
+        element.appendChild(labelE);
+        return element;
+    };
+    return CreateGameSection;
+}());
 var LobbyMain = /** @class */ (function () {
     function LobbyMain() {
     }
@@ -5502,32 +5573,66 @@ var LobbyMain = /** @class */ (function () {
         this.scriptManager = new ScriptManager(function () { return _this.delta; });
         var params = new URLSearchParams(window.location.search);
         this.username = params.get('player');
-        if (!this.username) {
-            this.error('player must be passed in queryParameters', true);
-            return;
-        }
         PIXI.Ticker.shared.add(function (delta) {
             _this.delta = delta / 60;
             _this.update();
         });
-        API.getusers([this.username], function (response, error) {
+        if (!this.username) {
+            this.error('player must be passed in queryParameters', true);
+            return;
+        }
+        API.getusers([this.username], function (users, error) {
             if (error) {
                 _this.error(error, true);
                 return;
             }
-            if (!response.users[_this.username]) {
+            if (!users[_this.username]) {
                 _this.error("User " + _this.username + " does not exist", true);
                 return;
             }
-            console.log('Fetched user:', response.users[_this.username]);
-            _this.user = response.users[_this.username];
+            console.log('Fetched user:', users[_this.username]);
+            _this.user = users[_this.username];
             _this.load();
         });
+        this.createGameSection = new CreateGameSection();
+        this.createGameSection.create();
     };
     LobbyMain.load = function () {
         this.wonderPreferenceList = new WonderPreferenceList();
         this.wonderPreferenceList.create();
         this.getInvites();
+    };
+    LobbyMain.createGame = function () {
+        var _this = this;
+        var options = this.createGameSection.getOptions();
+        API.creategame(options, function (gameid, error) {
+            if (error) {
+                _this.error('Failed to create game: ' + error);
+                return;
+            }
+            console.log('Created game with id:', gameid);
+            window.location.href = "./game.html?gameid=" + gameid + "&player=" + _this.username;
+        });
+        // Disable button for a bit to avoid duplicate game creation
+        this.scriptManager.runScript(function () {
+            var button;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        button = document.getElementById('createsectionbutton');
+                        button.disabled = true;
+                        button.style.backgroundColor = '#888888';
+                        button.querySelector('p').innerText = 'Creating...';
+                        return [5 /*yield**/, __values(S.wait(3)())];
+                    case 1:
+                        _a.sent();
+                        button.disabled = false;
+                        button.style.backgroundColor = '#FFFFFF';
+                        button.querySelector('p').innerText = 'Create Game';
+                        return [2 /*return*/];
+                }
+            });
+        });
     };
     LobbyMain.update = function () {
         this.scriptManager.update();
@@ -5542,13 +5647,13 @@ var LobbyMain = /** @class */ (function () {
     };
     LobbyMain.getInvites = function () {
         var _this = this;
-        API.getinvites(this.username, function (result, error) {
+        API.getinvites(this.username, function (gameids, error) {
             if (error) {
                 _this.error(error);
                 _this.sendUpdate();
                 return;
             }
-            _this.inviteGameids = result.gameids;
+            _this.inviteGameids = gameids;
             _this.setStatus();
             _this.sendUpdate();
         });

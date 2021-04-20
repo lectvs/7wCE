@@ -101,8 +101,6 @@ namespace API {
         effects: Effect[];
     }
 
-    export type MoveHistory = Dict<Dict<Move>>;
-
     export type Move = {
         action: 'play' | 'wonder' | 'throw' | 'reject';
         card: number;
@@ -117,10 +115,6 @@ namespace API {
         bank?: number;
     }
 
-    export type GetUsersResponse = {
-        users: Dict<User>;
-    }
-
     export type User = {
         username: string;
         wonder_preferences: WonderPreference[];
@@ -132,8 +126,9 @@ namespace API {
         name: string;
     }
 
-    export type GetInvitesResponse = {
-        gameids: string[];
+    export type CreateGameOptions = {
+        players: string[];
+        flags: string[];
     }
 
     export function eqMove(move1: Move, move2: Move) {
@@ -307,22 +302,22 @@ namespace API {
         });
     }
 
-    export function getusers(usernames: string[], callback: (response: GetUsersResponse, error: string) => any) {
+    export function getusers(usernames: string[], callback: (users: Dict<User>, error: string) => any) {
         httpRequest(`${LAMBDA_URL}?operation=getusers&usernames=${usernames.join(',')}`, (responseJson: any, error: string) => {
             if (error) {
                 callback(undefined, error);
             } else {
-                callback(responseJson, undefined);
+                callback(responseJson['users'], undefined);
             }
         });
     }
 
-    export function getinvites(username: string, callback: (result: GetInvitesResponse, error: string) => any) {
+    export function getinvites(username: string, callback: (gameids: string[], error: string) => any) {
         httpRequest(`${LAMBDA_URL}?operation=getinvites&username=${username}`, (responseJson: any, error: string) => {
             if (error) {
                 callback(undefined, error);
             } else {
-                callback(responseJson, undefined);
+                callback(responseJson['gameids'], undefined);
             }
         });
     }
@@ -331,6 +326,16 @@ namespace API {
         let preferencesString = preferences.map(pref => pref.id).join(',');
         httpRequest(`${LAMBDA_URL}?operation=setwonderpreferences&username=${username}&preferences=${preferencesString}`, (responseJson: any, error: string) => {
             callback(error);
+        });
+    }
+
+    export function creategame(options: CreateGameOptions, callback: (gameid: string, error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=creategame&players=${options.players.join(',')}&flags=${options.flags.join(',')}`, (responseJson: any, error: string) => {
+            if (error) {
+                callback(undefined, error);
+            } else {
+                callback(responseJson['gameid'], undefined);
+            }
         });
     }
 

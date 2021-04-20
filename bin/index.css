@@ -94,13 +94,66 @@ body {
     height: 100%;
 }
 
-.createsectioncontent {
+#createsectionplayers {
+    width: 33%;
+    height: 100%;
+    float: left;
+    position: relative;
+}
+
+#createsectionoptions {
+    width: 33%;
+    height: 100%;
+    float: left;
+    position: relative;
+}
+
+.createsectionheader {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 30px;
+    font-size: 20px;
+    position: absolute;
+}
+
+.createsectioncheckbox {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 20px;
+    position: absolute;
+}
+
+.createsectioncheckboxbox {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+}
+
+.createsectioncheckboxtext {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 16px;
+    position: absolute;
+    left: 20px;
+    top: -2px;
+}
+
+#createsectionbutton {
+    width: 200px;
+    height: 50px;
+    border-radius: 10px;
+    background-color: white;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+}
+
+#createsectionbuttontext {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 20px;
+    color: black;
+    width: 100%;
     position: absolute;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
+    text-align: center;
 }
 
 * {

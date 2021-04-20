@@ -72,14 +72,14 @@ class Main {
             console.log('Got game state:', gamestate);
             this.gamestate = gamestate;
 
-            API.getusers(this.gamestate.players, (response: API.GetUsersResponse, error: string) => {
+            API.getusers(this.gamestate.players, (users: Dict<API.User>, error: string) => {
                 if (error) {
                     Main.error('Failed to get user info: ' + error);
                     return;
                 }
 
-                console.log('Got user info:', response.users);
-                this.users = response.users;
+                console.log('Got user info:', users);
+                this.users = users;
     
                 PIXI.Loader.shared.add('wood', 'assets/wood.svg');
                 PIXI.Loader.shared.add('stone', 'assets/stone.svg');
