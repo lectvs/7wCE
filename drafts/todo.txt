@@ -1,13 +1,11 @@
 launch
 - handle duplicates in card list
-- fix stuck popups
-    - potentially fixed?
 - indicator borders
 - point totals for guilds
 - error reporting on invalid player name
-- game lobby
 
 post-launch
+- fix issue with science sorted rolls collapsing briefly during animation (when play gear?)
 - custom blur filter
 - fix scene cannot scroll left when zoomed in
 - delay military points until after animation end

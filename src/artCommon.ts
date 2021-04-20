@@ -20,6 +20,12 @@ namespace ArtCommon {
     export const resourceOuterColor = 0xD89846;
     export const selectionColor = 0xFF0000;
 
+    export function eloDiffColor(diff: number) {
+        if (diff > 0) return '#00FF00';
+        if (diff < 0) return '#FF0000';
+        return '#888888';
+    }
+
     export function domElementForArt(art: PIXI.DisplayObject, scale: number = 1, padding: number = 0) {
         art.scale.set(art.scale.x * scale, art.scale.y * scale);
         let bounds = art.getBounds();

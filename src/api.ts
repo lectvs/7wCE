@@ -29,6 +29,7 @@ namespace API {
         lastMove?: Move;
         currentMove?: Move;
         pointsDistribution: PointsDistribution;
+        elo?: EloData;
         totalShields: number;
     }
 
@@ -46,6 +47,12 @@ namespace API {
         guild: number;
         science: number;
         total: number;
+    }
+
+    export type EloData = {
+        before: number;
+        diff: number;
+        after: number;
     }
 
     export type Card = {
@@ -110,9 +117,14 @@ namespace API {
         bank?: number;
     }
 
+    export type GetUsersResponse = {
+        users: Dict<User>;
+    }
+
     export type User = {
         username: string;
         wonder_preferences: WonderPreference[];
+        elo: number;
     }
 
     export type WonderPreference = {
@@ -295,8 +307,8 @@ namespace API {
         });
     }
 
-    export function getuser(username: string, callback: (user: User, error: string) => any) {
-        httpRequest(`${LAMBDA_URL}?operation=getuser&username=${username}`, (responseJson: any, error: string) => {
+    export function getusers(usernames: string[], callback: (response: GetUsersResponse, error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=getusers&usernames=${usernames.join(',')}`, (responseJson: any, error: string) => {
             if (error) {
                 callback(undefined, error);
             } else {

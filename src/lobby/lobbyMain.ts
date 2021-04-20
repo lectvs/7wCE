@@ -39,13 +39,18 @@ class LobbyMain {
             this.update();
         });
 
-        API.getuser(this.username, (user: API.User, error: string) => {
+        API.getusers([this.username], (response: API.GetUsersResponse, error: string) => {
             if (error) {
                 this.error(error, true);
                 return;
             }
-            console.log('Fetched user:', user);
-            this.user = user;
+
+            if (!response.users[this.username]) {
+                this.error(`User ${this.username} does not exist`, true);
+                return;
+            }
+            console.log('Fetched user:', response.users[this.username]);
+            this.user = response.users[this.username];
             this.load();
         });
     }

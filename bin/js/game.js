@@ -440,8 +440,8 @@ var API;
         });
     }
     API.updategame = updategame;
-    function getuser(username, callback) {
-        httpRequest(LAMBDA_URL + "?operation=getuser&username=" + username, function (responseJson, error) {
+    function getusers(usernames, callback) {
+        httpRequest(LAMBDA_URL + "?operation=getusers&usernames=" + usernames.join(','), function (responseJson, error) {
             if (error) {
                 callback(undefined, error);
             }
@@ -450,7 +450,7 @@ var API;
             }
         });
     }
-    API.getuser = getuser;
+    API.getusers = getusers;
     function getinvites(username, callback) {
         httpRequest(LAMBDA_URL + "?operation=getinvites&username=" + username, function (responseJson, error) {
             if (error) {
@@ -514,6 +514,14 @@ var ArtCommon;
     ArtCommon.discardPileColor = 0x888888;
     ArtCommon.resourceOuterColor = 0xD89846;
     ArtCommon.selectionColor = 0xFF0000;
+    function eloDiffColor(diff) {
+        if (diff > 0)
+            return '#00FF00';
+        if (diff < 0)
+            return '#FF0000';
+        return '#888888';
+    }
+    ArtCommon.eloDiffColor = eloDiffColor;
     function domElementForArt(art, scale, padding) {
         if (scale === void 0) { scale = 1; }
         if (padding === void 0) { padding = 0; }
@@ -2525,11 +2533,13 @@ var C = /** @class */ (function () {
     C.PAYMENT_DIALOG_CLOSE_BUTTON_SCALE = 0.15;
     C.END_SCREEN_PLACEMENTS_Y = 50;
     C.END_SCREEN_NAMES_Y = 80;
-    C.END_SCREEN_POINTS_Y = 130;
+    C.END_SCREEN_ELOS_Y = 105;
+    C.END_SCREEN_POINTS_Y = 145;
     C.END_SCREEN_POINTS_DX = 110;
     C.END_SCREEN_POINTS_DY = 37.5;
     C.END_SCREEN_SYMBOL_SIZE = 24;
     C.END_SCREEN_TEXT_SIZE = 18;
+    C.END_SCREEN_ELO_TEXT_SIZE = 12;
     C.END_SCREEN_TEXT_COLOR = '#FFFFFF';
     C.CARD_LIST_HEADER_TEXT_SIZE = 24;
     C.CARD_LIST_HEADER_TEXT_COLOR = '#FFFFFF';
@@ -2625,7 +2635,7 @@ function getDescriptionForEffect(effect) {
         return effect.points_per_card + " VP for each " + effect.color + " card played by you";
     }
     else if (effect.type === 'multi_science') {
-        return "At the end of the game, becomes the science symbol which gives you the most points";
+        return "At the end of the game, becomes the most highest value science symbol for you";
     }
     else if (effect.type === 'play_last_card') {
         return "You may play your last card instead of discarding it at the end of each age";
@@ -2673,6 +2683,16 @@ var EndScreen = /** @class */ (function () {
                     placements[i] = placements[i - 1];
             }
         }
+        var elos = players.map(function (player) {
+            var elo = Main.gamestate.playerData[player].elo;
+            if (!elo)
+                return '--';
+            var before = Math.round(elo.before);
+            var after = Math.round(elo.after);
+            var diff = after - before;
+            var sign = (diff >= 0) ? '+' : '';
+            return after + " <span style=\"color:" + ArtCommon.eloDiffColor(diff) + "\">(" + sign + diff + ")</span>";
+        });
         var endscreen = document.getElementById('endscreen');
         var shield = ArtCommon.shield();
         shield.scale.set(0.25);
@@ -2696,19 +2716,20 @@ var EndScreen = /** @class */ (function () {
         endscreen.appendChild(this.scoreArt(greenCard, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 4 + "px"));
         endscreen.appendChild(this.scoreArt(yellowCard, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 5 + "px"));
         endscreen.appendChild(this.scoreArt(purpleCard, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 6 + "px"));
-        endscreen.appendChild(this.scoreText('Total', "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 7 + "px"));
+        endscreen.appendChild(this.scoreText('Total', C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 7 + "px"));
         for (var i = 0; i < players.length; i++) {
             var x_1 = (i - (players.length - 1) / 2) * C.END_SCREEN_POINTS_DX;
-            endscreen.appendChild(this.scoreText("#" + placements[i], "calc(50% + " + x_1 + "px)", C.END_SCREEN_PLACEMENTS_Y + "px"));
-            endscreen.appendChild(this.scoreText(players[i], "calc(50% + " + x_1 + "px)", C.END_SCREEN_NAMES_Y + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].conflict, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 0 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].finance, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 1 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].wonder, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 2 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].civilian, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 3 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].science, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 4 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].commerce, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 5 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].guild, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 6 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsTotals[i], "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 7 + "px"));
+            endscreen.appendChild(this.scoreText("#" + placements[i], C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_PLACEMENTS_Y + "px"));
+            endscreen.appendChild(this.scoreText(players[i], C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_NAMES_Y + "px"));
+            endscreen.appendChild(this.scoreText("" + elos[i], C.END_SCREEN_ELO_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_ELOS_Y + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].conflict, C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 0 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].finance, C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 1 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].wonder, C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 2 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].civilian, C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 3 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].science, C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 4 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].commerce, C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 5 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].guild, C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 6 + "px"));
+            endscreen.appendChild(this.scoreText("" + pointsTotals[i], C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 7 + "px"));
         }
     };
     EndScreen.prototype.destroy = function () {
@@ -2723,11 +2744,11 @@ var EndScreen = /** @class */ (function () {
         art.style.top = ys;
         return art;
     };
-    EndScreen.prototype.scoreText = function (text, xs, ys) {
+    EndScreen.prototype.scoreText = function (text, size, xs, ys) {
         var p = document.createElement('p');
         p.innerHTML = text;
         p.style.fontFamily = "'Courier New', Courier, monospace";
-        p.style.fontSize = C.END_SCREEN_TEXT_SIZE + "px";
+        p.style.fontSize = size + "px";
         p.style.color = C.END_SCREEN_TEXT_COLOR;
         p.style.transform = 'translate(-50%, -50%)';
         p.style.position = 'absolute';
@@ -4079,27 +4100,35 @@ var Main = /** @class */ (function () {
             }
             console.log('Got game state:', gamestate);
             _this.gamestate = gamestate;
-            PIXI.Loader.shared.add('wood', 'assets/wood.svg');
-            PIXI.Loader.shared.add('stone', 'assets/stone.svg');
-            PIXI.Loader.shared.add('ore', 'assets/ore.svg');
-            PIXI.Loader.shared.add('clay', 'assets/clay.svg');
-            PIXI.Loader.shared.add('glass', 'assets/glass.svg');
-            PIXI.Loader.shared.add('press', 'assets/press.svg');
-            PIXI.Loader.shared.add('loom', 'assets/loom.svg');
-            PIXI.Loader.shared.add('shield', 'assets/shield.svg');
-            PIXI.Loader.shared.add('goldcoin', 'assets/goldcoin.svg');
-            PIXI.Loader.shared.add('pointswreath', 'assets/pointswreath.svg');
-            PIXI.Loader.shared.add('compass', 'assets/compass.svg');
-            PIXI.Loader.shared.add('tablet', 'assets/tablet.svg');
-            PIXI.Loader.shared.add('gear', 'assets/gear.svg');
-            PIXI.Loader.shared.add('pyramid_full', 'assets/pyramid_full.svg');
-            PIXI.Loader.shared.add('pyramid_stages', 'assets/pyramid_stages.svg');
-            PIXI.Loader.shared.add('falcon', 'assets/falcon.svg');
-            PIXI.Loader.shared.load(function (loader, resources) {
-                for (var resource in resources) {
-                    Resources.PIXI_TEXTURES[resource] = resources[resource].texture;
+            API.getusers(_this.gamestate.players, function (response, error) {
+                if (error) {
+                    Main.error('Failed to get user info: ' + error);
+                    return;
                 }
-                _this.loader.loadGamestateResources();
+                console.log('Got user info:', response.users);
+                _this.users = response.users;
+                PIXI.Loader.shared.add('wood', 'assets/wood.svg');
+                PIXI.Loader.shared.add('stone', 'assets/stone.svg');
+                PIXI.Loader.shared.add('ore', 'assets/ore.svg');
+                PIXI.Loader.shared.add('clay', 'assets/clay.svg');
+                PIXI.Loader.shared.add('glass', 'assets/glass.svg');
+                PIXI.Loader.shared.add('press', 'assets/press.svg');
+                PIXI.Loader.shared.add('loom', 'assets/loom.svg');
+                PIXI.Loader.shared.add('shield', 'assets/shield.svg');
+                PIXI.Loader.shared.add('goldcoin', 'assets/goldcoin.svg');
+                PIXI.Loader.shared.add('pointswreath', 'assets/pointswreath.svg');
+                PIXI.Loader.shared.add('compass', 'assets/compass.svg');
+                PIXI.Loader.shared.add('tablet', 'assets/tablet.svg');
+                PIXI.Loader.shared.add('gear', 'assets/gear.svg');
+                PIXI.Loader.shared.add('pyramid_full', 'assets/pyramid_full.svg');
+                PIXI.Loader.shared.add('pyramid_stages', 'assets/pyramid_stages.svg');
+                PIXI.Loader.shared.add('falcon', 'assets/falcon.svg');
+                PIXI.Loader.shared.load(function (loader, resources) {
+                    for (var resource in resources) {
+                        Resources.PIXI_TEXTURES[resource] = resources[resource].texture;
+                    }
+                    _this.loader.loadGamestateResources();
+                });
             });
         });
     };
@@ -5271,7 +5300,8 @@ var Wonder = /** @class */ (function (_super) {
         sidebar.style.width = C.WONDER_BOARD_WIDTH + "px";
         sidebar.style.height = C.WONDER_BOARD_HEIGHT + "px";
         sidebar.style.position = 'absolute';
-        var nameText = sidebar.appendChild(this.drawSidebarText(this.player, C.WONDER_SIDEBAR_NAME_SIZE));
+        var nameElo = this.player in Main.users ? this.player + "<span style=\"font-size: 12px\"> (" + Main.users[this.player].elo + ")</span>" : this.player;
+        var nameText = sidebar.appendChild(this.drawSidebarText(nameElo, C.WONDER_SIDEBAR_NAME_SIZE));
         nameText.style.left = C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_NAME_X + "px";
         nameText.style.top = C.WONDER_SIDEBAR_NAME_Y + "px";
         var goldCoin = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.goldCoin(), C.WONDER_SIDEBAR_GOLD_COIN_SCALE));
@@ -5305,7 +5335,7 @@ var Wonder = /** @class */ (function (_super) {
         div.style.position = 'absolute';
         div.style.transform = 'translate(-100%, 0)';
         var p = div.appendChild(document.createElement('p'));
-        p.textContent = text;
+        p.innerHTML = text;
         p.style.fontFamily = "'Courier New', Courier, monospace";
         p.style.fontSize = size + "px";
         p.style.color = "#FFFFFF";
@@ -5421,7 +5451,8 @@ var WonderBoardForChoose = /** @class */ (function (_super) {
         sidebar.style.width = C.WONDER_BOARD_WIDTH + "px";
         sidebar.style.height = C.WONDER_BOARD_HEIGHT + "px";
         sidebar.style.position = 'absolute';
-        var nameText = sidebar.appendChild(this.drawSidebarText(this.player, C.WONDER_SIDEBAR_NAME_SIZE));
+        var nameElo = this.player in Main.users ? this.player + "<span style=\"font-size: 12px\"> (" + Main.users[this.player].elo + ")</span>" : this.player;
+        var nameText = sidebar.appendChild(this.drawSidebarText(nameElo, C.WONDER_SIDEBAR_NAME_SIZE));
         nameText.style.left = C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_NAME_X + "px";
         nameText.style.top = C.WONDER_SIDEBAR_NAME_Y + "px";
         return sidebar;
@@ -5432,7 +5463,7 @@ var WonderBoardForChoose = /** @class */ (function (_super) {
         div.style.position = 'absolute';
         div.style.transform = 'translate(-100%, 0)';
         var p = div.appendChild(document.createElement('p'));
-        p.textContent = text;
+        p.innerHTML = text;
         p.style.fontFamily = "'Courier New', Courier, monospace";
         p.style.fontSize = size + "px";
         p.style.color = "#FFFFFF";
@@ -5467,13 +5498,17 @@ var LobbyMain = /** @class */ (function () {
             _this.delta = delta / 60;
             _this.update();
         });
-        API.getuser(this.username, function (user, error) {
+        API.getusers([this.username], function (response, error) {
             if (error) {
                 _this.error(error, true);
                 return;
             }
-            console.log('Fetched user:', user);
-            _this.user = user;
+            if (!response.users[_this.username]) {
+                _this.error("User " + _this.username + " does not exist", true);
+                return;
+            }
+            console.log('Fetched user:', response.users[_this.username]);
+            _this.user = response.users[_this.username];
             _this.load();
         });
     };

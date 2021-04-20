@@ -2,6 +2,7 @@ class Main {
     static gameid: string;
     static player: string;
     static gamestate: API.GameState;
+    static users: Dict<API.User>;
     static currentError: string;
 
     static mouseX: number = 0;
@@ -71,27 +72,37 @@ class Main {
             console.log('Got game state:', gamestate);
             this.gamestate = gamestate;
 
-            PIXI.Loader.shared.add('wood', 'assets/wood.svg');
-            PIXI.Loader.shared.add('stone', 'assets/stone.svg');
-            PIXI.Loader.shared.add('ore', 'assets/ore.svg');
-            PIXI.Loader.shared.add('clay', 'assets/clay.svg');
-            PIXI.Loader.shared.add('glass', 'assets/glass.svg');
-            PIXI.Loader.shared.add('press', 'assets/press.svg');
-            PIXI.Loader.shared.add('loom', 'assets/loom.svg');
-            PIXI.Loader.shared.add('shield', 'assets/shield.svg');
-            PIXI.Loader.shared.add('goldcoin', 'assets/goldcoin.svg');
-            PIXI.Loader.shared.add('pointswreath', 'assets/pointswreath.svg');
-            PIXI.Loader.shared.add('compass', 'assets/compass.svg');
-            PIXI.Loader.shared.add('tablet', 'assets/tablet.svg');
-            PIXI.Loader.shared.add('gear', 'assets/gear.svg');
-            PIXI.Loader.shared.add('pyramid_full', 'assets/pyramid_full.svg');
-            PIXI.Loader.shared.add('pyramid_stages', 'assets/pyramid_stages.svg');
-            PIXI.Loader.shared.add('falcon', 'assets/falcon.svg');
-            PIXI.Loader.shared.load((loader: any, resources: Dict<PIXI.LoaderResource>) => {
-                for (let resource in resources) {
-                    Resources.PIXI_TEXTURES[resource] = resources[resource].texture;
+            API.getusers(this.gamestate.players, (response: API.GetUsersResponse, error: string) => {
+                if (error) {
+                    Main.error('Failed to get user info: ' + error);
+                    return;
                 }
-                this.loader.loadGamestateResources();
+
+                console.log('Got user info:', response.users);
+                this.users = response.users;
+    
+                PIXI.Loader.shared.add('wood', 'assets/wood.svg');
+                PIXI.Loader.shared.add('stone', 'assets/stone.svg');
+                PIXI.Loader.shared.add('ore', 'assets/ore.svg');
+                PIXI.Loader.shared.add('clay', 'assets/clay.svg');
+                PIXI.Loader.shared.add('glass', 'assets/glass.svg');
+                PIXI.Loader.shared.add('press', 'assets/press.svg');
+                PIXI.Loader.shared.add('loom', 'assets/loom.svg');
+                PIXI.Loader.shared.add('shield', 'assets/shield.svg');
+                PIXI.Loader.shared.add('goldcoin', 'assets/goldcoin.svg');
+                PIXI.Loader.shared.add('pointswreath', 'assets/pointswreath.svg');
+                PIXI.Loader.shared.add('compass', 'assets/compass.svg');
+                PIXI.Loader.shared.add('tablet', 'assets/tablet.svg');
+                PIXI.Loader.shared.add('gear', 'assets/gear.svg');
+                PIXI.Loader.shared.add('pyramid_full', 'assets/pyramid_full.svg');
+                PIXI.Loader.shared.add('pyramid_stages', 'assets/pyramid_stages.svg');
+                PIXI.Loader.shared.add('falcon', 'assets/falcon.svg');
+                PIXI.Loader.shared.load((loader: any, resources: Dict<PIXI.LoaderResource>) => {
+                    for (let resource in resources) {
+                        Resources.PIXI_TEXTURES[resource] = resources[resource].texture;
+                    }
+                    this.loader.loadGamestateResources();
+                });
             });
         });
     }

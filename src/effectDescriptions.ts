@@ -30,7 +30,7 @@ function getDescriptionForEffect(effect: API.Effect) {
     } else if (effect.type === 'points_for_self_cards') {
         return `${effect.points_per_card} VP for each ${effect.color} card played by you`;
     } else if (effect.type === 'multi_science') {
-        return `At the end of the game, becomes the science symbol which gives you the most points`;
+        return `At the end of the game, becomes the most highest value science symbol for you`;
     } else if (effect.type === 'play_last_card') {
         return `You may play your last card instead of discarding it at the end of each age`;
     } else if (effect.type === 'build_from_discard') {
