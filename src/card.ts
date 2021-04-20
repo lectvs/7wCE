@@ -32,7 +32,8 @@ class Card extends GameElement {
 
     frontDiv: HTMLDivElement;
     backDiv: HTMLDivElement;
-    private highlight: HTMLDivElement;
+    private highlightEffect: HTMLDivElement;
+    private highlightFlipped: HTMLDivElement;
     private checkMark: HTMLDivElement;
 
     private allowPlay: boolean;
@@ -149,15 +150,15 @@ class Card extends GameElement {
         this.frontDiv.style.transformOrigin = 'left center';
         let front = this.frontDiv.appendChild(this.cardResource.front);
         front.style.transform = `translate(-50%, -${C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2}px)`;
+        this.highlightEffect = this.frontDiv.appendChild(this.drawHighlightEffect());
         let payment = this.frontDiv.appendChild(this.drawPayment());
         payment.style.transform = `translate(-50%, -${C.CARD_TITLE_HEIGHT + C.CARD_PAYMENT_HEIGHT + C.CARD_BANNER_HEIGHT/2}px)`;
         payment.style.visibility = drawPayment ? 'visible' : 'hidden';
         this.backDiv = this.div.appendChild(document.createElement('div'));
         this.backDiv.style.transformOrigin = 'left center';
+        this.highlightFlipped = this.backDiv.appendChild(this.drawHighlightFlipped());
         let back = this.backDiv.appendChild(this.cardResource.back);
         back.style.transform = `translate(-50%, -${C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2}px)`;
-        let highlightDiv = this.div.appendChild(document.createElement('div'));
-        this.highlight = highlightDiv.appendChild(this.drawHighlight());
 
         this.checkMark = this.backDiv.appendChild(document.createElement('div'));
         this.checkMark.style.position = 'absolute';
@@ -310,11 +311,10 @@ class Card extends GameElement {
             alpha = 0;
         }
 
-        if (alpha > 0) {
-            this.highlight.style.width = `${this._width}px`;
-            this.highlight.style.transform = `translate(-50%, -${lerp(C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2, C.CARD_EFFECT_HEIGHT/2 + C.CARD_EFFECT_CLIP_PADDING, this.effectT)}px)`;
-        }
-        this.highlight.style.boxShadow = `inset 0px 0px 0px 4px rgba(255, 0, 0, ${alpha})`;
+        this.highlightEffect.style.boxShadow = `inset 0px 0px 0px ${C.CARD_HIGHLIGHT}px rgba(255, 0, 0, ${alpha})`;
+        this.highlightEffect.style.visibility = this.visualState === 'effect' ? 'visible' : 'hidden';
+        this.highlightFlipped.style.backgroundColor = `rgba(255, 0, 0, ${alpha})`;
+        this.highlightFlipped.style.visibility = this.visualState === 'flipped' ? 'visible' : 'hidden';
     }
 
     snap() {
@@ -398,8 +398,24 @@ class Card extends GameElement {
         return render(payment, C.CARD_WIDTH, C.CARD_PAYMENT_HEIGHT);
     }
 
-    private drawHighlight() {
+    private drawHighlightEffect() {
         let highlight = document.createElement('div');
+        highlight.style.width = `${this.cardResource.effectClipRect.width}px`;
+        highlight.style.height = `${this.cardResource.effectClipRect.height}px`;
+        highlight.style.transform = 'translate(-50%, -50%)';
+        highlight.style.position = 'absolute';
+        highlight.style.pointerEvents = 'none';
+        return highlight;
+    }
+
+    
+    private drawHighlightFlipped() {
+        let highlight = document.createElement('div');
+        highlight.style.width = `${C.CARD_WIDTH + 2*C.CARD_HIGHLIGHT}px`;
+        highlight.style.height = `${C.CARD_HEIGHT + 2*C.CARD_HIGHLIGHT}px`;
+        highlight.style.borderRadius = `${C.CARD_CORNER_RADIUS}px`;
+        highlight.style.transform = `translate(-50%, ${-C.CARD_BANNER_HEIGHT/2 - C.CARD_TITLE_HEIGHT - C.CARD_HIGHLIGHT}px)`;
+        highlight.style.position = 'absolute';
         highlight.style.pointerEvents = 'none';
         return highlight;
     }

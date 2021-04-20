@@ -277,7 +277,7 @@ class Wonder extends GameElement {
         sidebar.style.height = `${C.WONDER_BOARD_HEIGHT}px`;
         sidebar.style.position = 'absolute';
 
-        let nameElo = this.player in Main.users ? `${this.player}<span style="font-size: 12px"> (${Main.users[this.player].elo})</span>` : this.player;
+        let nameElo = this.player in Main.users ? `${this.player}<span style="font-size: 12px"> (${Math.round(Main.users[this.player].elo)})</span>` : this.player;
         let nameText = sidebar.appendChild(this.drawSidebarText(nameElo, C.WONDER_SIDEBAR_NAME_SIZE));
         nameText.style.left = `${C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_NAME_X}px`;
         nameText.style.top = `${C.WONDER_SIDEBAR_NAME_Y}px`;

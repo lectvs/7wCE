@@ -53,6 +53,7 @@ class C {
     public static readonly CARD_PAYMENT_HEIGHT = 24;
     public static readonly CARD_PAYMENT_SCALE = 0.15;
     public static readonly CARD_PAYMENT_OFFSET_X = -8.25;
+    public static readonly CARD_HIGHLIGHT = 3;
     public static readonly CARD_DISCARD_COUNT_TEXT_SIZE = 36;
     public static readonly CARD_CENTER_OFFSET_Y = 45;
 

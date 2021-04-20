@@ -1,8 +1,8 @@
 launch
 - handle duplicates in card list
-- indicator borders
 - point totals for guilds
 - error reporting on invalid player name
+- game creation
 
 post-launch
 - fix issue with science sorted rolls collapsing briefly during animation (when play gear?)

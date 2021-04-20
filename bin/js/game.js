@@ -1555,15 +1555,15 @@ var Card = /** @class */ (function (_super) {
         this.frontDiv.style.transformOrigin = 'left center';
         var front = this.frontDiv.appendChild(this.cardResource.front);
         front.style.transform = "translate(-50%, -" + (C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2) + "px)";
+        this.highlightEffect = this.frontDiv.appendChild(this.drawHighlightEffect());
         var payment = this.frontDiv.appendChild(this.drawPayment());
         payment.style.transform = "translate(-50%, -" + (C.CARD_TITLE_HEIGHT + C.CARD_PAYMENT_HEIGHT + C.CARD_BANNER_HEIGHT / 2) + "px)";
         payment.style.visibility = drawPayment ? 'visible' : 'hidden';
         this.backDiv = this.div.appendChild(document.createElement('div'));
         this.backDiv.style.transformOrigin = 'left center';
+        this.highlightFlipped = this.backDiv.appendChild(this.drawHighlightFlipped());
         var back = this.backDiv.appendChild(this.cardResource.back);
         back.style.transform = "translate(-50%, -" + (C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2) + "px)";
-        var highlightDiv = this.div.appendChild(document.createElement('div'));
-        this.highlight = highlightDiv.appendChild(this.drawHighlight());
         this.checkMark = this.backDiv.appendChild(document.createElement('div'));
         this.checkMark.style.position = 'absolute';
         this.checkMark.style.left = '0%';
@@ -1735,11 +1735,10 @@ var Card = /** @class */ (function (_super) {
         else {
             alpha = 0;
         }
-        if (alpha > 0) {
-            this.highlight.style.width = this._width + "px";
-            this.highlight.style.transform = "translate(-50%, -" + lerp(C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2, C.CARD_EFFECT_HEIGHT / 2 + C.CARD_EFFECT_CLIP_PADDING, this.effectT) + "px)";
-        }
-        this.highlight.style.boxShadow = "inset 0px 0px 0px 4px rgba(255, 0, 0, " + alpha + ")";
+        this.highlightEffect.style.boxShadow = "inset 0px 0px 0px " + C.CARD_HIGHLIGHT + "px rgba(255, 0, 0, " + alpha + ")";
+        this.highlightEffect.style.visibility = this.visualState === 'effect' ? 'visible' : 'hidden';
+        this.highlightFlipped.style.backgroundColor = "rgba(255, 0, 0, " + alpha + ")";
+        this.highlightFlipped.style.visibility = this.visualState === 'flipped' ? 'visible' : 'hidden';
     };
     Card.prototype.snap = function () {
         this.update();
@@ -1834,8 +1833,22 @@ var Card = /** @class */ (function (_super) {
         payment.position.set(C.CARD_WIDTH + C.CARD_PAYMENT_OFFSET_X, C.CARD_PAYMENT_HEIGHT / 2);
         return render(payment, C.CARD_WIDTH, C.CARD_PAYMENT_HEIGHT);
     };
-    Card.prototype.drawHighlight = function () {
+    Card.prototype.drawHighlightEffect = function () {
         var highlight = document.createElement('div');
+        highlight.style.width = this.cardResource.effectClipRect.width + "px";
+        highlight.style.height = this.cardResource.effectClipRect.height + "px";
+        highlight.style.transform = 'translate(-50%, -50%)';
+        highlight.style.position = 'absolute';
+        highlight.style.pointerEvents = 'none';
+        return highlight;
+    };
+    Card.prototype.drawHighlightFlipped = function () {
+        var highlight = document.createElement('div');
+        highlight.style.width = C.CARD_WIDTH + 2 * C.CARD_HIGHLIGHT + "px";
+        highlight.style.height = C.CARD_HEIGHT + 2 * C.CARD_HIGHLIGHT + "px";
+        highlight.style.borderRadius = C.CARD_CORNER_RADIUS + "px";
+        highlight.style.transform = "translate(-50%, " + (-C.CARD_BANNER_HEIGHT / 2 - C.CARD_TITLE_HEIGHT - C.CARD_HIGHLIGHT) + "px)";
+        highlight.style.position = 'absolute';
         highlight.style.pointerEvents = 'none';
         return highlight;
     };
@@ -2418,6 +2431,7 @@ var C = /** @class */ (function () {
     C.CARD_PAYMENT_HEIGHT = 24;
     C.CARD_PAYMENT_SCALE = 0.15;
     C.CARD_PAYMENT_OFFSET_X = -8.25;
+    C.CARD_HIGHLIGHT = 3;
     C.CARD_DISCARD_COUNT_TEXT_SIZE = 36;
     C.CARD_CENTER_OFFSET_Y = 45;
     C.HAND_Y = 64;
@@ -4039,8 +4053,6 @@ var Loader = /** @class */ (function () {
             resource.loaded = true;
         };
     };
-    Loader.prototype.loadCardList = function () {
-    };
     Loader.prototype.addNewResource = function () {
         var resource = {
             load: undefined,
@@ -5300,7 +5312,7 @@ var Wonder = /** @class */ (function (_super) {
         sidebar.style.width = C.WONDER_BOARD_WIDTH + "px";
         sidebar.style.height = C.WONDER_BOARD_HEIGHT + "px";
         sidebar.style.position = 'absolute';
-        var nameElo = this.player in Main.users ? this.player + "<span style=\"font-size: 12px\"> (" + Main.users[this.player].elo + ")</span>" : this.player;
+        var nameElo = this.player in Main.users ? this.player + "<span style=\"font-size: 12px\"> (" + Math.round(Main.users[this.player].elo) + ")</span>" : this.player;
         var nameText = sidebar.appendChild(this.drawSidebarText(nameElo, C.WONDER_SIDEBAR_NAME_SIZE));
         nameText.style.left = C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_NAME_X + "px";
         nameText.style.top = C.WONDER_SIDEBAR_NAME_Y + "px";
@@ -5451,7 +5463,7 @@ var WonderBoardForChoose = /** @class */ (function (_super) {
         sidebar.style.width = C.WONDER_BOARD_WIDTH + "px";
         sidebar.style.height = C.WONDER_BOARD_HEIGHT + "px";
         sidebar.style.position = 'absolute';
-        var nameElo = this.player in Main.users ? this.player + "<span style=\"font-size: 12px\"> (" + Main.users[this.player].elo + ")</span>" : this.player;
+        var nameElo = this.player in Main.users ? this.player + "<span style=\"font-size: 12px\"> (" + Math.round(Main.users[this.player].elo) + ")</span>" : this.player;
         var nameText = sidebar.appendChild(this.drawSidebarText(nameElo, C.WONDER_SIDEBAR_NAME_SIZE));
         nameText.style.left = C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_NAME_X + "px";
         nameText.style.top = C.WONDER_SIDEBAR_NAME_Y + "px";
