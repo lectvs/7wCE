@@ -2,7 +2,7 @@ launch
 - pre-game join
 - handle duplicates in card list
 - point totals for guilds
-- friend system
+- speed difference based on framerate
 
 post-launch
 - fix issue with science sorted rolls collapsing briefly during animation (when play gear?)
@@ -11,7 +11,6 @@ post-launch
 - delay military points until after animation end
 - consolidate loading percentage
 - combine identical effects on info popups
-- speed difference based on framerate
 - debug firefox issues
 - names bleeding into other names
 - identical cards swapping

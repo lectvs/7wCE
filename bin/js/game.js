@@ -5506,11 +5506,11 @@ var CreateGameSection = /** @class */ (function () {
         this.playersElement = document.getElementById('createsectionplayers');
         this.optionsElement = document.getElementById('createsectionoptions');
         // Players
-        var players = ["Dartm", "jamesn", "pittmang", "djbfox1115", "CuongManh", "TonyWu-", "LaterGator", "BOT1", "BOT2", "BOT3", "BOT4", "BOT5", "BOT6"];
-        players.splice(players.indexOf(LobbyMain.username), 1);
+        var players = LobbyMain.user.friends;
         for (var i = 0; i < players.length; i++) {
             this.playersElement.appendChild(this.checkbox('player', players[i], players[i], 32, TOP_Y + DY * i, false));
         }
+        this.playersElement.appendChild(this.botbox(32, TOP_Y + DY * players.length));
         // Options
         this.optionsElement.appendChild(this.checkbox('option', 'Use wonder preferences', 'respect_preferences', 32, TOP_Y, true));
     };
@@ -5524,6 +5524,11 @@ var CreateGameSection = /** @class */ (function () {
                 players.push(player);
             }
         });
+        var bots = document.querySelector('#bots');
+        var numBots = parseInt(bots.value);
+        for (var i = 1; i <= numBots; i++) {
+            players.push("BOT" + i);
+        }
         document.querySelectorAll('input[id^=option_]').forEach(function (node) {
             var input = node;
             var flag = input.getAttribute('data');
@@ -5538,19 +5543,41 @@ var CreateGameSection = /** @class */ (function () {
     };
     CreateGameSection.prototype.checkbox = function (type, label, data, x, y, checked) {
         var element = document.createElement('div');
-        element.className = 'createsectioncheckbox';
+        element.className = 'createsectiondata';
         element.style.left = x + "px";
         element.style.top = y + "px";
         var input = document.createElement('input');
         input.id = type + "_" + label;
         input.setAttribute('data', data);
-        input.className = 'createsectioncheckboxbox';
+        input.className = 'createsectioninput';
         input.type = 'checkbox';
         input.checked = checked;
         var labelE = document.createElement('label');
         labelE.setAttribute('for', type + "_" + label);
-        labelE.className = 'createsectioncheckboxtext';
+        labelE.className = 'createsectioninputtext';
         labelE.innerText = label;
+        labelE.style.left = '20px';
+        labelE.style.top = '-2px';
+        element.appendChild(input);
+        element.appendChild(labelE);
+        return element;
+    };
+    CreateGameSection.prototype.botbox = function (x, y) {
+        var element = document.createElement('div');
+        element.className = 'createsectiondata';
+        element.style.left = x + "px";
+        element.style.top = y + "px";
+        var input = document.createElement('input');
+        input.id = 'bots';
+        input.className = 'createsectiontextbox';
+        input.type = 'text';
+        input.value = '0';
+        var labelE = document.createElement('label');
+        labelE.setAttribute('for', 'bots');
+        labelE.className = 'createsectioninputtext';
+        labelE.innerText = 'Bots';
+        labelE.style.left = '20px';
+        labelE.style.top = '0px';
         element.appendChild(input);
         element.appendChild(labelE);
         return element;
@@ -5594,12 +5621,12 @@ var LobbyMain = /** @class */ (function () {
             _this.user = users[_this.username];
             _this.load();
         });
-        this.createGameSection = new CreateGameSection();
-        this.createGameSection.create();
     };
     LobbyMain.load = function () {
         this.wonderPreferenceList = new WonderPreferenceList();
         this.wonderPreferenceList.create();
+        this.createGameSection = new CreateGameSection();
+        this.createGameSection.create();
         this.getInvites();
     };
     LobbyMain.createGame = function () {

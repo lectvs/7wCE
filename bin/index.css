@@ -114,24 +114,33 @@ body {
     position: absolute;
 }
 
-.createsectioncheckbox {
+.createsectiondata {
     font-family: 'Courier New', Courier, monospace;
     font-size: 20px;
     position: absolute;
 }
 
-.createsectioncheckboxbox {
+.createsectioninput {
     position: absolute;
     left: 0px;
     top: 0px;
 }
 
-.createsectioncheckboxtext {
+.createsectiontextbox {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    background-color: white;
+    width: 12px;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.createsectioninputtext {
     font-family: 'Courier New', Courier, monospace;
     font-size: 16px;
     position: absolute;
-    left: 20px;
-    top: -2px;
 }
 
 #createsectionbutton {

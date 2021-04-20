@@ -54,14 +54,13 @@ class LobbyMain {
             this.user = users[this.username];
             this.load();
         });
-
-        this.createGameSection = new CreateGameSection();
-        this.createGameSection.create();
     }
 
     static load() {
         this.wonderPreferenceList = new WonderPreferenceList();
         this.wonderPreferenceList.create();
+        this.createGameSection = new CreateGameSection();
+        this.createGameSection.create();
         this.getInvites();
     }
 

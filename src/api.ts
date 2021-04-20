@@ -119,6 +119,7 @@ namespace API {
         username: string;
         wonder_preferences: WonderPreference[];
         elo: number;
+        friends: string[];
     }
 
     export type WonderPreference = {
