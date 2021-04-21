@@ -126,7 +126,6 @@ class LobbyMain {
 
     static setWonderPreferences(preferences: API.WonderPreference[]) {
         API.setwonderpreferences(this.username, preferences, (error: string) => {
-            console.log(preferences)
             if (error) {
                 this.error(error);
                 return;

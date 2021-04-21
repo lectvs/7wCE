@@ -4,7 +4,6 @@ launch
 - speed difference based on framerate
 - password-protect APIs
 - optimize
-- debug firefox issues
 
 post-launch
 - art refinement

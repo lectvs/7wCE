@@ -5751,7 +5751,6 @@ var LobbyMain = /** @class */ (function () {
     LobbyMain.setWonderPreferences = function (preferences) {
         var _this = this;
         API.setwonderpreferences(this.username, preferences, function (error) {
-            console.log(preferences);
             if (error) {
                 _this.error(error);
                 return;
