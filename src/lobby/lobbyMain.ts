@@ -1,5 +1,6 @@
 class LobbyMain {
     static username: string;
+    static password_hash: string;
     static user: API.User;
     static inviteGameids: string[];
     static currentError: string;
@@ -14,6 +15,12 @@ class LobbyMain {
     static wonderPreferenceList: WonderPreferenceList;
     static createGameSection: CreateGameSection;
 
+    static redirectIfNotLoggedIn() {
+        if (!getCookieUserInfo()) {
+            window.location.href = './login.html';
+        }
+    }
+
     static start() {
         window.addEventListener('mousedown', () => this.mouseDown = true);
         window.addEventListener('mouseup', () => this.mouseDown = false);
@@ -27,18 +34,20 @@ class LobbyMain {
         this.mouseDown = false;
         this.scriptManager = new ScriptManager(() => this.delta);
 
-        let params = new URLSearchParams(window.location.search);
-        this.username = params.get('player');
+        let userpass = getCookieUserInfo();
+        if (!userpass) {
+            window.location.href = './login.html';
+            return;
+        }
+        this.username = userpass.username;
+        this.password_hash = userpass.password_hash;
+
+        document.getElementsByClassName('userinfo')[0].innerHTML = `Logged in as ${this.username} (<a class="userinfolink" href="" onclick="Login.logout()">Logout</a>)`;
 
         PIXI.Ticker.shared.add(delta => {
             this.delta = delta/60;
             this.update();
         });
-
-        if (!this.username) {
-            this.error('player must be passed in queryParameters', true);
-            return;
-        }
 
         API.getusers([this.username], (users: Dict<API.User>, error: string) => {
             if (error) {
@@ -72,7 +81,7 @@ class LobbyMain {
                 return;
             }
             console.log('Created game with id:', gameid);
-            window.location.href = `./game.html?gameid=${gameid}&player=${this.username}`;
+            window.location.href = `./game.html?gameid=${gameid}`;
         });
 
         // Disable button for a bit to avoid duplicate game creation
@@ -141,7 +150,7 @@ class LobbyMain {
         status.style.color = C.OK_TEXT_COLOR;
 
         if (this.inviteGameids && this.inviteGameids.length > 0) {
-            let links = this.inviteGameids.map(gameid => `<a href="./game.html?gameid=${gameid}&player=${this.username}">${gameid}</a>`);
+            let links = this.inviteGameids.map(gameid => `<a href="./game.html?gameid=${gameid}">${gameid}</a>`);
             let text = `Current Games: ${links.join(', ')}`;
             if (statusText.innerHTML !== text) statusText.innerHTML = text;
         } else {

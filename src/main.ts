@@ -1,6 +1,7 @@
 class Main {
     static gameid: string;
     static player: string;
+    static password_hash: string;
     static gamestate: API.GameState;
     static users: Dict<API.User>;
     static currentError: string;
@@ -46,7 +47,14 @@ class Main {
 
         let params = new URLSearchParams(window.location.search);
         this.gameid = params.get('gameid');
-        this.player = params.get('player');
+
+        let userpass = getCookieUserInfo();
+        if (!userpass) {
+            window.location.href = './login.html';
+            return;
+        }
+        this.player = userpass.username;
+        this.password_hash = userpass.password_hash;
 
         this.loader = new Loader(() => {
             this.setupGame();
@@ -58,8 +66,8 @@ class Main {
             this.update();
         });
 
-        if (!this.gameid || !this.player) {
-            Main.error('gameid and player must be specified in URL parameters');
+        if (!this.gameid) {
+            Main.error('gameid must be specified in URL parameters');
             return;
         }
 

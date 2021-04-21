@@ -35,6 +35,31 @@ function filledArray<T>(len: number, fillWith: T) {
     return result;
 }
 
+function getCookieUserInfo() {
+    let cookies = document.cookie.split('; ');
+    let usernameCookie = cookies.find(l => l.startsWith('username='));
+    let passwordHashCookie = cookies.find(l => l.startsWith('password_hash='));
+    if (!usernameCookie || !passwordHashCookie) {
+        return undefined;
+    }
+
+    return {
+        username: usernameCookie.split('username=')[1],
+        password_hash: passwordHashCookie.split('password_hash=')[1]
+    };
+}
+
+function hash(str: string) {
+    var hash: number = 0, i: number, chr: number;
+    if (!str || str.length === 0) return '0';
+    for (i = 0; i < str.length; i++) {
+        chr = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + chr;
+        hash |= 0; // Convert to 32-bit integer
+    }
+    return `${hash}`;
+}
+
 function lerp(a: number, b: number, t: number) {
     return a + (b-a)*t;
 }

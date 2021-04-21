@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>7 Wonders CE</title>
+        <meta charset="utf-8">
+        <script src="js/pixi.min.js"></script>
+        <script src="js/game.js"></script>
+        <link rel="stylesheet" href="login.css">
+        <script>
+            window.onload = function() { Login.start(); }
+        </script>
+    </head>
+    <body style="background-color: black;">
+        <p class="title"><span style="color: gold;">7 WONDERS</span> <span style="color: white;">CE</span></p>
+        <div id="main">
+            <form id="form" onsubmit="Login.login()">
+                <div id="cdiv" style="top: 50px">
+                    <label for="username">Username: </label>
+                    <input id="username" type="text"/>
+                </div>
+                <div id="cdiv" style="top: 80px">
+                    <label for="password">Password: </label>
+                    <input id="password" type="password"/>
+                </div>
+                <button id="loginbutton" type="submit" style="left: 50%; top: 150px"><p id="loginbuttontext">Log In</p></button>
+                <p id="error" style="top: 200px"></p>
+            </form>
+        </div>
+    </body>
+</html>

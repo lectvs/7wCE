@@ -480,6 +480,12 @@ var API;
         });
     }
     API.creategame = creategame;
+    function login(username, password_hash, callback) {
+        httpRequest(LAMBDA_URL + "?operation=login&username=" + username + "&password_hash=" + password_hash, function (responseJson, error) {
+            callback(error);
+        });
+    }
+    API.login = login;
     function httpRequest(url, callback) {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url, true);
@@ -4103,7 +4109,13 @@ var Main = /** @class */ (function () {
         this.scriptManager = new ScriptManager(function () { return _this.delta; });
         var params = new URLSearchParams(window.location.search);
         this.gameid = params.get('gameid');
-        this.player = params.get('player');
+        var userpass = getCookieUserInfo();
+        if (!userpass) {
+            window.location.href = './login.html';
+            return;
+        }
+        this.player = userpass.username;
+        this.password_hash = userpass.password_hash;
         this.loader = new Loader(function () {
             _this.setupGame();
         });
@@ -4112,8 +4124,8 @@ var Main = /** @class */ (function () {
             _this.time += _this.delta;
             _this.update();
         });
-        if (!this.gameid || !this.player) {
-            Main.error('gameid and player must be specified in URL parameters');
+        if (!this.gameid) {
+            Main.error('gameid must be specified in URL parameters');
             return;
         }
         API.getgamestate(this.gameid, this.player, function (gamestate, error) {
@@ -5013,6 +5025,29 @@ function filledArray(len, fillWith) {
     }
     return result;
 }
+function getCookieUserInfo() {
+    var cookies = document.cookie.split('; ');
+    var usernameCookie = cookies.find(function (l) { return l.startsWith('username='); });
+    var passwordHashCookie = cookies.find(function (l) { return l.startsWith('password_hash='); });
+    if (!usernameCookie || !passwordHashCookie) {
+        return undefined;
+    }
+    return {
+        username: usernameCookie.split('username=')[1],
+        password_hash: passwordHashCookie.split('password_hash=')[1]
+    };
+}
+function hash(str) {
+    var hash = 0, i, chr;
+    if (!str || str.length === 0)
+        return '0';
+    for (i = 0; i < str.length; i++) {
+        chr = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + chr;
+        hash |= 0; // Convert to 32-bit integer
+    }
+    return "" + hash;
+}
 function lerp(a, b, t) {
     return a + (b - a) * t;
 }
@@ -5587,6 +5622,11 @@ var CreateGameSection = /** @class */ (function () {
 var LobbyMain = /** @class */ (function () {
     function LobbyMain() {
     }
+    LobbyMain.redirectIfNotLoggedIn = function () {
+        if (!getCookieUserInfo()) {
+            window.location.href = './login.html';
+        }
+    };
     LobbyMain.start = function () {
         var _this = this;
         window.addEventListener('mousedown', function () { return _this.mouseDown = true; });
@@ -5598,16 +5638,18 @@ var LobbyMain = /** @class */ (function () {
         };
         this.mouseDown = false;
         this.scriptManager = new ScriptManager(function () { return _this.delta; });
-        var params = new URLSearchParams(window.location.search);
-        this.username = params.get('player');
+        var userpass = getCookieUserInfo();
+        if (!userpass) {
+            window.location.href = './login.html';
+            return;
+        }
+        this.username = userpass.username;
+        this.password_hash = userpass.password_hash;
+        document.getElementsByClassName('userinfo')[0].innerHTML = "Logged in as " + this.username + " (<a class=\"userinfolink\" href=\"\" onclick=\"Login.logout()\">Logout</a>)";
         PIXI.Ticker.shared.add(function (delta) {
             _this.delta = delta / 60;
             _this.update();
         });
-        if (!this.username) {
-            this.error('player must be passed in queryParameters', true);
-            return;
-        }
         API.getusers([this.username], function (users, error) {
             if (error) {
                 _this.error(error, true);
@@ -5638,7 +5680,7 @@ var LobbyMain = /** @class */ (function () {
                 return;
             }
             console.log('Created game with id:', gameid);
-            window.location.href = "./game.html?gameid=" + gameid + "&player=" + _this.username;
+            window.location.href = "./game.html?gameid=" + gameid;
         });
         // Disable button for a bit to avoid duplicate game creation
         this.scriptManager.runScript(function () {
@@ -5697,7 +5739,6 @@ var LobbyMain = /** @class */ (function () {
         });
     };
     LobbyMain.setStatus = function () {
-        var _this = this;
         var status = document.querySelector('#status');
         var statusText = document.querySelector('#status > p');
         if (this.currentError) {
@@ -5709,7 +5750,7 @@ var LobbyMain = /** @class */ (function () {
         status.style.backgroundColor = C.OK_BG_COLOR;
         status.style.color = C.OK_TEXT_COLOR;
         if (this.inviteGameids && this.inviteGameids.length > 0) {
-            var links = this.inviteGameids.map(function (gameid) { return "<a href=\"./game.html?gameid=" + gameid + "&player=" + _this.username + "\">" + gameid + "</a>"; });
+            var links = this.inviteGameids.map(function (gameid) { return "<a href=\"./game.html?gameid=" + gameid + "\">" + gameid + "</a>"; });
             var text = "Current Games: " + links.join(', ');
             if (statusText.innerHTML !== text)
                 statusText.innerHTML = text;
@@ -5817,6 +5858,42 @@ var WonderPreferenceList = /** @class */ (function () {
         return new PIXI.Point(0, 32 * i);
     };
     return WonderPreferenceList;
+}());
+var Login = /** @class */ (function () {
+    function Login() {
+    }
+    Login.start = function () {
+        var form = document.getElementById('form');
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+        });
+    };
+    Login.login = function () {
+        var errorp = document.getElementById('error');
+        errorp.innerText = '';
+        var username = document.forms["form"]["username"].value;
+        var password = document.forms["form"]["password"].value;
+        if (!username || !password) {
+            errorp.innerText = 'Username and password must be provided';
+            return;
+        }
+        var password_hash = hash(password);
+        API.login(username, password_hash, function (error) {
+            if (error) {
+                errorp.innerText = error;
+                return;
+            }
+            document.cookie = "username=" + username + "; max-age=31536000";
+            document.cookie = "password_hash=" + password_hash + "; max-age=31536000";
+            window.location.href = './';
+        });
+    };
+    Login.logout = function () {
+        document.cookie = 'username=; max-age=-99999999';
+        document.cookie = 'password_hash=; max-age=-99999999';
+        window.location.href = './login.html';
+    };
+    return Login;
 }());
 var S;
 (function (S) {

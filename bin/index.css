@@ -7,6 +7,15 @@ body {
     color: #FFFFFF;
 }
 
+a.userinfolink {
+    color: rgb(0, 153, 255);
+    text-decoration: none;
+}
+
+a.userinfolink:active {
+    color: blue;
+}
+
 #status {
     background-color: white;
     color: black;
@@ -28,6 +37,13 @@ body {
     font-family: Possum Saltare;
     font-size: 40px;
     padding-top: 20px;
+}
+
+.userinfo {
+    text-align: center;
+    margin: auto;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
     padding-bottom: 20px;
 }
 

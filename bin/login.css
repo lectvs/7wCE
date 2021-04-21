@@ -1,0 +1,93 @@
+@font-face {
+    font-family: Possum Saltare;
+    src: url(assets/possum-saltare-nf.regular.otf);
+}
+
+body {
+    color: #FFFFFF;
+}
+
+#status {
+    background-color: white;
+    color: black;
+    font-family: 'Courier New', Courier, monospace;
+    width: 800px;
+    text-align: center;
+    margin: auto;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.title {
+    text-align: center;
+    margin: auto;
+    font-family: Possum Saltare;
+    font-size: 40px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+input {
+    background-color: white;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+label {
+    font-family: 'Courier New', Courier, monospace;
+}
+
+#main {
+    position: absolute;
+    width: 100%;
+}
+
+#cdiv {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 0%);
+}
+
+#loginbutton {
+    width: 100px;
+    height: 30px;
+    border-radius: 6px;
+    background-color: white;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+}
+
+#loginbuttontext {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 20px;
+    color: black;
+    width: 100%;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+#error {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 16px;
+    color: red;
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 0%);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+    background: transparent;
+}

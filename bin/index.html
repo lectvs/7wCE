@@ -7,6 +7,7 @@
         <script src="js/game.js"></script>
         <link rel="stylesheet" href="index.css">
         <script>
+            LobbyMain.redirectIfNotLoggedIn();
             window.onload = function() { LobbyMain.start(); }
         </script>
     </head>
@@ -15,6 +16,7 @@
             <p>Loading...</p>
         </div>
         <p class="title"><span style="color: gold;">7 WONDERS</span> <span style="color: white;">CE</span></p>
+        <p class="userinfo"></p>
         <div id="main">
             <div id="preferencesection" class="section">
                 <p class="sectiontitle">Wonder Preferences<span style="font-size: 12px;"><br>(Drag to reorder, high = favorite)</span></p>

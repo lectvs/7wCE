@@ -340,6 +340,12 @@ namespace API {
         });
     }
 
+    export function login(username: string, password_hash: string, callback: (error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=login&username=${username}&password_hash=${password_hash}`, (responseJson: any, error: string) => {
+            callback(error);
+        });
+    }
+
     function httpRequest(url: string, callback: (responseJson: any, error: string) => any) {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url, true);
