@@ -1880,11 +1880,12 @@ var Card = /** @class */ (function (_super) {
 }(GameElement));
 var CardForList = /** @class */ (function (_super) {
     __extends(CardForList, _super);
-    function CardForList(scene, cardId) {
+    function CardForList(scene, cardId, count) {
         var _this = _super.call(this) || this;
         _this.scene = scene;
         _this.apiCardId = cardId;
         _this.apiCard = Main.gamestate.cards[cardId];
+        _this.count = count;
         _this.create();
         // Popup
         _this.div.onmousemove = function () {
@@ -1925,6 +1926,9 @@ var CardForList = /** @class */ (function (_super) {
         var _a, _b;
         var info = document.createElement('div');
         info.style.position = 'absolute';
+        if (this.count > 1) {
+            info.appendChild(this.infoText(this.count + " \u00D7", '-60px', '0px'));
+        }
         var resourceCost = ((_a = this.apiCard.cost) === null || _a === void 0 ? void 0 : _a.resources) || [];
         var goldCost = ((_b = this.apiCard.cost) === null || _b === void 0 ? void 0 : _b.gold) || 0;
         if (this.apiCard.cost) {
@@ -1958,6 +1962,18 @@ var CardForList = /** @class */ (function (_super) {
             }
         }
         return info;
+    };
+    CardForList.prototype.infoText = function (text, xs, ys) {
+        var p = document.createElement('p');
+        p.innerHTML = text;
+        p.style.fontFamily = "'Courier New', Courier, monospace";
+        p.style.fontSize = C.CARD_LIST_INFO_TEXT_SIZE + "px";
+        p.style.color = C.CARD_LIST_INFO_TEXT_COLOR;
+        p.style.transform = 'translate(-100%, -50%)';
+        p.style.position = 'absolute';
+        p.style.left = xs;
+        p.style.top = ys;
+        return p;
     };
     return CardForList;
 }(GameElement));
@@ -2170,8 +2186,8 @@ var CardListScene = /** @class */ (function () {
             var y = 0;
             try {
                 for (var _b = (e_16 = void 0, __values(deck[age])), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var cardId = _c.value;
-                    var card = new CardForList(this, cardId);
+                    var cardInfo = _c.value;
+                    var card = new CardForList(this, cardInfo.id, cardInfo.count);
                     card.x = x;
                     card.y = y;
                     card.addToGame(Main.cardList);
@@ -2578,6 +2594,8 @@ var C = /** @class */ (function () {
     C.CARD_LIST_CARD_WIDTH = 96;
     C.CARD_LIST_CARD_HEIGHT = 40;
     C.CARD_LIST_EFFECT_SCALE = 0.24;
+    C.CARD_LIST_INFO_TEXT_SIZE = 16;
+    C.CARD_LIST_INFO_TEXT_COLOR = '#FFFFFF';
     C.CARD_LIST_CARD_DX = 400;
     C.CARD_LIST_CARD_DY = C.CARD_LIST_CARD_HEIGHT;
     C.SORT_CMP_RESOURCES = function (card1, card2) {

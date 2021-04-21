@@ -1,6 +1,5 @@
 launch
 - pre-game join
-- handle duplicates in card list
 - point totals for guilds
 - speed difference based on framerate
 - password-protect APIs
@@ -19,3 +18,4 @@ post-launch
 - names bleeding into other names
 - which players are online?
 - BGA move mode
+- store lambda code in version control?

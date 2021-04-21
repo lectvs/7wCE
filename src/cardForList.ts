@@ -3,13 +3,15 @@ class CardForList extends GameElement {
 
     apiCardId: number;
     apiCard: API.Card;
+    count: number;
 
-    constructor(scene: CardListScene, cardId: number) {
+    constructor(scene: CardListScene, cardId: number, count: number) {
         super();
 
         this.scene = scene;
         this.apiCardId = cardId;
         this.apiCard = Main.gamestate.cards[cardId];
+        this.count = count;
 
         this.create();
 
@@ -58,6 +60,10 @@ class CardForList extends GameElement {
         let info = document.createElement('div');
         info.style.position = 'absolute';
 
+        if (this.count > 1) {
+            info.appendChild(this.infoText(`${this.count} ×`, '-60px', '0px'));
+        }
+
         let resourceCost = this.apiCard.cost?.resources || [];
         let goldCost = this.apiCard.cost?.gold || 0;
 
@@ -91,5 +97,18 @@ class CardForList extends GameElement {
         }
 
         return info;
+    }
+
+    protected infoText(text: string, xs: string, ys: string) {
+        let p = document.createElement('p');
+        p.innerHTML = text;
+        p.style.fontFamily = "'Courier New', Courier, monospace";
+        p.style.fontSize = `${C.CARD_LIST_INFO_TEXT_SIZE}px`;
+        p.style.color = C.CARD_LIST_INFO_TEXT_COLOR;
+        p.style.transform = 'translate(-100%, -50%)';
+        p.style.position = 'absolute';
+        p.style.left = xs;
+        p.style.top = ys;
+        return p;
     }
 }

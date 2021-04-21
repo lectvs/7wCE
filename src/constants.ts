@@ -192,6 +192,8 @@ class C {
     public static readonly CARD_LIST_CARD_WIDTH = 96;
     public static readonly CARD_LIST_CARD_HEIGHT = 40;
     public static readonly CARD_LIST_EFFECT_SCALE = 0.24;
+    public static readonly CARD_LIST_INFO_TEXT_SIZE = 16;
+    public static readonly CARD_LIST_INFO_TEXT_COLOR = '#FFFFFF';
     public static readonly CARD_LIST_CARD_DX = 400;
     public static readonly CARD_LIST_CARD_DY = C.CARD_LIST_CARD_HEIGHT;
 

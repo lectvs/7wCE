@@ -8,7 +8,7 @@ namespace API {
         age: number;
         turn: number;
         turnInAge: number;
-        deck: Dict<number[]>;
+        deck: Dict<{id: number, count: number}[]>;
         playerData: Dict<PlayerData>;
         discardedCards?: number[]
         discardedCardCount: number;
