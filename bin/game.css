@@ -13,6 +13,19 @@
     border-bottom-right-radius: 8px;
 }
 
+a#backtolobby {
+    font-family: 'Courier New', Courier, monospace;
+    position: absolute;
+    left: 20px;
+    top: 10px;
+    color: rgb(0, 153, 255);
+    text-decoration: none;
+}
+
+a#backtolobby:active {
+    color: blue;
+}
+
 .popup {
     pointer-events: none;
 }

@@ -1,5 +1,4 @@
 launch
-- link back to lobby
 - pre-game join
 - handle duplicates in card list
 - point totals for guilds
