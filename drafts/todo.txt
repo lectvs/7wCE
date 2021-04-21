@@ -4,6 +4,8 @@ launch
 - point totals for guilds
 - speed difference based on framerate
 - password-protect APIs
+- optimize
+- debug firefox issues
 
 post-launch
 - art refinement
@@ -14,8 +16,6 @@ post-launch
 - delay military points until after animation end
 - consolidate loading percentage
 - combine identical effects on info popups
-- debug firefox issues
 - names bleeding into other names
-- identical cards swapping
 - which players are online?
 - BGA move mode

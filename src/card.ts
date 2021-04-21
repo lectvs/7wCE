@@ -16,6 +16,7 @@ type DraggingData = {
 class Card extends GameElement {
     private scene: GameScene;
 
+    index: number;
     apiCardId: number;
     apiCard: API.Card;
     cardResource: CardResource;
@@ -94,10 +95,11 @@ class Card extends GameElement {
         this.checkMark.style.visibility = value ? 'visible' : 'hidden';
     }
 
-    constructor(scene: GameScene, cardId: number, handPosition: PIXI.Point, activeWonder: Wonder, validMoves: API.Move[]) {
+    constructor(scene: GameScene, cardId: number, index: number, handPosition: PIXI.Point, activeWonder: Wonder, validMoves: API.Move[]) {
         super();
 
         this.scene = scene;
+        this.index = index;
         this.apiCardId = cardId;
         this.apiCard = Main.gamestate.cards[cardId];
         this.handPosition = handPosition;
@@ -184,7 +186,7 @@ class Card extends GameElement {
             let stage = this.activeWonder.getClosestStageId(Main.mouseX);
             if (!Main.mouseDown || !this.canBeInteractable()) {
                 if (this.allowPlay && this.activeWonder.getMainRegion().contains(Main.mouseX, Main.mouseY)) {
-                    let move: API.Move = { action: 'play', card: this.apiCardId };
+                    let move: API.Move = { action: 'play', card: this.apiCardId, index: this.index };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
                         this.scene.startPaymentDialog(this, move);
                     } else {
@@ -193,7 +195,7 @@ class Card extends GameElement {
                     }
                     this.select(move);
                 } else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(Main.mouseX, Main.mouseY)) {
-                    let move: API.Move = { action: 'wonder', card: this.apiCardId, stage: stage };
+                    let move: API.Move = { action: 'wonder', card: this.apiCardId, index: this.index, stage: stage };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
                         this.scene.startPaymentDialog(this, move);
                     } else {
@@ -202,7 +204,7 @@ class Card extends GameElement {
                     }
                     this.select(move);
                 } else if (this.allowThrow && this.scene.discardPile.getDiscardRegion().contains(Main.mouseX, Main.mouseY)) {
-                    let move: API.Move = { action: 'throw', card: this.apiCardId, payment: {} };
+                    let move: API.Move = { action: 'throw', card: this.apiCardId, index: this.index, payment: {} };
                     Main.submitMove(move);
                     this.select(move);
                 } else {
@@ -421,7 +423,7 @@ class Card extends GameElement {
     }
 
     static flippedCardForAge(scene: GameScene, age: number, justPlayed: boolean) {
-        let card = new Card(scene, -age, undefined, undefined, []);
+        let card = new Card(scene, -age, 0, undefined, undefined, []);
         card.state = { type: 'flipped', justPlayed: justPlayed };
         card.snap();
         return card;

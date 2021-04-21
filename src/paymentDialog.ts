@@ -83,6 +83,7 @@ class PaymentDialog extends GameElement {
                 let trueMove: API.Move = {
                     action: this.move.action,
                     card: this.move.card,
+                    index: this.move.index,
                     stage: this.move.stage,
                     payment: validPayments[i]
                 }

@@ -76,7 +76,7 @@ class Hand {
         for (let i = 0; i < this.cardIds.length; i++) {
             let handPosition = this.getNormalHandPosition(i);
             let card = handData.type === 'normal'
-                        ? new Card(this.scene, this.cardIds[i], handPosition, this.activeWonder, handData.validMoves)
+                        ? new Card(this.scene, this.cardIds[i], i, handPosition, this.activeWonder, handData.validMoves)
                         : Card.flippedCardForAge(this.scene, handData.type === 'back' ? handData.age : handData.lastCardAge, false);
             card.x = handPosition.x;
             card.y = handPosition.y;
@@ -116,14 +116,15 @@ class Hand {
 
         let moved = false;
         for (let card of this.cards) {
-            if (card.apiCardId === move.card) {
+            if (card.apiCardId === move.card && (move.index === undefined || card.index === move.index)) {
+                console.log('reflecting move', move, 'with card', card);
                 card.select(move);
                 moved = true;
             } else {
                 card.deselect();
             }
         }
-        if (!moved) console.error('Move card not found in hand:', move);
+        if (!moved) console.error('Move not found in hand:', move);
     }
 
     makeMove() {

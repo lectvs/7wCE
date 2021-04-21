@@ -104,6 +104,7 @@ namespace API {
     export type Move = {
         action: 'play' | 'wonder' | 'throw' | 'reject';
         card: number;
+        index?: number;
         stage?: number;
         payment?: Payment;
         side?: number;

@@ -1448,13 +1448,14 @@ var Bot;
 /// <reference path="gameElement.ts" />
 var Card = /** @class */ (function (_super) {
     __extends(Card, _super);
-    function Card(scene, cardId, handPosition, activeWonder, validMoves) {
+    function Card(scene, cardId, index, handPosition, activeWonder, validMoves) {
         var _this = _super.call(this) || this;
         _this._flippedT = 0;
         _this._effectT = 0;
         _this._interactable = false;
         _this._checkMarkVisible = true;
         _this.scene = scene;
+        _this.index = index;
         _this.apiCardId = cardId;
         _this.apiCard = Main.gamestate.cards[cardId];
         _this.handPosition = handPosition;
@@ -1605,7 +1606,7 @@ var Card = /** @class */ (function (_super) {
             var stage = this.activeWonder.getClosestStageId(Main.mouseX);
             if (!Main.mouseDown || !this.canBeInteractable()) {
                 if (this.allowPlay && this.activeWonder.getMainRegion().contains(Main.mouseX, Main.mouseY)) {
-                    var move = { action: 'play', card: this.apiCardId };
+                    var move = { action: 'play', card: this.apiCardId, index: this.index };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
                         this.scene.startPaymentDialog(this, move);
                     }
@@ -1616,7 +1617,7 @@ var Card = /** @class */ (function (_super) {
                     this.select(move);
                 }
                 else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(Main.mouseX, Main.mouseY)) {
-                    var move = { action: 'wonder', card: this.apiCardId, stage: stage };
+                    var move = { action: 'wonder', card: this.apiCardId, index: this.index, stage: stage };
                     if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
                         this.scene.startPaymentDialog(this, move);
                     }
@@ -1627,7 +1628,7 @@ var Card = /** @class */ (function (_super) {
                     this.select(move);
                 }
                 else if (this.allowThrow && this.scene.discardPile.getDiscardRegion().contains(Main.mouseX, Main.mouseY)) {
-                    var move = { action: 'throw', card: this.apiCardId, payment: {} };
+                    var move = { action: 'throw', card: this.apiCardId, index: this.index, payment: {} };
                     Main.submitMove(move);
                     this.select(move);
                 }
@@ -1870,7 +1871,7 @@ var Card = /** @class */ (function (_super) {
         return highlight;
     };
     Card.flippedCardForAge = function (scene, age, justPlayed) {
-        var card = new Card(scene, -age, undefined, undefined, []);
+        var card = new Card(scene, -age, 0, undefined, undefined, []);
         card.state = { type: 'flipped', justPlayed: justPlayed };
         card.snap();
         return card;
@@ -3698,7 +3699,7 @@ var Hand = /** @class */ (function () {
         for (var i = 0; i < this.cardIds.length; i++) {
             var handPosition = this.getNormalHandPosition(i);
             var card = handData.type === 'normal'
-                ? new Card(this.scene, this.cardIds[i], handPosition, this.activeWonder, handData.validMoves)
+                ? new Card(this.scene, this.cardIds[i], i, handPosition, this.activeWonder, handData.validMoves)
                 : Card.flippedCardForAge(this.scene, handData.type === 'back' ? handData.age : handData.lastCardAge, false);
             card.x = handPosition.x;
             card.y = handPosition.y;
@@ -3745,7 +3746,8 @@ var Hand = /** @class */ (function () {
         try {
             for (var _e = __values(this.cards), _f = _e.next(); !_f.done; _f = _e.next()) {
                 var card = _f.value;
-                if (card.apiCardId === move.card) {
+                if (card.apiCardId === move.card && (move.index === undefined || card.index === move.index)) {
+                    console.log('reflecting move', move, 'with card', card);
                     card.select(move);
                     moved = true;
                 }
@@ -3762,7 +3764,7 @@ var Hand = /** @class */ (function () {
             finally { if (e_26) throw e_26.error; }
         }
         if (!moved)
-            console.error('Move card not found in hand:', move);
+            console.error('Move not found in hand:', move);
     };
     Hand.prototype.makeMove = function () {
         if (this.state.type === 'back')
@@ -4586,6 +4588,7 @@ var PaymentDialog = /** @class */ (function (_super) {
                 var trueMove = {
                     action: _this.move.action,
                     card: _this.move.card,
+                    index: _this.move.index,
                     stage: _this.move.stage,
                     payment: validPayments[i]
                 };
@@ -5132,7 +5135,7 @@ var Wonder = /** @class */ (function (_super) {
         try {
             for (var _c = __values(playerData.playedCards), _d = _c.next(); !_d.done; _d = _c.next()) {
                 var apiCardId = _d.value;
-                var card = new Card(this.scene, apiCardId, undefined, this, []);
+                var card = new Card(this.scene, apiCardId, -1, undefined, this, []);
                 this.addNewCardEffect(card);
                 card.addToGame();
             }
