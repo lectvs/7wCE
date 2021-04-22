@@ -31,6 +31,7 @@ namespace API {
         pointsDistribution: PointsDistribution;
         elo?: EloData;
         totalShields: number;
+        cardPoints: Dict<number>;
     }
 
     export type StageBuilt = {

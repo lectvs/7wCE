@@ -61,7 +61,8 @@ class Wonder extends GameElement {
         this.playedCardEffectRolls.grey = this.playedCardEffectRolls.brown;
 
         for (let apiCardId of playerData.playedCards) {
-            let card = new Card(this.scene, apiCardId, -1, undefined, this, []);
+            let points = apiCardId in playerData.cardPoints ? playerData.cardPoints[apiCardId] : undefined;
+            let card = new Card(this.scene, apiCardId, -1, points, undefined, this, []);
             this.addNewCardEffect(card);
             card.addToGame();
         }

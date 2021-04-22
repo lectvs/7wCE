@@ -1448,7 +1448,7 @@ var Bot;
 /// <reference path="gameElement.ts" />
 var Card = /** @class */ (function (_super) {
     __extends(Card, _super);
-    function Card(scene, cardId, index, handPosition, activeWonder, validMoves) {
+    function Card(scene, cardId, index, points, handPosition, activeWonder, validMoves) {
         var _this = _super.call(this) || this;
         _this._flippedT = 0;
         _this._effectT = 0;
@@ -1458,6 +1458,7 @@ var Card = /** @class */ (function (_super) {
         _this.index = index;
         _this.apiCardId = cardId;
         _this.apiCard = Main.gamestate.cards[cardId];
+        _this.points = points;
         _this.handPosition = handPosition;
         _this.activeWonder = activeWonder;
         _this.targetPosition = new PIXI.Point();
@@ -1574,6 +1575,12 @@ var Card = /** @class */ (function (_super) {
         var front = this.frontDiv.appendChild(this.cardResource.front);
         front.style.transform = "translate(-50%, -" + (C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2) + "px)";
         this.highlightEffect = this.frontDiv.appendChild(this.drawHighlightEffect());
+        if (this.points !== undefined) {
+            var n = ("" + this.points).length;
+            this.pointsSummary = this.frontDiv.appendChild(this.drawPointsSummary());
+            this.pointsSummary.style.left = this.effectClipRect.width / 2 - C.CARD_POINTS_SUMMARY_WIDTH(n) / 2 + "px";
+            this.pointsSummary.style.top = -this.effectClipRect.height / 2 + C.CARD_POINTS_SUMMARY_HEIGHT / 2 + "px";
+        }
         var payment = this.frontDiv.appendChild(this.drawPayment());
         payment.style.transform = "translate(-50%, -" + (C.CARD_TITLE_HEIGHT + C.CARD_PAYMENT_HEIGHT + C.CARD_BANNER_HEIGHT / 2) + "px)";
         payment.style.visibility = drawPayment ? 'visible' : 'hidden';
@@ -1870,8 +1877,19 @@ var Card = /** @class */ (function (_super) {
         highlight.style.pointerEvents = 'none';
         return highlight;
     };
+    Card.prototype.drawPointsSummary = function () {
+        var summary = document.createElement('div');
+        summary.style.position = 'absolute';
+        var container = new PIXI.Container();
+        var n = ("" + this.points).length;
+        container.addChild(Shapes.filledRect(-C.CARD_POINTS_SUMMARY_WIDTH(n) / 2, -C.CARD_POINTS_SUMMARY_HEIGHT / 2, C.CARD_POINTS_SUMMARY_WIDTH(n), C.CARD_POINTS_SUMMARY_HEIGHT, C.CARD_POINTS_SUMMARY_BACKGROUND_COLOR));
+        container.addChild(Shapes.centeredText(0, 0, "" + this.points, 0.1, C.CARD_POINTS_SUMMARY_TEXT_COLOR)).y -= 0.5;
+        var pointsElement = summary.appendChild(ArtCommon.domElementForArt(container));
+        pointsElement.style.position = 'absolute';
+        return summary;
+    };
     Card.flippedCardForAge = function (scene, age, justPlayed) {
-        var card = new Card(scene, -age, 0, undefined, undefined, []);
+        var card = new Card(scene, -age, 0, undefined, undefined, undefined, []);
         card.state = { type: 'flipped', justPlayed: justPlayed };
         card.snap();
         return card;
@@ -2462,6 +2480,10 @@ var C = /** @class */ (function () {
     C.CARD_COST_Y = C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT;
     C.CARD_COST_SCALE = 0.13;
     C.CARD_COST_PADDING = 6;
+    C.CARD_POINTS_SUMMARY_WIDTH = function (n) { return 6 * n + 3; };
+    C.CARD_POINTS_SUMMARY_HEIGHT = 11;
+    C.CARD_POINTS_SUMMARY_BACKGROUND_COLOR = 0x222222;
+    C.CARD_POINTS_SUMMARY_TEXT_COLOR = 0xEEEEEE;
     C.CARD_PAYMENT_HEIGHT = 24;
     C.CARD_PAYMENT_SCALE = 0.15;
     C.CARD_PAYMENT_OFFSET_X = -8.25;
@@ -3717,7 +3739,7 @@ var Hand = /** @class */ (function () {
         for (var i = 0; i < this.cardIds.length; i++) {
             var handPosition = this.getNormalHandPosition(i);
             var card = handData.type === 'normal'
-                ? new Card(this.scene, this.cardIds[i], i, handPosition, this.activeWonder, handData.validMoves)
+                ? new Card(this.scene, this.cardIds[i], i, undefined, handPosition, this.activeWonder, handData.validMoves)
                 : Card.flippedCardForAge(this.scene, handData.type === 'back' ? handData.age : handData.lastCardAge, false);
             card.x = handPosition.x;
             card.y = handPosition.y;
@@ -5153,7 +5175,8 @@ var Wonder = /** @class */ (function (_super) {
         try {
             for (var _c = __values(playerData.playedCards), _d = _c.next(); !_d.done; _d = _c.next()) {
                 var apiCardId = _d.value;
-                var card = new Card(this.scene, apiCardId, -1, undefined, this, []);
+                var points = apiCardId in playerData.cardPoints ? playerData.cardPoints[apiCardId] : undefined;
+                var card = new Card(this.scene, apiCardId, -1, points, undefined, this, []);
                 this.addNewCardEffect(card);
                 card.addToGame();
             }

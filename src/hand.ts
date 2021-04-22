@@ -76,7 +76,7 @@ class Hand {
         for (let i = 0; i < this.cardIds.length; i++) {
             let handPosition = this.getNormalHandPosition(i);
             let card = handData.type === 'normal'
-                        ? new Card(this.scene, this.cardIds[i], i, handPosition, this.activeWonder, handData.validMoves)
+                        ? new Card(this.scene, this.cardIds[i], i, undefined, handPosition, this.activeWonder, handData.validMoves)
                         : Card.flippedCardForAge(this.scene, handData.type === 'back' ? handData.age : handData.lastCardAge, false);
             card.x = handPosition.x;
             card.y = handPosition.y;

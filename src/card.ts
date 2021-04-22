@@ -20,6 +20,7 @@ class Card extends GameElement {
     apiCardId: number;
     apiCard: API.Card;
     cardResource: CardResource;
+    points: number;
     handPosition: PIXI.Point;
     activeWonder: Wonder;
 
@@ -35,6 +36,7 @@ class Card extends GameElement {
     backDiv: HTMLDivElement;
     private highlightEffect: HTMLDivElement;
     private highlightFlipped: HTMLDivElement;
+    private pointsSummary: HTMLDivElement;
     private checkMark: HTMLDivElement;
 
     private allowPlay: boolean;
@@ -95,13 +97,14 @@ class Card extends GameElement {
         this.checkMark.style.visibility = value ? 'visible' : 'hidden';
     }
 
-    constructor(scene: GameScene, cardId: number, index: number, handPosition: PIXI.Point, activeWonder: Wonder, validMoves: API.Move[]) {
+    constructor(scene: GameScene, cardId: number, index: number, points: number, handPosition: PIXI.Point, activeWonder: Wonder, validMoves: API.Move[]) {
         super();
 
         this.scene = scene;
         this.index = index;
         this.apiCardId = cardId;
         this.apiCard = Main.gamestate.cards[cardId];
+        this.points = points;
         this.handPosition = handPosition;
         this.activeWonder = activeWonder;
 
@@ -153,6 +156,12 @@ class Card extends GameElement {
         let front = this.frontDiv.appendChild(this.cardResource.front);
         front.style.transform = `translate(-50%, -${C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2}px)`;
         this.highlightEffect = this.frontDiv.appendChild(this.drawHighlightEffect());
+        if (this.points !== undefined) {
+            let n = `${this.points}`.length;
+            this.pointsSummary = this.frontDiv.appendChild(this.drawPointsSummary());
+            this.pointsSummary.style.left = `${this.effectClipRect.width/2 - C.CARD_POINTS_SUMMARY_WIDTH(n)/2}px`;
+            this.pointsSummary.style.top = `${-this.effectClipRect.height/2 + C.CARD_POINTS_SUMMARY_HEIGHT/2}px`;
+        }
         let payment = this.frontDiv.appendChild(this.drawPayment());
         payment.style.transform = `translate(-50%, -${C.CARD_TITLE_HEIGHT + C.CARD_PAYMENT_HEIGHT + C.CARD_BANNER_HEIGHT/2}px)`;
         payment.style.visibility = drawPayment ? 'visible' : 'hidden';
@@ -410,7 +419,6 @@ class Card extends GameElement {
         return highlight;
     }
 
-    
     private drawHighlightFlipped() {
         let highlight = document.createElement('div');
         highlight.style.width = `${C.CARD_WIDTH + 2*C.CARD_HIGHLIGHT}px`;
@@ -422,8 +430,21 @@ class Card extends GameElement {
         return highlight;
     }
 
+    private drawPointsSummary() {
+        let summary = document.createElement('div');
+        summary.style.position = 'absolute';
+        let container = new PIXI.Container();
+        let n = `${this.points}`.length;
+        container.addChild(Shapes.filledRect(-C.CARD_POINTS_SUMMARY_WIDTH(n)/2, -C.CARD_POINTS_SUMMARY_HEIGHT/2,
+                                             C.CARD_POINTS_SUMMARY_WIDTH(n), C.CARD_POINTS_SUMMARY_HEIGHT, C.CARD_POINTS_SUMMARY_BACKGROUND_COLOR));
+        container.addChild(Shapes.centeredText(0, 0, `${this.points}`, 0.1, C.CARD_POINTS_SUMMARY_TEXT_COLOR)).y -= 0.5;
+        let pointsElement = summary.appendChild(ArtCommon.domElementForArt(container));
+        pointsElement.style.position = 'absolute';
+        return summary;
+    }
+
     static flippedCardForAge(scene: GameScene, age: number, justPlayed: boolean) {
-        let card = new Card(scene, -age, 0, undefined, undefined, []);
+        let card = new Card(scene, -age, 0, undefined, undefined, undefined, []);
         card.state = { type: 'flipped', justPlayed: justPlayed };
         card.snap();
         return card;

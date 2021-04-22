@@ -1,6 +1,5 @@
 launch
 - pre-game join
-- point totals for guilds
 - speed difference based on framerate
 - password-protect APIs
 - optimize

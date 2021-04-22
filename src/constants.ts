@@ -50,6 +50,10 @@ class C {
     public static readonly CARD_COST_Y = C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT;
     public static readonly CARD_COST_SCALE = 0.13;
     public static readonly CARD_COST_PADDING = 6;
+    public static readonly CARD_POINTS_SUMMARY_WIDTH = (n: number) => 6*n + 3;
+    public static readonly CARD_POINTS_SUMMARY_HEIGHT = 11;
+    public static readonly CARD_POINTS_SUMMARY_BACKGROUND_COLOR = 0x222222;
+    public static readonly CARD_POINTS_SUMMARY_TEXT_COLOR = 0xEEEEEE;
     public static readonly CARD_PAYMENT_HEIGHT = 24;
     public static readonly CARD_PAYMENT_SCALE = 0.15;
     public static readonly CARD_PAYMENT_OFFSET_X = -8.25;
