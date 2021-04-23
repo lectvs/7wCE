@@ -1,5 +1,4 @@
 launch
-- pre-game join
 - speed difference based on framerate
 - password-protect APIs
 - optimize

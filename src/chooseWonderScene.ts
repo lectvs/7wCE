@@ -2,7 +2,6 @@
 
 class ChooseWonderScene extends Scene {
     wonderChoices: WonderBoardForChoose[][];
-    discardPile: DiscardPile;
     popup: Popup;
 
     get topWonderChoices() { return this.wonderChoices[Main.gamestate.players.indexOf(Main.player)]; }

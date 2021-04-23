@@ -1951,27 +1951,18 @@ var CardForList = /** @class */ (function (_super) {
         var goldCost = ((_b = this.apiCard.cost) === null || _b === void 0 ? void 0 : _b.gold) || 0;
         if (this.apiCard.cost) {
             var currentX = 70;
-            var _loop_1 = function (i) {
+            for (var i = 0; i < resourceCost.length; i++) {
                 var resource = info.appendChild(document.createElement('div'));
-                var resourceArt = new PIXI.Container();
-                resourceArt.addChild(ArtCommon.getShadowForArt(function () { return ArtCommon.resource(resourceCost[i]); }, 'light'));
-                resourceArt.addChild(ArtCommon.resource(resourceCost[i]));
-                resource.appendChild(ArtCommon.domElementForArt(resourceArt, 1, 10));
+                resource.appendChild(ArtCommon.domElementForArt(ArtCommon.resource(resourceCost[i]), 1, 10));
                 resource.style.transform = 'scale(0.2)';
                 resource.style.position = 'absolute';
                 resource.style.left = currentX + "px";
                 resource.style.top = "0px";
                 currentX += 22;
-            };
-            for (var i = 0; i < resourceCost.length; i++) {
-                _loop_1(i);
             }
             if (goldCost > 0) {
                 var gold = info.appendChild(document.createElement('div'));
-                var goldArt = new PIXI.Container();
-                goldArt.addChild(ArtCommon.getShadowForArt(function () { return ArtCommon.gold(goldCost); }, 'light'));
-                goldArt.addChild(ArtCommon.gold(goldCost));
-                gold.appendChild(ArtCommon.domElementForArt(goldArt, 1, 10));
+                gold.appendChild(ArtCommon.domElementForArt(ArtCommon.gold(goldCost), 1, 10));
                 gold.style.transform = 'scale(0.2)';
                 gold.style.position = 'absolute';
                 gold.style.left = currentX + "px";
@@ -2078,7 +2069,7 @@ var CardInfoPopup = /** @class */ (function (_super) {
         box.appendChild(this.infoText("Cost:" + (isFree ? ' None' : ''), '10px', currentY + "px"));
         if (this.card.apiCard.cost) {
             var currentX = 60;
-            var _loop_2 = function (i) {
+            var _loop_1 = function (i) {
                 var resource = box.appendChild(document.createElement('div'));
                 var resourceArt = new PIXI.Container();
                 resourceArt.addChild(ArtCommon.getShadowForArt(function () { return ArtCommon.resource(resourceCost[i]); }, 'dark'));
@@ -2091,7 +2082,7 @@ var CardInfoPopup = /** @class */ (function (_super) {
                 currentX += 22;
             };
             for (var i = 0; i < resourceCost.length; i++) {
-                _loop_2(i);
+                _loop_1(i);
             }
             if (goldCost > 0) {
                 var gold = box.appendChild(document.createElement('div'));
@@ -3064,7 +3055,7 @@ var GameStateDiffer;
             return result;
         }
         result.scripts.push(function () {
-            var moveScripts, handPosition_1, targetHandPosition_1, discardHandPosition_1, targetDiscardHandPosition_1, lerpt_1, isEndOfAge, currentHandPositions_1, targetHandPosition_2, discardScripts, _loop_3, i, handPosition_2, targetHandPosition_3, discardHandPosition_2, discardTargetPosition_1, lerpt_2, p_1, l_1, r_1, pshields, lshields, rshields, militaryTokenDistributionScripts, hands_1, entryPoint, i_2, startPosition_1, endPosition_1, lerpt_3, i_3, _loop_4, count, currentHandPositions_2, targetHandPositions_1, newHandi_1, lerpt_4;
+            var moveScripts, handPosition_1, targetHandPosition_1, discardHandPosition_1, targetDiscardHandPosition_1, lerpt_1, isEndOfAge, currentHandPositions_1, targetHandPosition_2, discardScripts, _loop_2, i, handPosition_2, targetHandPosition_3, discardHandPosition_2, discardTargetPosition_1, lerpt_2, p_1, l_1, r_1, pshields, lshields, rshields, militaryTokenDistributionScripts, hands_1, entryPoint, i_2, startPosition_1, endPosition_1, lerpt_3, i_3, _loop_3, count, currentHandPositions_2, targetHandPositions_1, newHandi_1, lerpt_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -3238,7 +3229,7 @@ var GameStateDiffer;
                         targetHandPosition_2 = scene.discardPile.getDiscardLockPoint();
                         scene.hands.forEach(function (hand) { return hand.setZIndex(C.Z_INDEX_CARD_MOVING); });
                         discardScripts = [];
-                        _loop_3 = function (i) {
+                        _loop_2 = function (i) {
                             if (!contains(gamestate.lastCardPlayers, gamestate.players[i])) {
                                 discardScripts.push(function () {
                                     var lerpt;
@@ -3264,7 +3255,7 @@ var GameStateDiffer;
                             }
                         };
                         for (i = 0; i < scene.hands.length; i++) {
-                            _loop_3(i);
+                            _loop_2(i);
                         }
                         return [5 /*yield**/, __values(S.simul.apply(S, __spread(discardScripts))())];
                     case 6:
@@ -3434,7 +3425,7 @@ var GameStateDiffer;
                     case 24:
                         _a.sent();
                         i_3 = l_1;
-                        _loop_4 = function (count) {
+                        _loop_3 = function (count) {
                             var startPosition_2, endPosition_2, lerpt_5;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
@@ -3461,7 +3452,7 @@ var GameStateDiffer;
                         _a.label = 25;
                     case 25:
                         if (!(count < gamestate.players.length - 1)) return [3 /*break*/, 28];
-                        return [5 /*yield**/, _loop_4(count)];
+                        return [5 /*yield**/, _loop_3(count)];
                     case 26:
                         _a.sent();
                         _a.label = 27;
@@ -4410,7 +4401,7 @@ var Main = /** @class */ (function () {
         var _this = this;
         if (!this.isHost)
             return;
-        var _loop_5 = function (player) {
+        var _loop_4 = function (player) {
             if (player.startsWith('BOT') && !this_1.gamestate.playerData[player].currentMove) {
                 var botPlayer_1 = player;
                 if (this_1.gamestate.state === 'CHOOSE_WONDER_SIDE') {
@@ -4448,7 +4439,7 @@ var Main = /** @class */ (function () {
         try {
             for (var _b = __values(this.gamestate.players), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var player = _c.value;
-                _loop_5(player);
+                _loop_4(player);
             }
         }
         catch (e_33_1) { e_33 = { error: e_33_1 }; }
@@ -4582,7 +4573,7 @@ var PaymentDialog = /** @class */ (function (_super) {
         var dialogTitle = dialogDiv.appendChild(this.drawText(C.PAYMENT_DIALOG_TITLE, C.PAYMENT_DIALOG_TITLE_SIZE));
         dialogTitle.style.padding = C.PAYMENT_DIALOG_TITLE_PADDING + "px";
         var _a = __read(API.getNeighbors(Main.gamestate, Main.player), 2), negPlayer = _a[0], posPlayer = _a[1];
-        var _loop_6 = function (i) {
+        var _loop_5 = function (i) {
             var leftDiv = dialogDiv.appendChild(document.createElement('div'));
             leftDiv.style.width = 50 - C.PAYMENT_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 2 + "%";
             leftDiv.style.height = C.PAYMENT_DIALOG_PAYMENTS_DY + "px";
@@ -4638,7 +4629,7 @@ var PaymentDialog = /** @class */ (function (_super) {
         };
         var this_2 = this;
         for (var i = 0; i < validPayments.length; i++) {
-            _loop_6(i);
+            _loop_5(i);
         }
         var closeButton = dialogDiv.appendChild(this.drawCloseButton());
         closeButton.style.position = 'absolute';
@@ -4919,7 +4910,7 @@ var StageInfoPopup = /** @class */ (function (_super) {
         box.appendChild(this.infoText("Cost:" + (isFree ? ' None' : ''), '10px', currentY + "px"));
         if (this.stage.cost) {
             var currentX = 60;
-            var _loop_7 = function (i) {
+            var _loop_6 = function (i) {
                 var resource = box.appendChild(document.createElement('div'));
                 var resourceArt = new PIXI.Container();
                 resourceArt.addChild(ArtCommon.getShadowForArt(function () { return ArtCommon.resource(resourceCost[i]); }, 'dark'));
@@ -4932,7 +4923,7 @@ var StageInfoPopup = /** @class */ (function (_super) {
                 currentX += 22;
             };
             for (var i = 0; i < resourceCost.length; i++) {
-                _loop_7(i);
+                _loop_6(i);
             }
             if (goldCost > 0) {
                 var gold = box.appendChild(document.createElement('div'));
@@ -5223,7 +5214,7 @@ var Wonder = /** @class */ (function (_super) {
         popupDiv.onmouseleave = function () {
             Main.scene.stopPopup(_this.wonder);
         };
-        var _loop_8 = function (i) {
+        var _loop_7 = function (i) {
             var stageX = this_3.wonderResource.stageXs[i];
             var wonderStage = this_3.wonder.stages[i];
             var popupDiv_1 = this_3.div.appendChild(document.createElement('div'));
@@ -5246,7 +5237,7 @@ var Wonder = /** @class */ (function (_super) {
         var this_3 = this;
         // Stage popups
         for (var i = 0; i < this.wonder.stages.length; i++) {
-            _loop_8(i);
+            _loop_7(i);
         }
         this.zIndex = C.Z_INDEX_WONDER;
     };
@@ -5485,7 +5476,7 @@ var WonderBoardForChoose = /** @class */ (function (_super) {
         popupDiv.onmouseleave = function () {
             Main.scene.stopPopup(_this.wonder);
         };
-        var _loop_9 = function (i) {
+        var _loop_8 = function (i) {
             var stageX = this_4.wonderResource.stageXs[i];
             var wonderStage = this_4.wonder.stages[i];
             var popupDiv_2 = this_4.div.appendChild(document.createElement('div'));
@@ -5508,7 +5499,7 @@ var WonderBoardForChoose = /** @class */ (function (_super) {
         var this_4 = this;
         // Stage popups
         for (var i = 0; i < this.wonder.stages.length; i++) {
-            _loop_9(i);
+            _loop_8(i);
         }
         // Selection
         if (this.player === Main.player) {

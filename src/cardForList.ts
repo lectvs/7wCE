@@ -71,10 +71,7 @@ class CardForList extends GameElement {
             let currentX = 70;
             for (let i = 0; i < resourceCost.length; i++) {
                 let resource = info.appendChild(document.createElement('div'));
-                let resourceArt = new PIXI.Container();
-                resourceArt.addChild(ArtCommon.getShadowForArt(() => ArtCommon.resource(resourceCost[i]), 'light'));
-                resourceArt.addChild(ArtCommon.resource(resourceCost[i]));
-                resource.appendChild(ArtCommon.domElementForArt(resourceArt, 1, 10));
+                resource.appendChild(ArtCommon.domElementForArt(ArtCommon.resource(resourceCost[i]), 1, 10));
                 resource.style.transform = 'scale(0.2)';
                 resource.style.position = 'absolute';
                 resource.style.left = `${currentX}px`;
@@ -84,10 +81,7 @@ class CardForList extends GameElement {
 
             if (goldCost > 0) {
                 let gold = info.appendChild(document.createElement('div'));
-                let goldArt = new PIXI.Container();
-                goldArt.addChild(ArtCommon.getShadowForArt(() => ArtCommon.gold(goldCost), 'light'));
-                goldArt.addChild(ArtCommon.gold(goldCost));
-                gold.appendChild(ArtCommon.domElementForArt(goldArt, 1, 10));
+                gold.appendChild(ArtCommon.domElementForArt(ArtCommon.gold(goldCost), 1, 10));
                 gold.style.transform = 'scale(0.2)';
                 gold.style.position = 'absolute';
                 gold.style.left = `${currentX}px`;
