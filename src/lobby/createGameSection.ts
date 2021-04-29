@@ -24,6 +24,7 @@ class CreateGameSection {
 
         // Options
         this.optionsElement.appendChild(this.checkbox('option', 'Use wonder preferences', 'respect_preferences', 32, TOP_Y, true));
+        this.optionsElement.appendChild(this.checkbox('option', 'Use elo for draft', 'draft_by_elo', 32, TOP_Y + 2*DY, true));
     }
 
     getOptions() {
@@ -77,6 +78,7 @@ class CreateGameSection {
         labelE.innerText = label;
         labelE.style.left = '20px';
         labelE.style.top = '-2px';
+        labelE.style.width = '200px';
 
         element.appendChild(input);
         element.appendChild(labelE);

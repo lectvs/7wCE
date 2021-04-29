@@ -5583,6 +5583,7 @@ var CreateGameSection = /** @class */ (function () {
         this.playersElement.appendChild(this.botbox(32, TOP_Y + DY * players.length));
         // Options
         this.optionsElement.appendChild(this.checkbox('option', 'Use wonder preferences', 'respect_preferences', 32, TOP_Y, true));
+        this.optionsElement.appendChild(this.checkbox('option', 'Use elo for draft', 'draft_by_elo', 32, TOP_Y + 2 * DY, true));
     };
     CreateGameSection.prototype.getOptions = function () {
         var players = [LobbyMain.username];
@@ -5628,6 +5629,7 @@ var CreateGameSection = /** @class */ (function () {
         labelE.innerText = label;
         labelE.style.left = '20px';
         labelE.style.top = '-2px';
+        labelE.style.width = '200px';
         element.appendChild(input);
         element.appendChild(labelE);
         return element;
