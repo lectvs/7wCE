@@ -64,6 +64,11 @@ function lerp(a: number, b: number, t: number) {
     return a + (b-a)*t;
 }
 
+function lerpTime(a: number, b: number, t: number, delta: number) {
+    // From https://www.gamasutra.com/blogs/ScottLembcke/20180404/316046/Improved_Lerp_Smoothing.php
+    return lerp(a, b, 1-Math.pow(2, -100*t*delta));
+}
+
 function mod(n: number, mod: number) {
     while (n >= mod) n -= mod;
     while (n < 0) n += mod;

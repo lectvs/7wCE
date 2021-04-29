@@ -1,5 +1,4 @@
 launch
-- speed difference based on framerate
 - password-protect APIs
 - optimize
 

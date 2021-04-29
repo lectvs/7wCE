@@ -292,9 +292,9 @@ class Card extends GameElement {
             this.visualState = 'flipped';
         }
 
-        this.x = lerp(this.x, this.targetPosition.x, 0.25);
+        this.x = lerpTime(this.x, this.targetPosition.x, 0.25, Main.delta);
         if (Math.abs(this.x - this.targetPosition.x) < 1) this.x = this.targetPosition.x;
-        this.y = lerp(this.y, this.targetPosition.y, 0.25);
+        this.y = lerpTime(this.y, this.targetPosition.y, 0.25, Main.delta);
         if (Math.abs(this.y - this.targetPosition.y) < 1) this.y = this.targetPosition.y;
 
         this.updateVisuals();
@@ -302,15 +302,15 @@ class Card extends GameElement {
 
     updateVisuals() {
         if (this.visualState === 'effect') {
-            this.effectT = lerp(this.effectT, 1, 0.25);
+            this.effectT = lerpTime(this.effectT, 1, 0.25, Main.delta);
         } else {
-            this.effectT = lerp(this.effectT, 0, 0.25);
+            this.effectT = lerpTime(this.effectT, 0, 0.25, Main.delta);
         }
 
         if (this.visualState === 'flipped') {
-            this.flippedT = lerp(this.flippedT, 1, 0.25);
+            this.flippedT = lerpTime(this.flippedT, 1, 0.25, Main.delta);
         } else {
-            this.flippedT = lerp(this.flippedT, 0, 0.25);
+            this.flippedT = lerpTime(this.flippedT, 0, 0.25, Main.delta);
         }
 
         let alpha: number;

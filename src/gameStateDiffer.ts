@@ -118,9 +118,9 @@ namespace GameStateDiffer {
                         card.zIndex = C.Z_INDEX_CARD_PLAYED;
                         let playedPoint = scene.wonders[i].getNewCardEffectWorldPosition(card);
                         yield* S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, t => {
-                            card.targetPosition.x = lerp(card.targetPosition.x, playedPoint.x, t**2);
-                            card.targetPosition.y = lerp(card.targetPosition.y, playedPoint.y, t**2);
-                            card.scale = lerp(card.scale, 1, t**2);
+                            card.targetPosition.x = lerpTime(card.targetPosition.x, playedPoint.x, Math.tan(Math.PI/2*t**2), Main.delta);
+                            card.targetPosition.y = lerpTime(card.targetPosition.y, playedPoint.y, Math.tan(Math.PI/2*t**2), Main.delta);
+                            card.scale = lerpTime(card.scale, 1, Math.tan(Math.PI/2*t**2), Main.delta);
                             card.update();
                         })();
                         card.snap();
@@ -135,9 +135,9 @@ namespace GameStateDiffer {
                         card.zIndex = C.Z_INDEX_CARD_WONDER;
                         let wonderPoint = scene.wonders[i].getCardPositionForStage(lastMove.stage);
                         yield* S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, t => {
-                            card.targetPosition.x = lerp(card.targetPosition.x, wonderPoint.x, t**2);
-                            card.targetPosition.y = lerp(card.targetPosition.y, wonderPoint.y, t**2);
-                            card.scale = lerp(card.scale, 1, t**2);
+                            card.targetPosition.x = lerpTime(card.targetPosition.x, wonderPoint.x, Math.tan(Math.PI/2*t**2), Main.delta);
+                            card.targetPosition.y = lerpTime(card.targetPosition.y, wonderPoint.y, Math.tan(Math.PI/2*t**2), Main.delta);
+                            card.scale = lerpTime(card.scale, 1, Math.tan(Math.PI/2*t**2), Main.delta);
                             card.update();
                         })();
                         card.snap();
@@ -152,9 +152,9 @@ namespace GameStateDiffer {
                         card.zIndex = C.Z_INDEX_CARD_MOVING;
                         let discardPoint = scene.discardPile.getDiscardLockPoint();
                         yield* S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, t => {
-                            card.targetPosition.x = lerp(card.targetPosition.x, discardPoint.x, t**2);
-                            card.targetPosition.y = lerp(card.targetPosition.y, discardPoint.y, t**2);
-                            card.scale = lerp(card.scale, 1, t**2);
+                            card.targetPosition.x = lerpTime(card.targetPosition.x, discardPoint.x, Math.tan(Math.PI/2*t**2), Main.delta);
+                            card.targetPosition.y = lerpTime(card.targetPosition.y, discardPoint.y, Math.tan(Math.PI/2*t**2), Main.delta);
+                            card.scale = lerpTime(card.scale, 1, Math.tan(Math.PI/2*t**2), Main.delta);
                             card.update();
                         })();
                         card.snap();
@@ -182,12 +182,12 @@ namespace GameStateDiffer {
 
                 let lerpt = 0;
                 yield* S.doOverTime(0.3, t => {
-                    lerpt = lerp(lerpt, 1, t**2);
-                    scene.hand.x = lerp(handPosition.x, targetHandPosition.x, lerpt);
-                    scene.hand.y = lerp(handPosition.y, targetHandPosition.y, lerpt);
+                    lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI/2*t**2), Main.delta);
+                    scene.hand.x = lerpTime(handPosition.x, targetHandPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                    scene.hand.y = lerpTime(handPosition.y, targetHandPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
 
-                    scene.discardHand.x = lerp(discardHandPosition.x, targetDiscardHandPosition.x, lerpt);
-                    scene.discardHand.y = lerp(discardHandPosition.y, targetDiscardHandPosition.y, lerpt);
+                    scene.discardHand.x = lerpTime(discardHandPosition.x, targetDiscardHandPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                    scene.discardHand.y = lerpTime(discardHandPosition.y, targetDiscardHandPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
                 })();
 
                 yield* S.wait(0.2)();
@@ -209,11 +209,11 @@ namespace GameStateDiffer {
                         discardScripts.push(function*() {
                             let lerpt = 0;
                             yield* S.doOverTime(0.3, t => {
-                                lerpt = lerp(lerpt, 1, t**2);
+                                lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI/2*t**2), Main.delta);
                                 scene.hands[i].state = { type: 'back', moved: false };
-                                scene.hands[i].x = lerp(currentHandPositions[i].x, targetHandPosition.x, lerpt);
-                                scene.hands[i].y = lerp(currentHandPositions[i].y, targetHandPosition.y, lerpt);
-                                scene.hands[i].scale = lerp(scene.hands[i].scale, 1, lerpt);
+                                scene.hands[i].x = lerpTime(currentHandPositions[i].x, targetHandPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                                scene.hands[i].y = lerpTime(currentHandPositions[i].y, targetHandPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
+                                scene.hands[i].scale = lerpTime(scene.hands[i].scale, 1, Math.tan(Math.PI/2*lerpt), Main.delta);
                             })();
                             scene.discardHand.cards.push(...scene.hands[i].cards.splice(0));
                         });
@@ -238,12 +238,12 @@ namespace GameStateDiffer {
 
                     let lerpt = 0;
                     yield* S.doOverTime(0.3, t => {
-                        lerpt = lerp(lerpt, 1, t**2);
-                        scene.hand.x = lerp(handPosition.x, targetHandPosition.x, lerpt);
-                        scene.hand.y = lerp(handPosition.y, targetHandPosition.y, lerpt);
+                        lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI/2*t**2), Main.delta);
+                        scene.hand.x = lerpTime(handPosition.x, targetHandPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                        scene.hand.y = lerpTime(handPosition.y, targetHandPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
 
-                        scene.discardHand.x = lerp(discardHandPosition.x, discardTargetPosition.x, lerpt);
-                        scene.discardHand.y = lerp(discardHandPosition.y, discardTargetPosition.y, lerpt);
+                        scene.discardHand.x = lerpTime(discardHandPosition.x, discardTargetPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                        scene.discardHand.y = lerpTime(discardHandPosition.y, discardTargetPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
                     })();
     
                     yield* S.wait(0.2)();
@@ -313,9 +313,9 @@ namespace GameStateDiffer {
                         let targetPosition = scene.wonders[pi].getMilitaryTokenWorldPosition(i);
                         let lerpt = 0;
                         yield* S.doOverTime(C.ANIMATION_TOKEN_DISTRIBUTE_TIME, t => {
-                            lerpt = lerp(lerpt, 1, t**2);
-                            token.x = lerp(sourceSink.x, targetPosition.x, lerpt);
-                            token.y = lerp(sourceSink.y, targetPosition.y, lerpt);
+                            lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI/2*t**2), Main.delta);
+                            token.x = lerpTime(sourceSink.x, targetPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                            token.y = lerpTime(sourceSink.y, targetPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
                         })();
                     }));
                 });
@@ -346,10 +346,10 @@ namespace GameStateDiffer {
 
                     let lerpt = 0;
                     yield* S.doOverTime(0.3, t => {
-                        lerpt = lerp(lerpt, 1, t**2);
+                        lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI/2*t**2), Main.delta);
                         for (let hand of hands) {
-                            hand.x = lerp(startPosition.x, endPosition.x, lerpt);
-                            hand.y = lerp(startPosition.y, endPosition.y, lerpt);
+                            hand.x = lerpTime(startPosition.x, endPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                            hand.y = lerpTime(startPosition.y, endPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
                             hand.update();
                         }
                     })();
@@ -363,10 +363,10 @@ namespace GameStateDiffer {
 
                         let lerpt = 0;
                         yield* S.doOverTime(0.2, t => {
-                            lerpt = lerp(lerpt, 1, t**2);
-                            hands[i].x = lerp(startPosition.x, endPosition.x, lerpt);
-                            hands[i].y = lerp(startPosition.y, endPosition.y, lerpt);
-                            hands[i].scale = lerp(hands[i].scale, C.HAND_FLANK_SCALE, lerpt);
+                            lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI/2*t**2), Main.delta);
+                            hands[i].x = lerpTime(startPosition.x, endPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                            hands[i].y = lerpTime(startPosition.y, endPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
+                            hands[i].scale = lerpTime(hands[i].scale, C.HAND_FLANK_SCALE, Math.tan(Math.PI/2*lerpt), Main.delta);
                             hands[i].update();
                         })();
                         hands[i].snap();
@@ -399,15 +399,15 @@ namespace GameStateDiffer {
 
                 let lerpt = 0;
                 yield* S.doOverTime(0.3, t => {
-                    lerpt = lerp(lerpt, 1, t**2);
+                    lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI/2*t**2), Main.delta);
                     for (let i = 0; i < scene.hands.length; i++) {
-                        scene.hands[i].x = lerp(currentHandPositions[i].x, targetHandPositions[i].x, lerpt);
-                        scene.hands[i].y = lerp(currentHandPositions[i].y, targetHandPositions[i].y, lerpt);
+                        scene.hands[i].x = lerpTime(currentHandPositions[i].x, targetHandPositions[i].x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                        scene.hands[i].y = lerpTime(currentHandPositions[i].y, targetHandPositions[i].y, Math.tan(Math.PI/2*lerpt), Main.delta);
 
                         if (i === newHandi) {
-                            scene.hands[i].scale = lerp(scene.hands[i].scale, 1, lerpt);
+                            scene.hands[i].scale = lerpTime(scene.hands[i].scale, 1, Math.tan(Math.PI/2*lerpt), Main.delta);
                         } else {
-                            scene.hands[i].scale = lerp(scene.hands[i].scale, C.HAND_FLANK_SCALE, lerpt);
+                            scene.hands[i].scale = lerpTime(scene.hands[i].scale, C.HAND_FLANK_SCALE, Math.tan(Math.PI/2*lerpt), Main.delta);
                         }
                     }
                 })();
@@ -529,9 +529,9 @@ namespace GameStateDiffer {
 
                 let lerpt = 0;
                 yield* S.doOverTime(C.ANIMATION_GOLD_COIN_MOVE_TIME, t => {
-                    lerpt = lerp(lerpt, 1, t**2);
-                    goldCoin.x = lerp(fromPos.x, toPos.x, lerpt);
-                    goldCoin.y = lerp(fromPos.y, toPos.y, lerpt);
+                    lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI/2*t**2), Main.delta);
+                    goldCoin.x = lerpTime(fromPos.x, toPos.x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                    goldCoin.y = lerpTime(fromPos.y, toPos.y, Math.tan(Math.PI/2*lerpt), Main.delta);
                     goldCoin.scale = 1 - (2*lerpt - 1)**10;
                 })();
 
