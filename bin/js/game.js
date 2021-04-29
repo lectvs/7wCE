@@ -389,8 +389,8 @@ var API;
     }
     API.getCardsConsumingChain = getCardsConsumingChain;
     /* API METHODS */
-    function getgamestate(gameid, player, callback) {
-        httpRequest(LAMBDA_URL + "?operation=getgamestate&gameid=" + gameid + "&player=" + player, function (responseJson, error) {
+    function getgamestate(gameid, player, password_hash, callback) {
+        httpRequest(LAMBDA_URL + "?operation=getgamestate&gameid=" + gameid + "&player=" + player + "&password_hash=" + password_hash, function (responseJson, error) {
             if (error) {
                 callback(undefined, error);
             }
@@ -400,8 +400,8 @@ var API;
         });
     }
     API.getgamestate = getgamestate;
-    function getvalidmoves(gameid, turn, player, callback) {
-        httpRequest(LAMBDA_URL + "?operation=getvalidmoves&gameid=" + gameid + "&turn=" + turn + "&player=" + player, function (responseJson, error) {
+    function getvalidmoves(gameid, turn, player, password_hash, callback) {
+        httpRequest(LAMBDA_URL + "?operation=getvalidmoves&gameid=" + gameid + "&turn=" + turn + "&player=" + player + "&password_hash=" + password_hash, function (responseJson, error) {
             if (error) {
                 callback(undefined, error);
             }
@@ -411,20 +411,20 @@ var API;
         });
     }
     API.getvalidmoves = getvalidmoves;
-    function submitmove(gameid, turn, player, move, callback) {
-        httpRequest(LAMBDA_URL + "?operation=submitmove&gameid=" + gameid + "&turn=" + turn + "&player=" + player + "&move=" + JSON.stringify(move), function (responseJson, error) {
+    function submitmove(gameid, turn, player, password_hash, move, callback) {
+        httpRequest(LAMBDA_URL + "?operation=submitmove&gameid=" + gameid + "&turn=" + turn + "&player=" + player + "&password_hash=" + password_hash + "&move=" + JSON.stringify(move), function (responseJson, error) {
             callback(error);
         });
     }
     API.submitmove = submitmove;
-    function undomove(gameid, turn, player, callback) {
-        httpRequest(LAMBDA_URL + "?operation=undomove&gameid=" + gameid + "&turn=" + turn + "&player=" + player, function (responseJson, error) {
+    function undomove(gameid, turn, player, password_hash, callback) {
+        httpRequest(LAMBDA_URL + "?operation=undomove&gameid=" + gameid + "&turn=" + turn + "&player=" + player + "&password_hash=" + password_hash, function (responseJson, error) {
             callback(error);
         });
     }
     API.undomove = undomove;
-    function chooseside(gameid, player, side, callback) {
-        httpRequest(LAMBDA_URL + "?operation=chooseside&gameid=" + gameid + "&player=" + player + "&side=" + side, function (responseJson, error) {
+    function chooseside(gameid, player, password_hash, side, callback) {
+        httpRequest(LAMBDA_URL + "?operation=chooseside&gameid=" + gameid + "&player=" + player + "&password_hash=" + password_hash + "&side=" + side, function (responseJson, error) {
             callback(error);
         });
     }
@@ -462,9 +462,9 @@ var API;
         });
     }
     API.getinvites = getinvites;
-    function setwonderpreferences(username, preferences, callback) {
+    function setwonderpreferences(username, password_hash, preferences, callback) {
         var preferencesString = preferences.map(function (pref) { return pref.id; }).join(',');
-        httpRequest(LAMBDA_URL + "?operation=setwonderpreferences&username=" + username + "&preferences=" + preferencesString, function (responseJson, error) {
+        httpRequest(LAMBDA_URL + "?operation=setwonderpreferences&username=" + username + "&password_hash=" + password_hash + "&preferences=" + preferencesString, function (responseJson, error) {
             callback(error);
         });
     }
@@ -4161,7 +4161,7 @@ var Main = /** @class */ (function () {
             Main.error('gameid must be specified in URL parameters');
             return;
         }
-        API.getgamestate(this.gameid, this.player, function (gamestate, error) {
+        API.getgamestate(this.gameid, this.player, this.password_hash, function (gamestate, error) {
             if (error) {
                 Main.error('Failed to get game state: ' + error);
                 return;
@@ -4240,7 +4240,7 @@ var Main = /** @class */ (function () {
     };
     Main.getGameState = function () {
         var _this = this;
-        API.getgamestate(this.gameid, this.player, function (gamestate, error) {
+        API.getgamestate(this.gameid, this.player, this.password_hash, function (gamestate, error) {
             if (error) {
                 Main.error('Failed to get game state: ' + error);
                 _this.sendUpdate();
@@ -4289,9 +4289,9 @@ var Main = /** @class */ (function () {
     };
     Main.updateAndGetGameState = function () {
         var _this = this;
-        API.updategame(Main.gameid, function (wasUpdate, error) {
+        API.updategame(this.gameid, function (wasUpdate, error) {
             if (error) {
-                Main.error(error);
+                _this.error(error);
             }
             else {
                 if (wasUpdate)
@@ -4302,9 +4302,9 @@ var Main = /** @class */ (function () {
     };
     Main.submitMove = function (move) {
         var _this = this;
-        API.submitmove(Main.gameid, Main.gamestate.turn, Main.player, move, function (error) {
+        API.submitmove(this.gameid, this.gamestate.turn, this.player, this.password_hash, move, function (error) {
             if (error) {
-                Main.error(error);
+                _this.error(error);
                 return;
             }
             console.log('Submitted move:', move);
@@ -4314,9 +4314,9 @@ var Main = /** @class */ (function () {
     };
     Main.undoMove = function () {
         var _this = this;
-        API.undomove(this.gameid, this.gamestate.turn, this.player, function (error) {
+        API.undomove(this.gameid, this.gamestate.turn, this.player, this.password_hash, function (error) {
             if (error) {
-                Main.error(error);
+                _this.error(error);
                 return;
             }
             console.log('Undo move successful');
@@ -4326,9 +4326,9 @@ var Main = /** @class */ (function () {
     };
     Main.chooseSide = function (side) {
         var _this = this;
-        API.chooseside(Main.gameid, Main.player, side, function (error) {
+        API.chooseside(this.gameid, this.player, this.password_hash, side, function (error) {
             if (error) {
-                Main.error(error);
+                _this.error(error);
                 return;
             }
             console.log('Chose wonder side:', side);
@@ -4406,9 +4406,9 @@ var Main = /** @class */ (function () {
                 var botPlayer_1 = player;
                 if (this_1.gamestate.state === 'CHOOSE_WONDER_SIDE') {
                     var side_1 = Bot.chooseSide(this_1.gamestate.wonderChoices[botPlayer_1]);
-                    API.chooseside(this_1.gameid, botPlayer_1, side_1, function (error) {
+                    API.chooseside(this_1.gameid, botPlayer_1, undefined, side_1, function (error) {
                         if (error) {
-                            Main.error(error);
+                            _this.error(error);
                             return;
                         }
                         console.log('Successfully chose bot wonder side:', side_1);
@@ -4416,17 +4416,17 @@ var Main = /** @class */ (function () {
                 }
                 else {
                     var turn_1 = this_1.gamestate.turn;
-                    API.getvalidmoves(this_1.gameid, this_1.gamestate.turn, botPlayer_1, function (validMoves, error) {
+                    API.getvalidmoves(this_1.gameid, this_1.gamestate.turn, botPlayer_1, undefined, function (validMoves, error) {
                         if (error) {
-                            Main.error(error);
+                            _this.error(error);
                             return;
                         }
                         if (turn_1 !== _this.gamestate.turn || validMoves.length === 0)
                             return;
                         var move = Bot.getMove(validMoves);
-                        API.submitmove(_this.gameid, _this.gamestate.turn, botPlayer_1, move, function (error) {
+                        API.submitmove(_this.gameid, _this.gamestate.turn, botPlayer_1, undefined, move, function (error) {
                             if (error) {
-                                Main.error(error);
+                                _this.error(error);
                                 return;
                             }
                             console.log('Successfully submitted bot move:', move);
@@ -5770,7 +5770,7 @@ var LobbyMain = /** @class */ (function () {
     };
     LobbyMain.setWonderPreferences = function (preferences) {
         var _this = this;
-        API.setwonderpreferences(this.username, preferences, function (error) {
+        API.setwonderpreferences(this.username, this.password_hash, preferences, function (error) {
             if (error) {
                 _this.error(error);
                 return;

@@ -257,8 +257,8 @@ namespace API {
     }
 
     /* API METHODS */
-    export function getgamestate(gameid: string, player: string, callback: (gamestate: GameState, error: string) => any) {
-        httpRequest(`${LAMBDA_URL}?operation=getgamestate&gameid=${gameid}&player=${player}`, (responseJson: any, error: string) => {
+    export function getgamestate(gameid: string, player: string, password_hash: string, callback: (gamestate: GameState, error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=getgamestate&gameid=${gameid}&player=${player}&password_hash=${password_hash}`, (responseJson: any, error: string) => {
             if (error) {
                 callback(undefined, error);
             } else {
@@ -267,8 +267,8 @@ namespace API {
         });
     }
 
-    export function getvalidmoves(gameid: string, turn: number, player: string, callback: (validMoves: Move[], error: string) => any) {
-        httpRequest(`${LAMBDA_URL}?operation=getvalidmoves&gameid=${gameid}&turn=${turn}&player=${player}`, (responseJson: any, error: string) => {
+    export function getvalidmoves(gameid: string, turn: number, player: string, password_hash: string, callback: (validMoves: Move[], error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=getvalidmoves&gameid=${gameid}&turn=${turn}&player=${player}&password_hash=${password_hash}`, (responseJson: any, error: string) => {
             if (error) {
                 callback(undefined, error);
             } else {
@@ -277,20 +277,20 @@ namespace API {
         });
     }
 
-    export function submitmove(gameid: string, turn: number, player: string, move: Move, callback: (error: string) => any) {
-        httpRequest(`${LAMBDA_URL}?operation=submitmove&gameid=${gameid}&turn=${turn}&player=${player}&move=${JSON.stringify(move)}`, (responseJson: any, error: string) => {
+    export function submitmove(gameid: string, turn: number, player: string, password_hash: string, move: Move, callback: (error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=submitmove&gameid=${gameid}&turn=${turn}&player=${player}&password_hash=${password_hash}&move=${JSON.stringify(move)}`, (responseJson: any, error: string) => {
             callback(error);
         });
     }
 
-    export function undomove(gameid: string, turn: number, player: string, callback: (error: string) => any) {
-        httpRequest(`${LAMBDA_URL}?operation=undomove&gameid=${gameid}&turn=${turn}&player=${player}`, (responseJson: any, error: string) => {
+    export function undomove(gameid: string, turn: number, player: string, password_hash: string, callback: (error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=undomove&gameid=${gameid}&turn=${turn}&player=${player}&password_hash=${password_hash}`, (responseJson: any, error: string) => {
             callback(error);
         });
     }
 
-    export function chooseside(gameid: string, player: string, side: number, callback: (error: string) => any) {
-        httpRequest(`${LAMBDA_URL}?operation=chooseside&gameid=${gameid}&player=${player}&side=${side}`, (responseJson: any, error: string) => {
+    export function chooseside(gameid: string, player: string, password_hash: string, side: number, callback: (error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=chooseside&gameid=${gameid}&player=${player}&password_hash=${password_hash}&side=${side}`, (responseJson: any, error: string) => {
             callback(error);
         });
     }
@@ -325,9 +325,9 @@ namespace API {
         });
     }
 
-    export function setwonderpreferences(username: string, preferences: WonderPreference[], callback: (error: string) => any) {
+    export function setwonderpreferences(username: string, password_hash: string, preferences: WonderPreference[], callback: (error: string) => any) {
         let preferencesString = preferences.map(pref => pref.id).join(',');
-        httpRequest(`${LAMBDA_URL}?operation=setwonderpreferences&username=${username}&preferences=${preferencesString}`, (responseJson: any, error: string) => {
+        httpRequest(`${LAMBDA_URL}?operation=setwonderpreferences&username=${username}&password_hash=${password_hash}&preferences=${preferencesString}`, (responseJson: any, error: string) => {
             callback(error);
         });
     }

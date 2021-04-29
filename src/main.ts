@@ -71,7 +71,7 @@ class Main {
             return;
         }
 
-        API.getgamestate(this.gameid, this.player, (gamestate: API.GameState, error: string) => {
+        API.getgamestate(this.gameid, this.player, this.password_hash, (gamestate: API.GameState, error: string) => {
             if (error) {
                 Main.error('Failed to get game state: ' + error);
                 return;
@@ -156,7 +156,7 @@ class Main {
     }
 
     static getGameState() {
-        API.getgamestate(this.gameid, this.player, (gamestate: API.GameState, error: string) => {
+        API.getgamestate(this.gameid, this.player, this.password_hash, (gamestate: API.GameState, error: string) => {
             if (error) {
                 Main.error('Failed to get game state: ' + error);
                 this.sendUpdate();
@@ -212,9 +212,9 @@ class Main {
     }
 
     static updateAndGetGameState() {
-        API.updategame(Main.gameid, (wasUpdate: boolean, error: string) => {
+        API.updategame(this.gameid, (wasUpdate: boolean, error: string) => {
             if (error) {
-                Main.error(error);
+                this.error(error);
             } else {
                 if (wasUpdate) console.log('Updated game');
             }
@@ -223,9 +223,9 @@ class Main {
     }
 
     static submitMove(move: API.Move) {
-        API.submitmove(Main.gameid, Main.gamestate.turn, Main.player, move, (error: string) => {
+        API.submitmove(this.gameid, this.gamestate.turn, this.player, this.password_hash, move, (error: string) => {
             if (error) {
-                Main.error(error);
+                this.error(error);
                 return;
             }
             console.log('Submitted move:', move);
@@ -235,9 +235,9 @@ class Main {
     }
 
     static undoMove() {
-        API.undomove(this.gameid, this.gamestate.turn, this.player, (error: string) => {
+        API.undomove(this.gameid, this.gamestate.turn, this.player, this.password_hash, (error: string) => {
             if (error) {
-                Main.error(error);
+                this.error(error);
                 return;
             }
             console.log('Undo move successful');
@@ -247,9 +247,9 @@ class Main {
     }
 
     static chooseSide(side: number) {
-        API.chooseside(Main.gameid, Main.player, side, (error: string) => {
+        API.chooseside(this.gameid, this.player, this.password_hash, side, (error: string) => {
             if (error) {
-                Main.error(error);
+                this.error(error);
                 return;
             }
             console.log('Chose wonder side:', side);
@@ -322,27 +322,27 @@ class Main {
                 let botPlayer = player;
                 if (this.gamestate.state === 'CHOOSE_WONDER_SIDE') {
                     let side = Bot.chooseSide(this.gamestate.wonderChoices[botPlayer]);
-                    API.chooseside(this.gameid, botPlayer, side, (error: string) => {
+                    API.chooseside(this.gameid, botPlayer, undefined, side, (error: string) => {
                         if (error) {
-                            Main.error(error);
+                            this.error(error);
                             return;
                         }
                         console.log('Successfully chose bot wonder side:', side);
                     });
                 } else {
                     let turn = this.gamestate.turn;
-                    API.getvalidmoves(this.gameid, this.gamestate.turn, botPlayer, (validMoves: API.Move[], error: string) => {
+                    API.getvalidmoves(this.gameid, this.gamestate.turn, botPlayer, undefined, (validMoves: API.Move[], error: string) => {
                         if (error) {
-                            Main.error(error);
+                            this.error(error);
                             return;
                         }
     
                         if (turn !== this.gamestate.turn || validMoves.length === 0) return;
     
                         let move = Bot.getMove(validMoves);
-                        API.submitmove(this.gameid, this.gamestate.turn, botPlayer, move, (error: string) => {
+                        API.submitmove(this.gameid, this.gamestate.turn, botPlayer, undefined, move, (error: string) => {
                             if (error) {
-                                Main.error(error);
+                                this.error(error);
                                 return;
                             }
                             console.log('Successfully submitted bot move:', move);
