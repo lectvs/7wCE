@@ -5905,7 +5905,7 @@ var WonderPreference = /** @class */ (function (_super) {
         _this.div.className = 'preferenceelement';
         var p = _this.div.appendChild(document.createElement('p'));
         p.className = 'preferenceelementtext';
-        p.innerText = preference.name;
+        p.innerHTML = preference.name;
         // Dragging
         _this.div.onmousedown = function (event) {
             if (event.button !== 0)

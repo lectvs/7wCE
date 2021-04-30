@@ -15,7 +15,7 @@ class WonderPreference extends GameElement {
 
         let p = this.div.appendChild(document.createElement('p'));
         p.className = 'preferenceelementtext';
-        p.innerText = preference.name;
+        p.innerHTML = preference.name;
 
         // Dragging
         this.div.onmousedown = (event: MouseEvent) => {
