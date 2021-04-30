@@ -260,7 +260,7 @@ class Wonder extends GameElement {
         let payments = new PIXI.Container();
         for (let i = 0; i < wonder.stages.length; i++) {
             if (this.player === Main.player && !contains(stageIdsBuilt, i)) {
-                let stagePayment = ArtCommon.payment(wonderStageMinCosts[i]);
+                let stagePayment = ArtCommon.payment(wonderStageMinCosts[i], false);
                 stagePayment.scale.set(C.WONDER_STAGE_PAYMENT_SCALE);
                 stagePayment.position.set(this.stageXs[i] + C.WONDER_STAGE_PAYMENT_OFFSET_X, 0);
                 payments.addChild(stagePayment);

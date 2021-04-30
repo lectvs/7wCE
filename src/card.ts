@@ -43,6 +43,7 @@ class Card extends GameElement {
     private allowBuildStages: number[];
     private allowThrow: boolean;
     private minPlayCost: number;
+    private zeusActiveForPlay: boolean;
 
     private dragging: DraggingData;
 
@@ -196,7 +197,7 @@ class Card extends GameElement {
             if (!Main.mouseDown || !this.canBeInteractable()) {
                 if (this.allowPlay && this.activeWonder.getMainRegion().contains(Main.mouseX, Main.mouseY)) {
                     let move: API.Move = { action: 'play', card: this.apiCardId, index: this.index };
-                    if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
+                    if (API.isPaymentSelectionNecessary(move, Main.gamestate.validMoves)) {
                         this.scene.startPaymentDialog(this, move);
                     } else {
                         move.payment = { bank: API.minimalBankPayment(move, Main.gamestate.validMoves) };
@@ -205,7 +206,7 @@ class Card extends GameElement {
                     this.select(move);
                 } else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(Main.mouseX, Main.mouseY)) {
                     let move: API.Move = { action: 'wonder', card: this.apiCardId, index: this.index, stage: stage };
-                    if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
+                    if (API.isPaymentSelectionNecessary(move, Main.gamestate.validMoves)) {
                         this.scene.startPaymentDialog(this, move);
                     } else {
                         move.payment = { bank: Main.gamestate.wonders[Main.player].stages[stage]?.cost?.gold };
@@ -366,12 +367,14 @@ class Card extends GameElement {
         this.allowBuildStages = [];
         this.allowThrow = false;
         this.minPlayCost = Infinity;
+        this.zeusActiveForPlay = false;
         for (let move of validMoves) {
             if (move.card !== this.apiCardId) continue;
             if (move.action === 'play') {
                 this.allowPlay = true;
                 let cost = API.totalPaymentAmount(move.payment);
-                if (cost < this.minPlayCost) this.minPlayCost = cost;
+                if (!move.payment?.free_with_zeus && cost < this.minPlayCost) this.minPlayCost = cost;
+                if (move.payment?.free_with_zeus) this.zeusActiveForPlay = true;
             } else if (move.action === 'wonder') {
                 if (!contains(this.allowBuildStages, move.stage)) this.allowBuildStages.push(move.stage);
             } else if (move.action === 'throw') {
@@ -402,7 +405,7 @@ class Card extends GameElement {
     }
 
     private drawPayment() {
-        let payment = ArtCommon.payment(this.allowPlay ? this.minPlayCost : Infinity);
+        let payment = ArtCommon.payment(this.allowPlay ? this.minPlayCost : Infinity, this.zeusActiveForPlay);
         payment.scale.set(C.CARD_PAYMENT_SCALE);
         payment.position.set(C.CARD_WIDTH + C.CARD_PAYMENT_OFFSET_X, C.CARD_PAYMENT_HEIGHT/2);
 

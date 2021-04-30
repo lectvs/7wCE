@@ -69,6 +69,20 @@ class PaymentDialog extends GameElement {
                 paymentTextPosP.style.top = '50%';
                 paymentTextPosP.style.transform = 'translate(0, -50%)';
             }
+            if (payment.free_with_zeus) {
+                let paymentTextZeus1 = leftDiv.appendChild(this.drawText(`Free with`, C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
+                paymentTextZeus1.style.width = '100%';
+                paymentTextZeus1.style.textAlign = 'right';
+                paymentTextZeus1.style.position = 'absolute';
+                paymentTextZeus1.style.top = '50%';
+                paymentTextZeus1.style.transform = 'translate(0, -50%)';
+                let paymentTextZeus2 = rightDiv.appendChild(this.drawText(`Olympia :)`, C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
+                paymentTextZeus2.style.width = '100%';
+                paymentTextZeus2.style.textAlign = 'left';
+                paymentTextZeus2.style.position = 'absolute';
+                paymentTextZeus2.style.top = '50%';
+                paymentTextZeus2.style.transform = 'translate(0, -50%)';
+            }
 
             let payButton = middleDiv.appendChild(document.createElement('div'));
             payButton.style.backgroundColor = C.PAYMENT_DIALOG_PAY_BUTTON_COLOR;

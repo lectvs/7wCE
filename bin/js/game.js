@@ -239,7 +239,7 @@ var API;
     API.totalNeighborPaymentAmount = totalNeighborPaymentAmount;
     function minimalBankPayment(move, validMoves) {
         var e_1, _a;
-        var _b;
+        var _b, _c;
         var result = Infinity;
         try {
             for (var validMoves_1 = __values(validMoves), validMoves_1_1 = validMoves_1.next(); !validMoves_1_1.done; validMoves_1_1 = validMoves_1.next()) {
@@ -251,7 +251,7 @@ var API;
                 if (validMove.stage !== move.stage)
                     continue;
                 var bankPayment = ((_b = validMove.payment) === null || _b === void 0 ? void 0 : _b.bank) || 0;
-                if (bankPayment < result)
+                if (!((_c = validMove.payment) === null || _c === void 0 ? void 0 : _c.free_with_zeus) && bankPayment < result)
                     result = bankPayment;
             }
         }
@@ -265,8 +265,9 @@ var API;
         return result;
     }
     API.minimalBankPayment = minimalBankPayment;
-    function isNeighborPaymentNecessary(move, validMoves) {
+    function isPaymentSelectionNecessary(move, validMoves) {
         var e_2, _a;
+        var _b;
         var foundMatchingMove = false;
         try {
             for (var validMoves_2 = __values(validMoves), validMoves_2_1 = validMoves_2.next(); !validMoves_2_1.done; validMoves_2_1 = validMoves_2.next()) {
@@ -279,7 +280,7 @@ var API;
                     continue;
                 foundMatchingMove = true;
                 var totalPayment = totalNeighborPaymentAmount(validMove.payment);
-                if (totalPayment === 0)
+                if (totalPayment === 0 && !((_b = validMove.payment) === null || _b === void 0 ? void 0 : _b.free_with_zeus))
                     return false;
             }
         }
@@ -294,7 +295,7 @@ var API;
             return false;
         return true;
     }
-    API.isNeighborPaymentNecessary = isNeighborPaymentNecessary;
+    API.isPaymentSelectionNecessary = isPaymentSelectionNecessary;
     function getNeighbors(gamestate, player) {
         var neg_index = gamestate.players.indexOf(player) - 1;
         if (neg_index < 0)
@@ -317,7 +318,7 @@ var API;
                     continue;
                 if (validMove.stage !== move.stage)
                     continue;
-                if (totalNeighborPaymentAmount(validMove.payment) === 0)
+                if (totalNeighborPaymentAmount(validMove.payment) === 0 && !validMove.payment.free_with_zeus)
                     continue;
                 options.push(validMove.payment);
             }
@@ -336,7 +337,8 @@ var API;
                 var neg_i = options[i].neg || 0;
                 var pos_j = options[j].pos || 0;
                 var neg_j = options[j].neg || 0;
-                if (pos_i <= pos_j && neg_i <= neg_j) {
+                var zeus_i = options[i].free_with_zeus;
+                if (pos_i <= pos_j && neg_i <= neg_j && !zeus_i) {
                     options.splice(j, 1);
                     j--;
                 }
@@ -531,6 +533,9 @@ var ArtCommon;
     ArtCommon.discardPileColor = 0x888888;
     ArtCommon.resourceOuterColor = 0xD89846;
     ArtCommon.selectionColor = 0xFF0000;
+    ArtCommon.freeColor = 0x00FF00;
+    ArtCommon.affordColor = ArtCommon.goldColor;
+    ArtCommon.cantAffordColor = 0xFF0000;
     function eloDiffColor(diff) {
         if (diff > 0)
             return '#00FF00';
@@ -650,6 +655,15 @@ var ArtCommon;
             }
             else if (effect.type === 'build_free_last_card') {
                 return buildFreeLastCard();
+            }
+            else if (effect.type === 'double_trading_post') {
+                return tradingPost('both');
+            }
+            else if (effect.type === 'copy_guild') {
+                return copyGuild();
+            }
+            else if (effect.type === 'build_free_once_per_age') {
+                return buildFreeOncePerAge();
             }
             console.error('Effect type not found:', effect.type);
             return effectNotFound();
@@ -844,20 +858,17 @@ var ArtCommon;
         var resources = combineEffectArt([woodArt, stoneArt, oreArt, clayArt], 8);
         resources.position.set(0, 25);
         container.addChild(resources);
-        if (direction === 'pos') {
+        if (direction === 'pos' || direction === 'both') {
             var arrow = arrowRight();
             arrow.scale.set(0.5);
             arrow.position.set(150, 25);
             container.addChild(arrow);
         }
-        else if (direction === 'neg') {
+        if (direction === 'neg' || direction === 'both') {
             var arrow = arrowLeft();
             arrow.scale.set(0.5);
             arrow.position.set(-150, 25);
             container.addChild(arrow);
-        }
-        else {
-            console.error('Trading post direction not found:', direction);
         }
         return container;
     }
@@ -1065,6 +1076,35 @@ var ArtCommon;
         return container;
     }
     ArtCommon.buildFreeLastCard = buildFreeLastCard;
+    function buildFreeOncePerAge() {
+        var container = new PIXI.Container();
+        container.addChild(cardForEffect(0xDDDDDD));
+        var cross = X(0xFF0000);
+        cross.scale.set(0.3);
+        cross.position.set(-30, -20);
+        container.addChild(cross);
+        return container;
+    }
+    ArtCommon.buildFreeOncePerAge = buildFreeOncePerAge;
+    function copyGuild() {
+        var container = new PIXI.Container();
+        var card = cardForEffect(ArtCommon.cardBannerForColor('purple'));
+        card.position.set(-80, 0);
+        container.addChild(card);
+        var arrowL = arrowLeft();
+        arrowL.scale.set(0.6);
+        arrowL.position.set(0, 0);
+        container.addChild(arrowL);
+        var slashmark = slash();
+        slashmark.position.set(50, 0);
+        container.addChild(slashmark);
+        var arrowR = arrowRight();
+        arrowR.scale.set(0.6);
+        arrowR.position.set(100, 0);
+        container.addChild(arrowR);
+        return container;
+    }
+    ArtCommon.copyGuild = copyGuild;
     function wood() {
         var container = new PIXI.Container();
         container.addChild(Shapes.filledCircle(0, 0, 50, ArtCommon.resourceOuterColor));
@@ -1267,16 +1307,18 @@ var ArtCommon;
         return container;
     }
     ArtCommon.militaryTokenNegative = militaryTokenNegative;
-    function payment(amount) {
+    function payment(amount, canChooseFree) {
+        var errorColor = canChooseFree ? ArtCommon.freeColor : ArtCommon.cantAffordColor;
+        var costColor = canChooseFree ? ArtCommon.freeColor : ArtCommon.affordColor;
         if (!isFinite(amount)) {
-            return ArtCommon.X(0xFF0000);
+            return X(errorColor);
         }
         if (amount === 0) {
-            return ArtCommon.checkMark();
+            return checkMark();
         }
         var cost = new PIXI.Container();
-        cost.addChild(Shapes.filledCircle(0, 0, 50, ArtCommon.goldColor));
-        var goldText = Shapes.centeredText(-70, 0, "" + amount, 1, ArtCommon.goldColor);
+        cost.addChild(Shapes.filledCircle(0, 0, 50, costColor));
+        var goldText = Shapes.centeredText(-70, 0, "" + amount, 1, costColor);
         goldText.anchor.set(1, 0.5);
         cost.addChild(goldText);
         return cost;
@@ -1284,7 +1326,7 @@ var ArtCommon;
     ArtCommon.payment = payment;
     function checkMark() {
         var graphics = new PIXI.Graphics();
-        graphics.beginFill(0x00FF00, 1);
+        graphics.beginFill(ArtCommon.freeColor, 1);
         graphics.drawPolygon([-50, 0, -15, 50, 50, -50, -15, 20]);
         graphics.endFill();
         return graphics;
@@ -1614,7 +1656,7 @@ var Card = /** @class */ (function (_super) {
             if (!Main.mouseDown || !this.canBeInteractable()) {
                 if (this.allowPlay && this.activeWonder.getMainRegion().contains(Main.mouseX, Main.mouseY)) {
                     var move = { action: 'play', card: this.apiCardId, index: this.index };
-                    if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
+                    if (API.isPaymentSelectionNecessary(move, Main.gamestate.validMoves)) {
                         this.scene.startPaymentDialog(this, move);
                     }
                     else {
@@ -1625,7 +1667,7 @@ var Card = /** @class */ (function (_super) {
                 }
                 else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(Main.mouseX, Main.mouseY)) {
                     var move = { action: 'wonder', card: this.apiCardId, index: this.index, stage: stage };
-                    if (API.isNeighborPaymentNecessary(move, Main.gamestate.validMoves)) {
+                    if (API.isPaymentSelectionNecessary(move, Main.gamestate.validMoves)) {
                         this.scene.startPaymentDialog(this, move);
                     }
                     else {
@@ -1798,10 +1840,12 @@ var Card = /** @class */ (function (_super) {
     };
     Card.prototype.configureValidMoves = function (validMoves) {
         var e_12, _a;
+        var _b, _c;
         this.allowPlay = false;
         this.allowBuildStages = [];
         this.allowThrow = false;
         this.minPlayCost = Infinity;
+        this.zeusActiveForPlay = false;
         try {
             for (var validMoves_4 = __values(validMoves), validMoves_4_1 = validMoves_4.next(); !validMoves_4_1.done; validMoves_4_1 = validMoves_4.next()) {
                 var move = validMoves_4_1.value;
@@ -1810,8 +1854,10 @@ var Card = /** @class */ (function (_super) {
                 if (move.action === 'play') {
                     this.allowPlay = true;
                     var cost = API.totalPaymentAmount(move.payment);
-                    if (cost < this.minPlayCost)
+                    if (!((_b = move.payment) === null || _b === void 0 ? void 0 : _b.free_with_zeus) && cost < this.minPlayCost)
                         this.minPlayCost = cost;
+                    if ((_c = move.payment) === null || _c === void 0 ? void 0 : _c.free_with_zeus)
+                        this.zeusActiveForPlay = true;
                 }
                 else if (move.action === 'wonder') {
                     if (!contains(this.allowBuildStages, move.stage))
@@ -1853,7 +1899,7 @@ var Card = /** @class */ (function (_super) {
         discardCount.style.transform = 'translate(-50%, -50%)';
     };
     Card.prototype.drawPayment = function () {
-        var payment = ArtCommon.payment(this.allowPlay ? this.minPlayCost : Infinity);
+        var payment = ArtCommon.payment(this.allowPlay ? this.minPlayCost : Infinity, this.zeusActiveForPlay);
         payment.scale.set(C.CARD_PAYMENT_SCALE);
         payment.position.set(C.CARD_WIDTH + C.CARD_PAYMENT_OFFSET_X, C.CARD_PAYMENT_HEIGHT / 2);
         return render(payment, C.CARD_WIDTH, C.CARD_PAYMENT_HEIGHT);
@@ -2698,7 +2744,7 @@ function getDescriptionForEffect(effect) {
         return effect.points_per_card + " VP for each " + effect.color + " card played by you";
     }
     else if (effect.type === 'multi_science') {
-        return "At the end of the game, becomes the most highest value science symbol for you";
+        return "Any science symbol";
     }
     else if (effect.type === 'play_last_card') {
         return "You may play your last card instead of discarding it at the end of each age";
@@ -2714,6 +2760,15 @@ function getDescriptionForEffect(effect) {
     }
     else if (effect.type === 'build_free_last_card') {
         return "You may ignore the cost of any card in your last hand of each age";
+    }
+    else if (effect.type === 'double_trading_post') {
+        return "Pay 1 gold instead of 2 for brown resources traded from either neighbor";
+    }
+    else if (effect.type === 'copy_guild') {
+        return "Copy the effect of a guild from either neighbor";
+    }
+    else if (effect.type === 'build_free_once_per_age') {
+        return "You may ignore the cost of a single card of your choice per age";
     }
     console.error('Effect type not found:', effect.type);
     return "Description not found";
@@ -4606,6 +4661,20 @@ var PaymentDialog = /** @class */ (function (_super) {
                 paymentTextPosP.style.top = '50%';
                 paymentTextPosP.style.transform = 'translate(0, -50%)';
             }
+            if (payment.free_with_zeus) {
+                var paymentTextZeus1 = leftDiv.appendChild(this_2.drawText("Free with", C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
+                paymentTextZeus1.style.width = '100%';
+                paymentTextZeus1.style.textAlign = 'right';
+                paymentTextZeus1.style.position = 'absolute';
+                paymentTextZeus1.style.top = '50%';
+                paymentTextZeus1.style.transform = 'translate(0, -50%)';
+                var paymentTextZeus2 = rightDiv.appendChild(this_2.drawText("Olympia :)", C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
+                paymentTextZeus2.style.width = '100%';
+                paymentTextZeus2.style.textAlign = 'left';
+                paymentTextZeus2.style.position = 'absolute';
+                paymentTextZeus2.style.top = '50%';
+                paymentTextZeus2.style.transform = 'translate(0, -50%)';
+            }
             var payButton = middleDiv.appendChild(document.createElement('div'));
             payButton.style.backgroundColor = C.PAYMENT_DIALOG_PAY_BUTTON_COLOR;
             payButton.style.width = C.PAYMENT_DIALOG_PAY_BUTTON_WIDTH + "px";
@@ -5383,7 +5452,7 @@ var Wonder = /** @class */ (function (_super) {
         var payments = new PIXI.Container();
         for (var i = 0; i < wonder.stages.length; i++) {
             if (this.player === Main.player && !contains(stageIdsBuilt, i)) {
-                var stagePayment = ArtCommon.payment(wonderStageMinCosts[i]);
+                var stagePayment = ArtCommon.payment(wonderStageMinCosts[i], false);
                 stagePayment.scale.set(C.WONDER_STAGE_PAYMENT_SCALE);
                 stagePayment.position.set(this.stageXs[i] + C.WONDER_STAGE_PAYMENT_OFFSET_X, 0);
                 payments.addChild(stagePayment);

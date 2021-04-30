@@ -30,7 +30,7 @@ function getDescriptionForEffect(effect: API.Effect) {
     } else if (effect.type === 'points_for_self_cards') {
         return `${effect.points_per_card} VP for each ${effect.color} card played by you`;
     } else if (effect.type === 'multi_science') {
-        return `At the end of the game, becomes the most highest value science symbol for you`;
+        return `Any science symbol`;
     } else if (effect.type === 'play_last_card') {
         return `You may play your last card instead of discarding it at the end of each age`;
     } else if (effect.type === 'build_from_discard') {
@@ -41,6 +41,12 @@ function getDescriptionForEffect(effect: API.Effect) {
         return `You may ignore the cost of any card in your first hand of each age`;
     } else if (effect.type === 'build_free_last_card') {
         return `You may ignore the cost of any card in your last hand of each age`;
+    } else if (effect.type === 'double_trading_post') {
+        return `Pay 1 gold instead of 2 for brown resources traded from either neighbor`
+    } else if (effect.type === 'copy_guild') {
+        return `Copy the effect of a guild from either neighbor`;
+    } else if (effect.type === 'build_free_once_per_age') {
+        return `You may ignore the cost of a single card of your choice per age`;
     }
     console.error('Effect type not found:', effect.type);
     return "Description not found";

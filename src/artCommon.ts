@@ -19,6 +19,9 @@ namespace ArtCommon {
     export const discardPileColor = 0x888888;
     export const resourceOuterColor = 0xD89846;
     export const selectionColor = 0xFF0000;
+    export const freeColor = 0x00FF00;
+    export const affordColor = goldColor;
+    export const cantAffordColor = 0xFF0000;
 
     export function eloDiffColor(diff: number) {
         if (diff > 0) return '#00FF00';
@@ -101,6 +104,12 @@ namespace ArtCommon {
                 return buildFreeFirstCard();
             } else if (effect.type === 'build_free_last_card') {
                 return buildFreeLastCard();
+            } else if (effect.type === 'double_trading_post') {
+                return tradingPost('both');
+            } else if (effect.type === 'copy_guild') {
+                return copyGuild();
+            } else if (effect.type === 'build_free_once_per_age') {
+                return buildFreeOncePerAge();
             }
             console.error('Effect type not found:', effect.type);
             return effectNotFound();
@@ -249,18 +258,17 @@ namespace ArtCommon {
         let resources = combineEffectArt([woodArt, stoneArt, oreArt, clayArt], 8);
         resources.position.set(0, 25);
         container.addChild(resources);
-        if (direction === 'pos') {
+        if (direction === 'pos' || direction === 'both') {
             let arrow = arrowRight();
             arrow.scale.set(0.5);
             arrow.position.set(150, 25);
             container.addChild(arrow);
-        } else if (direction === 'neg') {
+        }
+        if (direction === 'neg' || direction === 'both') {
             let arrow = arrowLeft();
             arrow.scale.set(0.5);
             arrow.position.set(-150, 25);
             container.addChild(arrow);
-        } else {
-            console.error('Trading post direction not found:', direction);
         }
         return container;
     }
@@ -468,6 +476,35 @@ namespace ArtCommon {
         return container;
     }
 
+    export function buildFreeOncePerAge() {
+        let container = new PIXI.Container();
+        container.addChild(cardForEffect(0xDDDDDD));
+        let cross = X(0xFF0000);
+        cross.scale.set(0.3);
+        cross.position.set(-30, -20);
+        container.addChild(cross);
+        return container;
+    }
+
+    export function copyGuild() {
+        let container = new PIXI.Container();
+        let card = cardForEffect(ArtCommon.cardBannerForColor('purple'));
+        card.position.set(-80, 0);
+        container.addChild(card);
+        let arrowL = arrowLeft();
+        arrowL.scale.set(0.6);
+        arrowL.position.set(0, 0);
+        container.addChild(arrowL);
+        let slashmark = slash();
+        slashmark.position.set(50, 0);
+        container.addChild(slashmark);
+        let arrowR = arrowRight();
+        arrowR.scale.set(0.6);
+        arrowR.position.set(100, 0);
+        container.addChild(arrowR);
+        return container;
+    }
+
     export function wood() {
         let container = new PIXI.Container();
         container.addChild(Shapes.filledCircle(0, 0, 50, ArtCommon.resourceOuterColor));
@@ -670,18 +707,20 @@ namespace ArtCommon {
         return container;
     }
 
-    export function payment(amount: number) {
+    export function payment(amount: number, canChooseFree: boolean) {
+        let errorColor = canChooseFree ? freeColor : cantAffordColor;
+        let costColor = canChooseFree ? freeColor : affordColor;
         if (!isFinite(amount)) {
-            return ArtCommon.X(0xFF0000);
+            return X(errorColor);
         }
         
         if (amount === 0) {
-            return ArtCommon.checkMark();
+            return checkMark();
         }
 
         let cost = new PIXI.Container();
-        cost.addChild(Shapes.filledCircle(0, 0, 50, ArtCommon.goldColor));
-        let goldText = Shapes.centeredText(-70, 0, `${amount}`, 1, ArtCommon.goldColor);
+        cost.addChild(Shapes.filledCircle(0, 0, 50, costColor));
+        let goldText = Shapes.centeredText(-70, 0, `${amount}`, 1, costColor);
         goldText.anchor.set(1, 0.5);
         cost.addChild(goldText);
         return cost;
@@ -689,7 +728,7 @@ namespace ArtCommon {
 
     export function checkMark() {
         let graphics = new PIXI.Graphics();
-        graphics.beginFill(0x00FF00, 1);
+        graphics.beginFill(freeColor, 1);
         graphics.drawPolygon([ -50, 0, -15, 50, 50, -50, -15, 20 ]);
         graphics.endFill();
         return graphics;

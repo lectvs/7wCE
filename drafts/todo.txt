@@ -1,6 +1,6 @@
 launch
-- password-protect APIs
 - optimize
+- implement old olympia
 
 post-launch
 - art refinement
@@ -15,3 +15,5 @@ post-launch
 - which players are online?
 - BGA move mode
 - store lambda code in version control?
+- allow any player to updateGame?
+- fix old olympia payment problem with browns

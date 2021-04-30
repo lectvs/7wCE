@@ -26,6 +26,7 @@ namespace API {
         stagesBuilt: StageBuilt[];
         militaryTokens: number[];
         handCount: number;
+        zeusUsed: boolean;
         lastMove?: Move;
         currentMove?: Move;
         pointsDistribution: PointsDistribution;
@@ -115,6 +116,7 @@ namespace API {
         pos?: number;
         neg?: number;
         bank?: number;
+        free_with_zeus?: boolean;
     }
 
     export type User = {
@@ -170,12 +172,12 @@ namespace API {
             if (validMove.card !== move.card) continue;
             if (validMove.stage !== move.stage) continue;
             let bankPayment = validMove.payment?.bank || 0;
-            if (bankPayment < result) result = bankPayment;
+            if (!validMove.payment?.free_with_zeus && bankPayment < result) result = bankPayment;
         }
         return result;
     }
 
-    export function isNeighborPaymentNecessary(move: Move, validMoves: Move[]) {
+    export function isPaymentSelectionNecessary(move: Move, validMoves: Move[]) {
         let foundMatchingMove = false;
         for (let validMove of validMoves) {
             if (validMove.action !== move.action) continue;
@@ -183,7 +185,7 @@ namespace API {
             if (validMove.stage !== move.stage) continue;
             foundMatchingMove = true;
             let totalPayment = totalNeighborPaymentAmount(validMove.payment);
-            if (totalPayment === 0) return false;
+            if (totalPayment === 0 && !validMove.payment?.free_with_zeus) return false;
         }
         if (!foundMatchingMove) return false;
         return true;
@@ -205,7 +207,7 @@ namespace API {
             if (validMove.action !== move.action) continue;
             if (validMove.card !== move.card) continue;
             if (validMove.stage !== move.stage) continue;
-            if (totalNeighborPaymentAmount(validMove.payment) === 0) continue;
+            if (totalNeighborPaymentAmount(validMove.payment) === 0 && !validMove.payment.free_with_zeus) continue;
             options.push(validMove.payment);
         }
 
@@ -217,7 +219,8 @@ namespace API {
                 let neg_i = options[i].neg || 0;
                 let pos_j = options[j].pos || 0;
                 let neg_j = options[j].neg || 0;
-                if (pos_i <= pos_j && neg_i <= neg_j) {
+                let zeus_i = options[i].free_with_zeus;
+                if (pos_i <= pos_j && neg_i <= neg_j && !zeus_i) {
                     options.splice(j, 1);
                     j--;
                 }
