@@ -79,6 +79,20 @@ a.userinfolink:active {
     height: 100%;
 }
 
+#createsection {
+    left: 25.5%;
+    top: 0%;
+    width: 49%;
+    height: 100%;
+}
+
+#patchnotessection {
+    left: 75.5%;
+    top: 0%;
+    width: 24.5%;
+    height: 100%;
+}
+
 #preferencelist {
     position: absolute;
     left: 50%;
@@ -101,13 +115,6 @@ a.userinfolink:active {
     top: 50%;
     font-family: 'Courier New', Courier, monospace;
     transform: translate(0%, -50%);
-}
-
-#createsection {
-    left: 25.5%;
-    top: 0%;
-    width: 74.5%;
-    height: 100%;
 }
 
 #createsectionplayers {
@@ -179,6 +186,23 @@ a.userinfolink:active {
     top: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
+}
+
+#patchnotescontent {
+    width: 90%;
+    height: 90%;
+    position: absolute;
+    left: 5%;
+    top: 10%;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+}
+
+.pnci {
+    position: relative;
+    width: 90%;
+    left: 30px;
+    text-indent: -15px;
 }
 
 * {

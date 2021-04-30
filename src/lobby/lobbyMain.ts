@@ -63,6 +63,15 @@ class LobbyMain {
             this.user = users[this.username];
             this.load();
         });
+
+        API.getpatchnotes((patchnotes: string, error: string) => {
+            if (error) {
+                this.error(error, true);
+                return;
+            }
+            console.log('Fetched patch notes');
+            document.getElementById('patchnotescontent').innerHTML = patchnotes;
+        });
     }
 
     static load() {

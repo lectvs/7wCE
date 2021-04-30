@@ -92,6 +92,8 @@ namespace ArtCommon {
                 return pointsForFinishedWonder(effect.points);
             } else if (effect.type === 'points_for_self_cards') {
                 return pointsForSelfCards(effect.color, effect.points_per_card);
+            } else if (effect.type === 'points_for_negative_tokens') {
+                return pointsForNegativeTokens(effect.points_per_token);
             } else if (effect.type === 'multi_science') {
                 return multiScience(effect.symbols.split('/'));
             } else if (effect.type === 'play_last_card') {
@@ -400,6 +402,26 @@ namespace ArtCommon {
         let card = cardGoldPoints(color, 0, pointsPerCard);
         card.scale.set(0.8);
         container.addChild(card);
+        return container;
+    }
+
+    export function pointsForNegativeTokens(pointsPerToken: number) {
+        let container = new PIXI.Container();
+        let token = militaryToken(-1);
+        token.scale.set(0.8);
+        container.addChild(token);
+        let pointsWreath = victoryPoints(pointsPerToken);
+        pointsWreath.scale.set(0.48);
+        pointsWreath.position.set(36, 24);
+        container.addChild(pointsWreath);
+        let arrowL = arrowLeft();
+        arrowL.scale.set(0.4);
+        arrowL.position.set(-85, 20);
+        container.addChild(arrowL);
+        let arrowR = arrowRight();
+        arrowR.scale.set(0.4);
+        arrowR.position.set(85, 20);
+        container.addChild(arrowR);
         return container;
     }
 

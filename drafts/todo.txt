@@ -1,6 +1,6 @@
 launch
 - optimize
-- implement old olympia
+- fix old olympia payment problem with browns
 
 post-launch
 - art refinement
@@ -16,4 +16,4 @@ post-launch
 - BGA move mode
 - store lambda code in version control?
 - allow any player to updateGame?
-- fix old olympia payment problem with browns
+- avoid multiple people creating games at the same time

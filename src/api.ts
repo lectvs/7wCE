@@ -87,6 +87,7 @@ namespace API {
         gold_per_stage?: number;
         points_per_card?: number;
         points_per_stage?: number;
+        points_per_token?: number;
     }
 
     export type Wonder = {
@@ -348,6 +349,16 @@ namespace API {
     export function login(username: string, password_hash: string, callback: (error: string) => any) {
         httpRequest(`${LAMBDA_URL}?operation=login&username=${username}&password_hash=${password_hash}`, (responseJson: any, error: string) => {
             callback(error);
+        });
+    }
+    
+    export function getpatchnotes(callback: (patchnotes: string, error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=getpatchnotes`, (responseJson: any, error: string) => {
+            if (error) {
+                callback(undefined, error);
+            } else {
+                callback(responseJson['patchNotes'], undefined);
+            }
         });
     }
 

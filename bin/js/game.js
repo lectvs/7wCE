@@ -488,6 +488,17 @@ var API;
         });
     }
     API.login = login;
+    function getpatchnotes(callback) {
+        httpRequest(LAMBDA_URL + "?operation=getpatchnotes", function (responseJson, error) {
+            if (error) {
+                callback(undefined, error);
+            }
+            else {
+                callback(responseJson['patchNotes'], undefined);
+            }
+        });
+    }
+    API.getpatchnotes = getpatchnotes;
     function httpRequest(url, callback) {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url, true);
@@ -637,6 +648,9 @@ var ArtCommon;
             }
             else if (effect.type === 'points_for_self_cards') {
                 return pointsForSelfCards(effect.color, effect.points_per_card);
+            }
+            else if (effect.type === 'points_for_negative_tokens') {
+                return pointsForNegativeTokens(effect.points_per_token);
             }
             else if (effect.type === 'multi_science') {
                 return multiScience(effect.symbols.split('/'));
@@ -1003,6 +1017,26 @@ var ArtCommon;
         return container;
     }
     ArtCommon.pointsForSelfCards = pointsForSelfCards;
+    function pointsForNegativeTokens(pointsPerToken) {
+        var container = new PIXI.Container();
+        var token = militaryToken(-1);
+        token.scale.set(0.8);
+        container.addChild(token);
+        var pointsWreath = victoryPoints(pointsPerToken);
+        pointsWreath.scale.set(0.48);
+        pointsWreath.position.set(36, 24);
+        container.addChild(pointsWreath);
+        var arrowL = arrowLeft();
+        arrowL.scale.set(0.4);
+        arrowL.position.set(-85, 20);
+        container.addChild(arrowL);
+        var arrowR = arrowRight();
+        arrowR.scale.set(0.4);
+        arrowR.position.set(85, 20);
+        container.addChild(arrowR);
+        return container;
+    }
+    ArtCommon.pointsForNegativeTokens = pointsForNegativeTokens;
     function playLastCard() {
         var container = new PIXI.Container();
         var card1 = cardForEffect(0x686B6A);
@@ -5772,6 +5806,14 @@ var LobbyMain = /** @class */ (function () {
             console.log('Fetched user:', users[_this.username]);
             _this.user = users[_this.username];
             _this.load();
+        });
+        API.getpatchnotes(function (patchnotes, error) {
+            if (error) {
+                _this.error(error, true);
+                return;
+            }
+            console.log('Fetched patch notes');
+            document.getElementById('patchnotescontent').innerHTML = patchnotes;
         });
     };
     LobbyMain.load = function () {
