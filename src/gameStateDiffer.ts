@@ -8,7 +8,7 @@ namespace GameStateDiffer {
             scripts: []
         };
 
-        diffCurrentWonderSideChoice(gamestate, result);
+        diffCurrentWonderSideChoices(gamestate, result);
 
         return result;
     }
@@ -502,18 +502,23 @@ namespace GameStateDiffer {
         });
     }
 
-    function diffCurrentWonderSideChoice(gamestate: API.GameState, result: DiffResult) {
+    function diffCurrentWonderSideChoices(gamestate: API.GameState, result: DiffResult) {
         if (!(Main.scene instanceof ChooseWonderScene)) return;
         let scene: ChooseWonderScene = Main.scene;
 
-        let currentMove = gamestate.playerData[Main.player].currentMove;
-
-        // Reflect current choice.
-        if (currentMove && !Main.isMoveImmune) {
-            result.scripts.push(function*() {
-                scene.selectSide(currentMove.side);
-            });
-            return;
+        for (let player of gamestate.players) {
+            let currentMove = gamestate.playerData[player].currentMove;
+            if (player === Main.player) {
+                if (currentMove && !Main.isMoveImmune) {
+                    result.scripts.push(function*() {
+                        scene.selectSide(currentMove.side);
+                    });
+                }
+            } else {
+                result.scripts.push(function*() {
+                    scene.setCurrentlyMoved(player, !!currentMove);
+                });
+            }
         }
     }
 

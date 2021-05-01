@@ -1,6 +1,7 @@
 launch
 - optimize
 - fix old olympia payment problem with browns
+- lectvs website on S3
 
 post-launch
 - art refinement

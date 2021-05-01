@@ -71,8 +71,14 @@ class ChooseWonderScene extends Scene {
         let padding = gamestate.players.length === 3 ? C.GAME_HEIGHT_PADDING_3P : C.GAME_HEIGHT_PADDING_4567P;
         Main.game.style.height = `${finalY + C.WONDER_BOARD_HEIGHT/2 + padding}px`;
 
-        if (gamestate.playerData[Main.player].currentMove) {
-            this.selectSide(gamestate.playerData[Main.player].currentMove.side);
+        for (let player of gamestate.players) {
+            if (gamestate.playerData[player].currentMove) {
+                if (player === Main.player) {
+                    this.selectSide(gamestate.playerData[Main.player].currentMove.side);
+                } else {
+                    this.setCurrentlyMoved(player, true);
+                }
+            }
         }
     }
 
@@ -93,6 +99,12 @@ class ChooseWonderScene extends Scene {
         for (let i = 0; i < topWonderChoices.length; i++) {
             if (i == side) topWonderChoices[i].select();
             else topWonderChoices[i].deselect();
+        }
+    }
+
+    setCurrentlyMoved(player: string, currentlyMoved: boolean) {
+        for (let wonderChoice of this.wonderChoices[Main.gamestate.players.indexOf(player)]) {
+            wonderChoice.checkMarkVisible = currentlyMoved;
         }
     }
 }

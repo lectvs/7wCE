@@ -9,6 +9,14 @@ class WonderBoardForChoose extends GameElement {
 
     wonderResource: WonderResource;
     selection: HTMLCanvasElement;
+    checkMark: HTMLElement;
+
+    private _checkMarkVisible: boolean = true;
+    get checkMarkVisible() { return this._checkMarkVisible; }
+    set checkMarkVisible(value: boolean) {
+        this._checkMarkVisible = value;
+        this.checkMark.style.visibility = value ? 'visible' : 'hidden';
+    }
 
     constructor(scene: ChooseWonderScene, wonder: API.Wonder, side: number, player: string) {
         super();
@@ -88,6 +96,10 @@ class WonderBoardForChoose extends GameElement {
                 Main.chooseSide(this.side);
                 this.scene.selectSide(this.side);
             };
+        } else {
+            this.checkMark = this.drawCheckMark();
+            this.checkMark.style.visibility = 'hidden';
+            this.div.appendChild(this.checkMark);
         }
 
         this.zIndex = C.Z_INDEX_WONDER;
@@ -120,6 +132,14 @@ class WonderBoardForChoose extends GameElement {
         graphics.drawRoundedRect(C.WONDER_BOARD_BORDER, C.WONDER_BOARD_BORDER, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT, C.WONDER_BOARD_CORNER_RADIUS);
         graphics.endHole();
         return render(graphics, C.WONDER_BOARD_WIDTH + 2*C.WONDER_BOARD_BORDER, C.WONDER_BOARD_HEIGHT + 2*C.WONDER_BOARD_BORDER);
+    }
+
+    private drawCheckMark() {
+        let checkmark = ArtCommon.domElementForArt(ArtCommon.checkMark(), 0.5);
+        checkmark.style.position = 'absolute';
+        checkmark.style.left = '50%';
+        checkmark.style.top = '50%';
+        return checkmark;
     }
 
     private drawSidebar() {
