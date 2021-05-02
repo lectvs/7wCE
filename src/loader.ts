@@ -76,6 +76,7 @@ class Loader {
 
         // Other
         this.loadDiscardPile();
+        this.loadCardList(Main.gamestate);
     }
 
     private loadCard(id: string, card: API.Card) {
@@ -260,6 +261,73 @@ class Loader {
             discardPile.addChild(Shapes.centeredText(C.DISCARD_PILE_AREA_WIDTH/2, C.DISCARD_PILE_TITLE_Y, C.DISCARD_PILE_TITLE_TEXT, C.DISCARD_PILE_TITLE_SCALE, ArtCommon.discardPileColor));
     
             Resources.DISCARD_PILE = render(discardPile, C.DISCARD_PILE_AREA_WIDTH, C.DISCARD_PILE_AREA_HEIGHT);
+            resource.loaded = true;
+        };
+    }
+
+    private loadCardList(gamestate: API.GameState) {
+        let resource = this.addNewResource();
+
+        resource.load = () => {
+            let cardList = new PIXI.Container();
+
+            let maxY = 0;
+
+            for (let age = 1; age <= 3; age++) {
+                let x = age * C.CARD_LIST_CARD_DX;
+                let y = 0;
+
+                for (let cardInfo of gamestate.deck[age]) {
+                    let card = gamestate.cards[cardInfo.id];
+
+                    let cardForList = new PIXI.Container();
+                    cardForList.addChild(Shapes.filledRect(-C.CARD_LIST_CARD_WIDTH/2, -C.CARD_LIST_CARD_HEIGHT/2, C.CARD_LIST_CARD_WIDTH, C.CARD_LIST_CARD_HEIGHT, ArtCommon.cardBannerForColor(card.color)));
+                    let effectContainer = new PIXI.Container();
+                    effectContainer.addChild(ArtCommon.getShadowForEffects(card.effects, 'dark'));
+                    effectContainer.addChild(ArtCommon.getArtForEffects(card.effects));
+                    effectContainer.scale.set(C.CARD_LIST_EFFECT_SCALE);
+                    cardForList.addChild(effectContainer);
+
+                    if (cardInfo.count > 1) {
+                        let text = Shapes.centeredText(-60, 0, `${cardInfo.count} ×`, 0.15, 0xFFFFFF);
+                        text.anchor.set(1, 0.5);
+                        cardForList.addChild(text);
+                    }
+            
+                    let resourceCost = card.cost?.resources || [];
+                    let goldCost = card.cost?.gold || 0;
+            
+                    if (card.cost) {
+                        let currentX = 70;
+                        for (let i = 0; i < resourceCost.length; i++) {
+                            let resource = ArtCommon.resource(resourceCost[i]);
+                            resource.scale.set(0.2);
+                            resource.position.set(currentX, 0);
+                            cardForList.addChild(resource);
+                            currentX += 22;
+                        }
+            
+                        if (goldCost > 0) {
+                            let gold = ArtCommon.gold(goldCost);
+                            gold.scale.set(0.2);
+                            gold.position.set(currentX, 0);
+                            cardForList.addChild(gold);
+                            currentX += 22;
+                        }
+                    }
+
+                    cardForList.x = x;
+                    cardForList.y = y;
+                    cardList.addChild(cardForList);
+
+                    y += C.CARD_LIST_CARD_DY;
+                }
+                maxY = Math.max(maxY, y);
+            }
+            
+            cardList.y += C.CARD_LIST_CARD_HEIGHT/2;
+
+            Resources.CARD_LIST = render(cardList, C.CARD_LIST_WIDTH, maxY);
             resource.loaded = true;
         };
     }

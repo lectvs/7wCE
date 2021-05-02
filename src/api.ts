@@ -8,7 +8,7 @@ namespace API {
         age: number;
         turn: number;
         turnInAge: number;
-        deck: Dict<{id: number, count: number}[]>;
+        deck: Deck;
         playerData: Dict<PlayerData>;
         discardedCards?: number[]
         discardedCardCount: number;
@@ -56,6 +56,11 @@ namespace API {
         diff: number;
         after: number;
     }
+
+    export type Deck = Dict<{
+        id: number;
+        count: number;
+    }[]>
 
     export type Card = {
         age: number;

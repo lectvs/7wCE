@@ -200,6 +200,9 @@ class C {
     public static readonly CARD_LIST_INFO_TEXT_COLOR = '#FFFFFF';
     public static readonly CARD_LIST_CARD_DX = 400;
     public static readonly CARD_LIST_CARD_DY = C.CARD_LIST_CARD_HEIGHT;
+    public static readonly CARD_LIST_WIDTH = C.CARD_LIST_CARD_DX*4;
+    public static readonly CARD_LIST_OFFSET_Y = -20;
+    public static readonly CARD_LIST_PADDING = 200;
 
     public static readonly SORT_CMP_RESOURCES = (card1: Card, card2: Card) => {
         if (card1.apiCard.color === 'brown' && card2.apiCard.color === 'grey') return -1;

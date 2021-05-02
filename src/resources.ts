@@ -16,6 +16,7 @@ class Resources {
     static readonly CARD_CACHE: Dict<CardResource[]> = {};
     static readonly WONDER_CACHE: Dict<WonderResource[]> = {};
     static DISCARD_PILE: HTMLCanvasElement;
+    static CARD_LIST: HTMLCanvasElement;
 
     static getCard(cardId: number): CardResource {
         if (!this.CARD_CACHE[cardId] || this.CARD_CACHE[cardId].length === 0) {

@@ -14,9 +14,13 @@ class CardListScene {
     }
 
     create() {
-        let deck = Main.gamestate.deck;
+        let cardList = Main.cardList.appendChild(Resources.CARD_LIST);
+        let height = cardList.height/resolution;
+        cardList.style.top = `${height/2 + C.CARD_LIST_OFFSET_Y}px`;
 
-        let maxY = 0;
+        Main.cardList.style.height = `${height + C.CARD_LIST_PADDING + C.CARD_LIST_OFFSET_Y}px`;
+
+        let deck = Main.gamestate.deck;
 
         for (let age = 1; age <= 3; age++) {
             let x = (age-2) * C.CARD_LIST_CARD_DX;
@@ -30,10 +34,7 @@ class CardListScene {
 
                 y += C.CARD_LIST_CARD_DY;
             }
-            maxY = Math.max(maxY, y);
         }
-
-        Main.cardList.style.height = `${maxY}px`;
     }
 
     destroy() {
@@ -57,6 +58,7 @@ class CardListScene {
     stopPopup(source: Popup.Source) {
         if (this.popup && this.popup.getSource() === source) {
             this.popup.removeFromGame();
+            this.popup = null;
         }
     }
 
