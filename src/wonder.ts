@@ -38,6 +38,8 @@ class Wonder extends GameElement {
         this.wonderResource = Resources.getWonder(this.wonder.name, this.wonder.side);
         this.stageXs = this.wonderResource.stageXs;
 
+        this.div.className = 'wonder';
+
         let boardDiv = this.div.appendChild(document.createElement('div'));
         boardDiv.appendChild(this.wonderResource.board);
 
@@ -71,10 +73,9 @@ class Wonder extends GameElement {
         for (let stageBuilt of playerData.stagesBuilt) {
             let justPlayed = (Main.gamestate.state !== 'GAME_COMPLETE' && playerData.lastMove && playerData.lastMove.action === 'wonder' && playerData.lastMove.stage === stageBuilt.stage);
             let card = Card.flippedCardForAge(this.scene, stageBuilt.cardAge, justPlayed);
-            
-            card.zIndex = C.Z_INDEX_CARD_WONDER;
-            this.builtWonderCards.push(card);
+            card.convertToBuried();
             card.addToGame();
+            this.builtWonderCards.push(card);
         }
 
         // Starting effects popup

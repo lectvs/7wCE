@@ -87,6 +87,9 @@ class Hand {
         }
 
         if (this.cards.length > 0 && handData.type === 'discard') {
+            for (let card of this.cards) {
+                card.convertToDiscarded();
+            }
             this.cards[this.cards.length-1].addDiscardCountText();
         }
     }

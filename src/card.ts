@@ -34,6 +34,7 @@ class Card extends GameElement {
 
     frontDiv: HTMLDivElement;
     backDiv: HTMLDivElement;
+    private paymentCanvas: HTMLCanvasElement;
     private highlightEffect: HTMLDivElement;
     private highlightFlipped: HTMLDivElement;
     private pointsSummary: HTMLDivElement;
@@ -150,6 +151,7 @@ class Card extends GameElement {
         this.fullClipRect = this.cardResource.fullClipRect;
         this.effectClipRect = this.cardResource.effectClipRect;
 
+        this.div.className = 'card';
         this.div.style.transformOrigin = `left top`;
 
         this.frontDiv = this.div.appendChild(document.createElement('div'));
@@ -163,9 +165,9 @@ class Card extends GameElement {
             this.pointsSummary.style.left = `${this.effectClipRect.width/2 - C.CARD_POINTS_SUMMARY_WIDTH(n)/2}px`;
             this.pointsSummary.style.top = `${-this.effectClipRect.height/2 + C.CARD_POINTS_SUMMARY_HEIGHT/2}px`;
         }
-        let payment = this.frontDiv.appendChild(this.drawPayment());
-        payment.style.transform = `translate(-50%, -${C.CARD_TITLE_HEIGHT + C.CARD_PAYMENT_HEIGHT + C.CARD_BANNER_HEIGHT/2}px)`;
-        payment.style.visibility = drawPayment ? 'visible' : 'hidden';
+        this.paymentCanvas = this.frontDiv.appendChild(this.drawPayment());
+        this.paymentCanvas.style.transform = `translate(-50%, -${C.CARD_TITLE_HEIGHT + C.CARD_PAYMENT_HEIGHT + C.CARD_BANNER_HEIGHT/2}px)`;
+        this.paymentCanvas.style.visibility = drawPayment ? 'visible' : 'hidden';
         this.backDiv = this.div.appendChild(document.createElement('div'));
         this.backDiv.style.transformOrigin = 'left center';
         this.highlightFlipped = this.backDiv.appendChild(this.drawHighlightFlipped());
@@ -189,6 +191,27 @@ class Card extends GameElement {
         }
         Resources.returnCard(this.apiCardId, this.cardResource);
         this.cardResource = null;
+    }
+
+    convertToPlayed() {
+        this.div.className = 'playedcard';
+        this.zIndex = C.Z_INDEX_CARD_PLAYED;
+        this.div.removeChild(this.backDiv);
+        this.frontDiv.removeChild(this.paymentCanvas);
+    }
+
+    convertToBuried() {
+        this.div.className = 'buriedcard';
+        this.zIndex = C.Z_INDEX_CARD_WONDER;
+        this.div.removeChild(this.frontDiv);
+        this.backDiv.removeChild(this.checkMark);
+    }
+
+    convertToDiscarded() {
+        this.div.className = 'discardedcard';
+        this.div.removeChild(this.frontDiv);
+        this.backDiv.removeChild(this.highlightFlipped);
+        this.backDiv.removeChild(this.checkMark);
     }
 
     update() {

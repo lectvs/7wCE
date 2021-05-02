@@ -53,7 +53,7 @@ class PlayedCardEffectRoll {
     addCard(card: Card) {
         let i = this.getSortedIndex(card);
         this.cards.splice(i, 0, card);
-        card.zIndex = C.Z_INDEX_CARD_PLAYED;
+        card.convertToPlayed();
         this.update();
     }
 

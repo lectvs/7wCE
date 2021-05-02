@@ -1645,6 +1645,7 @@ var Card = /** @class */ (function (_super) {
         this.cardResource = Resources.getCard(cardId);
         this.fullClipRect = this.cardResource.fullClipRect;
         this.effectClipRect = this.cardResource.effectClipRect;
+        this.div.className = 'card';
         this.div.style.transformOrigin = "left top";
         this.frontDiv = this.div.appendChild(document.createElement('div'));
         this.frontDiv.style.transformOrigin = 'left center';
@@ -1657,9 +1658,9 @@ var Card = /** @class */ (function (_super) {
             this.pointsSummary.style.left = this.effectClipRect.width / 2 - C.CARD_POINTS_SUMMARY_WIDTH(n) / 2 + "px";
             this.pointsSummary.style.top = -this.effectClipRect.height / 2 + C.CARD_POINTS_SUMMARY_HEIGHT / 2 + "px";
         }
-        var payment = this.frontDiv.appendChild(this.drawPayment());
-        payment.style.transform = "translate(-50%, -" + (C.CARD_TITLE_HEIGHT + C.CARD_PAYMENT_HEIGHT + C.CARD_BANNER_HEIGHT / 2) + "px)";
-        payment.style.visibility = drawPayment ? 'visible' : 'hidden';
+        this.paymentCanvas = this.frontDiv.appendChild(this.drawPayment());
+        this.paymentCanvas.style.transform = "translate(-50%, -" + (C.CARD_TITLE_HEIGHT + C.CARD_PAYMENT_HEIGHT + C.CARD_BANNER_HEIGHT / 2) + "px)";
+        this.paymentCanvas.style.visibility = drawPayment ? 'visible' : 'hidden';
         this.backDiv = this.div.appendChild(document.createElement('div'));
         this.backDiv.style.transformOrigin = 'left center';
         this.highlightFlipped = this.backDiv.appendChild(this.drawHighlightFlipped());
@@ -1682,6 +1683,24 @@ var Card = /** @class */ (function (_super) {
         }
         Resources.returnCard(this.apiCardId, this.cardResource);
         this.cardResource = null;
+    };
+    Card.prototype.convertToPlayed = function () {
+        this.div.className = 'playedcard';
+        this.zIndex = C.Z_INDEX_CARD_PLAYED;
+        this.div.removeChild(this.backDiv);
+        this.frontDiv.removeChild(this.paymentCanvas);
+    };
+    Card.prototype.convertToBuried = function () {
+        this.div.className = 'buriedcard';
+        this.zIndex = C.Z_INDEX_CARD_WONDER;
+        this.div.removeChild(this.frontDiv);
+        this.backDiv.removeChild(this.checkMark);
+    };
+    Card.prototype.convertToDiscarded = function () {
+        this.div.className = 'discardedcard';
+        this.div.removeChild(this.frontDiv);
+        this.backDiv.removeChild(this.highlightFlipped);
+        this.backDiv.removeChild(this.checkMark);
     };
     Card.prototype.update = function () {
         var _a, _b;
@@ -3807,6 +3826,7 @@ var Hand = /** @class */ (function () {
         }
     };
     Hand.prototype.createWithData = function (handData) {
+        var e_28, _a;
         this.cards = [];
         this.cardIds = handData.type === 'normal'
             ? handData.cardIds
@@ -3825,6 +3845,19 @@ var Hand = /** @class */ (function () {
             card.state = { type: 'in_hand', visualState: 'full' };
         }
         if (this.cards.length > 0 && handData.type === 'discard') {
+            try {
+                for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var card = _c.value;
+                    card.convertToDiscarded();
+                }
+            }
+            catch (e_28_1) { e_28 = { error: e_28_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_28) throw e_28.error; }
+            }
             this.cards[this.cards.length - 1].addDiscardCountText();
         }
     };
@@ -3842,7 +3875,7 @@ var Hand = /** @class */ (function () {
         this.update();
     };
     Hand.prototype.reflectMove = function (move) {
-        var e_28, _a, e_29, _b;
+        var e_29, _a, e_30, _b;
         if (!move || move.action === 'reject') {
             try {
                 for (var _c = __values(this.cards), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -3850,12 +3883,12 @@ var Hand = /** @class */ (function () {
                     card.deselect();
                 }
             }
-            catch (e_28_1) { e_28 = { error: e_28_1 }; }
+            catch (e_29_1) { e_29 = { error: e_29_1 }; }
             finally {
                 try {
                     if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                 }
-                finally { if (e_28) throw e_28.error; }
+                finally { if (e_29) throw e_29.error; }
             }
             return;
         }
@@ -3873,12 +3906,12 @@ var Hand = /** @class */ (function () {
                 }
             }
         }
-        catch (e_29_1) { e_29 = { error: e_29_1 }; }
+        catch (e_30_1) { e_30 = { error: e_30_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_29) throw e_29.error; }
+            finally { if (e_30) throw e_30.error; }
         }
         if (!moved)
             console.error('Move not found in hand:', move);
@@ -3892,27 +3925,11 @@ var Hand = /** @class */ (function () {
             this.state.moved = false;
     };
     Hand.prototype.setZIndex = function (zIndex) {
-        var e_30, _a;
-        try {
-            for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var card = _c.value;
-                card.zIndex = zIndex;
-            }
-        }
-        catch (e_30_1) { e_30 = { error: e_30_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_30) throw e_30.error; }
-        }
-    };
-    Hand.prototype.setAllCardState = function (state) {
         var e_31, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
-                card.state = state;
+                card.zIndex = zIndex;
             }
         }
         catch (e_31_1) { e_31 = { error: e_31_1 }; }
@@ -3921,6 +3938,22 @@ var Hand = /** @class */ (function () {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
             finally { if (e_31) throw e_31.error; }
+        }
+    };
+    Hand.prototype.setAllCardState = function (state) {
+        var e_32, _a;
+        try {
+            for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var card = _c.value;
+                card.state = state;
+            }
+        }
+        catch (e_32_1) { e_32 = { error: e_32_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_32) throw e_32.error; }
         }
     };
     Hand.prototype.getPosition = function () {
@@ -3950,7 +3983,7 @@ var Loader = /** @class */ (function () {
     }
     Object.defineProperty(Loader.prototype, "isLoaded", {
         get: function () {
-            var e_32, _a;
+            var e_33, _a;
             try {
                 for (var _b = __values(this.resources), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var resource = _c.value;
@@ -3958,12 +3991,12 @@ var Loader = /** @class */ (function () {
                         return false;
                 }
             }
-            catch (e_32_1) { e_32 = { error: e_32_1 }; }
+            catch (e_33_1) { e_33 = { error: e_33_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_32) throw e_32.error; }
+                finally { if (e_33) throw e_33.error; }
             }
             return this.resources.length > 0;
         },
@@ -3972,7 +4005,7 @@ var Loader = /** @class */ (function () {
     });
     Object.defineProperty(Loader.prototype, "loadPercentage", {
         get: function () {
-            var e_33, _a;
+            var e_34, _a;
             if (this.resources.length === 0)
                 return 0;
             var loaded = 0;
@@ -3983,12 +4016,12 @@ var Loader = /** @class */ (function () {
                         loaded++;
                 }
             }
-            catch (e_33_1) { e_33 = { error: e_33_1 }; }
+            catch (e_34_1) { e_34 = { error: e_34_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_33) throw e_33.error; }
+                finally { if (e_34) throw e_34.error; }
             }
             return Math.round(loaded / this.resources.length * 100);
         },
@@ -3996,7 +4029,7 @@ var Loader = /** @class */ (function () {
         configurable: true
     });
     Loader.prototype.update = function () {
-        var e_34, _a;
+        var e_35, _a;
         if (this.complete)
             return;
         var loaded = this.resources.length > 0;
@@ -4010,12 +4043,12 @@ var Loader = /** @class */ (function () {
                 }
             }
         }
-        catch (e_34_1) { e_34 = { error: e_34_1 }; }
+        catch (e_35_1) { e_35 = { error: e_35_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_34) throw e_34.error; }
+            finally { if (e_35) throw e_35.error; }
         }
         if (loaded) {
             this.onFinishedLoading();
@@ -4023,7 +4056,7 @@ var Loader = /** @class */ (function () {
         }
     };
     Loader.prototype.loadGamestateResources = function () {
-        var e_35, _a;
+        var e_36, _a;
         // Cards
         for (var cardId in Main.gamestate.cards) {
             var card = Main.gamestate.cards[cardId];
@@ -4038,17 +4071,17 @@ var Loader = /** @class */ (function () {
             for (var player in Main.gamestate.wonderChoices) {
                 var wonderChoice = Main.gamestate.wonderChoices[player];
                 try {
-                    for (var wonderChoice_2 = (e_35 = void 0, __values(wonderChoice)), wonderChoice_2_1 = wonderChoice_2.next(); !wonderChoice_2_1.done; wonderChoice_2_1 = wonderChoice_2.next()) {
+                    for (var wonderChoice_2 = (e_36 = void 0, __values(wonderChoice)), wonderChoice_2_1 = wonderChoice_2.next(); !wonderChoice_2_1.done; wonderChoice_2_1 = wonderChoice_2.next()) {
                         var wonder = wonderChoice_2_1.value;
                         this.loadWonder(wonder);
                     }
                 }
-                catch (e_35_1) { e_35 = { error: e_35_1 }; }
+                catch (e_36_1) { e_36 = { error: e_36_1 }; }
                 finally {
                     try {
                         if (wonderChoice_2_1 && !wonderChoice_2_1.done && (_a = wonderChoice_2.return)) _a.call(wonderChoice_2);
                     }
-                    finally { if (e_35) throw e_35.error; }
+                    finally { if (e_36) throw e_36.error; }
                 }
             }
         }
@@ -4193,7 +4226,7 @@ var Loader = /** @class */ (function () {
     Loader.prototype.loadCardList = function (gamestate) {
         var resource = this.addNewResource();
         resource.load = function () {
-            var e_36, _a;
+            var e_37, _a;
             var _b, _c;
             var cardList = new PIXI.Container();
             var maxY = 0;
@@ -4201,7 +4234,7 @@ var Loader = /** @class */ (function () {
                 var x = age * C.CARD_LIST_CARD_DX;
                 var y = 0;
                 try {
-                    for (var _d = (e_36 = void 0, __values(gamestate.deck[age])), _e = _d.next(); !_e.done; _e = _d.next()) {
+                    for (var _d = (e_37 = void 0, __values(gamestate.deck[age])), _e = _d.next(); !_e.done; _e = _d.next()) {
                         var cardInfo = _e.value;
                         var card = gamestate.cards[cardInfo.id];
                         var cardForList = new PIXI.Container();
@@ -4241,12 +4274,12 @@ var Loader = /** @class */ (function () {
                         y += C.CARD_LIST_CARD_DY;
                     }
                 }
-                catch (e_36_1) { e_36 = { error: e_36_1 }; }
+                catch (e_37_1) { e_37 = { error: e_37_1 }; }
                 finally {
                     try {
                         if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
                     }
-                    finally { if (e_36) throw e_36.error; }
+                    finally { if (e_37) throw e_37.error; }
                 }
                 maxY = Math.max(maxY, y);
             }
@@ -4549,7 +4582,7 @@ var Main = /** @class */ (function () {
         }
     };
     Main.updateBotMoves = function () {
-        var e_37, _a;
+        var e_38, _a;
         var _this = this;
         if (!this.isHost)
             return;
@@ -4594,12 +4627,12 @@ var Main = /** @class */ (function () {
                 _loop_5(player);
             }
         }
-        catch (e_37_1) { e_37 = { error: e_37_1 }; }
+        catch (e_38_1) { e_38 = { error: e_38_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_37) throw e_37.error; }
+            finally { if (e_38) throw e_38.error; }
         }
     };
     Main.stop = function () {
@@ -4851,19 +4884,19 @@ var PlayedCardEffectRoll = /** @class */ (function () {
         configurable: true
     });
     PlayedCardEffectRoll.prototype.destroy = function () {
-        var e_38, _a;
+        var e_39, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
                 card.destroy();
             }
         }
-        catch (e_38_1) { e_38 = { error: e_38_1 }; }
+        catch (e_39_1) { e_39 = { error: e_39_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_38) throw e_38.error; }
+            finally { if (e_39) throw e_39.error; }
         }
     };
     PlayedCardEffectRoll.prototype.update = function () {
@@ -4885,7 +4918,7 @@ var PlayedCardEffectRoll = /** @class */ (function () {
     PlayedCardEffectRoll.prototype.addCard = function (card) {
         var i = this.getSortedIndex(card);
         this.cards.splice(i, 0, card);
-        card.zIndex = C.Z_INDEX_CARD_PLAYED;
+        card.convertToPlayed();
         this.update();
     };
     PlayedCardEffectRoll.prototype.addPlaceholder = function (card) {
@@ -5201,7 +5234,7 @@ function cloneCanvas(canvas) {
     return newCanvas;
 }
 function contains(array, element) {
-    var e_39, _a;
+    var e_40, _a;
     try {
         for (var array_1 = __values(array), array_1_1 = array_1.next(); !array_1_1.done; array_1_1 = array_1.next()) {
             var e = array_1_1.value;
@@ -5209,12 +5242,12 @@ function contains(array, element) {
                 return true;
         }
     }
-    catch (e_39_1) { e_39 = { error: e_39_1 }; }
+    catch (e_40_1) { e_40 = { error: e_40_1 }; }
     finally {
         try {
             if (array_1_1 && !array_1_1.done && (_a = array_1.return)) _a.call(array_1);
         }
-        finally { if (e_39) throw e_39.error; }
+        finally { if (e_40) throw e_40.error; }
     }
     return false;
 }
@@ -5278,7 +5311,7 @@ function range(start, end) {
     return result;
 }
 function sum(array, key) {
-    var e_40, _a;
+    var e_41, _a;
     if (!array || array.length === 0) {
         return 0;
     }
@@ -5289,12 +5322,12 @@ function sum(array, key) {
             result += key(e);
         }
     }
-    catch (e_40_1) { e_40 = { error: e_40_1 }; }
+    catch (e_41_1) { e_41 = { error: e_41_1 }; }
     finally {
         try {
             if (array_2_1 && !array_2_1.done && (_a = array_2.return)) _a.call(array_2);
         }
-        finally { if (e_40) throw e_40.error; }
+        finally { if (e_41) throw e_41.error; }
     }
     return result;
 }
@@ -5310,11 +5343,12 @@ var Wonder = /** @class */ (function (_super) {
         return _this;
     }
     Wonder.prototype.create = function () {
-        var e_41, _a, e_42, _b;
+        var e_42, _a, e_43, _b;
         var _this = this;
         var playerData = Main.gamestate.playerData[this.player];
         this.wonderResource = Resources.getWonder(this.wonder.name, this.wonder.side);
         this.stageXs = this.wonderResource.stageXs;
+        this.div.className = 'wonder';
         var boardDiv = this.div.appendChild(document.createElement('div'));
         boardDiv.appendChild(this.wonderResource.board);
         var payments = boardDiv.appendChild(this.drawPayments());
@@ -5342,12 +5376,12 @@ var Wonder = /** @class */ (function (_super) {
                 card.addToGame();
             }
         }
-        catch (e_41_1) { e_41 = { error: e_41_1 }; }
+        catch (e_42_1) { e_42 = { error: e_42_1 }; }
         finally {
             try {
                 if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
             }
-            finally { if (e_41) throw e_41.error; }
+            finally { if (e_42) throw e_42.error; }
         }
         this.builtWonderCards = [];
         try {
@@ -5355,17 +5389,17 @@ var Wonder = /** @class */ (function (_super) {
                 var stageBuilt = _f.value;
                 var justPlayed = (Main.gamestate.state !== 'GAME_COMPLETE' && playerData.lastMove && playerData.lastMove.action === 'wonder' && playerData.lastMove.stage === stageBuilt.stage);
                 var card = Card.flippedCardForAge(this.scene, stageBuilt.cardAge, justPlayed);
-                card.zIndex = C.Z_INDEX_CARD_WONDER;
-                this.builtWonderCards.push(card);
+                card.convertToBuried();
                 card.addToGame();
+                this.builtWonderCards.push(card);
             }
         }
-        catch (e_42_1) { e_42 = { error: e_42_1 }; }
+        catch (e_43_1) { e_43 = { error: e_43_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_42) throw e_42.error; }
+            finally { if (e_43) throw e_43.error; }
         }
         // Starting effects popup
         var popupDiv = this.div.appendChild(document.createElement('div'));
@@ -5412,7 +5446,7 @@ var Wonder = /** @class */ (function (_super) {
         this.zIndex = C.Z_INDEX_WONDER;
     };
     Wonder.prototype.destroy = function () {
-        var e_43, _a;
+        var e_44, _a;
         for (var color in this.playedCardEffectRolls) {
             this.playedCardEffectRolls[color].destroy();
         }
@@ -5422,12 +5456,12 @@ var Wonder = /** @class */ (function (_super) {
                 card.destroy();
             }
         }
-        catch (e_43_1) { e_43 = { error: e_43_1 }; }
+        catch (e_44_1) { e_44 = { error: e_44_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_43) throw e_43.error; }
+            finally { if (e_44) throw e_44.error; }
         }
         while (this.div.firstChild) {
             this.div.removeChild(this.div.firstChild);
@@ -5522,7 +5556,7 @@ var Wonder = /** @class */ (function (_super) {
         }[color];
     };
     Wonder.prototype.drawPayments = function () {
-        var e_44, _a;
+        var e_45, _a;
         var wonder = Main.gamestate.wonders[this.player];
         var playerData = Main.gamestate.playerData[this.player];
         var stageIdsBuilt = playerData.stagesBuilt.map(function (stageBuilt) { return stageBuilt.stage; });
@@ -5539,12 +5573,12 @@ var Wonder = /** @class */ (function (_super) {
                 }
             }
         }
-        catch (e_44_1) { e_44 = { error: e_44_1 }; }
+        catch (e_45_1) { e_45 = { error: e_45_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_44) throw e_44.error; }
+            finally { if (e_45) throw e_45.error; }
         }
         var payments = new PIXI.Container();
         for (var i = 0; i < wonder.stages.length; i++) {
@@ -6150,8 +6184,8 @@ var S;
             scriptFunctions[_i] = arguments[_i];
         }
         return function () {
-            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_45_1;
-            var e_45, _a;
+            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_46_1;
+            var e_46, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -6170,14 +6204,14 @@ var S;
                         return [3 /*break*/, 1];
                     case 4: return [3 /*break*/, 7];
                     case 5:
-                        e_45_1 = _b.sent();
-                        e_45 = { error: e_45_1 };
+                        e_46_1 = _b.sent();
+                        e_46 = { error: e_46_1 };
                         return [3 /*break*/, 7];
                     case 6:
                         try {
                             if (scriptFunctions_1_1 && !scriptFunctions_1_1.done && (_a = scriptFunctions_1.return)) _a.call(scriptFunctions_1);
                         }
-                        finally { if (e_45) throw e_45.error; }
+                        finally { if (e_46) throw e_46.error; }
                         return [7 /*endfinally*/];
                     case 7: return [2 /*return*/];
                 }
