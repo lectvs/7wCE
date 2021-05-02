@@ -1,18 +1,20 @@
 class GameElement {
     div: HTMLDivElement;
 
+    useTransform: boolean;
+
     private _x: number = 0;
     get x() { return this._x; }
     set x(value: number) {
         this._x = value;
-        this.div.style.left = `${this._x}px`;
+        this.setTransform();
     }
 
     private _y: number = 0;
     get y() { return this._y; }
     set y(value: number) {
         this._y = value;
-        this.div.style.top = `${this._y}px`;
+        this.setTransform();
     }
 
     private _scale: number = 1;
@@ -46,7 +48,9 @@ class GameElement {
     constructor() {
         this.div = document.createElement('div');
         this.div.style.position = 'absolute';
+        this.div.style.transition = 'transform 0.03s';
         this.setTransform();
+        this.useTransform = false;
     }
 
     addToGame(gameDiv: HTMLDivElement = Main.game) {
@@ -65,6 +69,12 @@ class GameElement {
     }
 
     private setTransform() {
-        this.div.style.transform = `scale(${this._scale})`;
+        if (this.useTransform) {
+            this.div.style.transform = `translate(${this._x}px, ${this._y}px) scale(${this._scale})`;
+        } else {
+            this.div.style.left = `${this._x}px`;
+            this.div.style.top = `${this._y}px`;
+            this.div.style.transform = `scale(${this._scale})`;
+        }
     }
 }

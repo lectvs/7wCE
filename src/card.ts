@@ -116,6 +116,7 @@ class Card extends GameElement {
         this.state = { type: 'in_hand', visualState: 'full' };
         this.configureValidMoves(validMoves);
 
+        this.useTransform = true;
         this.create(cardId, true);
 
         // Dragging
@@ -346,10 +347,15 @@ class Card extends GameElement {
             alpha = 0;
         }
 
-        this.highlightEffect.style.boxShadow = `inset 0px 0px 0px ${C.CARD_HIGHLIGHT}px rgba(255, 0, 0, ${alpha})`;
-        this.highlightEffect.style.visibility = this.visualState === 'effect' ? 'visible' : 'hidden';
-        this.highlightFlipped.style.backgroundColor = `rgba(255, 0, 0, ${alpha})`;
-        this.highlightFlipped.style.visibility = this.visualState === 'flipped' ? 'visible' : 'hidden';
+        if (alpha > 0) {
+            this.highlightEffect.style.boxShadow = `inset 0px 0px 0px ${C.CARD_HIGHLIGHT}px rgba(255, 0, 0, ${alpha})`;
+            this.highlightEffect.style.visibility = this.visualState === 'effect' ? 'visible' : 'hidden';
+            this.highlightFlipped.style.backgroundColor = `rgba(255, 0, 0, ${alpha})`;
+            this.highlightFlipped.style.visibility = this.visualState === 'flipped' ? 'visible' : 'hidden';
+        } else {
+            this.highlightEffect.style.visibility = 'hidden';
+            this.highlightFlipped.style.visibility = 'hidden';
+        }
     }
 
     snap() {

@@ -79,13 +79,15 @@ var GameElement = /** @class */ (function () {
         this._alpha = 1;
         this.div = document.createElement('div');
         this.div.style.position = 'absolute';
+        this.div.style.transition = 'transform 0.03s';
         this.setTransform();
+        this.useTransform = false;
     }
     Object.defineProperty(GameElement.prototype, "x", {
         get: function () { return this._x; },
         set: function (value) {
             this._x = value;
-            this.div.style.left = this._x + "px";
+            this.setTransform();
         },
         enumerable: false,
         configurable: true
@@ -94,7 +96,7 @@ var GameElement = /** @class */ (function () {
         get: function () { return this._y; },
         set: function (value) {
             this._y = value;
-            this.div.style.top = this._y + "px";
+            this.setTransform();
         },
         enumerable: false,
         configurable: true
@@ -149,7 +151,14 @@ var GameElement = /** @class */ (function () {
         this.y = point.y;
     };
     GameElement.prototype.setTransform = function () {
-        this.div.style.transform = "scale(" + this._scale + ")";
+        if (this.useTransform) {
+            this.div.style.transform = "translate(" + this._x + "px, " + this._y + "px) scale(" + this._scale + ")";
+        }
+        else {
+            this.div.style.left = this._x + "px";
+            this.div.style.top = this._y + "px";
+            this.div.style.transform = "scale(" + this._scale + ")";
+        }
     };
     return GameElement;
 }());
@@ -1541,6 +1550,7 @@ var Card = /** @class */ (function (_super) {
         _this.visualState = 'full';
         _this.state = { type: 'in_hand', visualState: 'full' };
         _this.configureValidMoves(validMoves);
+        _this.useTransform = true;
         _this.create(cardId, true);
         // Dragging
         _this.frontDiv.onmousedown = function (event) {
@@ -1855,10 +1865,16 @@ var Card = /** @class */ (function (_super) {
         else {
             alpha = 0;
         }
-        this.highlightEffect.style.boxShadow = "inset 0px 0px 0px " + C.CARD_HIGHLIGHT + "px rgba(255, 0, 0, " + alpha + ")";
-        this.highlightEffect.style.visibility = this.visualState === 'effect' ? 'visible' : 'hidden';
-        this.highlightFlipped.style.backgroundColor = "rgba(255, 0, 0, " + alpha + ")";
-        this.highlightFlipped.style.visibility = this.visualState === 'flipped' ? 'visible' : 'hidden';
+        if (alpha > 0) {
+            this.highlightEffect.style.boxShadow = "inset 0px 0px 0px " + C.CARD_HIGHLIGHT + "px rgba(255, 0, 0, " + alpha + ")";
+            this.highlightEffect.style.visibility = this.visualState === 'effect' ? 'visible' : 'hidden';
+            this.highlightFlipped.style.backgroundColor = "rgba(255, 0, 0, " + alpha + ")";
+            this.highlightFlipped.style.visibility = this.visualState === 'flipped' ? 'visible' : 'hidden';
+        }
+        else {
+            this.highlightEffect.style.visibility = 'hidden';
+            this.highlightFlipped.style.visibility = 'hidden';
+        }
     };
     Card.prototype.snap = function () {
         this.update();
