@@ -184,17 +184,43 @@ namespace API {
     }
 
     export function isPaymentSelectionNecessary(move: Move, validMoves: Move[]) {
-        let foundMatchingMove = false;
-        for (let validMove of validMoves) {
-            if (validMove.action !== move.action) continue;
-            if (validMove.card !== move.card) continue;
-            if (validMove.stage !== move.stage) continue;
-            foundMatchingMove = true;
-            let totalPayment = totalNeighborPaymentAmount(validMove.payment);
-            if (totalPayment === 0 && !validMove.payment?.free_with_zeus) return false;
+        let matchingMoves = validMoves.filter(validMove => validMove.action === move.action && validMove.card === move.card && validMove.stage === move.stage);
+        
+        console.log(matchingMoves);
+
+        // If the move is already free...
+        for (let validMove of matchingMoves) {
+            if (totalPaymentAmount(validMove.payment) === 0 && !validMove.payment?.free_with_zeus) {
+                console.log('move is free');
+                return false;
+            }
         }
-        if (!foundMatchingMove) return false;
+
+        // If move is not free and Olympia power is active...
+        if (isZeusActive(matchingMoves)) {
+            console.log('zeus is active');
+
+            return true;
+        }
+
+        // If move does not require neighbor payment...
+        for (let validMove of matchingMoves) {
+            if (totalNeighborPaymentAmount(validMove.payment) === 0) {
+                console.log('neighbor payment unneccessary');
+                return false;
+            }
+        }
+
+        // Otherwise, move requires neighbor payment.
+        console.log('neighbor payment neccessary');
         return true;
+    }
+
+    export function isZeusActive(moves: Move[]) {
+        for (let move of moves) {
+            if (move.payment?.free_with_zeus) return true;
+        }
+        return false;
     }
 
     export function getNeighbors(gamestate: GameState, player: string) {
@@ -213,11 +239,10 @@ namespace API {
             if (validMove.action !== move.action) continue;
             if (validMove.card !== move.card) continue;
             if (validMove.stage !== move.stage) continue;
-            if (totalNeighborPaymentAmount(validMove.payment) === 0 && !validMove.payment.free_with_zeus) continue;
             options.push(validMove.payment);
         }
 
-        options.sort((o1, o2) => totalNeighborPaymentAmount(o1) - totalNeighborPaymentAmount(o2));
+        options.sort((o1, o2) => totalPaymentAmount(o1) - totalPaymentAmount(o2));
 
         for (let i = 0; i < options.length; i++) {
             for (let j = i+1; j < options.length; j++) {
@@ -226,7 +251,8 @@ namespace API {
                 let pos_j = options[j].pos || 0;
                 let neg_j = options[j].neg || 0;
                 let zeus_i = options[i].free_with_zeus;
-                if (pos_i <= pos_j && neg_i <= neg_j && !zeus_i) {
+                let zeus_j = options[j].free_with_zeus;
+                if (pos_i <= pos_j && neg_i <= neg_j && zeus_i === zeus_j) {
                     options.splice(j, 1);
                     j--;
                 }

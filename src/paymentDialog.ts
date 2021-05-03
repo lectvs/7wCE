@@ -93,6 +93,7 @@ class PaymentDialog extends GameElement {
             payButton.style.top = '50%';
             payButton.style.transform = 'translate(-50%, -50%)';
             payButton.style.cursor = 'pointer';
+            payButton.style.color = '#FFFFFF';
             payButton.onclick = (event: MouseEvent) => {
                 let trueMove: API.Move = {
                     action: this.move.action,
@@ -103,6 +104,15 @@ class PaymentDialog extends GameElement {
                 }
                 Main.submitMove(trueMove);
                 this.removeFromGame(true);
+            }
+
+            if (payment.bank) {
+                let payButtonText = payButton.appendChild(this.drawText(`${payment.bank} to bank`, C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
+                payButtonText.style.width = '100%';
+                payButtonText.style.position = 'absolute';
+                payButtonText.style.left = '50%';
+                payButtonText.style.top = '50%';
+                payButtonText.style.transform = 'translate(-50%, -50%)';
             }
         }
 

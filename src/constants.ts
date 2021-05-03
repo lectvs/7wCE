@@ -169,11 +169,11 @@ class C {
     public static readonly PAYMENT_DIALOG_TITLE = "Payment";
     public static readonly PAYMENT_DIALOG_TITLE_SIZE = 18;
     public static readonly PAYMENT_DIALOG_TITLE_PADDING = 12;
-    public static readonly PAYMENT_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT = 20;
+    public static readonly PAYMENT_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT = 24;
     public static readonly PAYMENT_DIALOG_PAYMENTS_DY = 37.5;
     public static readonly PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE = 12;
-    public static readonly PAYMENT_DIALOG_PAY_BUTTON_WIDTH = 36;
-    public static readonly PAYMENT_DIALOG_PAY_BUTTON_HEIGHT = 24;
+    public static readonly PAYMENT_DIALOG_PAY_BUTTON_WIDTH = 56;
+    public static readonly PAYMENT_DIALOG_PAY_BUTTON_HEIGHT = 30;
     public static readonly PAYMENT_DIALOG_PAY_BUTTON_COLOR = '#000088';
     public static readonly PAYMENT_DIALOG_CLOSE_BUTTON_OFFSET_X = 15;
     public static readonly PAYMENT_DIALOG_CLOSE_BUTTON_OFFSET_Y = 15;
