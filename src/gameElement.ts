@@ -45,12 +45,14 @@ class GameElement {
         this.div.style.opacity = `${this._alpha}`;
     }
 
-    constructor() {
+    constructor(useTransform: boolean = false) {
+        this.useTransform = useTransform;
         this.div = document.createElement('div');
         this.div.style.position = 'absolute';
-        this.div.style.transition = 'transform 0.03s';
+        if (this.useTransform) {
+            this.div.style.willChange = 'transform';
+        }
         this.setTransform();
-        this.useTransform = false;
     }
 
     addToGame(gameDiv: HTMLDivElement = Main.game) {
@@ -70,7 +72,7 @@ class GameElement {
 
     private setTransform() {
         if (this.useTransform) {
-            this.div.style.transform = `translate(${this._x}px, ${this._y}px) scale(${this._scale})`;
+            this.div.style.transform = `translate(${this._x}px, ${this._y}px) translateZ(0) scale(${this._scale})`;
         } else {
             this.div.style.left = `${this._x}px`;
             this.div.style.top = `${this._y}px`;

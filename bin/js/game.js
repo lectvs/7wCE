@@ -70,18 +70,21 @@ var __spread = (this && this.__spread) || function () {
     return ar;
 };
 var GameElement = /** @class */ (function () {
-    function GameElement() {
+    function GameElement(useTransform) {
+        if (useTransform === void 0) { useTransform = false; }
         this._x = 0;
         this._y = 0;
         this._scale = 1;
         this._zIndex = 0;
         this._visible = true;
         this._alpha = 1;
+        this.useTransform = useTransform;
         this.div = document.createElement('div');
         this.div.style.position = 'absolute';
-        this.div.style.transition = 'transform 0.03s';
+        if (this.useTransform) {
+            this.div.style.willChange = 'transform';
+        }
         this.setTransform();
-        this.useTransform = false;
     }
     Object.defineProperty(GameElement.prototype, "x", {
         get: function () { return this._x; },
@@ -152,7 +155,7 @@ var GameElement = /** @class */ (function () {
     };
     GameElement.prototype.setTransform = function () {
         if (this.useTransform) {
-            this.div.style.transform = "translate(" + this._x + "px, " + this._y + "px) scale(" + this._scale + ")";
+            this.div.style.transform = "translate(" + this._x + "px, " + this._y + "px) translateZ(0) scale(" + this._scale + ")";
         }
         else {
             this.div.style.left = this._x + "px";
@@ -1571,7 +1574,7 @@ var Bot;
 var Card = /** @class */ (function (_super) {
     __extends(Card, _super);
     function Card(scene, cardId, index, points, handPosition, activeWonder, validMoves) {
-        var _this = _super.call(this) || this;
+        var _this = _super.call(this, true) || this;
         _this._flippedT = 0;
         _this._effectT = 0;
         _this._interactable = false;
@@ -1587,7 +1590,6 @@ var Card = /** @class */ (function (_super) {
         _this.visualState = 'full';
         _this.state = { type: 'in_hand', visualState: 'full' };
         _this.configureValidMoves(validMoves);
-        _this.useTransform = true;
         _this.create(cardId, true);
         // Dragging
         _this.frontDiv.onmousedown = function (event) {
@@ -1607,7 +1609,7 @@ var Card = /** @class */ (function (_super) {
                 return;
             }
             var bounds = _this.bounds;
-            _this.scene.updatePopup(_this, _this.x + bounds.left, _this.y + bounds.bottom);
+            //this.scene.updatePopup(this, this.x + bounds.left, this.y + bounds.bottom);
         };
         _this.frontDiv.onmouseleave = function () {
             _this.scene.stopPopup(_this);

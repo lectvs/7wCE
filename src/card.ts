@@ -100,7 +100,7 @@ class Card extends GameElement {
     }
 
     constructor(scene: GameScene, cardId: number, index: number, points: number, handPosition: PIXI.Point, activeWonder: Wonder, validMoves: API.Move[]) {
-        super();
+        super(true);
 
         this.scene = scene;
         this.index = index;
@@ -116,7 +116,6 @@ class Card extends GameElement {
         this.state = { type: 'in_hand', visualState: 'full' };
         this.configureValidMoves(validMoves);
 
-        this.useTransform = true;
         this.create(cardId, true);
 
         // Dragging
@@ -136,7 +135,7 @@ class Card extends GameElement {
                 return;
             }
             let bounds = this.bounds;
-            this.scene.updatePopup(this, this.x + bounds.left, this.y + bounds.bottom);
+            //this.scene.updatePopup(this, this.x + bounds.left, this.y + bounds.bottom);
         };
 
         this.frontDiv.onmouseleave = () => {
