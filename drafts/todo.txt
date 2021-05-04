@@ -1,8 +1,4 @@
-launch
-- optimize
-- lectvs website on S3
-
-post-launch
+todo
 - art refinement
 - different color game tab
 - fix issue with science sorted rolls collapsing briefly during animation (when play gear?)

@@ -205,6 +205,13 @@ a.userinfolink:active {
     text-indent: -15px;
 }
 
+.ppnci {
+    position: relative;
+    width: 90%;
+    left: 60px;
+    text-indent: -30px;
+}
+
 * {
     margin: 0;
     padding: 0;
