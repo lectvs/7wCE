@@ -135,7 +135,7 @@ class Card extends GameElement {
                 return;
             }
             let bounds = this.bounds;
-            //this.scene.updatePopup(this, this.x + bounds.left, this.y + bounds.bottom);
+            this.scene.updatePopup(this, this.x + bounds.left, this.y + bounds.bottom);
         };
 
         this.frontDiv.onmouseleave = () => {

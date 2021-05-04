@@ -1609,7 +1609,7 @@ var Card = /** @class */ (function (_super) {
                 return;
             }
             var bounds = _this.bounds;
-            //this.scene.updatePopup(this, this.x + bounds.left, this.y + bounds.bottom);
+            _this.scene.updatePopup(_this, _this.x + bounds.left, _this.y + bounds.bottom);
         };
         _this.frontDiv.onmouseleave = function () {
             _this.scene.stopPopup(_this);
