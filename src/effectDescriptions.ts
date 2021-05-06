@@ -47,6 +47,18 @@ function getDescriptionForEffect(effect: API.Effect) {
         return `Copy the effect of a guild from either neighbor`;
     } else if (effect.type === 'build_free_once_per_age') {
         return `You may ignore the cost of a single card of your choice per age`;
+    } else if (effect.type === 'gold_for_others') {
+        return `All players except you receive ${effect.gold} gold from the bank`;
+    } else if (effect.type === 'gold_for_neighbor') {
+        return `Your ${effect.direction === 'neg' ? 'left' : 'right'} neighbor receives ${effect.gold} gold from the bank`;
+    } else if (effect.type === 'waive_wonder_resource_costs') {
+        return `You may ignore the resource costs of your wonder stages (gold costs are unaffected)`;
+    } else if (effect.type === 'mask') {
+        return `Copy the symbol from a green card from either neighbor. Multiple masks cannot copy the same card.`;
+    } else if (effect.type === 'unproduced_resource') {
+        return `Gives one of a resource you are not currently producing in your wonder per turn (untradable resources are ignored).`;
+    } else if (effect.type === 'duplicate_produced_resource') {
+        return `Gives one extra of a resource you are currently producing in your wonder per turn (untradable resources are ignored).`;
     }
     console.error('Effect type not found:', effect.type);
     return "Description not found";

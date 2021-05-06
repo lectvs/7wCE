@@ -728,6 +728,24 @@ var ArtCommon;
             else if (effect.type === 'build_free_once_per_age') {
                 return buildFreeOncePerAge();
             }
+            else if (effect.type === 'gold_for_others') {
+                return goldForOthers(effect.gold);
+            }
+            else if (effect.type === 'gold_for_neighbor') {
+                return goldForNeighbor(effect.gold, effect.direction);
+            }
+            else if (effect.type === 'waive_wonder_resource_costs') {
+                return waiveWonderResourceCosts();
+            }
+            else if (effect.type === 'mask') {
+                return mask();
+            }
+            else if (effect.type === 'unproduced_resource') {
+                return unproducedResource();
+            }
+            else if (effect.type === 'duplicate_produced_resource') {
+                return duplicateProducedResource();
+            }
             console.error('Effect type not found:', effect.type);
             return effectNotFound();
         });
@@ -803,6 +821,7 @@ var ArtCommon;
         return combineStageCostArt(costArts, 16);
     }
     ArtCommon.getArtForStageCost = getArtForStageCost;
+    /* EFFECTS */
     function resource(resource) {
         if (resource === 'wood')
             return wood();
@@ -1188,6 +1207,111 @@ var ArtCommon;
         return container;
     }
     ArtCommon.copyGuild = copyGuild;
+    function goldForOthers(amount) {
+        var container = new PIXI.Container();
+        var goldCoin = gold(amount);
+        goldCoin.scale.set(0.6);
+        goldCoin.position.set(0, 20);
+        container.addChild(goldCoin);
+        for (var i = -1; i <= 1; i++) {
+            var arrow = arrowRight();
+            arrow.scale.set(0.3);
+            arrow.angle = -90 + 60 * i;
+            arrow.position.set(50 * Math.cos(arrow.rotation), 20 + 50 * Math.sin(arrow.rotation));
+            container.addChild(arrow);
+        }
+        return container;
+    }
+    ArtCommon.goldForOthers = goldForOthers;
+    function goldForNeighbor(amount, direction) {
+        var container = new PIXI.Container();
+        var goldCoin = gold(amount);
+        goldCoin.scale.set(0.6);
+        container.addChild(goldCoin);
+        if (direction === 'pos') {
+            var arrow = arrowRight();
+            arrow.scale.set(0.4);
+            arrow.position.set(60, 0);
+            container.addChild(arrow);
+        }
+        if (direction === 'neg') {
+            var arrow = arrowLeft();
+            arrow.scale.set(0.4);
+            arrow.position.set(-60, 0);
+            container.addChild(arrow);
+        }
+        return container;
+    }
+    ArtCommon.goldForNeighbor = goldForNeighbor;
+    function waiveWonderResourceCosts() {
+        var container = new PIXI.Container();
+        var pyramid = pyramidStages();
+        container.addChild(pyramid);
+        var cross = X(0xFF0000);
+        cross.scale.set(0.4);
+        cross.position.set(-40, 20);
+        container.addChild(cross);
+        return container;
+    }
+    ArtCommon.waiveWonderResourceCosts = waiveWonderResourceCosts;
+    function mask() {
+        var container = new PIXI.Container();
+        container.addChild(Shapes.filledRoundedRect(-130, -30, 260, 80, 40, cardBannerForColor('green')));
+        var resources = combineEffectArt([compass(), slash(), tablet(), slash(), gear()], 8);
+        resources.scale.set(0.65);
+        resources.position.set(0, 10);
+        container.addChild(resources);
+        var mask = new PIXI.Sprite(PIXI.Texture.from('mask'));
+        mask.anchor.set(0.5, 0.5);
+        mask.scale.set(0.8);
+        mask.position.set(0, -5);
+        container.addChild(mask);
+        var arrowR = arrowRight();
+        arrowR.scale.set(0.5);
+        arrowR.position.set(160, 10);
+        container.addChild(arrowR);
+        var arrowL = arrowLeft();
+        arrowL.scale.set(0.5);
+        arrowL.position.set(-160, 10);
+        container.addChild(arrowL);
+        return container;
+    }
+    ArtCommon.mask = mask;
+    function unproducedResource() {
+        var container = new PIXI.Container();
+        var unproduced = new PIXI.Sprite(PIXI.Texture.from('unproduced_resource'));
+        unproduced.anchor.set(0.5, 0.5);
+        unproduced.scale.set(0.6);
+        unproduced.position.set(-80, 0);
+        container.addChild(unproduced);
+        var arrow = arrowRight();
+        arrow.scale.set(0.4);
+        container.addChild(arrow);
+        var resource = doubleResourceBack();
+        resource.scale.set(0.9);
+        resource.position.set(80, 0);
+        container.addChild(resource);
+        return container;
+    }
+    ArtCommon.unproducedResource = unproducedResource;
+    function duplicateProducedResource() {
+        var container = new PIXI.Container();
+        var produced = doubleResourceBack();
+        produced.scale.set(0.8);
+        produced.position.set(-120, 0);
+        container.addChild(produced);
+        var arrow = arrowRight();
+        arrow.scale.set(0.4);
+        arrow.position.set(-40, 0);
+        container.addChild(arrow);
+        var resources = combineEffectArt([doubleResourceBack(), doubleResourceBack()], 8);
+        resources.scale.set(0.8);
+        resources.position.set(76, 0);
+        container.addChild(resources);
+        return container;
+    }
+    ArtCommon.duplicateProducedResource = duplicateProducedResource;
+    /* COMPONENTS */
     function wood() {
         var container = new PIXI.Container();
         container.addChild(Shapes.filledCircle(0, 0, 50, ArtCommon.resourceOuterColor));
@@ -1390,6 +1514,13 @@ var ArtCommon;
         return container;
     }
     ArtCommon.militaryTokenNegative = militaryTokenNegative;
+    function doubleResourceBack() {
+        var container = new PIXI.Container();
+        container.addChild(Shapes.filledCircle(0, 0, 50, cardBannerForColor('brown')));
+        container.addChild(Shapes.filledPolygon(0, 0, [0, -50, 22, -50, 50, -22, 50, 22, 22, 50, 0, 50], cardBannerForColor('grey')));
+        return container;
+    }
+    ArtCommon.doubleResourceBack = doubleResourceBack;
     function payment(amount, canChooseFree) {
         var errorColor = canChooseFree ? ArtCommon.freeColor : ArtCommon.cantAffordColor;
         var costColor = canChooseFree ? ArtCommon.freeColor : ArtCommon.affordColor;
@@ -2850,6 +2981,24 @@ function getDescriptionForEffect(effect) {
     }
     else if (effect.type === 'build_free_once_per_age') {
         return "You may ignore the cost of a single card of your choice per age";
+    }
+    else if (effect.type === 'gold_for_others') {
+        return "All players except you receive " + effect.gold + " gold from the bank";
+    }
+    else if (effect.type === 'gold_for_neighbor') {
+        return "Your " + (effect.direction === 'neg' ? 'left' : 'right') + " neighbor receives " + effect.gold + " gold from the bank";
+    }
+    else if (effect.type === 'waive_wonder_resource_costs') {
+        return "You may ignore the resource costs of your wonder stages (gold costs are unaffected)";
+    }
+    else if (effect.type === 'mask') {
+        return "Copy the symbol from a green card from either neighbor. Multiple masks cannot copy the same card.";
+    }
+    else if (effect.type === 'unproduced_resource') {
+        return "Gives one of a resource you are not currently producing in your wonder per turn (untradable resources are ignored).";
+    }
+    else if (effect.type === 'duplicate_produced_resource') {
+        return "Gives one extra of a resource you are currently producing in your wonder per turn (untradable resources are ignored).";
     }
     console.error('Effect type not found:', effect.type);
     return "Description not found";
@@ -4431,6 +4580,8 @@ var Main = /** @class */ (function () {
                 PIXI.Loader.shared.add('pyramid_full', 'assets/pyramid_full.svg');
                 PIXI.Loader.shared.add('pyramid_stages', 'assets/pyramid_stages.svg');
                 PIXI.Loader.shared.add('falcon', 'assets/falcon.svg');
+                PIXI.Loader.shared.add('mask', 'assets/mask.svg');
+                PIXI.Loader.shared.add('unproduced_resource', 'assets/unproduced_resource.svg');
                 PIXI.Loader.shared.load(function (loader, resources) {
                     for (var resource in resources) {
                         Resources.PIXI_TEXTURES[resource] = resources[resource].texture;
@@ -5862,18 +6013,21 @@ var CreateGameSection = /** @class */ (function () {
     }
     CreateGameSection.prototype.create = function () {
         var TOP_Y = 80;
-        var DY = 32;
         this.playersElement = document.getElementById('createsectionplayers');
         this.optionsElement = document.getElementById('createsectionoptions');
         // Players
         var players = LobbyMain.user.friends;
         for (var i = 0; i < players.length; i++) {
-            this.playersElement.appendChild(this.checkbox('player', players[i], players[i], 32, TOP_Y + DY * i, false));
+            this.playersElement.appendChild(this.checkbox('player', players[i], players[i], 32, TOP_Y + 32 * i, false));
         }
-        this.playersElement.appendChild(this.botbox(32, TOP_Y + DY * players.length));
+        this.playersElement.appendChild(this.botbox(32, TOP_Y + 32 * players.length));
         // Options
-        this.optionsElement.appendChild(this.checkbox('option', 'Use wonder preferences', 'respect_preferences', 32, TOP_Y, true));
-        this.optionsElement.appendChild(this.checkbox('option', 'Use elo for draft', 'draft_by_elo', 32, TOP_Y + 2 * DY, true));
+        this.optionsElement.appendChild(this.checkbox('option', 'Cities expansion', 'cities', 32, TOP_Y, true));
+        this.optionsElement.appendChild(this.checkbox('option', 'Use wonder preferences', 'respect_preferences', 32, TOP_Y + 32, true));
+        this.optionsElement.appendChild(this.checkbox('option', 'Use elo for draft', 'draft_by_elo', 32, TOP_Y + 84, true));
+        if (window.location.href.includes('localhost')) {
+            this.optionsElement.appendChild(this.checkbox('option', 'Test game', 'test', 32, TOP_Y + 310, true));
+        }
     };
     CreateGameSection.prototype.getOptions = function () {
         var players = [LobbyMain.username];

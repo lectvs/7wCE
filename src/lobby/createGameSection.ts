@@ -8,7 +8,6 @@ class CreateGameSection {
 
     create() {
         let TOP_Y = 80;
-        let DY = 32;
 
         this.playersElement = document.getElementById('createsectionplayers');
         this.optionsElement = document.getElementById('createsectionoptions');
@@ -17,14 +16,19 @@ class CreateGameSection {
         let players = LobbyMain.user.friends;
 
         for (let i = 0; i < players.length; i++) {
-            this.playersElement.appendChild(this.checkbox('player', players[i], players[i], 32, TOP_Y + DY*i, false));
+            this.playersElement.appendChild(this.checkbox('player', players[i], players[i], 32, TOP_Y + 32*i, false));
         }
 
-        this.playersElement.appendChild(this.botbox(32, TOP_Y + DY*players.length));
+        this.playersElement.appendChild(this.botbox(32, TOP_Y + 32*players.length));
 
         // Options
-        this.optionsElement.appendChild(this.checkbox('option', 'Use wonder preferences', 'respect_preferences', 32, TOP_Y, true));
-        this.optionsElement.appendChild(this.checkbox('option', 'Use elo for draft', 'draft_by_elo', 32, TOP_Y + 2*DY, true));
+        this.optionsElement.appendChild(this.checkbox('option', 'Cities expansion', 'cities', 32, TOP_Y, true));
+        this.optionsElement.appendChild(this.checkbox('option', 'Use wonder preferences', 'respect_preferences', 32, TOP_Y + 32, true));
+        this.optionsElement.appendChild(this.checkbox('option', 'Use elo for draft', 'draft_by_elo', 32, TOP_Y + 84, true));
+
+        if (window.location.href.includes('localhost')) {
+            this.optionsElement.appendChild(this.checkbox('option', 'Test game', 'test', 32, TOP_Y + 310, true));
+        }
     }
 
     getOptions() {

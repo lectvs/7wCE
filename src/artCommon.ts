@@ -112,6 +112,18 @@ namespace ArtCommon {
                 return copyGuild();
             } else if (effect.type === 'build_free_once_per_age') {
                 return buildFreeOncePerAge();
+            } else if (effect.type === 'gold_for_others') {
+                return goldForOthers(effect.gold);
+            } else if (effect.type === 'gold_for_neighbor') {
+                return goldForNeighbor(effect.gold, effect.direction);
+            } else if (effect.type === 'waive_wonder_resource_costs') {
+                return waiveWonderResourceCosts();
+            } else if (effect.type === 'mask') {
+                return mask();
+            } else if (effect.type === 'unproduced_resource') {
+                return unproducedResource();
+            } else if (effect.type === 'duplicate_produced_resource') {
+                return duplicateProducedResource();
             }
             console.error('Effect type not found:', effect.type);
             return effectNotFound();
@@ -168,6 +180,9 @@ namespace ArtCommon {
 
         return combineStageCostArt(costArts, 16);
     }
+
+    
+    /* EFFECTS */
 
     export function resource(resource: string) {
         if (resource === 'wood') return wood();
@@ -527,6 +542,117 @@ namespace ArtCommon {
         return container;
     }
 
+    export function goldForOthers(amount: number) {
+        let container = new PIXI.Container();
+        let goldCoin = gold(amount);
+        goldCoin.scale.set(0.6);
+        goldCoin.position.set(0, 20);
+        container.addChild(goldCoin);
+
+        for (let i = -1; i <= 1; i++) {
+            let arrow = arrowRight();
+            arrow.scale.set(0.3);
+            arrow.angle = -90 + 60*i;
+            arrow.position.set(50*Math.cos(arrow.rotation), 20 + 50*Math.sin(arrow.rotation));
+            container.addChild(arrow);
+        }
+
+        return container;
+    }
+
+    export function goldForNeighbor(amount: number, direction: string) {
+        let container = new PIXI.Container();
+        let goldCoin = gold(amount);
+        goldCoin.scale.set(0.6);
+        container.addChild(goldCoin);
+
+        if (direction === 'pos') {
+            let arrow = arrowRight();
+            arrow.scale.set(0.4);
+            arrow.position.set(60, 0);
+            container.addChild(arrow);
+        }
+        if (direction === 'neg') {
+            let arrow = arrowLeft();
+            arrow.scale.set(0.4);
+            arrow.position.set(-60, 0);
+            container.addChild(arrow);
+        }
+
+        return container;
+    }
+
+    export function waiveWonderResourceCosts() {
+        let container = new PIXI.Container();
+        let pyramid = pyramidStages();
+        container.addChild(pyramid);
+        let cross = X(0xFF0000);
+        cross.scale.set(0.4);
+        cross.position.set(-40, 20);
+        container.addChild(cross);
+        return container;
+    }
+
+    export function mask() {
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledRoundedRect(-130, -30, 260, 80, 40, cardBannerForColor('green')));
+        let resources = combineEffectArt([compass(), slash(), tablet(), slash(), gear()], 8);
+        resources.scale.set(0.65);
+        resources.position.set(0, 10);
+        container.addChild(resources);
+        let mask = new PIXI.Sprite(PIXI.Texture.from('mask'));
+        mask.anchor.set(0.5, 0.5);
+        mask.scale.set(0.8);
+        mask.position.set(0, -5);
+        container.addChild(mask);
+        let arrowR = arrowRight();
+        arrowR.scale.set(0.5);
+        arrowR.position.set(160, 10);
+        container.addChild(arrowR);
+        let arrowL = arrowLeft();
+        arrowL.scale.set(0.5);
+        arrowL.position.set(-160, 10);
+        container.addChild(arrowL);
+        return container;
+    }
+
+    export function unproducedResource() {
+        let container = new PIXI.Container();
+        let unproduced = new PIXI.Sprite(PIXI.Texture.from('unproduced_resource'));
+        unproduced.anchor.set(0.5, 0.5);
+        unproduced.scale.set(0.6);
+        unproduced.position.set(-80, 0);
+        container.addChild(unproduced);
+        let arrow = arrowRight();
+        arrow.scale.set(0.4);
+        container.addChild(arrow);
+        let resource = doubleResourceBack();
+        resource.scale.set(0.9);
+        resource.position.set(80, 0);
+        container.addChild(resource);
+        return container;
+    }
+
+    export function duplicateProducedResource() {
+        let container = new PIXI.Container();
+        let produced = doubleResourceBack();
+        produced.scale.set(0.8);
+        produced.position.set(-120, 0);
+        container.addChild(produced);
+        let arrow = arrowRight();
+        arrow.scale.set(0.4);
+        arrow.position.set(-40, 0);
+        container.addChild(arrow);
+        let resources = combineEffectArt([doubleResourceBack(), doubleResourceBack()], 8);
+        resources.scale.set(0.8);
+        resources.position.set(76, 0);
+        container.addChild(resources);
+        return container;
+    }
+
+
+    /* COMPONENTS */
+
     export function wood() {
         let container = new PIXI.Container();
         container.addChild(Shapes.filledCircle(0, 0, 50, ArtCommon.resourceOuterColor));
@@ -726,6 +852,13 @@ namespace ArtCommon {
         container.addChild(wreath);
         container.addChild(Shapes.filledRect(-26, 0, 12, 6, 0xCC1D17));
         container.addChild(Shapes.centeredText(2, 0, `${amount}`, 0.6, 0xCC1D17));
+        return container;
+    }
+
+    export function doubleResourceBack() {
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledCircle(0, 0, 50, cardBannerForColor('brown')));
+        container.addChild(Shapes.filledPolygon(0, 0, [0, -50, 22, -50, 50, -22, 50, 22, 22, 50, 0, 50], cardBannerForColor('grey')));
         return container;
     }
 
