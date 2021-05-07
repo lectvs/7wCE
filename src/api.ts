@@ -3,6 +3,8 @@ namespace API {
         state: 'CHOOSE_WONDER_SIDE' | 'NORMAL_MOVE' | 'LAST_CARD_MOVE' | 'DISCARD_MOVE' | 'GAME_COMPLETE';
         discardMoveQueue: string[];
         lastCardPlayers: string[];
+        fightingPlayers?: string[];
+        diplomacyPlayers?: string[];
         players: string[];
         host: string;
         age: number;
@@ -185,34 +187,27 @@ namespace API {
 
     export function isPaymentSelectionNecessary(move: Move, validMoves: Move[]) {
         let matchingMoves = validMoves.filter(validMove => validMove.action === move.action && validMove.card === move.card && validMove.stage === move.stage);
-        
-        console.log(matchingMoves);
 
         // If the move is already free...
         for (let validMove of matchingMoves) {
             if (totalPaymentAmount(validMove.payment) === 0 && !validMove.payment?.free_with_zeus) {
-                console.log('move is free');
                 return false;
             }
         }
 
         // If move is not free and Olympia power is active...
         if (isZeusActive(matchingMoves)) {
-            console.log('zeus is active');
-
             return true;
         }
 
         // If move does not require neighbor payment...
         for (let validMove of matchingMoves) {
             if (totalNeighborPaymentAmount(validMove.payment) === 0) {
-                console.log('neighbor payment unneccessary');
                 return false;
             }
         }
 
         // Otherwise, move requires neighbor payment.
-        console.log('neighbor payment neccessary');
         return true;
     }
 

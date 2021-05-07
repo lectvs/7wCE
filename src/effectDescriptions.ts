@@ -54,11 +54,15 @@ function getDescriptionForEffect(effect: API.Effect) {
     } else if (effect.type === 'waive_wonder_resource_costs') {
         return `You may ignore the resource costs of your wonder stages (gold costs are unaffected)`;
     } else if (effect.type === 'mask') {
-        return `Copy the symbol from a green card from either neighbor. Multiple masks cannot copy the same card.`;
+        return `Copy the symbol from a green card from either neighbor. Multiple masks cannot copy the same card`;
     } else if (effect.type === 'unproduced_resource') {
-        return `Gives one of a resource you are not currently producing in your wonder per turn (untradable resources are ignored).`;
+        return `Gives one of a resource you are not currently producing in your wonder per turn (untradable resources are ignored)`;
     } else if (effect.type === 'duplicate_produced_resource') {
-        return `Gives one extra of a resource you are currently producing in your wonder per turn (untradable resources are ignored).`;
+        return `Gives one extra of a resource you are currently producing in your wonder per turn (untradable resources are ignored)`;
+    } else if (effect.type === 'wharf') {
+        return `Pay 1 gold less for a single resource per turn traded from your ${effect.direction === 'neg' ? 'left' : 'right'} neighbor`;
+    } else if (effect.type === 'smugglers_cache') {
+        return `Pay 1 gold less when buying the starting resource from either neighbor`;
     }
     console.error('Effect type not found:', effect.type);
     return "Description not found";

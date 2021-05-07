@@ -1,25 +1,33 @@
+type MilitaryOverlayType = 'victory' | 'defeat' | 'tie' | 'diplomacy';
+
 class MilitaryOverlay extends GameElement {
+    private shield: HTMLCanvasElement;
     private shieldsText: HTMLParagraphElement;
+    private dove: HTMLCanvasElement;
 
     private overlayNeutral: HTMLCanvasElement;
     private overlayVictory: HTMLCanvasElement;
     private overlayDefeat: HTMLCanvasElement;
+
 
     constructor() {
         super();
 
         this.div.appendChild(this.draw());
         this.div.className = 'wonderoverlay';
-        this.setShieldDiff(0);
+        this.setType('tie');
         this.setShields(0);
         this.zIndex = C.Z_INDEX_MILITARY_OVERLAY;
         this.alpha = 0;
     }
 
-    setShieldDiff(diff: number) {
-        this.overlayNeutral.style.visibility = (diff === 0) ? 'visible' : 'hidden';
-        this.overlayVictory.style.visibility = (diff > 0) ? 'visible' : 'hidden';
-        this.overlayDefeat.style.visibility = (diff < 0) ? 'visible' : 'hidden';
+    setType(type: MilitaryOverlayType) {
+        this.overlayNeutral.style.visibility = (type === 'tie' || type ==='diplomacy') ? 'visible' : 'hidden';
+        this.overlayVictory.style.visibility = type === 'victory' ? 'visible' : 'hidden';
+        this.overlayDefeat.style.visibility = type === 'defeat' ? 'visible' : 'hidden';
+        this.shield.style.visibility = type === 'diplomacy' ? 'hidden' : 'visible';
+        this.shieldsText.style.visibility = type === 'diplomacy' ? 'hidden' : 'visible';
+        this.dove.style.visibility = type === 'diplomacy' ? 'visible' : 'hidden';
     }
 
     setShields(shields: number) {
@@ -39,10 +47,10 @@ class MilitaryOverlay extends GameElement {
         pixiOverlayDefeat.alpha = C.WONDER_OVERLAY_ALPHA;
         this.overlayDefeat = div.appendChild(render(pixiOverlayDefeat, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT));
 
-        let shield = div.appendChild(ArtCommon.domElementForArt(ArtCommon.shield(), C.WONDER_OVERLAY_SHIELD_SCALE));
-        shield.style.position = 'absolute';
-        shield.style.left = `${C.WONDER_OVERLAY_SHIELD_X}px`;
-        shield.style.top = '0px';
+        this.shield = div.appendChild(ArtCommon.domElementForArt(ArtCommon.shield(), C.WONDER_OVERLAY_SHIELD_SCALE));
+        this.shield.style.position = 'absolute';
+        this.shield.style.left = `${C.WONDER_OVERLAY_SHIELD_X}px`;
+        this.shield.style.top = '0px';
 
         let textDiv = div.appendChild(document.createElement('div'));
         textDiv.style.width = '50%';
@@ -56,6 +64,11 @@ class MilitaryOverlay extends GameElement {
         this.shieldsText.style.width = '100%';
         this.shieldsText.style.textAlign = 'right';
         this.shieldsText.style.transform = 'translate(0, -45%)';
+
+        this.dove = div.appendChild(ArtCommon.domElementForArt(ArtCommon.dove(), C.WONDER_OVERLAY_SHIELD_SCALE));
+        this.dove.style.position = 'absolute';
+        this.dove.style.left = '0px';
+        this.dove.style.top = '0px';
 
         return div;
     }

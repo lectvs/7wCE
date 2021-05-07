@@ -1,18 +1,17 @@
 cities
 - new effects
-
-    - wharf (direction)
-    - smugglers_cache
-    - broken_gold (amount)
-    - broken_gold_per_victory_token (amount)
-    - broken_gold_per_stage (amount)
     - debt_for_neighbor (amount, direction)
     - gain_victory_token (value)
     - gold_per_defeat_token (amount)
     - discard_defeat_tokens
     - points_for_victory_tokens (value, points_per_token)
     - gold_and_points_per_victory_token (gold_per_token, points_per_token)
+    - broken_gold (amount)
+    - broken_gold_per_victory_token (amount)
+    - broken_gold_per_stage (amount)
     - diplomacy
+    - (complete) wharf (direction)
+    - (complete) smugglers_cache
     - (complete) mask
     - (complete) waive_wonder_resource_costs
     - (complete) duplicate_produced_resource
@@ -41,3 +40,4 @@ todo
 - store lambda code in version control?
 - allow any player to updateGame?
 - avoid multiple people creating games at the same time
+- can't get same wonder N times in a row

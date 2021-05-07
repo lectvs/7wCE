@@ -124,6 +124,12 @@ namespace ArtCommon {
                 return unproducedResource();
             } else if (effect.type === 'duplicate_produced_resource') {
                 return duplicateProducedResource();
+            } else if (effect.type === 'wharf') {
+                return wharf(effect.direction);
+            } else if (effect.type === 'smugglers_cache') {
+                return smugglersCache();
+            } else if (effect.type === 'dove') {
+                return dove();
             }
             console.error('Effect type not found:', effect.type);
             return effectNotFound();
@@ -648,6 +654,58 @@ namespace ArtCommon {
         resources.position.set(76, 0);
         container.addChild(resources);
         return container;
+    }
+
+    export function wharf(direction: string) {
+        let container = new PIXI.Container();
+        let coin = goldCoin();
+        coin.scale.set(0.8);
+        container.addChild(coin);
+        container.addChild(Shapes.filledRect(-26, 0, 12, 6, 0x000000));
+        container.addChild(Shapes.centeredText(2, 0, `1`, 0.6, 0x000000));
+        if (direction === 'pos') {
+            let arrow = arrowRight();
+            arrow.scale.set(0.4);
+            arrow.position.set(70, 0);
+            container.addChild(arrow);
+        }
+        if (direction === 'neg') {
+            let arrow = arrowLeft();
+            arrow.scale.set(0.4);
+            arrow.position.set(-70, 0);
+            container.addChild(arrow);
+        }
+        return container;
+    }
+
+    export function smugglersCache() {
+        let container = new PIXI.Container();
+        let resource = doubleResourceBack();
+        resource.scale.set(0.5);
+        resource.position.set(0, 15);
+        container.addChild(resource);
+        let coin = goldCoin();
+        coin.scale.set(0.6);
+        coin.position.set(0, -15);
+        container.addChild(coin);
+        container.addChild(Shapes.filledRect(-24, -15, 12, 6, 0x000000));
+        container.addChild(Shapes.centeredText(2, -16, `1`, 0.5, 0x000000));
+        let arrowR = arrowRight();
+        arrowR.scale.set(0.4);
+        arrowR.position.set(70, 15);
+        container.addChild(arrowR);
+        let arrowL = arrowLeft();
+        arrowL.scale.set(0.4);
+        arrowL.position.set(-70, 15);
+        container.addChild(arrowL);
+        return container;
+    }
+
+    export function dove() {
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('dove'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        return sprite;
     }
 
 

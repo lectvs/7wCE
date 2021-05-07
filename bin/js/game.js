@@ -281,13 +281,11 @@ var API;
         var e_2, _a, e_3, _b;
         var _c;
         var matchingMoves = validMoves.filter(function (validMove) { return validMove.action === move.action && validMove.card === move.card && validMove.stage === move.stage; });
-        console.log(matchingMoves);
         try {
             // If the move is already free...
             for (var matchingMoves_1 = __values(matchingMoves), matchingMoves_1_1 = matchingMoves_1.next(); !matchingMoves_1_1.done; matchingMoves_1_1 = matchingMoves_1.next()) {
                 var validMove = matchingMoves_1_1.value;
                 if (totalPaymentAmount(validMove.payment) === 0 && !((_c = validMove.payment) === null || _c === void 0 ? void 0 : _c.free_with_zeus)) {
-                    console.log('move is free');
                     return false;
                 }
             }
@@ -301,7 +299,6 @@ var API;
         }
         // If move is not free and Olympia power is active...
         if (isZeusActive(matchingMoves)) {
-            console.log('zeus is active');
             return true;
         }
         try {
@@ -309,7 +306,6 @@ var API;
             for (var matchingMoves_2 = __values(matchingMoves), matchingMoves_2_1 = matchingMoves_2.next(); !matchingMoves_2_1.done; matchingMoves_2_1 = matchingMoves_2.next()) {
                 var validMove = matchingMoves_2_1.value;
                 if (totalNeighborPaymentAmount(validMove.payment) === 0) {
-                    console.log('neighbor payment unneccessary');
                     return false;
                 }
             }
@@ -322,7 +318,6 @@ var API;
             finally { if (e_3) throw e_3.error; }
         }
         // Otherwise, move requires neighbor payment.
-        console.log('neighbor payment neccessary');
         return true;
     }
     API.isPaymentSelectionNecessary = isPaymentSelectionNecessary;
@@ -745,6 +740,15 @@ var ArtCommon;
             }
             else if (effect.type === 'duplicate_produced_resource') {
                 return duplicateProducedResource();
+            }
+            else if (effect.type === 'wharf') {
+                return wharf(effect.direction);
+            }
+            else if (effect.type === 'smugglers_cache') {
+                return smugglersCache();
+            }
+            else if (effect.type === 'dove') {
+                return dove();
             }
             console.error('Effect type not found:', effect.type);
             return effectNotFound();
@@ -1311,6 +1315,58 @@ var ArtCommon;
         return container;
     }
     ArtCommon.duplicateProducedResource = duplicateProducedResource;
+    function wharf(direction) {
+        var container = new PIXI.Container();
+        var coin = goldCoin();
+        coin.scale.set(0.8);
+        container.addChild(coin);
+        container.addChild(Shapes.filledRect(-26, 0, 12, 6, 0x000000));
+        container.addChild(Shapes.centeredText(2, 0, "1", 0.6, 0x000000));
+        if (direction === 'pos') {
+            var arrow = arrowRight();
+            arrow.scale.set(0.4);
+            arrow.position.set(70, 0);
+            container.addChild(arrow);
+        }
+        if (direction === 'neg') {
+            var arrow = arrowLeft();
+            arrow.scale.set(0.4);
+            arrow.position.set(-70, 0);
+            container.addChild(arrow);
+        }
+        return container;
+    }
+    ArtCommon.wharf = wharf;
+    function smugglersCache() {
+        var container = new PIXI.Container();
+        var resource = doubleResourceBack();
+        resource.scale.set(0.5);
+        resource.position.set(0, 15);
+        container.addChild(resource);
+        var coin = goldCoin();
+        coin.scale.set(0.6);
+        coin.position.set(0, -15);
+        container.addChild(coin);
+        container.addChild(Shapes.filledRect(-24, -15, 12, 6, 0x000000));
+        container.addChild(Shapes.centeredText(2, -16, "1", 0.5, 0x000000));
+        var arrowR = arrowRight();
+        arrowR.scale.set(0.4);
+        arrowR.position.set(70, 15);
+        container.addChild(arrowR);
+        var arrowL = arrowLeft();
+        arrowL.scale.set(0.4);
+        arrowL.position.set(-70, 15);
+        container.addChild(arrowL);
+        return container;
+    }
+    ArtCommon.smugglersCache = smugglersCache;
+    function dove() {
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('dove'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        return sprite;
+    }
+    ArtCommon.dove = dove;
     /* COMPONENTS */
     function wood() {
         var container = new PIXI.Container();
@@ -2992,13 +3048,19 @@ function getDescriptionForEffect(effect) {
         return "You may ignore the resource costs of your wonder stages (gold costs are unaffected)";
     }
     else if (effect.type === 'mask') {
-        return "Copy the symbol from a green card from either neighbor. Multiple masks cannot copy the same card.";
+        return "Copy the symbol from a green card from either neighbor. Multiple masks cannot copy the same card";
     }
     else if (effect.type === 'unproduced_resource') {
-        return "Gives one of a resource you are not currently producing in your wonder per turn (untradable resources are ignored).";
+        return "Gives one of a resource you are not currently producing in your wonder per turn (untradable resources are ignored)";
     }
     else if (effect.type === 'duplicate_produced_resource') {
-        return "Gives one extra of a resource you are currently producing in your wonder per turn (untradable resources are ignored).";
+        return "Gives one extra of a resource you are currently producing in your wonder per turn (untradable resources are ignored)";
+    }
+    else if (effect.type === 'wharf') {
+        return "Pay 1 gold less for a single resource per turn traded from your " + (effect.direction === 'neg' ? 'left' : 'right') + " neighbor";
+    }
+    else if (effect.type === 'smugglers_cache') {
+        return "Pay 1 gold less when buying the starting resource from either neighbor";
     }
     console.error('Effect type not found:', effect.type);
     return "Description not found";
@@ -3340,9 +3402,10 @@ var GameStateDiffer;
             return result;
         }
         result.scripts.push(function () {
-            var moveScripts, handPosition_1, targetHandPosition_1, discardHandPosition_1, targetDiscardHandPosition_1, lerpt_1, isEndOfAge, currentHandPositions_1, targetHandPosition_2, discardScripts, _loop_2, i, handPosition_2, targetHandPosition_3, discardHandPosition_2, discardTargetPosition_1, lerpt_2, p_1, l_1, r_1, pshields, lshields, rshields, militaryTokenDistributionScripts, hands_1, entryPoint, i_2, startPosition_1, endPosition_1, lerpt_3, i_3, _loop_3, count, currentHandPositions_2, targetHandPositions_1, newHandi_1, lerpt_4;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var moveScripts, handPosition_1, targetHandPosition_1, discardHandPosition_1, targetDiscardHandPosition_1, lerpt_1, isEndOfAge, currentHandPositions_1, targetHandPosition_2, discardScripts, _loop_2, i, handPosition_2, targetHandPosition_3, discardHandPosition_2, discardTargetPosition_1, lerpt_2, p, l, r, militaryShowings, _loop_3, militaryShowings_1, militaryShowings_1_1, showings, e_27_1, militaryTokenDistributionScripts, hands_1, entryPoint, i_2, startPosition_1, endPosition_1, lerpt_3, i_3, _loop_4, count, currentHandPositions_2, targetHandPositions_1, newHandi_1, lerpt_4;
+            var e_27, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         moveScripts = gamestate.players.map(function (player) {
                             return function () {
@@ -3480,7 +3543,7 @@ var GameStateDiffer;
                         });
                         return [5 /*yield**/, __values(S.simul.apply(S, __spread(moveScripts))())];
                     case 1:
-                        _a.sent();
+                        _b.sent();
                         if (!(Main.gamestate.state === 'DISCARD_MOVE' && Main.gamestate.discardMoveQueue[0] === Main.player)) return [3 /*break*/, 5];
                         scene.discardHand = scene.hand;
                         scene.hands[Main.gamestate.players.indexOf(Main.player)] = new Hand(scene, scene.getHandOffScreenPoint(), { type: 'normal', cardIds: Main.gamestate.hand, activeWonder: scene.topWonder, validMoves: Main.gamestate.validMoves });
@@ -3492,7 +3555,7 @@ var GameStateDiffer;
                         scene.discardHand.state = { type: 'back', moved: false };
                         return [5 /*yield**/, __values(S.wait(0.4)())];
                     case 2:
-                        _a.sent();
+                        _b.sent();
                         lerpt_1 = 0;
                         return [5 /*yield**/, __values(S.doOverTime(0.3, function (t) {
                                 lerpt_1 = lerpTime(lerpt_1, 1, Math.tan(Math.PI / 2 * Math.pow(t, 2)), Main.delta);
@@ -3502,11 +3565,11 @@ var GameStateDiffer;
                                 scene.discardHand.y = lerpTime(discardHandPosition_1.y, targetDiscardHandPosition_1.y, Math.tan(Math.PI / 2 * lerpt_1), Main.delta);
                             })())];
                     case 3:
-                        _a.sent();
+                        _b.sent();
                         return [5 /*yield**/, __values(S.wait(0.2)())];
                     case 4:
-                        _a.sent();
-                        _a.label = 5;
+                        _b.sent();
+                        _b.label = 5;
                     case 5:
                         isEndOfAge = gamestate.state === 'GAME_COMPLETE' || gamestate.age !== Main.gamestate.age || gamestate.hand.length < 2;
                         if (!isEndOfAge) return [3 /*break*/, 8];
@@ -3544,14 +3607,14 @@ var GameStateDiffer;
                         }
                         return [5 /*yield**/, __values(S.simul.apply(S, __spread(discardScripts))())];
                     case 6:
-                        _a.sent();
+                        _b.sent();
                         return [5 /*yield**/, __values(S.wait(0.5)())];
                     case 7:
-                        _a.sent();
-                        _a.label = 8;
+                        _b.sent();
+                        _b.label = 8;
                     case 8:
                         if (!(gamestate.state === 'LAST_CARD_MOVE')) return [3 /*break*/, 9];
-                        return [3 /*break*/, 36];
+                        return [3 /*break*/, 38];
                     case 9:
                         if (!(gamestate.state === 'DISCARD_MOVE')) return [3 /*break*/, 14];
                         if (!(gamestate.discardMoveQueue[0] === Main.player)) return [3 /*break*/, 13];
@@ -3570,68 +3633,77 @@ var GameStateDiffer;
                                 scene.discardHand.y = lerpTime(discardHandPosition_2.y, discardTargetPosition_1.y, Math.tan(Math.PI / 2 * lerpt_2), Main.delta);
                             })())];
                     case 10:
-                        _a.sent();
+                        _b.sent();
                         return [5 /*yield**/, __values(S.wait(0.2)())];
                     case 11:
-                        _a.sent();
+                        _b.sent();
                         scene.discardHand.destroy();
                         scene.discardHand.createWithData({ type: 'normal', cardIds: gamestate.discardedCards, activeWonder: scene.topWonder, validMoves: gamestate.validMoves });
                         scene.discardHand.snap();
                         scene.discardHand.state = { type: 'normal' };
                         return [5 /*yield**/, __values(S.wait(0.4)())];
                     case 12:
-                        _a.sent();
+                        _b.sent();
                         scene.discardHand.snap();
-                        _a.label = 13;
-                    case 13: return [3 /*break*/, 36];
+                        _b.label = 13;
+                    case 13: return [3 /*break*/, 38];
                     case 14:
-                        if (!isEndOfAge) return [3 /*break*/, 31];
-                        p_1 = gamestate.players.indexOf(Main.player);
-                        l_1 = mod(p_1 - 1, gamestate.players.length);
-                        r_1 = mod(p_1 + 1, gamestate.players.length);
-                        pshields = gamestate.playerData[gamestate.players[p_1]].totalShields;
-                        lshields = gamestate.playerData[gamestate.players[l_1]].totalShields;
-                        rshields = gamestate.playerData[gamestate.players[r_1]].totalShields;
-                        // Diff left
-                        scene.militaryOverlays[p_1].setShieldDiff(pshields - lshields);
-                        scene.militaryOverlays[l_1].setShieldDiff(lshields - pshields);
-                        scene.militaryOverlays[p_1].setShields(gamestate.playerData[gamestate.players[p_1]].totalShields);
-                        scene.militaryOverlays[l_1].setShields(gamestate.playerData[gamestate.players[l_1]].totalShields);
-                        return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, function (t) {
-                                scene.militaryOverlays[p_1].alpha = t;
-                                scene.militaryOverlays[l_1].alpha = t;
-                            })())];
+                        if (!isEndOfAge) return [3 /*break*/, 33];
+                        p = gamestate.players.indexOf(Main.player);
+                        l = mod(p - 1, gamestate.players.length);
+                        r = mod(p + 1, gamestate.players.length);
+                        militaryShowings = getMilitaryShowings(gamestate);
+                        _loop_3 = function (showings) {
+                            var showingsAnimations;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        console.log(showings);
+                                        showingsAnimations = range(0, showings.length - 1).map(function (i) { return showings[i] ? S.chain(S.call(function () {
+                                            var showing = showings[i];
+                                            scene.militaryOverlays[i].setType(showing.type);
+                                            if (showing.type !== 'diplomacy') {
+                                                scene.militaryOverlays[i].setShields(showing.shields);
+                                            }
+                                        }), S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, function (t) {
+                                            scene.militaryOverlays[i].alpha = t;
+                                        }), S.wait(C.ANIMATION_MILITARY_WAIT_TIME), S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, function (t) {
+                                            scene.militaryOverlays[i].alpha = 1 - t;
+                                        })) : undefined; }).filter(function (s) { return s; });
+                                        return [5 /*yield**/, __values(S.simul.apply(S, __spread(showingsAnimations))())];
+                                    case 1:
+                                        _a.sent();
+                                        return [2 /*return*/];
+                                }
+                            });
+                        };
+                        _b.label = 15;
                     case 15:
-                        _a.sent();
-                        return [5 /*yield**/, __values(S.wait(C.ANIMATION_MILITARY_WAIT_TIME)())];
+                        _b.trys.push([15, 20, 21, 22]);
+                        militaryShowings_1 = __values(militaryShowings), militaryShowings_1_1 = militaryShowings_1.next();
+                        _b.label = 16;
                     case 16:
-                        _a.sent();
-                        return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, function (t) {
-                                scene.militaryOverlays[p_1].alpha = 1 - t;
-                                scene.militaryOverlays[l_1].alpha = 1 - t;
-                            })())];
+                        if (!!militaryShowings_1_1.done) return [3 /*break*/, 19];
+                        showings = militaryShowings_1_1.value;
+                        return [5 /*yield**/, _loop_3(showings)];
                     case 17:
-                        _a.sent();
-                        // Diff right
-                        scene.militaryOverlays[p_1].setShieldDiff(pshields - rshields);
-                        scene.militaryOverlays[r_1].setShieldDiff(rshields - pshields);
-                        scene.militaryOverlays[p_1].setShields(gamestate.playerData[gamestate.players[p_1]].totalShields);
-                        scene.militaryOverlays[r_1].setShields(gamestate.playerData[gamestate.players[r_1]].totalShields);
-                        return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, function (t) {
-                                scene.militaryOverlays[p_1].alpha = t;
-                                scene.militaryOverlays[r_1].alpha = t;
-                            })())];
+                        _b.sent();
+                        _b.label = 18;
                     case 18:
-                        _a.sent();
-                        return [5 /*yield**/, __values(S.wait(C.ANIMATION_MILITARY_WAIT_TIME)())];
-                    case 19:
-                        _a.sent();
-                        return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, function (t) {
-                                scene.militaryOverlays[p_1].alpha = 1 - t;
-                                scene.militaryOverlays[r_1].alpha = 1 - t;
-                            })())];
+                        militaryShowings_1_1 = militaryShowings_1.next();
+                        return [3 /*break*/, 16];
+                    case 19: return [3 /*break*/, 22];
                     case 20:
-                        _a.sent();
+                        e_27_1 = _b.sent();
+                        e_27 = { error: e_27_1 };
+                        return [3 /*break*/, 22];
+                    case 21:
+                        try {
+                            if (militaryShowings_1_1 && !militaryShowings_1_1.done && (_a = militaryShowings_1.return)) _a.call(militaryShowings_1);
+                        }
+                        finally { if (e_27) throw e_27.error; }
+                        return [7 /*endfinally*/];
+                    case 22:
                         militaryTokenDistributionScripts = gamestate.players.map(function (player) {
                             var pi = gamestate.players.indexOf(player);
                             var newTokenIndices = [];
@@ -3663,19 +3735,19 @@ var GameStateDiffer;
                             }; })));
                         });
                         return [5 /*yield**/, __values(S.simul.apply(S, __spread(militaryTokenDistributionScripts))())];
-                    case 21:
-                        _a.sent();
+                    case 23:
+                        _b.sent();
                         return [5 /*yield**/, __values(S.wait(0.5)())];
-                    case 22:
-                        _a.sent();
-                        if (!(gamestate.state !== 'GAME_COMPLETE')) return [3 /*break*/, 30];
+                    case 24:
+                        _b.sent();
+                        if (!(gamestate.state !== 'GAME_COMPLETE')) return [3 /*break*/, 32];
                         hands_1 = gamestate.players.map(function (player) { return undefined; });
                         entryPoint = scene.getHandOffScreenPoint();
-                        hands_1[p_1] = new Hand(scene, entryPoint, { type: 'normal', cardIds: gamestate.hand, activeWonder: scene.topWonder, validMoves: gamestate.validMoves });
-                        hands_1[p_1].state = { type: 'back', moved: false };
-                        hands_1[p_1].snap();
+                        hands_1[p] = new Hand(scene, entryPoint, { type: 'normal', cardIds: gamestate.hand, activeWonder: scene.topWonder, validMoves: gamestate.validMoves });
+                        hands_1[p].state = { type: 'back', moved: false };
+                        hands_1[p].snap();
                         for (i_2 = 0; i_2 < gamestate.players.length; i_2++) {
-                            if (i_2 === p_1)
+                            if (i_2 === p)
                                 continue;
                             hands_1[i_2] = new Hand(scene, entryPoint, { type: 'back', age: gamestate.age, player: gamestate.players[i_2], flankDirection: 1 });
                             hands_1[i_2].state = { type: 'back', moved: false };
@@ -3683,10 +3755,10 @@ var GameStateDiffer;
                         }
                         hands_1.map(function (hand) { return hand.setZIndex(C.Z_INDEX_CARD_MOVING); });
                         startPosition_1 = hands_1[0].getPosition();
-                        endPosition_1 = scene.getHandPosition(p_1);
+                        endPosition_1 = scene.getHandPosition(p);
                         lerpt_3 = 0;
                         return [5 /*yield**/, __values(S.doOverTime(0.3, function (t) {
-                                var e_27, _a;
+                                var e_28, _a;
                                 lerpt_3 = lerpTime(lerpt_3, 1, Math.tan(Math.PI / 2 * Math.pow(t, 2)), Main.delta);
                                 try {
                                     for (var hands_2 = __values(hands_1), hands_2_1 = hands_2.next(); !hands_2_1.done; hands_2_1 = hands_2.next()) {
@@ -3696,21 +3768,21 @@ var GameStateDiffer;
                                         hand.update();
                                     }
                                 }
-                                catch (e_27_1) { e_27 = { error: e_27_1 }; }
+                                catch (e_28_1) { e_28 = { error: e_28_1 }; }
                                 finally {
                                     try {
                                         if (hands_2_1 && !hands_2_1.done && (_a = hands_2.return)) _a.call(hands_2);
                                     }
-                                    finally { if (e_27) throw e_27.error; }
+                                    finally { if (e_28) throw e_28.error; }
                                 }
                             })())];
-                    case 23:
-                        _a.sent();
+                    case 25:
+                        _b.sent();
                         return [5 /*yield**/, __values(S.wait(0.2)())];
-                    case 24:
-                        _a.sent();
-                        i_3 = l_1;
-                        _loop_3 = function (count) {
+                    case 26:
+                        _b.sent();
+                        i_3 = l;
+                        _loop_4 = function (count) {
                             var startPosition_2, endPosition_2, lerpt_5;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
@@ -3734,26 +3806,26 @@ var GameStateDiffer;
                             });
                         };
                         count = 0;
-                        _a.label = 25;
-                    case 25:
-                        if (!(count < gamestate.players.length - 1)) return [3 /*break*/, 28];
-                        return [5 /*yield**/, _loop_3(count)];
-                    case 26:
-                        _a.sent();
-                        _a.label = 27;
+                        _b.label = 27;
                     case 27:
-                        count++;
-                        return [3 /*break*/, 25];
+                        if (!(count < gamestate.players.length - 1)) return [3 /*break*/, 30];
+                        return [5 /*yield**/, _loop_4(count)];
                     case 28:
-                        scene.hands[p_1] = hands_1[p_1];
-                        hands_1[p_1].state = { type: 'normal' };
-                        return [5 /*yield**/, __values(S.wait(0.4)())];
+                        _b.sent();
+                        _b.label = 29;
                     case 29:
-                        _a.sent();
-                        hands_1[p_1].snap();
-                        _a.label = 30;
-                    case 30: return [3 /*break*/, 36];
+                        count++;
+                        return [3 /*break*/, 27];
+                    case 30:
+                        scene.hands[p] = hands_1[p];
+                        hands_1[p].state = { type: 'normal' };
+                        return [5 /*yield**/, __values(S.wait(0.4)())];
                     case 31:
+                        _b.sent();
+                        hands_1[p].snap();
+                        _b.label = 32;
+                    case 32: return [3 /*break*/, 38];
+                    case 33:
                         currentHandPositions_2 = scene.hands.map(function (hand) { return hand.getPosition(); });
                         targetHandPositions_1 = __spread(currentHandPositions_2);
                         if (Main.gamestate.age % 2 === 0) {
@@ -3766,8 +3838,8 @@ var GameStateDiffer;
                         }
                         scene.hand.state = { type: 'back', moved: false };
                         return [5 /*yield**/, __values(S.wait(0.5)())];
-                    case 32:
-                        _a.sent();
+                    case 34:
+                        _b.sent();
                         scene.hands.forEach(function (hand) { return hand.setZIndex(C.Z_INDEX_CARD_MOVING); });
                         lerpt_4 = 0;
                         return [5 /*yield**/, __values(S.doOverTime(0.3, function (t) {
@@ -3783,21 +3855,21 @@ var GameStateDiffer;
                                     }
                                 }
                             })())];
-                    case 33:
-                        _a.sent();
+                    case 35:
+                        _b.sent();
                         return [5 /*yield**/, __values(S.wait(0.2)())];
-                    case 34:
-                        _a.sent();
+                    case 36:
+                        _b.sent();
                         scene.hands[newHandi_1].destroy();
                         scene.hands[newHandi_1].createWithData({ type: 'normal', cardIds: gamestate.hand, activeWonder: scene.hand.activeWonder, validMoves: gamestate.validMoves });
                         scene.hands[newHandi_1].snap();
                         scene.hands[newHandi_1].state = { type: 'normal' };
                         return [5 /*yield**/, __values(S.wait(0.5)())];
-                    case 35:
-                        _a.sent();
+                    case 37:
+                        _b.sent();
                         scene.hands[newHandi_1].snap();
-                        _a.label = 36;
-                    case 36: return [2 /*return*/];
+                        _b.label = 38;
+                    case 38: return [2 /*return*/];
                 }
             });
         });
@@ -3893,11 +3965,11 @@ var GameStateDiffer;
         });
     }
     function diffCurrentWonderSideChoices(gamestate, result) {
-        var e_28, _a;
+        var e_29, _a;
         if (!(Main.scene instanceof ChooseWonderScene))
             return;
         var scene = Main.scene;
-        var _loop_4 = function (player) {
+        var _loop_5 = function (player) {
             var currentMove = gamestate.playerData[player].currentMove;
             if (player === Main.player) {
                 if (currentMove && !Main.isMoveImmune) {
@@ -3921,15 +3993,15 @@ var GameStateDiffer;
         try {
             for (var _b = __values(gamestate.players), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var player = _c.value;
-                _loop_4(player);
+                _loop_5(player);
             }
         }
-        catch (e_28_1) { e_28 = { error: e_28_1 }; }
+        catch (e_29_1) { e_29 = { error: e_29_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_28) throw e_28.error; }
+            finally { if (e_29) throw e_29.error; }
         }
     }
     function animateGoldMovement(fromPos, toPos, gold) {
@@ -3958,6 +4030,58 @@ var GameStateDiffer;
             });
         }); })));
     }
+    function getMilitaryShowings(gamestate) {
+        if (gamestate.fightingPlayers.length < 2) {
+            return [gamestate.players.map(function (player) { return contains(gamestate.diplomacyPlayers, player) ? { type: 'diplomacy' } : { type: 'tie', shields: gamestate.playerData[player].totalShields }; })];
+        }
+        if (contains(gamestate.diplomacyPlayers, Main.player)) {
+            var showings = filledMilitaryShowings(gamestate, true, true);
+            showings[gamestate.players.indexOf(Main.player)] = { type: 'diplomacy' };
+            return [showings];
+        }
+        else {
+            var showings1 = filledMilitaryShowings(gamestate, true, false);
+            var showings2 = filledMilitaryShowings(gamestate, false, true);
+            return [showings1, showings2];
+        }
+    }
+    function filledMilitaryShowings(gamestate, left, right) {
+        var showings = gamestate.players.map(function (player) { return undefined; });
+        var p = gamestate.players.indexOf(Main.player);
+        var l = p;
+        if (left) {
+            l = mod(p - 1, gamestate.players.length);
+            while (contains(gamestate.diplomacyPlayers, gamestate.players[l])) {
+                showings[l] = { type: 'diplomacy' };
+                l = mod(p - 1, gamestate.players.length);
+            }
+        }
+        var r = p;
+        if (right) {
+            r = mod(p + 1, gamestate.players.length);
+            while (contains(gamestate.diplomacyPlayers, gamestate.players[r])) {
+                showings[r] = { type: 'diplomacy' };
+                r = mod(p + 1, gamestate.players.length);
+            }
+        }
+        var lplayer = gamestate.players[l];
+        var rplayer = gamestate.players[r];
+        var lshields = gamestate.playerData[lplayer].totalShields;
+        var rshields = gamestate.playerData[rplayer].totalShields;
+        if (lshields > rshields) {
+            showings[l] = { type: 'victory', shields: lshields };
+            showings[r] = { type: 'defeat', shields: rshields };
+        }
+        else if (lshields < rshields) {
+            showings[l] = { type: 'defeat', shields: lshields };
+            showings[r] = { type: 'victory', shields: rshields };
+        }
+        else {
+            showings[l] = { type: 'tie', shields: lshields };
+            showings[r] = { type: 'tie', shields: rshields };
+        }
+        return showings;
+    }
 })(GameStateDiffer || (GameStateDiffer = {}));
 var GoldCoin = /** @class */ (function (_super) {
     __extends(GoldCoin, _super);
@@ -3983,7 +4107,7 @@ var Hand = /** @class */ (function () {
     }
     Object.defineProperty(Hand.prototype, "selectedCard", {
         get: function () {
-            var e_29, _a;
+            var e_30, _a;
             try {
                 for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var card = _c.value;
@@ -3992,12 +4116,12 @@ var Hand = /** @class */ (function () {
                     }
                 }
             }
-            catch (e_29_1) { e_29 = { error: e_29_1 }; }
+            catch (e_30_1) { e_30 = { error: e_30_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_29) throw e_29.error; }
+                finally { if (e_30) throw e_30.error; }
             }
             return undefined;
         },
@@ -4030,7 +4154,7 @@ var Hand = /** @class */ (function () {
         }
     };
     Hand.prototype.createWithData = function (handData) {
-        var e_30, _a;
+        var e_31, _a;
         this.cards = [];
         this.cardIds = handData.type === 'normal'
             ? handData.cardIds
@@ -4055,12 +4179,12 @@ var Hand = /** @class */ (function () {
                     card.convertToDiscarded();
                 }
             }
-            catch (e_30_1) { e_30 = { error: e_30_1 }; }
+            catch (e_31_1) { e_31 = { error: e_31_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_30) throw e_30.error; }
+                finally { if (e_31) throw e_31.error; }
             }
             this.cards[this.cards.length - 1].addDiscardCountText();
         }
@@ -4079,7 +4203,7 @@ var Hand = /** @class */ (function () {
         this.update();
     };
     Hand.prototype.reflectMove = function (move) {
-        var e_31, _a, e_32, _b;
+        var e_32, _a, e_33, _b;
         if (!move || move.action === 'reject') {
             try {
                 for (var _c = __values(this.cards), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -4087,12 +4211,12 @@ var Hand = /** @class */ (function () {
                     card.deselect();
                 }
             }
-            catch (e_31_1) { e_31 = { error: e_31_1 }; }
+            catch (e_32_1) { e_32 = { error: e_32_1 }; }
             finally {
                 try {
                     if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                 }
-                finally { if (e_31) throw e_31.error; }
+                finally { if (e_32) throw e_32.error; }
             }
             return;
         }
@@ -4110,12 +4234,12 @@ var Hand = /** @class */ (function () {
                 }
             }
         }
-        catch (e_32_1) { e_32 = { error: e_32_1 }; }
+        catch (e_33_1) { e_33 = { error: e_33_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_32) throw e_32.error; }
+            finally { if (e_33) throw e_33.error; }
         }
         if (!moved)
             console.error('Move not found in hand:', move);
@@ -4129,27 +4253,11 @@ var Hand = /** @class */ (function () {
             this.state.moved = false;
     };
     Hand.prototype.setZIndex = function (zIndex) {
-        var e_33, _a;
-        try {
-            for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var card = _c.value;
-                card.zIndex = zIndex;
-            }
-        }
-        catch (e_33_1) { e_33 = { error: e_33_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_33) throw e_33.error; }
-        }
-    };
-    Hand.prototype.setAllCardState = function (state) {
         var e_34, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
-                card.state = state;
+                card.zIndex = zIndex;
             }
         }
         catch (e_34_1) { e_34 = { error: e_34_1 }; }
@@ -4158,6 +4266,22 @@ var Hand = /** @class */ (function () {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
             finally { if (e_34) throw e_34.error; }
+        }
+    };
+    Hand.prototype.setAllCardState = function (state) {
+        var e_35, _a;
+        try {
+            for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var card = _c.value;
+                card.state = state;
+            }
+        }
+        catch (e_35_1) { e_35 = { error: e_35_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_35) throw e_35.error; }
         }
     };
     Hand.prototype.getPosition = function () {
@@ -4187,7 +4311,7 @@ var Loader = /** @class */ (function () {
     }
     Object.defineProperty(Loader.prototype, "isLoaded", {
         get: function () {
-            var e_35, _a;
+            var e_36, _a;
             try {
                 for (var _b = __values(this.resources), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var resource = _c.value;
@@ -4195,12 +4319,12 @@ var Loader = /** @class */ (function () {
                         return false;
                 }
             }
-            catch (e_35_1) { e_35 = { error: e_35_1 }; }
+            catch (e_36_1) { e_36 = { error: e_36_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_35) throw e_35.error; }
+                finally { if (e_36) throw e_36.error; }
             }
             return this.resources.length > 0;
         },
@@ -4209,7 +4333,7 @@ var Loader = /** @class */ (function () {
     });
     Object.defineProperty(Loader.prototype, "loadPercentage", {
         get: function () {
-            var e_36, _a;
+            var e_37, _a;
             if (this.resources.length === 0)
                 return 0;
             var loaded = 0;
@@ -4220,12 +4344,12 @@ var Loader = /** @class */ (function () {
                         loaded++;
                 }
             }
-            catch (e_36_1) { e_36 = { error: e_36_1 }; }
+            catch (e_37_1) { e_37 = { error: e_37_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_36) throw e_36.error; }
+                finally { if (e_37) throw e_37.error; }
             }
             return Math.round(loaded / this.resources.length * 100);
         },
@@ -4233,7 +4357,7 @@ var Loader = /** @class */ (function () {
         configurable: true
     });
     Loader.prototype.update = function () {
-        var e_37, _a;
+        var e_38, _a;
         if (this.complete)
             return;
         var loaded = this.resources.length > 0;
@@ -4247,12 +4371,12 @@ var Loader = /** @class */ (function () {
                 }
             }
         }
-        catch (e_37_1) { e_37 = { error: e_37_1 }; }
+        catch (e_38_1) { e_38 = { error: e_38_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_37) throw e_37.error; }
+            finally { if (e_38) throw e_38.error; }
         }
         if (loaded) {
             this.onFinishedLoading();
@@ -4260,7 +4384,7 @@ var Loader = /** @class */ (function () {
         }
     };
     Loader.prototype.loadGamestateResources = function () {
-        var e_38, _a;
+        var e_39, _a;
         // Cards
         for (var cardId in Main.gamestate.cards) {
             var card = Main.gamestate.cards[cardId];
@@ -4275,17 +4399,17 @@ var Loader = /** @class */ (function () {
             for (var player in Main.gamestate.wonderChoices) {
                 var wonderChoice = Main.gamestate.wonderChoices[player];
                 try {
-                    for (var wonderChoice_2 = (e_38 = void 0, __values(wonderChoice)), wonderChoice_2_1 = wonderChoice_2.next(); !wonderChoice_2_1.done; wonderChoice_2_1 = wonderChoice_2.next()) {
+                    for (var wonderChoice_2 = (e_39 = void 0, __values(wonderChoice)), wonderChoice_2_1 = wonderChoice_2.next(); !wonderChoice_2_1.done; wonderChoice_2_1 = wonderChoice_2.next()) {
                         var wonder = wonderChoice_2_1.value;
                         this.loadWonder(wonder);
                     }
                 }
-                catch (e_38_1) { e_38 = { error: e_38_1 }; }
+                catch (e_39_1) { e_39 = { error: e_39_1 }; }
                 finally {
                     try {
                         if (wonderChoice_2_1 && !wonderChoice_2_1.done && (_a = wonderChoice_2.return)) _a.call(wonderChoice_2);
                     }
-                    finally { if (e_38) throw e_38.error; }
+                    finally { if (e_39) throw e_39.error; }
                 }
             }
         }
@@ -4430,7 +4554,7 @@ var Loader = /** @class */ (function () {
     Loader.prototype.loadCardList = function (gamestate) {
         var resource = this.addNewResource();
         resource.load = function () {
-            var e_39, _a;
+            var e_40, _a;
             var _b, _c;
             var cardList = new PIXI.Container();
             var maxY = 0;
@@ -4438,7 +4562,7 @@ var Loader = /** @class */ (function () {
                 var x = age * C.CARD_LIST_CARD_DX;
                 var y = 0;
                 try {
-                    for (var _d = (e_39 = void 0, __values(gamestate.deck[age])), _e = _d.next(); !_e.done; _e = _d.next()) {
+                    for (var _d = (e_40 = void 0, __values(gamestate.deck[age])), _e = _d.next(); !_e.done; _e = _d.next()) {
                         var cardInfo = _e.value;
                         var card = gamestate.cards[cardInfo.id];
                         var cardForList = new PIXI.Container();
@@ -4478,12 +4602,12 @@ var Loader = /** @class */ (function () {
                         y += C.CARD_LIST_CARD_DY;
                     }
                 }
-                catch (e_39_1) { e_39 = { error: e_39_1 }; }
+                catch (e_40_1) { e_40 = { error: e_40_1 }; }
                 finally {
                     try {
                         if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
                     }
-                    finally { if (e_39) throw e_39.error; }
+                    finally { if (e_40) throw e_40.error; }
                 }
                 maxY = Math.max(maxY, y);
             }
@@ -4582,6 +4706,7 @@ var Main = /** @class */ (function () {
                 PIXI.Loader.shared.add('falcon', 'assets/falcon.svg');
                 PIXI.Loader.shared.add('mask', 'assets/mask.svg');
                 PIXI.Loader.shared.add('unproduced_resource', 'assets/unproduced_resource.svg');
+                PIXI.Loader.shared.add('dove', 'assets/dove.svg');
                 PIXI.Loader.shared.load(function (loader, resources) {
                     for (var resource in resources) {
                         Resources.PIXI_TEXTURES[resource] = resources[resource].texture;
@@ -4788,11 +4913,11 @@ var Main = /** @class */ (function () {
         }
     };
     Main.updateBotMoves = function () {
-        var e_40, _a;
+        var e_41, _a;
         var _this = this;
         if (!this.isHost)
             return;
-        var _loop_5 = function (player) {
+        var _loop_6 = function (player) {
             if (player.startsWith('BOT') && !this_1.gamestate.playerData[player].currentMove) {
                 var botPlayer_1 = player;
                 if (this_1.gamestate.state === 'CHOOSE_WONDER_SIDE') {
@@ -4830,15 +4955,15 @@ var Main = /** @class */ (function () {
         try {
             for (var _b = __values(this.gamestate.players), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var player = _c.value;
-                _loop_5(player);
+                _loop_6(player);
             }
         }
-        catch (e_40_1) { e_40 = { error: e_40_1 }; }
+        catch (e_41_1) { e_41 = { error: e_41_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_40) throw e_40.error; }
+            finally { if (e_41) throw e_41.error; }
         }
     };
     Main.stop = function () {
@@ -4877,16 +5002,19 @@ var MilitaryOverlay = /** @class */ (function (_super) {
         var _this = _super.call(this) || this;
         _this.div.appendChild(_this.draw());
         _this.div.className = 'wonderoverlay';
-        _this.setShieldDiff(0);
+        _this.setType('tie');
         _this.setShields(0);
         _this.zIndex = C.Z_INDEX_MILITARY_OVERLAY;
         _this.alpha = 0;
         return _this;
     }
-    MilitaryOverlay.prototype.setShieldDiff = function (diff) {
-        this.overlayNeutral.style.visibility = (diff === 0) ? 'visible' : 'hidden';
-        this.overlayVictory.style.visibility = (diff > 0) ? 'visible' : 'hidden';
-        this.overlayDefeat.style.visibility = (diff < 0) ? 'visible' : 'hidden';
+    MilitaryOverlay.prototype.setType = function (type) {
+        this.overlayNeutral.style.visibility = (type === 'tie' || type === 'diplomacy') ? 'visible' : 'hidden';
+        this.overlayVictory.style.visibility = type === 'victory' ? 'visible' : 'hidden';
+        this.overlayDefeat.style.visibility = type === 'defeat' ? 'visible' : 'hidden';
+        this.shield.style.visibility = type === 'diplomacy' ? 'hidden' : 'visible';
+        this.shieldsText.style.visibility = type === 'diplomacy' ? 'hidden' : 'visible';
+        this.dove.style.visibility = type === 'diplomacy' ? 'visible' : 'hidden';
     };
     MilitaryOverlay.prototype.setShields = function (shields) {
         this.shieldsText.textContent = "" + shields;
@@ -4902,10 +5030,10 @@ var MilitaryOverlay = /** @class */ (function (_super) {
         var pixiOverlayDefeat = Shapes.filledRoundedRect(0, 0, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT, C.WONDER_BOARD_CORNER_RADIUS, C.WONDER_OVERLAY_COLOR_DEFEAT);
         pixiOverlayDefeat.alpha = C.WONDER_OVERLAY_ALPHA;
         this.overlayDefeat = div.appendChild(render(pixiOverlayDefeat, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT));
-        var shield = div.appendChild(ArtCommon.domElementForArt(ArtCommon.shield(), C.WONDER_OVERLAY_SHIELD_SCALE));
-        shield.style.position = 'absolute';
-        shield.style.left = C.WONDER_OVERLAY_SHIELD_X + "px";
-        shield.style.top = '0px';
+        this.shield = div.appendChild(ArtCommon.domElementForArt(ArtCommon.shield(), C.WONDER_OVERLAY_SHIELD_SCALE));
+        this.shield.style.position = 'absolute';
+        this.shield.style.left = C.WONDER_OVERLAY_SHIELD_X + "px";
+        this.shield.style.top = '0px';
         var textDiv = div.appendChild(document.createElement('div'));
         textDiv.style.width = '50%';
         textDiv.style.position = 'absolute';
@@ -4918,6 +5046,10 @@ var MilitaryOverlay = /** @class */ (function (_super) {
         this.shieldsText.style.width = '100%';
         this.shieldsText.style.textAlign = 'right';
         this.shieldsText.style.transform = 'translate(0, -45%)';
+        this.dove = div.appendChild(ArtCommon.domElementForArt(ArtCommon.dove(), C.WONDER_OVERLAY_SHIELD_SCALE));
+        this.dove.style.position = 'absolute';
+        this.dove.style.left = '0px';
+        this.dove.style.top = '0px';
         return div;
     };
     return MilitaryOverlay;
@@ -4964,7 +5096,7 @@ var PaymentDialog = /** @class */ (function (_super) {
         var dialogTitle = dialogDiv.appendChild(this.drawText(C.PAYMENT_DIALOG_TITLE, C.PAYMENT_DIALOG_TITLE_SIZE));
         dialogTitle.style.padding = C.PAYMENT_DIALOG_TITLE_PADDING + "px";
         var _a = __read(API.getNeighbors(Main.gamestate, Main.player), 2), negPlayer = _a[0], posPlayer = _a[1];
-        var _loop_6 = function (i) {
+        var _loop_7 = function (i) {
             var leftDiv = dialogDiv.appendChild(document.createElement('div'));
             leftDiv.style.width = 50 - C.PAYMENT_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 2 + "%";
             leftDiv.style.height = C.PAYMENT_DIALOG_PAYMENTS_DY + "px";
@@ -5043,7 +5175,7 @@ var PaymentDialog = /** @class */ (function (_super) {
         };
         var this_2 = this;
         for (var i = 0; i < validPayments.length; i++) {
-            _loop_6(i);
+            _loop_7(i);
         }
         var closeButton = dialogDiv.appendChild(this.drawCloseButton());
         closeButton.style.position = 'absolute';
@@ -5099,19 +5231,19 @@ var PlayedCardEffectRoll = /** @class */ (function () {
         configurable: true
     });
     PlayedCardEffectRoll.prototype.destroy = function () {
-        var e_41, _a;
+        var e_42, _a;
         try {
             for (var _b = __values(this.cards), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var card = _c.value;
                 card.destroy();
             }
         }
-        catch (e_41_1) { e_41 = { error: e_41_1 }; }
+        catch (e_42_1) { e_42 = { error: e_42_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_41) throw e_41.error; }
+            finally { if (e_42) throw e_42.error; }
         }
     };
     PlayedCardEffectRoll.prototype.update = function () {
@@ -5324,7 +5456,7 @@ var StageInfoPopup = /** @class */ (function (_super) {
         box.appendChild(this.infoText("Cost:" + (isFree ? ' None' : ''), '10px', currentY + "px"));
         if (this.stage.cost) {
             var currentX = 60;
-            var _loop_7 = function (i) {
+            var _loop_8 = function (i) {
                 var resource = box.appendChild(document.createElement('div'));
                 var resourceArt = new PIXI.Container();
                 resourceArt.addChild(ArtCommon.getShadowForArt(function () { return ArtCommon.resource(resourceCost[i]); }, 'dark'));
@@ -5337,7 +5469,7 @@ var StageInfoPopup = /** @class */ (function (_super) {
                 currentX += 22;
             };
             for (var i = 0; i < resourceCost.length; i++) {
-                _loop_7(i);
+                _loop_8(i);
             }
             if (goldCost > 0) {
                 var gold = box.appendChild(document.createElement('div'));
@@ -5449,7 +5581,7 @@ function cloneCanvas(canvas) {
     return newCanvas;
 }
 function contains(array, element) {
-    var e_42, _a;
+    var e_43, _a;
     try {
         for (var array_1 = __values(array), array_1_1 = array_1.next(); !array_1_1.done; array_1_1 = array_1.next()) {
             var e = array_1_1.value;
@@ -5457,12 +5589,12 @@ function contains(array, element) {
                 return true;
         }
     }
-    catch (e_42_1) { e_42 = { error: e_42_1 }; }
+    catch (e_43_1) { e_43 = { error: e_43_1 }; }
     finally {
         try {
             if (array_1_1 && !array_1_1.done && (_a = array_1.return)) _a.call(array_1);
         }
-        finally { if (e_42) throw e_42.error; }
+        finally { if (e_43) throw e_43.error; }
     }
     return false;
 }
@@ -5526,7 +5658,7 @@ function range(start, end) {
     return result;
 }
 function sum(array, key) {
-    var e_43, _a;
+    var e_44, _a;
     if (!array || array.length === 0) {
         return 0;
     }
@@ -5537,12 +5669,12 @@ function sum(array, key) {
             result += key(e);
         }
     }
-    catch (e_43_1) { e_43 = { error: e_43_1 }; }
+    catch (e_44_1) { e_44 = { error: e_44_1 }; }
     finally {
         try {
             if (array_2_1 && !array_2_1.done && (_a = array_2.return)) _a.call(array_2);
         }
-        finally { if (e_43) throw e_43.error; }
+        finally { if (e_44) throw e_44.error; }
     }
     return result;
 }
@@ -5558,7 +5690,7 @@ var Wonder = /** @class */ (function (_super) {
         return _this;
     }
     Wonder.prototype.create = function () {
-        var e_44, _a, e_45, _b;
+        var e_45, _a, e_46, _b;
         var _this = this;
         var playerData = Main.gamestate.playerData[this.player];
         this.wonderResource = Resources.getWonder(this.wonder.name, this.wonder.side);
@@ -5591,12 +5723,12 @@ var Wonder = /** @class */ (function (_super) {
                 card.addToGame();
             }
         }
-        catch (e_44_1) { e_44 = { error: e_44_1 }; }
+        catch (e_45_1) { e_45 = { error: e_45_1 }; }
         finally {
             try {
                 if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
             }
-            finally { if (e_44) throw e_44.error; }
+            finally { if (e_45) throw e_45.error; }
         }
         this.builtWonderCards = [];
         try {
@@ -5609,12 +5741,12 @@ var Wonder = /** @class */ (function (_super) {
                 this.builtWonderCards.push(card);
             }
         }
-        catch (e_45_1) { e_45 = { error: e_45_1 }; }
+        catch (e_46_1) { e_46 = { error: e_46_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
-            finally { if (e_45) throw e_45.error; }
+            finally { if (e_46) throw e_46.error; }
         }
         // Starting effects popup
         var popupDiv = this.div.appendChild(document.createElement('div'));
@@ -5633,7 +5765,7 @@ var Wonder = /** @class */ (function (_super) {
         popupDiv.onmouseleave = function () {
             Main.scene.stopPopup(_this.wonder);
         };
-        var _loop_8 = function (i) {
+        var _loop_9 = function (i) {
             var stageX = this_3.wonderResource.stageXs[i];
             var wonderStage = this_3.wonder.stages[i];
             var popupDiv_1 = this_3.div.appendChild(document.createElement('div'));
@@ -5656,12 +5788,12 @@ var Wonder = /** @class */ (function (_super) {
         var this_3 = this;
         // Stage popups
         for (var i = 0; i < this.wonder.stages.length; i++) {
-            _loop_8(i);
+            _loop_9(i);
         }
         this.zIndex = C.Z_INDEX_WONDER;
     };
     Wonder.prototype.destroy = function () {
-        var e_46, _a;
+        var e_47, _a;
         for (var color in this.playedCardEffectRolls) {
             this.playedCardEffectRolls[color].destroy();
         }
@@ -5671,12 +5803,12 @@ var Wonder = /** @class */ (function (_super) {
                 card.destroy();
             }
         }
-        catch (e_46_1) { e_46 = { error: e_46_1 }; }
+        catch (e_47_1) { e_47 = { error: e_47_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_46) throw e_46.error; }
+            finally { if (e_47) throw e_47.error; }
         }
         while (this.div.firstChild) {
             this.div.removeChild(this.div.firstChild);
@@ -5771,7 +5903,7 @@ var Wonder = /** @class */ (function (_super) {
         }[color];
     };
     Wonder.prototype.drawPayments = function () {
-        var e_47, _a;
+        var e_48, _a;
         var wonder = Main.gamestate.wonders[this.player];
         var playerData = Main.gamestate.playerData[this.player];
         var stageIdsBuilt = playerData.stagesBuilt.map(function (stageBuilt) { return stageBuilt.stage; });
@@ -5788,12 +5920,12 @@ var Wonder = /** @class */ (function (_super) {
                 }
             }
         }
-        catch (e_47_1) { e_47 = { error: e_47_1 }; }
+        catch (e_48_1) { e_48 = { error: e_48_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_47) throw e_47.error; }
+            finally { if (e_48) throw e_48.error; }
         }
         var payments = new PIXI.Container();
         for (var i = 0; i < wonder.stages.length; i++) {
@@ -5905,7 +6037,7 @@ var WonderBoardForChoose = /** @class */ (function (_super) {
         popupDiv.onmouseleave = function () {
             Main.scene.stopPopup(_this.wonder);
         };
-        var _loop_9 = function (i) {
+        var _loop_10 = function (i) {
             var stageX = this_4.wonderResource.stageXs[i];
             var wonderStage = this_4.wonder.stages[i];
             var popupDiv_2 = this_4.div.appendChild(document.createElement('div'));
@@ -5928,7 +6060,7 @@ var WonderBoardForChoose = /** @class */ (function (_super) {
         var this_4 = this;
         // Stage popups
         for (var i = 0; i < this.wonder.stages.length; i++) {
-            _loop_9(i);
+            _loop_10(i);
         }
         // Selection
         if (this.player === Main.player) {
@@ -6402,8 +6534,8 @@ var S;
             scriptFunctions[_i] = arguments[_i];
         }
         return function () {
-            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_48_1;
-            var e_48, _a;
+            var scriptFunctions_1, scriptFunctions_1_1, scriptFunction, e_49_1;
+            var e_49, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -6422,14 +6554,14 @@ var S;
                         return [3 /*break*/, 1];
                     case 4: return [3 /*break*/, 7];
                     case 5:
-                        e_48_1 = _b.sent();
-                        e_48 = { error: e_48_1 };
+                        e_49_1 = _b.sent();
+                        e_49 = { error: e_49_1 };
                         return [3 /*break*/, 7];
                     case 6:
                         try {
                             if (scriptFunctions_1_1 && !scriptFunctions_1_1.done && (_a = scriptFunctions_1.return)) _a.call(scriptFunctions_1);
                         }
-                        finally { if (e_48) throw e_48.error; }
+                        finally { if (e_49) throw e_49.error; }
                         return [7 /*endfinally*/];
                     case 7: return [2 /*return*/];
                 }

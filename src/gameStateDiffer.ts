@@ -1,3 +1,8 @@
+type MilitaryShowing = {
+    type: 'victory' | 'defeat' | 'tie';
+    shields: number;
+} | { type: 'diplomacy' };
+
 namespace GameStateDiffer {
     export type DiffResult = {
         scripts: Script.Function[];
@@ -263,39 +268,27 @@ namespace GameStateDiffer {
                 let l = mod(p-1, gamestate.players.length);
                 let r = mod(p+1, gamestate.players.length);
 
-                let pshields = gamestate.playerData[gamestate.players[p]].totalShields;
-                let lshields = gamestate.playerData[gamestate.players[l]].totalShields;
-                let rshields = gamestate.playerData[gamestate.players[r]].totalShields;
-
-                // Diff left
-                scene.militaryOverlays[p].setShieldDiff(pshields - lshields);
-                scene.militaryOverlays[l].setShieldDiff(lshields - pshields);
-                scene.militaryOverlays[p].setShields(gamestate.playerData[gamestate.players[p]].totalShields);
-                scene.militaryOverlays[l].setShields(gamestate.playerData[gamestate.players[l]].totalShields);
-                yield* S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, t => {
-                    scene.militaryOverlays[p].alpha = t;
-                    scene.militaryOverlays[l].alpha = t;
-                })();
-                yield* S.wait(C.ANIMATION_MILITARY_WAIT_TIME)();
-                yield* S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, t => {
-                    scene.militaryOverlays[p].alpha = 1-t;
-                    scene.militaryOverlays[l].alpha = 1-t;
-                })();
-
-                // Diff right
-                scene.militaryOverlays[p].setShieldDiff(pshields - rshields);
-                scene.militaryOverlays[r].setShieldDiff(rshields - pshields);
-                scene.militaryOverlays[p].setShields(gamestate.playerData[gamestate.players[p]].totalShields);
-                scene.militaryOverlays[r].setShields(gamestate.playerData[gamestate.players[r]].totalShields);
-                yield* S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, t => {
-                    scene.militaryOverlays[p].alpha = t;
-                    scene.militaryOverlays[r].alpha = t;
-                })();
-                yield* S.wait(C.ANIMATION_MILITARY_WAIT_TIME)();
-                yield* S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, t => {
-                    scene.militaryOverlays[p].alpha = 1-t;
-                    scene.militaryOverlays[r].alpha = 1-t;
-                })();
+                let militaryShowings = getMilitaryShowings(gamestate);
+                for (let showings of militaryShowings) {
+                    console.log(showings);
+                    let showingsAnimations = range(0, showings.length-1).map(i => showings[i] ? S.chain(
+                        S.call(() => {
+                            let showing = showings[i];
+                            scene.militaryOverlays[i].setType(showing.type);
+                            if (showing.type !== 'diplomacy') {
+                                scene.militaryOverlays[i].setShields(showing.shields);
+                            }
+                        }),
+                        S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, t => {
+                            scene.militaryOverlays[i].alpha = t;
+                        }),
+                        S.wait(C.ANIMATION_MILITARY_WAIT_TIME),
+                        S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, t => {
+                            scene.militaryOverlays[i].alpha = 1-t;
+                        })
+                    ) : undefined).filter(s => s);
+                    yield* S.simul(...showingsAnimations)();
+                }
 
                 // Distribute tokens
                 let militaryTokenDistributionScripts = gamestate.players.map(player => {
@@ -543,5 +536,64 @@ namespace GameStateDiffer {
                 goldCoin.removeFromGame();
             }
         )));
+    }
+
+    function getMilitaryShowings(gamestate: API.GameState): MilitaryShowing[][] {
+        if (gamestate.fightingPlayers.length < 2) {
+            return [gamestate.players.map(player => contains(gamestate.diplomacyPlayers, player) ? { type: 'diplomacy' } : { type: 'tie', shields: gamestate.playerData[player].totalShields })];
+        }
+
+        if (contains(gamestate.diplomacyPlayers, Main.player)) {
+            let showings = filledMilitaryShowings(gamestate, true, true);
+            showings[gamestate.players.indexOf(Main.player)] = { type: 'diplomacy' };
+
+            return [showings];
+        } else {
+            let showings1 = filledMilitaryShowings(gamestate, true, false);
+            let showings2 = filledMilitaryShowings(gamestate, false, true);
+            return [showings1, showings2];
+        }
+    }
+
+    function filledMilitaryShowings(gamestate: API.GameState, left: boolean, right: boolean): MilitaryShowing[] {
+        let showings: MilitaryShowing[] = gamestate.players.map(player => undefined);
+        let p = gamestate.players.indexOf(Main.player);
+        
+        let l: number = p;
+        if (left) {
+            l = mod(p-1, gamestate.players.length);
+            while(contains(gamestate.diplomacyPlayers, gamestate.players[l])) {
+                showings[l] = { type: 'diplomacy' };
+                l = mod(p-1, gamestate.players.length);
+            }
+        }
+
+        let r: number = p;
+        if (right) {
+            r = mod(p+1, gamestate.players.length);
+            while(contains(gamestate.diplomacyPlayers, gamestate.players[r])) {
+                showings[r] = { type: 'diplomacy' };
+                r = mod(p+1, gamestate.players.length);
+            }
+        }
+
+        let lplayer = gamestate.players[l];
+        let rplayer = gamestate.players[r];
+
+        let lshields = gamestate.playerData[lplayer].totalShields;
+        let rshields = gamestate.playerData[rplayer].totalShields;
+
+        if (lshields > rshields) {
+            showings[l] = { type: 'victory', shields: lshields };
+            showings[r] = { type: 'defeat', shields: rshields };
+        } else if (lshields < rshields) {
+            showings[l] = { type: 'defeat', shields: lshields };
+            showings[r] = { type: 'victory', shields: rshields };
+        } else {
+            showings[l] = { type: 'tie', shields: lshields };
+            showings[r] = { type: 'tie', shields: rshields };
+        }
+
+        return showings;
     }
 }
