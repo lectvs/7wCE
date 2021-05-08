@@ -9,7 +9,7 @@ cities
     - broken_gold (amount)
     - broken_gold_per_victory_token (amount)
     - broken_gold_per_stage (amount)
-    - diplomacy
+    - (complete) diplomacy
     - (complete) wharf (direction)
     - (complete) smugglers_cache
     - (complete) mask

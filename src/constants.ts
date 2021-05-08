@@ -7,6 +7,8 @@ class C {
     public static readonly Z_INDEX_WONDER = 10;
     public static readonly Z_INDEX_CARD_PLAYED = 11;
     public static readonly Z_INDEX_CARD_MOVING = 12;
+    public static readonly Z_INDEX_DIPLOMACY_TOKEN_RACK = 13;
+    public static readonly Z_INDEX_DIPLOMACY_TOKEN = 14;
     public static readonly Z_INDEX_CARD_DRAGGING = 100;
     public static readonly Z_INDEX_MILITARY_OVERLAY = 101;
     public static readonly Z_INDEX_MILITARY_TOKEN = 102;
@@ -108,20 +110,21 @@ class C {
     public static readonly WONDER_BLUE_ROLL_Y = -18;
     public static readonly WONDER_GREEN_ROLL_Y = 18;
     public static readonly WONDER_OVERFLOW_ROLL_OFFSET_Y = C.WONDER_RESOURCE_ROLL_OFFSET_Y + 38;
-    public static readonly WONDER_SIDEBAR_NAME_X = -13.5;
-    public static readonly WONDER_SIDEBAR_NAME_Y = 18;
+    public static readonly WONDER_SIDEBAR_NAME_X = -2;
+    public static readonly WONDER_SIDEBAR_NAME_Y = -36;
+    public static readonly WONDER_SIDEBAR_NAME_Y_CHOOSE = -15;
     public static readonly WONDER_SIDEBAR_NAME_SIZE = 15;
     public static readonly WONDER_SIDEBAR_GOLD_COIN_SCALE = 0.15;
-    public static readonly WONDER_SIDEBAR_GOLD_COIN_X = -21;
-    public static readonly WONDER_SIDEBAR_GOLD_COIN_Y = 42;
-    public static readonly WONDER_SIDEBAR_GOLD_TEXT_X = -33;
-    public static readonly WONDER_SIDEBAR_GOLD_TEXT_Y = 42;
+    public static readonly WONDER_SIDEBAR_GOLD_COIN_X = -10;
+    public static readonly WONDER_SIDEBAR_GOLD_COIN_Y = -15;
+    public static readonly WONDER_SIDEBAR_GOLD_TEXT_X = -22;
+    public static readonly WONDER_SIDEBAR_GOLD_TEXT_Y = -15;
     public static readonly WONDER_SIDEBAR_GOLD_TEXT_SIZE = 15;
     public static readonly WONDER_SIDEBAR_POINTS_WREATH_SCALE = 0.15;
-    public static readonly WONDER_SIDEBAR_POINTS_WREATH_X = -66;
-    public static readonly WONDER_SIDEBAR_POINTS_WREATH_Y = 42;
-    public static readonly WONDER_SIDEBAR_POINTS_TEXT_X = -78;
-    public static readonly WONDER_SIDEBAR_POINTS_TEXT_Y = 42;
+    public static readonly WONDER_SIDEBAR_POINTS_WREATH_X = -55;
+    public static readonly WONDER_SIDEBAR_POINTS_WREATH_Y = -15;
+    public static readonly WONDER_SIDEBAR_POINTS_TEXT_X = -65;
+    public static readonly WONDER_SIDEBAR_POINTS_TEXT_Y = -15;
     public static readonly WONDER_SIDEBAR_POINTS_TEXT_SIZE = 15;
     public static readonly WONDER_SIDEBAR_CHECKMARK_SCALE = 0.15;
     public static readonly WONDER_SIDEBAR_CHECKMARK_X = -108;
@@ -129,6 +132,8 @@ class C {
     public static readonly WONDER_SIDEBAR_TOKENS_X = -21;
     public static readonly WONDER_SIDEBAR_TOKENS_DX = -18;
     public static readonly WONDER_SIDEBAR_TOKENS_Y = 63;
+    public static readonly WONDER_DIPLOMACY_TOKENS_OFFSET_X = 20;
+    public static readonly WONDER_DIPLOMACY_TOKENS_DX = 30;
 
     public static readonly WONDER_SIDE_CHOICE_DY = C.WONDER_BOARD_HEIGHT + 10;
     public static readonly WONDER_SIDE_CHOICE_TOP_ADJUST_DY = -C.WONDER_SIDE_CHOICE_DY;
@@ -148,6 +153,7 @@ class C {
     public static readonly CARD_INFO_EFFECT_DESCRIPTION_SIZE = 10;
 
     public static readonly TOKEN_SCALE = 0.15;
+    public static readonly DIPLOMACY_TOKEN_SCALE = 0.25;
     public static readonly GOLD_COIN_SCALE = 0.225;
 
     public static readonly DISCARD_PILE_X = 0;

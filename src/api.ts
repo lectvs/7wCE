@@ -27,6 +27,7 @@ namespace API {
         playedCards: number[];
         stagesBuilt: StageBuilt[];
         militaryTokens: number[];
+        diplomacyTokens: number;
         handCount: number;
         zeusUsed: boolean;
         lastMove?: Move;

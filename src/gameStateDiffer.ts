@@ -26,6 +26,7 @@ namespace GameStateDiffer {
         for (let player of Main.gamestate.players) {
             diffPoints(gamestate, player, result);
             diffGold(gamestate, player, result);
+            diffDiplomacyPreConflict(gamestate, player, result);
             if (midturn) diffCurrentMove(gamestate, player, result);
         }
 
@@ -64,7 +65,11 @@ namespace GameStateDiffer {
                         scene.hand.cards.splice(scene.hand.cards.indexOf(selectedCard), 1);
                         scene.hand.playedCard = selectedCard;
                         if (selectedCard) {
-                            if (lastMove.action === 'throw') {
+                            if (lastMove.action === 'play') {
+                                if (selectedCard.apiCard.color === 'red' && hasDiplomacyTokenAtStartOfTurn(gamestate, player)) {
+                                    selectedCard.setGrayedOut(true);
+                                }
+                            } else if (lastMove.action === 'throw') {
                                 scene.discardHand.cards.push(selectedCard);
                             }
                         }
@@ -129,6 +134,7 @@ namespace GameStateDiffer {
                             card.update();
                         })();
                         card.snap();
+                        scene.wonders[i].playedCardEffectRolls[card.apiCard.color].addCard(card);
                     } else if (lastMove.action === 'wonder') {
                         let card = hand.cards.pop();
                         hand.state = { type: 'back', moved: false };
@@ -263,14 +269,13 @@ namespace GameStateDiffer {
                 }
             } else if (isEndOfAge) {
                 // End of age
-                // Military conflicts
                 let p = gamestate.players.indexOf(Main.player);
                 let l = mod(p-1, gamestate.players.length);
                 let r = mod(p+1, gamestate.players.length);
 
+                // Military conflicts
                 let militaryShowings = getMilitaryShowings(gamestate);
                 for (let showings of militaryShowings) {
-                    console.log(showings);
                     let showingsAnimations = range(0, showings.length-1).map(i => showings[i] ? S.chain(
                         S.call(() => {
                             let showing = showings[i];
@@ -315,6 +320,29 @@ namespace GameStateDiffer {
 
                 yield* S.simul(...militaryTokenDistributionScripts)();
                 yield* S.wait(0.5)();
+
+                // Remove diplomacies if applicable
+                for (let player of gamestate.diplomacyPlayers) {
+                    let tokens = gamestate.playerData[player].diplomacyTokens;
+                    let wonder = scene.wonders[gamestate.players.indexOf(player)];
+                    wonder.adjustToDiplomacy(tokens > 0);
+
+                    let token = new DiplomacyToken();
+                    let tokenPos = wonder.getDiplomacyTokenPosition(wonder.diplomacyTokenRack.getTokenCount()-1);
+                    token.x = tokenPos.x;
+                    token.y = tokenPos.y;
+                    token.addToGame();
+                    wonder.diplomacyTokenRack.removeToken();
+                    let targetPosition = scene.getSourceSinkPosition();
+                    let lerpt = 0;
+                    yield* S.doOverTime(C.ANIMATION_TOKEN_DISTRIBUTE_TIME, t => {
+                        lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI/2*t**2), Main.delta);
+                        token.x = lerpTime(tokenPos.x, targetPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                        token.y = lerpTime(tokenPos.y, targetPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
+                        token.scale = lerpTime(1, 0, Math.tan(Math.PI/2*lerpt), Main.delta);
+                    })();
+                    token.removeFromGame();
+                }
 
                 if (gamestate.state !== 'GAME_COMPLETE') {
                     // Deal new cards
@@ -415,7 +443,7 @@ namespace GameStateDiffer {
                 yield* S.wait(0.5)();
                 scene.hands[newHandi].snap();
             }
-        })
+        });
 
         return result;
     }
@@ -515,6 +543,45 @@ namespace GameStateDiffer {
         }
     }
 
+    function diffDiplomacyPreConflict(gamestate: API.GameState, player: string, result: DiffResult) {
+        if (!(Main.scene instanceof GameScene)) return;
+        let scene: GameScene = Main.scene;
+
+        let gainedTokens = gainedDiplomacyTokens(gamestate, player);
+        if (gainedTokens <= 0) return;
+
+        // Distribute tokens
+        let pi = gamestate.players.indexOf(player);
+        let newTokenIndices: number[] = [];
+        for (let i = Main.gamestate.playerData[player].diplomacyTokens; i < Main.gamestate.playerData[player].diplomacyTokens + gainedTokens; i++) {
+            newTokenIndices.push(i);
+        }
+
+        result.scripts.push(S.chain(
+            S.call(() => {
+                scene.wonders[gamestate.players.indexOf(player)].adjustToDiplomacy(hasDiplomacyTokenAtStartOfTurn(gamestate, player));
+            }),
+            S.wait(0.5),
+            S.simul(...newTokenIndices.map(i => function*() {
+                let sourceSink = scene.getSourceSinkPosition();
+                let token = new DiplomacyToken();
+                token.x = sourceSink.x;
+                token.y = sourceSink.y;
+                token.addToGame();
+                let targetPosition = scene.wonders[pi].getDiplomacyTokenPosition(i);
+                let lerpt = 0;
+                yield* S.doOverTime(C.ANIMATION_TOKEN_DISTRIBUTE_TIME, t => {
+                    lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI/2*t**2), Main.delta);
+                    token.x = lerpTime(sourceSink.x, targetPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                    token.y = lerpTime(sourceSink.y, targetPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
+                })();
+                scene.wonders[gamestate.players.indexOf(player)].diplomacyTokenRack.addToken();
+                token.removeFromGame();
+            })),
+            S.wait(0.5)
+        ));
+    }
+
     function animateGoldMovement(fromPos: PIXI.Point, toPos: PIXI.Point, gold: number) {
         return S.simul(...range(0, gold-1).map(i => S.chain(
             S.wait(0.2*i),
@@ -595,5 +662,17 @@ namespace GameStateDiffer {
         }
 
         return showings;
+    }
+
+    function hasDiplomacyTokenAtStartOfTurn(gamestate: API.GameState, player: string) {
+        return gamestate.playerData[player].diplomacyTokens > 0 || gainedDiplomacyTokens(gamestate, player) > 0;
+    }
+
+    function gainedDiplomacyTokens(gamestate: API.GameState, player: string) {
+        let diff = gamestate.playerData[player].diplomacyTokens - Main.gamestate.playerData[player].diplomacyTokens;
+        if (gamestate.age > Main.gamestate.age && contains(gamestate.diplomacyPlayers, player)) {
+            diff++;
+        }
+        return diff;
     }
 }

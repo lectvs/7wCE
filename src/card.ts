@@ -34,6 +34,7 @@ class Card extends GameElement {
 
     frontDiv: HTMLDivElement;
     backDiv: HTMLDivElement;
+    private frontProxy: HTMLDivElement;
     private paymentCanvas: HTMLCanvasElement;
     private highlightEffect: HTMLDivElement;
     private highlightFlipped: HTMLDivElement;
@@ -156,7 +157,10 @@ class Card extends GameElement {
 
         this.frontDiv = this.div.appendChild(document.createElement('div'));
         this.frontDiv.style.transformOrigin = 'left center';
-        let front = this.frontDiv.appendChild(this.cardResource.front);
+        this.frontProxy = this.frontDiv.appendChild(document.createElement('div'));
+        this.frontProxy.style.transition = 'filter 1s';
+        this.setGrayedOut(false);
+        let front = this.frontProxy.appendChild(this.cardResource.front);
         front.style.transform = `translate(-50%, -${C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2}px)`;
         this.highlightEffect = this.frontDiv.appendChild(this.drawHighlightEffect());
         if (this.points !== undefined) {
@@ -430,6 +434,10 @@ class Card extends GameElement {
         discardCount.style.color = ArtCommon.ageBacksHtml[Main.gamestate.lastDiscardedCardAge];
         discardCount.style.position = 'absolute';
         discardCount.style.transform = 'translate(-50%, -50%)';
+    }
+
+    setGrayedOut(grayedOut: boolean) {
+        this.frontProxy.style.filter = grayedOut ? 'grayscale(100%) brightness(50%)' : 'grayscale(0%) brightness(100%)';
     }
 
     private drawPayment() {

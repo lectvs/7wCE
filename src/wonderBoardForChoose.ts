@@ -34,9 +34,11 @@ class WonderBoardForChoose extends GameElement {
         let boardDiv = this.div.appendChild(document.createElement('div'));
         boardDiv.appendChild(this.wonderResource.board);
 
-        let sidebar = this.div.appendChild(this.drawSidebar());
-        sidebar.style.left = `${C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_WIDTH}px`;
-        sidebar.style.top = `${-C.WONDER_BOARD_HEIGHT/2}px`;
+        if (this.side === 0) {
+            let sidebar = this.div.appendChild(this.drawSidebar());
+            sidebar.style.left = `${C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_WIDTH}px`;
+            sidebar.style.top = `${-C.WONDER_BOARD_HEIGHT/2}px`;
+        }
 
         // Starting effects popup
         let popupDiv = this.div.appendChild(document.createElement('div'));
@@ -151,7 +153,7 @@ class WonderBoardForChoose extends GameElement {
         let nameElo = this.player in Main.users ? `${this.player}<span style="font-size: 12px"> (${Math.round(Main.users[this.player].elo)})</span>` : this.player;
         let nameText = sidebar.appendChild(this.drawSidebarText(nameElo, C.WONDER_SIDEBAR_NAME_SIZE));
         nameText.style.left = `${C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_NAME_X}px`;
-        nameText.style.top = `${C.WONDER_SIDEBAR_NAME_Y}px`;
+        nameText.style.top = `${C.WONDER_SIDEBAR_NAME_Y_CHOOSE}px`;
 
         return sidebar;
     }

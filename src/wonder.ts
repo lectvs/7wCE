@@ -19,6 +19,7 @@ class Wonder extends GameElement {
         overflow: PlayedCardEffectRoll;
     } & Dict<PlayedCardEffectRoll>;
     builtWonderCards: Card[];
+    diplomacyTokenRack: DiplomacyTokenRack;
 
     pointsText: HTMLParagraphElement;
     goldText: HTMLParagraphElement;
@@ -61,11 +62,14 @@ class Wonder extends GameElement {
             overflow: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2, -C.WONDER_BOARD_HEIGHT/2 - C.WONDER_OVERFLOW_ROLL_OFFSET_Y, false, null),
         };
         this.playedCardEffectRolls.grey = this.playedCardEffectRolls.brown;
-
+        
         for (let apiCardId of playerData.playedCards) {
             let points = apiCardId in playerData.cardPoints ? playerData.cardPoints[apiCardId] : undefined;
             let card = new Card(this.scene, apiCardId, -1, points, undefined, this, []);
             this.addNewCardEffect(card);
+            if (card.apiCard.color === 'red' && playerData.diplomacyTokens > 0) {
+                card.setGrayedOut(true);
+            }
             card.addToGame();
         }
 
@@ -77,6 +81,12 @@ class Wonder extends GameElement {
             card.addToGame();
             this.builtWonderCards.push(card);
         }
+
+        this.diplomacyTokenRack = new DiplomacyTokenRack(this);
+        for (let i = 0; i < playerData.diplomacyTokens; i++) {
+            this.diplomacyTokenRack.addToken();
+        }
+        this.diplomacyTokenRack.addToGame();
 
         // Starting effects popup
         let popupDiv = this.div.appendChild(document.createElement('div'));
@@ -156,6 +166,8 @@ class Wonder extends GameElement {
             this.builtWonderCards[i].snapToTarget();
             this.builtWonderCards[i].update();
         }
+
+        this.diplomacyTokenRack.update();
     }
 
     getMainRegion() {
@@ -197,6 +209,10 @@ class Wonder extends GameElement {
         return new PIXI.Point(this.x + C.WONDER_BOARD_WIDTH/2 + C.WONDER_SIDEBAR_TOKENS_X + C.WONDER_SIDEBAR_TOKENS_DX*i, this.y - C.WONDER_BOARD_HEIGHT/2 + C.WONDER_SIDEBAR_TOKENS_Y);
     }
 
+    getDiplomacyTokenPosition(i: number) {
+        return this.diplomacyTokenRack.getTokenPosition(i);
+    }
+
     addNewCardEffect(card: Card) {
         let playerData = Main.gamestate.playerData[this.player];
         let justPlayed = (Main.gamestate.state !== 'GAME_COMPLETE' && playerData.lastMove && playerData.lastMove.action === 'play' && playerData.lastMove.card === card.apiCardId);
@@ -215,6 +231,14 @@ class Wonder extends GameElement {
         this.removePlaceholders();
         if (card && (card.state.type === 'effect' || card.state.type === 'locked_play')) {
             this.addPlaceholder(card);
+        }
+    }
+
+    adjustToDiplomacy(diplomacy: boolean) {
+        for (let key in this.playedCardEffectRolls) {
+            for (let card of this.playedCardEffectRolls[key].cards) {
+                if (card.apiCard.color === 'red') card.setGrayedOut(diplomacy);
+            }
         }
     }
 
