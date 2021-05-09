@@ -5,10 +5,10 @@ class MilitaryToken extends GameElement {
         super();
         this.amount = amount;
         this.div.appendChild(this.draw());
-        this.zIndex = C.Z_INDEX_MILITARY_TOKEN;
+        this.zIndex = C.Z_INDEX_TOKEN_MOVING;
     }
 
     private draw() {
-        return ArtCommon.domElementForArt(ArtCommon.militaryToken(this.amount), C.TOKEN_SCALE);
+        return ArtCommon.domElementForArt(ArtCommon.militaryToken(this.amount), C.MILITARY_TOKEN_SCALE);
     }
 }

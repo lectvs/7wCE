@@ -27,6 +27,8 @@ namespace GameStateDiffer {
             diffPoints(gamestate, player, result);
             diffGold(gamestate, player, result);
             diffDiplomacyPreConflict(gamestate, player, result);
+            diffMilitaryTokensPreConflict(gamestate, player, result);
+            diffDebtTokens(gamestate, player, result);
             if (midturn) diffCurrentMove(gamestate, player, result);
         }
 
@@ -299,23 +301,10 @@ namespace GameStateDiffer {
                 let militaryTokenDistributionScripts = gamestate.players.map(player => {
                     let pi = gamestate.players.indexOf(player);
                     let newTokenIndices: number[] = [];
-                    for (let i = Main.gamestate.playerData[player].militaryTokens.length; i < gamestate.playerData[player].militaryTokens.length; i++) {
+                    for (let i = scene.wonders[pi].militaryTokenRack.getTokenCount(); i < gamestate.playerData[player].militaryTokens.length; i++) {
                         newTokenIndices.push(i);
                     }
-                    return S.simul(...newTokenIndices.map(i => function*() {
-                        let sourceSink = scene.getSourceSinkPosition();
-                        let token = new MilitaryToken(gamestate.playerData[player].militaryTokens[i]);
-                        token.x = sourceSink.x;
-                        token.y = sourceSink.y;
-                        token.addToGame();
-                        let targetPosition = scene.wonders[pi].getMilitaryTokenWorldPosition(i);
-                        let lerpt = 0;
-                        yield* S.doOverTime(C.ANIMATION_TOKEN_DISTRIBUTE_TIME, t => {
-                            lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI/2*t**2), Main.delta);
-                            token.x = lerpTime(sourceSink.x, targetPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
-                            token.y = lerpTime(sourceSink.y, targetPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
-                        })();
-                    }));
+                    return S.chain(...newTokenIndices.map(i => animateGiveMilitaryToken(scene, gamestate, player, gamestate.playerData[player].militaryTokens[i])));
                 });
 
                 yield* S.simul(...militaryTokenDistributionScripts)();
@@ -575,11 +564,66 @@ namespace GameStateDiffer {
                     token.x = lerpTime(sourceSink.x, targetPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
                     token.y = lerpTime(sourceSink.y, targetPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
                 })();
-                scene.wonders[gamestate.players.indexOf(player)].diplomacyTokenRack.addToken();
+                scene.wonders[gamestate.players.indexOf(player)].addDiplomacyToken();
                 token.removeFromGame();
             })),
             S.wait(0.5)
         ));
+    }
+
+    function diffMilitaryTokensPreConflict(gamestate: API.GameState, player: string, result: DiffResult) {
+        if (!(Main.scene instanceof GameScene)) return;
+        let scene: GameScene = Main.scene;
+
+        let oldTokens = Main.gamestate.playerData[player].militaryTokens;
+        let newTokens = gamestate.playerData[player].militaryTokens;
+
+        if (gamestate.age > Main.gamestate.age || gamestate.state === 'GAME_COMPLETE') {
+            newTokens = newTokens.slice(0, newTokens.length - gamestate.playerData[player].gainedMilitaryTokensFromConflict.length);
+        }
+
+        if (equalsArray(oldTokens, newTokens)) return;
+
+        // Diff the lists
+        let removedIndices: number[] = [];
+        let addedIndices: number[] = [];
+
+        let i = 0, j = 0;
+        while (i < oldTokens.length && j < newTokens.length) {
+            if (oldTokens[i] === newTokens[j]) {
+                i++;
+                j++;
+                continue;
+            }
+            removedIndices.push(i);
+            i++;
+        }
+
+        if (j >= newTokens.length) {
+            removedIndices.push(...range(i, oldTokens.length-1));
+        }
+
+        if (i >= oldTokens.length) {
+            addedIndices.push(...range(j, newTokens.length-1));
+        }
+
+        console.log(player, oldTokens, removedIndices, newTokens, addedIndices);
+
+        let scripts = [...addedIndices.map(j => animateGiveMilitaryToken(scene, gamestate, player, newTokens[j]))];
+
+        result.scripts.push(S.chain(...scripts));
+    }
+
+    function diffDebtTokens(gamestate: API.GameState, player: string, result: DiffResult) {
+        if (!(Main.scene instanceof GameScene)) return;
+        let scene: GameScene = Main.scene;
+
+        let oldTokens = Main.gamestate.playerData[player].debtTokens;
+        let newTokens = gamestate.playerData[player].debtTokens;
+
+        if (oldTokens >= newTokens) return;
+
+        result.scripts.push(S.chain(...range(1, newTokens-oldTokens).map(j => animateGiveDebtToken(scene, gamestate, player))));
     }
 
     function animateGoldMovement(fromPos: PIXI.Point, toPos: PIXI.Point, gold: number) {
@@ -603,6 +647,46 @@ namespace GameStateDiffer {
                 goldCoin.removeFromGame();
             }
         )));
+    }
+
+    function animateGiveMilitaryToken(scene: GameScene, gamestate: API.GameState, player: string, value: number) {
+        return function*() {
+            let wonder = scene.wonders[gamestate.players.indexOf(player)];
+            let sourceSink = scene.getSourceSinkPosition();
+            let token = new MilitaryToken(value);
+            token.x = sourceSink.x;
+            token.y = sourceSink.y;
+            token.addToGame();
+            let targetPosition = wonder.getMilitaryTokenWorldPosition(wonder.militaryTokenRack.getTokenCount());
+            let lerpt = 0;
+            yield* S.doOverTime(C.ANIMATION_TOKEN_DISTRIBUTE_TIME, t => {
+                lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI/2*t**2), Main.delta);
+                token.x = lerpTime(sourceSink.x, targetPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                token.y = lerpTime(sourceSink.y, targetPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
+            })();
+            wonder.addMilitaryToken(value);
+            token.removeFromGame();
+        }
+    }
+
+    function animateGiveDebtToken(scene: GameScene, gamestate: API.GameState, player: string) {
+        return function*() {
+            let wonder = scene.wonders[gamestate.players.indexOf(player)];
+            let sourceSink = scene.getSourceSinkPosition();
+            let token = new DebtToken();
+            token.x = sourceSink.x;
+            token.y = sourceSink.y;
+            token.addToGame();
+            let targetPosition = wonder.getDebtTokenWorldPosition(wonder.debtTokenRack.getTokenCount());
+            let lerpt = 0;
+            yield* S.doOverTime(C.ANIMATION_TOKEN_DISTRIBUTE_TIME, t => {
+                lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI/2*t**2), Main.delta);
+                token.x = lerpTime(sourceSink.x, targetPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                token.y = lerpTime(sourceSink.y, targetPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
+            })();
+            wonder.addDebtToken();
+            token.removeFromGame();
+        }
     }
 
     function getMilitaryShowings(gamestate: API.GameState): MilitaryShowing[][] {
@@ -670,7 +754,7 @@ namespace GameStateDiffer {
 
     function gainedDiplomacyTokens(gamestate: API.GameState, player: string) {
         let diff = gamestate.playerData[player].diplomacyTokens - Main.gamestate.playerData[player].diplomacyTokens;
-        if (gamestate.age > Main.gamestate.age && contains(gamestate.diplomacyPlayers, player)) {
+        if ((gamestate.age > Main.gamestate.age || gamestate.state === 'GAME_COMPLETE') && contains(gamestate.diplomacyPlayers, player)) {
             diff++;
         }
         return diff;

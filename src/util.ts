@@ -27,6 +27,16 @@ function contains<T>(array: T[], element: T) {
     return false;
 }
 
+function equalsArray<T>(array1: T[], array2: T[]) {
+    if (!array1 && !array2) return true;
+    if (!array1 || !array2) return false;
+    if (array1.length !== array2.length) return false;
+    for (let i = 0; i < array1.length; i++) {
+        if (array1[i] !== array2[i]) return false;
+    }
+    return true;
+}
+
 function filledArray<T>(len: number, fillWith: T) {
     let result: T[] = [];
     for (let i = 0; i < len; i++) {

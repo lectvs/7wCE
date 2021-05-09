@@ -6,12 +6,11 @@ class C {
     public static readonly Z_INDEX_CARD_WONDER = 9;
     public static readonly Z_INDEX_WONDER = 10;
     public static readonly Z_INDEX_CARD_PLAYED = 11;
-    public static readonly Z_INDEX_CARD_MOVING = 12;
-    public static readonly Z_INDEX_DIPLOMACY_TOKEN_RACK = 13;
-    public static readonly Z_INDEX_DIPLOMACY_TOKEN = 14;
+    public static readonly Z_INDEX_WONDER_TOKENS = 12;
+    public static readonly Z_INDEX_CARD_MOVING = 13;
     public static readonly Z_INDEX_CARD_DRAGGING = 100;
     public static readonly Z_INDEX_MILITARY_OVERLAY = 101;
-    public static readonly Z_INDEX_MILITARY_TOKEN = 102;
+    public static readonly Z_INDEX_TOKEN_MOVING = 102;
     public static readonly Z_INDEX_GOLD_COIN = 102;
     public static readonly Z_INDEX_PAYMENT_DIALOG = 1000;
     public static readonly Z_INDEX_CARD_POPUP = 1001;
@@ -130,10 +129,14 @@ class C {
     public static readonly WONDER_SIDEBAR_CHECKMARK_X = -108;
     public static readonly WONDER_SIDEBAR_CHECKMARK_Y = 39;
     public static readonly WONDER_SIDEBAR_TOKENS_X = -21;
-    public static readonly WONDER_SIDEBAR_TOKENS_DX = -18;
-    public static readonly WONDER_SIDEBAR_TOKENS_Y = 63;
+    public static readonly WONDER_SIDEBAR_MILITARY_TOKENS_Y = 21;
+    public static readonly WONDER_SIDEBAR_DEBT_TOKENS_Y = 42;
     public static readonly WONDER_DIPLOMACY_TOKENS_OFFSET_X = 20;
     public static readonly WONDER_DIPLOMACY_TOKENS_DX = 30;
+    public static readonly WONDER_MILITARY_TOKENS_OFFSET_X = 0;
+    public static readonly WONDER_MILITARY_TOKENS_DX = -18;
+    public static readonly WONDER_DEBT_TOKENS_OFFSET_X = 0;
+    public static readonly WONDER_DEBT_TOKENS_DX = -18;
 
     public static readonly WONDER_SIDE_CHOICE_DY = C.WONDER_BOARD_HEIGHT + 10;
     public static readonly WONDER_SIDE_CHOICE_TOP_ADJUST_DY = -C.WONDER_SIDE_CHOICE_DY;
@@ -152,7 +155,8 @@ class C {
     public static readonly CARD_INFO_TEXT_SIZE = 12;
     public static readonly CARD_INFO_EFFECT_DESCRIPTION_SIZE = 10;
 
-    public static readonly TOKEN_SCALE = 0.15;
+    public static readonly MILITARY_TOKEN_SCALE = 0.15;
+    public static readonly DEBT_TOKEN_SCALE = 0.15;
     public static readonly DIPLOMACY_TOKEN_SCALE = 0.25;
     public static readonly GOLD_COIN_SCALE = 0.225;
 

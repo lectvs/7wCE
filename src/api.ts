@@ -27,6 +27,8 @@ namespace API {
         playedCards: number[];
         stagesBuilt: StageBuilt[];
         militaryTokens: number[];
+        gainedMilitaryTokensFromConflict?: number[];
+        debtTokens: number;
         diplomacyTokens: number;
         handCount: number;
         zeusUsed: boolean;
@@ -93,6 +95,7 @@ namespace API {
         color?: string;
         gold_per_card?: number;
         gold_per_stage?: number;
+        gold_per_token?: number;
         points_per_card?: number;
         points_per_stage?: number;
         points_per_token?: number;

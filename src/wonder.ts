@@ -19,8 +19,11 @@ class Wonder extends GameElement {
         overflow: PlayedCardEffectRoll;
     } & Dict<PlayedCardEffectRoll>;
     builtWonderCards: Card[];
-    diplomacyTokenRack: DiplomacyTokenRack;
+    diplomacyTokenRack: TokenRack;
+    militaryTokenRack: TokenRack;
+    debtTokenRack: TokenRack;
 
+    sidebar: HTMLDivElement;
     pointsText: HTMLParagraphElement;
     goldText: HTMLParagraphElement;
 
@@ -47,9 +50,27 @@ class Wonder extends GameElement {
         let payments = boardDiv.appendChild(this.drawPayments());
         payments.style.transform = `translate(-50%, ${C.WONDER_BOARD_HEIGHT/2 - C.WONDER_STAGE_HEIGHT + C.WONDER_STAGE_PAYMENT_OFFSET_Y}px)`
 
-        let sidebar = this.div.appendChild(this.drawSidebar());
-        sidebar.style.left = `${C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_WIDTH}px`;
-        sidebar.style.top = `${-C.WONDER_BOARD_HEIGHT/2}px`;
+        this.sidebar = this.div.appendChild(this.drawSidebar());
+        this.sidebar.style.left = `${C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_WIDTH}px`;
+        this.sidebar.style.top = `${-C.WONDER_BOARD_HEIGHT/2}px`;
+
+        // Military tokens
+        this.militaryTokenRack = new TokenRack(C.WONDER_MILITARY_TOKENS_OFFSET_X, C.WONDER_MILITARY_TOKENS_DX, C.Z_INDEX_WONDER_TOKENS, () => {
+            return new PIXI.Point(this.x + C.WONDER_BOARD_WIDTH/2 + C.WONDER_SIDEBAR_TOKENS_X, this.y - C.WONDER_BOARD_HEIGHT/2 + C.WONDER_SIDEBAR_MILITARY_TOKENS_Y);
+        });
+        for (let i = 0; i < Main.gamestate.playerData[this.player].militaryTokens.length; i++) {
+            this.addMilitaryToken(Main.gamestate.playerData[this.player].militaryTokens[i]);
+        }
+        this.militaryTokenRack.addToGame();
+
+        // Debt tokens
+        this.debtTokenRack = new TokenRack(C.WONDER_DEBT_TOKENS_OFFSET_X, C.WONDER_DEBT_TOKENS_DX, C.Z_INDEX_WONDER_TOKENS, () => {
+            return new PIXI.Point(this.x + C.WONDER_BOARD_WIDTH/2 + C.WONDER_SIDEBAR_TOKENS_X, this.y - C.WONDER_BOARD_HEIGHT/2 + C.WONDER_SIDEBAR_DEBT_TOKENS_Y);
+        });
+        for (let i = 0; i < Main.gamestate.playerData[this.player].debtTokens; i++) {
+            this.addDebtToken();
+        }
+        this.debtTokenRack.addToGame();
 
         this.playedCardEffectRolls = {
             brown: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2, -C.WONDER_BOARD_HEIGHT/2 - C.WONDER_RESOURCE_ROLL_OFFSET_Y, false, C.SORT_CMP_RESOURCES),
@@ -82,9 +103,14 @@ class Wonder extends GameElement {
             this.builtWonderCards.push(card);
         }
 
-        this.diplomacyTokenRack = new DiplomacyTokenRack(this);
+        this.diplomacyTokenRack = new TokenRack(C.WONDER_DIPLOMACY_TOKENS_OFFSET_X, C.WONDER_DIPLOMACY_TOKENS_DX, C.Z_INDEX_WONDER_TOKENS, () => {
+            return new PIXI.Point(this.x + this.playedCardEffectRolls.red.offsetx
+                                         + this.playedCardEffectRolls.red.width
+                                         + this.playedCardEffectRolls.red.placeholderWidth,
+                                  this.y + this.playedCardEffectRolls.red.offsety);
+        });
         for (let i = 0; i < playerData.diplomacyTokens; i++) {
-            this.diplomacyTokenRack.addToken();
+            this.addDiplomacyToken();
         }
         this.diplomacyTokenRack.addToGame();
 
@@ -167,6 +193,8 @@ class Wonder extends GameElement {
             this.builtWonderCards[i].update();
         }
 
+        this.militaryTokenRack.update();
+        this.debtTokenRack.update();
         this.diplomacyTokenRack.update();
     }
 
@@ -206,7 +234,11 @@ class Wonder extends GameElement {
     }
 
     getMilitaryTokenWorldPosition(i: number) {
-        return new PIXI.Point(this.x + C.WONDER_BOARD_WIDTH/2 + C.WONDER_SIDEBAR_TOKENS_X + C.WONDER_SIDEBAR_TOKENS_DX*i, this.y - C.WONDER_BOARD_HEIGHT/2 + C.WONDER_SIDEBAR_TOKENS_Y);
+        return this.militaryTokenRack.getTokenPosition(i);
+    }
+
+    getDebtTokenWorldPosition(i: number) {
+        return this.debtTokenRack.getTokenPosition(i);
     }
 
     getDiplomacyTokenPosition(i: number) {
@@ -240,6 +272,18 @@ class Wonder extends GameElement {
                 if (card.apiCard.color === 'red') card.setGrayedOut(diplomacy);
             }
         }
+    }
+
+    addMilitaryToken(value: number) {
+        this.militaryTokenRack.addToken(ArtCommon.domElementForArt(ArtCommon.militaryToken(value), C.MILITARY_TOKEN_SCALE));
+    }
+
+    addDebtToken() {
+        this.debtTokenRack.addToken(ArtCommon.domElementForArt(ArtCommon.debtToken(), C.DEBT_TOKEN_SCALE));
+    }
+
+    addDiplomacyToken() {
+        this.diplomacyTokenRack.addToken(ArtCommon.domElementForArt(ArtCommon.dove(), C.DIPLOMACY_TOKEN_SCALE));
     }
 
     private addPlaceholder(card: Card) {
@@ -328,13 +372,6 @@ class Wonder extends GameElement {
         pointsText.style.left = `${C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_POINTS_TEXT_X}px`;
         pointsText.style.top = `${C.WONDER_SIDEBAR_POINTS_TEXT_Y}px`;
         this.pointsText = pointsText.querySelector('p');
-
-        for (let i = 0; i < Main.gamestate.playerData[this.player].militaryTokens.length; i++) {
-            let token = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.militaryToken(Main.gamestate.playerData[this.player].militaryTokens[i]), C.TOKEN_SCALE));
-            token.style.position = 'absolute';
-            token.style.left = `${C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_TOKENS_X + C.WONDER_SIDEBAR_TOKENS_DX*i}px`;
-            token.style.top = `${C.WONDER_SIDEBAR_TOKENS_Y}px`;
-        }
 
         return sidebar;
     }

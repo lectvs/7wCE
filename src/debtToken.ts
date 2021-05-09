@@ -1,4 +1,4 @@
-class DiplomacyToken extends GameElement {
+class DebtToken extends GameElement {
     constructor() {
         super();
         this.div.appendChild(this.draw());
@@ -6,6 +6,6 @@ class DiplomacyToken extends GameElement {
     }
 
     private draw() {
-        return ArtCommon.domElementForArt(ArtCommon.dove(), C.DIPLOMACY_TOKEN_SCALE);
+        return ArtCommon.domElementForArt(ArtCommon.debtToken(), C.DEBT_TOKEN_SCALE);
     }
 }

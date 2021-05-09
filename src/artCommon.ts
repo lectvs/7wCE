@@ -130,6 +130,12 @@ namespace ArtCommon {
                 return smugglersCache();
             } else if (effect.type === 'dove') {
                 return dove();
+            } else if (effect.type === 'gain_victory_token') {
+                return gainVictoryToken(effect.points);
+            } else if (effect.type === 'debt_for_neighbor') {
+                return debtForNeighbor(effect.direction);
+            } else if (effect.type === 'gold_for_defeat_tokens') {
+                return goldForDefeatTokens(effect.gold_per_token);
             }
             console.error('Effect type not found:', effect.type);
             return effectNotFound();
@@ -708,6 +714,42 @@ namespace ArtCommon {
         return sprite;
     }
 
+    export function gainVictoryToken(value: number) {
+        return militaryTokenPositive(value);
+    }
+
+    export function debtForNeighbor(direction: string) {
+        let container = new PIXI.Container();
+        let token = debtToken();
+        token.scale.set(0.8);
+        container.addChild(token);
+        if (direction === 'pos') {
+            let arrow = arrowRight();
+            arrow.scale.set(0.4);
+            arrow.position.set(70, 0);
+            container.addChild(arrow);
+        }
+        if (direction === 'neg') {
+            let arrow = arrowLeft();
+            arrow.scale.set(0.4);
+            arrow.position.set(-70, 0);
+            container.addChild(arrow);
+        }
+        return container;
+    }
+
+    export function goldForDefeatTokens(goldPerToken: number) {
+        let container = new PIXI.Container();
+        let token = militaryTokenNegative(1);
+        token.scale.set(0.9);
+        container.addChild(token);
+        let goldCoin = gold(goldPerToken);
+        goldCoin.scale.set(0.6);
+        goldCoin.position.set(-45, 30);
+        container.addChild(goldCoin);
+        return container;
+    }
+
 
     /* COMPONENTS */
 
@@ -913,6 +955,17 @@ namespace ArtCommon {
         return container;
     }
 
+    export function debtToken() {
+        let container = new PIXI.Container();
+        container.addChild(Shapes.filledRect(-50, -50, 100, 100, 0x444444));
+        let wreath = pointsWreath();
+        wreath.scale.set(0.7);
+        container.addChild(wreath);
+        container.addChild(Shapes.filledRect(-26, 0, 12, 6, 0xCC1D17));
+        container.addChild(Shapes.centeredText(2, 0, `1`, 0.6, 0xCC1D17));
+        return container;
+    }
+
     export function doubleResourceBack() {
         let container = new PIXI.Container();
         container.addChild(Shapes.filledCircle(0, 0, 50, cardBannerForColor('brown')));
@@ -1053,9 +1106,5 @@ namespace ArtCommon {
 
     function effectNotFound() {
         return Shapes.filledRect(-50, -50, 100, 100, 0xFF00FF);
-    }
-
-    function debugEffect(color: number) {
-        return Shapes.filledCircle(0, 0, 50, color);
     }
 }

@@ -1,14 +1,14 @@
 cities
 - new effects
-    - debt_for_neighbor (amount, direction)
-    - gain_victory_token (value)
-    - gold_per_defeat_token (amount)
     - discard_defeat_tokens
     - points_for_victory_tokens (value, points_per_token)
     - gold_and_points_per_victory_token (gold_per_token, points_per_token)
     - broken_gold (amount)
     - broken_gold_per_victory_token (amount)
     - broken_gold_per_stage (amount)
+    - (complete) gold_per_defeat_token (amount)
+    - (complete) debt_for_neighbor (direction)
+    - (complete) gain_victory_token (value)
     - (complete) diplomacy
     - (complete) wharf (direction)
     - (complete) smugglers_cache

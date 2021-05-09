@@ -63,6 +63,14 @@ function getDescriptionForEffect(effect: API.Effect) {
         return `Pay 1 gold less for a single resource per turn traded from your ${effect.direction === 'neg' ? 'left' : 'right'} neighbor`;
     } else if (effect.type === 'smugglers_cache') {
         return `Pay 1 gold less when buying the starting resource from either neighbor`;
+    } else if (effect.type === 'dove') {
+        return `Gain 1 diplomacy token`;
+    } else if (effect.type === 'gain_victory_token') {
+        return `Gain a military victory token worth ${effect.points} VP`;
+    } else if (effect.type === 'debt_for_neighbor') {
+        return `Gives a debt token to your ${effect.direction === 'neg' ? 'left' : 'right'} neighbor`;
+    } else if (effect.type === 'gold_for_defeat_tokens') {
+        return `Gain ${effect.gold_per_token} gold for each military defeat token you have`;
     }
     console.error('Effect type not found:', effect.type);
     return "Description not found";

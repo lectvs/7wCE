@@ -750,6 +750,15 @@ var ArtCommon;
             else if (effect.type === 'dove') {
                 return dove();
             }
+            else if (effect.type === 'gain_victory_token') {
+                return gainVictoryToken(effect.points);
+            }
+            else if (effect.type === 'debt_for_neighbor') {
+                return debtForNeighbor(effect.direction);
+            }
+            else if (effect.type === 'gold_for_defeat_tokens') {
+                return goldForDefeatTokens(effect.gold_per_token);
+            }
             console.error('Effect type not found:', effect.type);
             return effectNotFound();
         });
@@ -1367,6 +1376,42 @@ var ArtCommon;
         return sprite;
     }
     ArtCommon.dove = dove;
+    function gainVictoryToken(value) {
+        return militaryTokenPositive(value);
+    }
+    ArtCommon.gainVictoryToken = gainVictoryToken;
+    function debtForNeighbor(direction) {
+        var container = new PIXI.Container();
+        var token = debtToken();
+        token.scale.set(0.8);
+        container.addChild(token);
+        if (direction === 'pos') {
+            var arrow = arrowRight();
+            arrow.scale.set(0.4);
+            arrow.position.set(70, 0);
+            container.addChild(arrow);
+        }
+        if (direction === 'neg') {
+            var arrow = arrowLeft();
+            arrow.scale.set(0.4);
+            arrow.position.set(-70, 0);
+            container.addChild(arrow);
+        }
+        return container;
+    }
+    ArtCommon.debtForNeighbor = debtForNeighbor;
+    function goldForDefeatTokens(goldPerToken) {
+        var container = new PIXI.Container();
+        var token = militaryTokenNegative(1);
+        token.scale.set(0.9);
+        container.addChild(token);
+        var goldCoin = gold(goldPerToken);
+        goldCoin.scale.set(0.6);
+        goldCoin.position.set(-45, 30);
+        container.addChild(goldCoin);
+        return container;
+    }
+    ArtCommon.goldForDefeatTokens = goldForDefeatTokens;
     /* COMPONENTS */
     function wood() {
         var container = new PIXI.Container();
@@ -1570,6 +1615,17 @@ var ArtCommon;
         return container;
     }
     ArtCommon.militaryTokenNegative = militaryTokenNegative;
+    function debtToken() {
+        var container = new PIXI.Container();
+        container.addChild(Shapes.filledRect(-50, -50, 100, 100, 0x444444));
+        var wreath = pointsWreath();
+        wreath.scale.set(0.7);
+        container.addChild(wreath);
+        container.addChild(Shapes.filledRect(-26, 0, 12, 6, 0xCC1D17));
+        container.addChild(Shapes.centeredText(2, 0, "1", 0.6, 0xCC1D17));
+        return container;
+    }
+    ArtCommon.debtToken = debtToken;
     function doubleResourceBack() {
         var container = new PIXI.Container();
         container.addChild(Shapes.filledCircle(0, 0, 50, cardBannerForColor('brown')));
@@ -1729,9 +1785,6 @@ var ArtCommon;
     }
     function effectNotFound() {
         return Shapes.filledRect(-50, -50, 100, 100, 0xFF00FF);
-    }
-    function debugEffect(color) {
-        return Shapes.filledCircle(0, 0, 50, color);
     }
 })(ArtCommon || (ArtCommon = {}));
 var Bot;
@@ -2749,12 +2802,11 @@ var C = /** @class */ (function () {
     C.Z_INDEX_CARD_WONDER = 9;
     C.Z_INDEX_WONDER = 10;
     C.Z_INDEX_CARD_PLAYED = 11;
-    C.Z_INDEX_CARD_MOVING = 12;
-    C.Z_INDEX_DIPLOMACY_TOKEN_RACK = 13;
-    C.Z_INDEX_DIPLOMACY_TOKEN = 14;
+    C.Z_INDEX_WONDER_TOKENS = 12;
+    C.Z_INDEX_CARD_MOVING = 13;
     C.Z_INDEX_CARD_DRAGGING = 100;
     C.Z_INDEX_MILITARY_OVERLAY = 101;
-    C.Z_INDEX_MILITARY_TOKEN = 102;
+    C.Z_INDEX_TOKEN_MOVING = 102;
     C.Z_INDEX_GOLD_COIN = 102;
     C.Z_INDEX_PAYMENT_DIALOG = 1000;
     C.Z_INDEX_CARD_POPUP = 1001;
@@ -2866,10 +2918,14 @@ var C = /** @class */ (function () {
     C.WONDER_SIDEBAR_CHECKMARK_X = -108;
     C.WONDER_SIDEBAR_CHECKMARK_Y = 39;
     C.WONDER_SIDEBAR_TOKENS_X = -21;
-    C.WONDER_SIDEBAR_TOKENS_DX = -18;
-    C.WONDER_SIDEBAR_TOKENS_Y = 63;
+    C.WONDER_SIDEBAR_MILITARY_TOKENS_Y = 21;
+    C.WONDER_SIDEBAR_DEBT_TOKENS_Y = 42;
     C.WONDER_DIPLOMACY_TOKENS_OFFSET_X = 20;
     C.WONDER_DIPLOMACY_TOKENS_DX = 30;
+    C.WONDER_MILITARY_TOKENS_OFFSET_X = 0;
+    C.WONDER_MILITARY_TOKENS_DX = -18;
+    C.WONDER_DEBT_TOKENS_OFFSET_X = 0;
+    C.WONDER_DEBT_TOKENS_DX = -18;
     C.WONDER_SIDE_CHOICE_DY = C.WONDER_BOARD_HEIGHT + 10;
     C.WONDER_SIDE_CHOICE_TOP_ADJUST_DY = -C.WONDER_SIDE_CHOICE_DY;
     C.WONDER_SIDE_CHOICE_GROUP_ADJUST_DY = -50;
@@ -2884,7 +2940,8 @@ var C = /** @class */ (function () {
     C.CARD_INFO_TEXT_COLOR = '#000000';
     C.CARD_INFO_TEXT_SIZE = 12;
     C.CARD_INFO_EFFECT_DESCRIPTION_SIZE = 10;
-    C.TOKEN_SCALE = 0.15;
+    C.MILITARY_TOKEN_SCALE = 0.15;
+    C.DEBT_TOKEN_SCALE = 0.15;
     C.DIPLOMACY_TOKEN_SCALE = 0.25;
     C.GOLD_COIN_SCALE = 0.225;
     C.DISCARD_PILE_X = 0;
@@ -2961,54 +3018,31 @@ var C = /** @class */ (function () {
     };
     return C;
 }());
+var DebtToken = /** @class */ (function (_super) {
+    __extends(DebtToken, _super);
+    function DebtToken() {
+        var _this = _super.call(this) || this;
+        _this.div.appendChild(_this.draw());
+        _this.zIndex = C.Z_INDEX_TOKEN_MOVING;
+        return _this;
+    }
+    DebtToken.prototype.draw = function () {
+        return ArtCommon.domElementForArt(ArtCommon.debtToken(), C.DEBT_TOKEN_SCALE);
+    };
+    return DebtToken;
+}(GameElement));
 var DiplomacyToken = /** @class */ (function (_super) {
     __extends(DiplomacyToken, _super);
     function DiplomacyToken() {
         var _this = _super.call(this) || this;
         _this.div.appendChild(_this.draw());
-        _this.zIndex = C.Z_INDEX_DIPLOMACY_TOKEN;
+        _this.zIndex = C.Z_INDEX_TOKEN_MOVING;
         return _this;
     }
     DiplomacyToken.prototype.draw = function () {
         return ArtCommon.domElementForArt(ArtCommon.dove(), C.DIPLOMACY_TOKEN_SCALE);
     };
     return DiplomacyToken;
-}(GameElement));
-var DiplomacyTokenRack = /** @class */ (function (_super) {
-    __extends(DiplomacyTokenRack, _super);
-    function DiplomacyTokenRack(wonder) {
-        var _this = _super.call(this) || this;
-        _this.wonder = wonder;
-        _this.tokens = [];
-        _this.div.className = 'diplomacytokenrack';
-        _this.div.style.pointerEvents = 'none';
-        _this.zIndex = C.Z_INDEX_DIPLOMACY_TOKEN_RACK;
-        return _this;
-    }
-    DiplomacyTokenRack.prototype.update = function () {
-        this.x = this.wonder.x + this.wonder.playedCardEffectRolls.red.offsetx
-            + this.wonder.playedCardEffectRolls.red.width
-            + this.wonder.playedCardEffectRolls.red.placeholderWidth;
-        this.y = this.wonder.y + this.wonder.playedCardEffectRolls.red.offsety;
-    };
-    DiplomacyTokenRack.prototype.addToken = function () {
-        var token = ArtCommon.domElementForArt(ArtCommon.dove(), 0.25);
-        token.style.position = 'absolute';
-        token.style.left = C.WONDER_DIPLOMACY_TOKENS_OFFSET_X + C.WONDER_DIPLOMACY_TOKENS_DX * this.getTokenCount() + "px";
-        this.div.appendChild(token);
-        this.tokens.push(token);
-    };
-    DiplomacyTokenRack.prototype.removeToken = function () {
-        var token = this.tokens.pop();
-        token.parentElement.removeChild(token);
-    };
-    DiplomacyTokenRack.prototype.getTokenPosition = function (i) {
-        return new PIXI.Point(this.x + C.WONDER_DIPLOMACY_TOKENS_OFFSET_X + C.WONDER_DIPLOMACY_TOKENS_DX * i, this.y);
-    };
-    DiplomacyTokenRack.prototype.getTokenCount = function () {
-        return this.tokens.length;
-    };
-    return DiplomacyTokenRack;
 }(GameElement));
 var DiscardPile = /** @class */ (function (_super) {
     __extends(DiscardPile, _super);
@@ -3122,6 +3156,18 @@ function getDescriptionForEffect(effect) {
     }
     else if (effect.type === 'smugglers_cache') {
         return "Pay 1 gold less when buying the starting resource from either neighbor";
+    }
+    else if (effect.type === 'dove') {
+        return "Gain 1 diplomacy token";
+    }
+    else if (effect.type === 'gain_victory_token') {
+        return "Gain a military victory token worth " + effect.points + " VP";
+    }
+    else if (effect.type === 'debt_for_neighbor') {
+        return "Gives a debt token to your " + (effect.direction === 'neg' ? 'left' : 'right') + " neighbor";
+    }
+    else if (effect.type === 'gold_for_defeat_tokens') {
+        return "Gain " + effect.gold_per_token + " gold for each military defeat token you have";
     }
     console.error('Effect type not found:', effect.type);
     return "Description not found";
@@ -3439,6 +3485,8 @@ var GameStateDiffer;
                 diffPoints(gamestate, player, result);
                 diffGold(gamestate, player, result);
                 diffDiplomacyPreConflict(gamestate, player, result);
+                diffMilitaryTokensPreConflict(gamestate, player, result);
+                diffDebtTokens(gamestate, player, result);
                 if (midturn)
                     diffCurrentMove(gamestate, player, result);
             }
@@ -3774,32 +3822,10 @@ var GameStateDiffer;
                         militaryTokenDistributionScripts = gamestate.players.map(function (player) {
                             var pi = gamestate.players.indexOf(player);
                             var newTokenIndices = [];
-                            for (var i = Main.gamestate.playerData[player].militaryTokens.length; i < gamestate.playerData[player].militaryTokens.length; i++) {
+                            for (var i = scene.wonders[pi].militaryTokenRack.getTokenCount(); i < gamestate.playerData[player].militaryTokens.length; i++) {
                                 newTokenIndices.push(i);
                             }
-                            return S.simul.apply(S, __spread(newTokenIndices.map(function (i) { return function () {
-                                var sourceSink, token, targetPosition, lerpt;
-                                return __generator(this, function (_a) {
-                                    switch (_a.label) {
-                                        case 0:
-                                            sourceSink = scene.getSourceSinkPosition();
-                                            token = new MilitaryToken(gamestate.playerData[player].militaryTokens[i]);
-                                            token.x = sourceSink.x;
-                                            token.y = sourceSink.y;
-                                            token.addToGame();
-                                            targetPosition = scene.wonders[pi].getMilitaryTokenWorldPosition(i);
-                                            lerpt = 0;
-                                            return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TOKEN_DISTRIBUTE_TIME, function (t) {
-                                                    lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI / 2 * Math.pow(t, 2)), Main.delta);
-                                                    token.x = lerpTime(sourceSink.x, targetPosition.x, Math.tan(Math.PI / 2 * lerpt), Main.delta);
-                                                    token.y = lerpTime(sourceSink.y, targetPosition.y, Math.tan(Math.PI / 2 * lerpt), Main.delta);
-                                                })())];
-                                        case 1:
-                                            _a.sent();
-                                            return [2 /*return*/];
-                                    }
-                                });
-                            }; })));
+                            return S.chain.apply(S, __spread(newTokenIndices.map(function (i) { return animateGiveMilitaryToken(scene, gamestate, player, gamestate.playerData[player].militaryTokens[i]); })));
                         });
                         return [5 /*yield**/, __values(S.simul.apply(S, __spread(militaryTokenDistributionScripts))())];
                     case 23:
@@ -4161,12 +4187,56 @@ var GameStateDiffer;
                             })())];
                     case 1:
                         _a.sent();
-                        scene.wonders[gamestate.players.indexOf(player)].diplomacyTokenRack.addToken();
+                        scene.wonders[gamestate.players.indexOf(player)].addDiplomacyToken();
                         token.removeFromGame();
                         return [2 /*return*/];
                 }
             });
         }; }))), S.wait(0.5)));
+    }
+    function diffMilitaryTokensPreConflict(gamestate, player, result) {
+        if (!(Main.scene instanceof GameScene))
+            return;
+        var scene = Main.scene;
+        var oldTokens = Main.gamestate.playerData[player].militaryTokens;
+        var newTokens = gamestate.playerData[player].militaryTokens;
+        if (gamestate.age > Main.gamestate.age || gamestate.state === 'GAME_COMPLETE') {
+            newTokens = newTokens.slice(0, newTokens.length - gamestate.playerData[player].gainedMilitaryTokensFromConflict.length);
+        }
+        if (equalsArray(oldTokens, newTokens))
+            return;
+        // Diff the lists
+        var removedIndices = [];
+        var addedIndices = [];
+        var i = 0, j = 0;
+        while (i < oldTokens.length && j < newTokens.length) {
+            if (oldTokens[i] === newTokens[j]) {
+                i++;
+                j++;
+                continue;
+            }
+            removedIndices.push(i);
+            i++;
+        }
+        if (j >= newTokens.length) {
+            removedIndices.push.apply(removedIndices, __spread(range(i, oldTokens.length - 1)));
+        }
+        if (i >= oldTokens.length) {
+            addedIndices.push.apply(addedIndices, __spread(range(j, newTokens.length - 1)));
+        }
+        console.log(player, oldTokens, removedIndices, newTokens, addedIndices);
+        var scripts = __spread(addedIndices.map(function (j) { return animateGiveMilitaryToken(scene, gamestate, player, newTokens[j]); }));
+        result.scripts.push(S.chain.apply(S, __spread(scripts)));
+    }
+    function diffDebtTokens(gamestate, player, result) {
+        if (!(Main.scene instanceof GameScene))
+            return;
+        var scene = Main.scene;
+        var oldTokens = Main.gamestate.playerData[player].debtTokens;
+        var newTokens = gamestate.playerData[player].debtTokens;
+        if (oldTokens >= newTokens)
+            return;
+        result.scripts.push(S.chain.apply(S, __spread(range(1, newTokens - oldTokens).map(function (j) { return animateGiveDebtToken(scene, gamestate, player); }))));
     }
     function animateGoldMovement(fromPos, toPos, gold) {
         return S.simul.apply(S, __spread(range(0, gold - 1).map(function (i) { return S.chain(S.wait(0.2 * i), function () {
@@ -4193,6 +4263,62 @@ var GameStateDiffer;
                 }
             });
         }); })));
+    }
+    function animateGiveMilitaryToken(scene, gamestate, player, value) {
+        return function () {
+            var wonder, sourceSink, token, targetPosition, lerpt;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        wonder = scene.wonders[gamestate.players.indexOf(player)];
+                        sourceSink = scene.getSourceSinkPosition();
+                        token = new MilitaryToken(value);
+                        token.x = sourceSink.x;
+                        token.y = sourceSink.y;
+                        token.addToGame();
+                        targetPosition = wonder.getMilitaryTokenWorldPosition(wonder.militaryTokenRack.getTokenCount());
+                        lerpt = 0;
+                        return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TOKEN_DISTRIBUTE_TIME, function (t) {
+                                lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI / 2 * Math.pow(t, 2)), Main.delta);
+                                token.x = lerpTime(sourceSink.x, targetPosition.x, Math.tan(Math.PI / 2 * lerpt), Main.delta);
+                                token.y = lerpTime(sourceSink.y, targetPosition.y, Math.tan(Math.PI / 2 * lerpt), Main.delta);
+                            })())];
+                    case 1:
+                        _a.sent();
+                        wonder.addMilitaryToken(value);
+                        token.removeFromGame();
+                        return [2 /*return*/];
+                }
+            });
+        };
+    }
+    function animateGiveDebtToken(scene, gamestate, player) {
+        return function () {
+            var wonder, sourceSink, token, targetPosition, lerpt;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        wonder = scene.wonders[gamestate.players.indexOf(player)];
+                        sourceSink = scene.getSourceSinkPosition();
+                        token = new DebtToken();
+                        token.x = sourceSink.x;
+                        token.y = sourceSink.y;
+                        token.addToGame();
+                        targetPosition = wonder.getDebtTokenWorldPosition(wonder.debtTokenRack.getTokenCount());
+                        lerpt = 0;
+                        return [5 /*yield**/, __values(S.doOverTime(C.ANIMATION_TOKEN_DISTRIBUTE_TIME, function (t) {
+                                lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI / 2 * Math.pow(t, 2)), Main.delta);
+                                token.x = lerpTime(sourceSink.x, targetPosition.x, Math.tan(Math.PI / 2 * lerpt), Main.delta);
+                                token.y = lerpTime(sourceSink.y, targetPosition.y, Math.tan(Math.PI / 2 * lerpt), Main.delta);
+                            })())];
+                    case 1:
+                        _a.sent();
+                        wonder.addDebtToken();
+                        token.removeFromGame();
+                        return [2 /*return*/];
+                }
+            });
+        };
     }
     function getMilitaryShowings(gamestate) {
         if (gamestate.fightingPlayers.length < 2) {
@@ -4251,7 +4377,7 @@ var GameStateDiffer;
     }
     function gainedDiplomacyTokens(gamestate, player) {
         var diff = gamestate.playerData[player].diplomacyTokens - Main.gamestate.playerData[player].diplomacyTokens;
-        if (gamestate.age > Main.gamestate.age && contains(gamestate.diplomacyPlayers, player)) {
+        if ((gamestate.age > Main.gamestate.age || gamestate.state === 'GAME_COMPLETE') && contains(gamestate.diplomacyPlayers, player)) {
             diff++;
         }
         return diff;
@@ -5234,11 +5360,11 @@ var MilitaryToken = /** @class */ (function (_super) {
         var _this = _super.call(this) || this;
         _this.amount = amount;
         _this.div.appendChild(_this.draw());
-        _this.zIndex = C.Z_INDEX_MILITARY_TOKEN;
+        _this.zIndex = C.Z_INDEX_TOKEN_MOVING;
         return _this;
     }
     MilitaryToken.prototype.draw = function () {
-        return ArtCommon.domElementForArt(ArtCommon.militaryToken(this.amount), C.TOKEN_SCALE);
+        return ArtCommon.domElementForArt(ArtCommon.militaryToken(this.amount), C.MILITARY_TOKEN_SCALE);
     };
     return MilitaryToken;
 }(GameElement));
@@ -5735,6 +5861,42 @@ var StartingEffectsInfoPopup = /** @class */ (function (_super) {
     };
     return StartingEffectsInfoPopup;
 }(Popup));
+var TokenRack = /** @class */ (function (_super) {
+    __extends(TokenRack, _super);
+    function TokenRack(offsetX, dx, zIndex, getPos) {
+        var _this = _super.call(this) || this;
+        _this.offsetX = offsetX;
+        _this.dx = dx;
+        _this.getPos = getPos;
+        _this.tokens = [];
+        _this.div.className = 'diplomacytokenrack';
+        _this.div.style.pointerEvents = 'none';
+        _this.zIndex = zIndex;
+        return _this;
+    }
+    TokenRack.prototype.update = function () {
+        var pos = this.getPos();
+        this.x = pos.x;
+        this.y = pos.y;
+    };
+    TokenRack.prototype.addToken = function (token) {
+        token.style.position = 'absolute';
+        token.style.left = this.offsetX + this.dx * this.getTokenCount() + "px";
+        this.div.appendChild(token);
+        this.tokens.push(token);
+    };
+    TokenRack.prototype.removeToken = function () {
+        var token = this.tokens.pop();
+        token.parentElement.removeChild(token);
+    };
+    TokenRack.prototype.getTokenPosition = function (i) {
+        return new PIXI.Point(this.x + this.offsetX + this.dx * i, this.y);
+    };
+    TokenRack.prototype.getTokenCount = function () {
+        return this.tokens.length;
+    };
+    return TokenRack;
+}(GameElement));
 function clamp(n, min, max) {
     if (n < min)
         return min;
@@ -5771,6 +5933,19 @@ function contains(array, element) {
         finally { if (e_44) throw e_44.error; }
     }
     return false;
+}
+function equalsArray(array1, array2) {
+    if (!array1 && !array2)
+        return true;
+    if (!array1 || !array2)
+        return false;
+    if (array1.length !== array2.length)
+        return false;
+    for (var i = 0; i < array1.length; i++) {
+        if (array1[i] !== array2[i])
+            return false;
+    }
+    return true;
 }
 function filledArray(len, fillWith) {
     var result = [];
@@ -5874,9 +6049,25 @@ var Wonder = /** @class */ (function (_super) {
         boardDiv.appendChild(this.wonderResource.board);
         var payments = boardDiv.appendChild(this.drawPayments());
         payments.style.transform = "translate(-50%, " + (C.WONDER_BOARD_HEIGHT / 2 - C.WONDER_STAGE_HEIGHT + C.WONDER_STAGE_PAYMENT_OFFSET_Y) + "px)";
-        var sidebar = this.div.appendChild(this.drawSidebar());
-        sidebar.style.left = C.WONDER_BOARD_WIDTH / 2 - C.WONDER_BOARD_WIDTH + "px";
-        sidebar.style.top = -C.WONDER_BOARD_HEIGHT / 2 + "px";
+        this.sidebar = this.div.appendChild(this.drawSidebar());
+        this.sidebar.style.left = C.WONDER_BOARD_WIDTH / 2 - C.WONDER_BOARD_WIDTH + "px";
+        this.sidebar.style.top = -C.WONDER_BOARD_HEIGHT / 2 + "px";
+        // Military tokens
+        this.militaryTokenRack = new TokenRack(C.WONDER_MILITARY_TOKENS_OFFSET_X, C.WONDER_MILITARY_TOKENS_DX, C.Z_INDEX_WONDER_TOKENS, function () {
+            return new PIXI.Point(_this.x + C.WONDER_BOARD_WIDTH / 2 + C.WONDER_SIDEBAR_TOKENS_X, _this.y - C.WONDER_BOARD_HEIGHT / 2 + C.WONDER_SIDEBAR_MILITARY_TOKENS_Y);
+        });
+        for (var i = 0; i < Main.gamestate.playerData[this.player].militaryTokens.length; i++) {
+            this.addMilitaryToken(Main.gamestate.playerData[this.player].militaryTokens[i]);
+        }
+        this.militaryTokenRack.addToGame();
+        // Debt tokens
+        this.debtTokenRack = new TokenRack(C.WONDER_DEBT_TOKENS_OFFSET_X, C.WONDER_DEBT_TOKENS_DX, C.Z_INDEX_WONDER_TOKENS, function () {
+            return new PIXI.Point(_this.x + C.WONDER_BOARD_WIDTH / 2 + C.WONDER_SIDEBAR_TOKENS_X, _this.y - C.WONDER_BOARD_HEIGHT / 2 + C.WONDER_SIDEBAR_DEBT_TOKENS_Y);
+        });
+        for (var i = 0; i < Main.gamestate.playerData[this.player].debtTokens; i++) {
+            this.addDebtToken();
+        }
+        this.debtTokenRack.addToGame();
         this.playedCardEffectRolls = {
             brown: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH / 2, -C.WONDER_BOARD_HEIGHT / 2 - C.WONDER_RESOURCE_ROLL_OFFSET_Y, false, C.SORT_CMP_RESOURCES),
             grey: undefined,
@@ -5925,9 +6116,13 @@ var Wonder = /** @class */ (function (_super) {
             }
             finally { if (e_47) throw e_47.error; }
         }
-        this.diplomacyTokenRack = new DiplomacyTokenRack(this);
+        this.diplomacyTokenRack = new TokenRack(C.WONDER_DIPLOMACY_TOKENS_OFFSET_X, C.WONDER_DIPLOMACY_TOKENS_DX, C.Z_INDEX_WONDER_TOKENS, function () {
+            return new PIXI.Point(_this.x + _this.playedCardEffectRolls.red.offsetx
+                + _this.playedCardEffectRolls.red.width
+                + _this.playedCardEffectRolls.red.placeholderWidth, _this.y + _this.playedCardEffectRolls.red.offsety);
+        });
         for (var i = 0; i < playerData.diplomacyTokens; i++) {
-            this.diplomacyTokenRack.addToken();
+            this.addDiplomacyToken();
         }
         this.diplomacyTokenRack.addToGame();
         // Starting effects popup
@@ -6009,6 +6204,8 @@ var Wonder = /** @class */ (function (_super) {
             this.builtWonderCards[i].snapToTarget();
             this.builtWonderCards[i].update();
         }
+        this.militaryTokenRack.update();
+        this.debtTokenRack.update();
         this.diplomacyTokenRack.update();
     };
     Wonder.prototype.getMainRegion = function () {
@@ -6042,7 +6239,10 @@ var Wonder = /** @class */ (function (_super) {
         return new PIXI.Point(this.x + C.WONDER_BOARD_WIDTH / 2 + C.WONDER_SIDEBAR_GOLD_COIN_X, this.y - C.WONDER_BOARD_HEIGHT / 2 + C.WONDER_SIDEBAR_GOLD_COIN_Y);
     };
     Wonder.prototype.getMilitaryTokenWorldPosition = function (i) {
-        return new PIXI.Point(this.x + C.WONDER_BOARD_WIDTH / 2 + C.WONDER_SIDEBAR_TOKENS_X + C.WONDER_SIDEBAR_TOKENS_DX * i, this.y - C.WONDER_BOARD_HEIGHT / 2 + C.WONDER_SIDEBAR_TOKENS_Y);
+        return this.militaryTokenRack.getTokenPosition(i);
+    };
+    Wonder.prototype.getDebtTokenWorldPosition = function (i) {
+        return this.debtTokenRack.getTokenPosition(i);
     };
     Wonder.prototype.getDiplomacyTokenPosition = function (i) {
         return this.diplomacyTokenRack.getTokenPosition(i);
@@ -6084,6 +6284,15 @@ var Wonder = /** @class */ (function (_super) {
                 finally { if (e_49) throw e_49.error; }
             }
         }
+    };
+    Wonder.prototype.addMilitaryToken = function (value) {
+        this.militaryTokenRack.addToken(ArtCommon.domElementForArt(ArtCommon.militaryToken(value), C.MILITARY_TOKEN_SCALE));
+    };
+    Wonder.prototype.addDebtToken = function () {
+        this.debtTokenRack.addToken(ArtCommon.domElementForArt(ArtCommon.debtToken(), C.DEBT_TOKEN_SCALE));
+    };
+    Wonder.prototype.addDiplomacyToken = function () {
+        this.diplomacyTokenRack.addToken(ArtCommon.domElementForArt(ArtCommon.dove(), C.DIPLOMACY_TOKEN_SCALE));
     };
     Wonder.prototype.addPlaceholder = function (card) {
         var color = card.apiCard.color;
@@ -6170,12 +6379,6 @@ var Wonder = /** @class */ (function (_super) {
         pointsText.style.left = C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_POINTS_TEXT_X + "px";
         pointsText.style.top = C.WONDER_SIDEBAR_POINTS_TEXT_Y + "px";
         this.pointsText = pointsText.querySelector('p');
-        for (var i = 0; i < Main.gamestate.playerData[this.player].militaryTokens.length; i++) {
-            var token = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.militaryToken(Main.gamestate.playerData[this.player].militaryTokens[i]), C.TOKEN_SCALE));
-            token.style.position = 'absolute';
-            token.style.left = C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_TOKENS_X + C.WONDER_SIDEBAR_TOKENS_DX * i + "px";
-            token.style.top = C.WONDER_SIDEBAR_TOKENS_Y + "px";
-        }
         return sidebar;
     };
     Wonder.prototype.drawSidebarText = function (text, size) {
