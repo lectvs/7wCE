@@ -131,11 +131,23 @@ namespace ArtCommon {
             } else if (effect.type === 'dove') {
                 return dove();
             } else if (effect.type === 'gain_victory_token') {
-                return gainVictoryToken(effect.points);
+                return gainVictoryToken(effect.token_value);
             } else if (effect.type === 'debt_for_neighbor') {
                 return debtForNeighbor(effect.direction);
             } else if (effect.type === 'gold_for_defeat_tokens') {
                 return goldForDefeatTokens(effect.gold_per_token);
+            } else if (effect.type === 'points_for_victory_tokens') {
+                return pointsForVictoryTokens(effect.token_value, effect.points_per_token);
+            } else if (effect.type === 'gold_and_points_for_victory_tokens') {
+                return goldAndPointsForVictoryTokens(effect.gold_per_token, effect.points_per_token);
+            } else if (effect.type === 'discard_defeat_tokens') {
+                return discardDefeatTokens();
+            } else if (effect.type === 'broken_gold') {
+                return brokenGold(effect.gold);
+            } else if (effect.type === 'broken_gold_for_stages') {
+                return brokenGoldForStages(effect.gold_per_stage);
+            } else if (effect.type === 'broken_gold_for_victory_tokens') {
+                return brokenGoldForVictoryTokens(effect.gold_per_token);
             }
             console.error('Effect type not found:', effect.type);
             return effectNotFound();
@@ -258,14 +270,14 @@ namespace ArtCommon {
     export function victoryPoints(points: number) {
         let container = new PIXI.Container();
         container.addChild(pointsWreath());
-        container.addChild(Shapes.centeredText(0, 0, `${points}`, 0.7, 0x000000));
+        container.addChild(Shapes.centeredText(0, 0, `${points}`, 0.8, 0x000000));
         return container;
     }
 
     export function gold(gold: number) {
         let container = new PIXI.Container();
         container.addChild(goldCoin());
-        container.addChild(Shapes.centeredText(0, 0, `${gold}`, 0.7, 0x000000));
+        container.addChild(Shapes.centeredText(0, 0, `${gold}`, 0.8, 0x000000));
         return container;
     }
 
@@ -750,6 +762,86 @@ namespace ArtCommon {
         return container;
     }
 
+    export function pointsForVictoryTokens(value: number, pointsPerToken: number) {
+        let container = new PIXI.Container();
+        let token = militaryTokenPositive(value);
+        token.scale.set(0.9);
+        container.addChild(token);
+        let pointsWreath = victoryPoints(pointsPerToken);
+        pointsWreath.scale.set(0.6);
+        pointsWreath.position.set(45, 30);
+        container.addChild(pointsWreath);
+        return container;
+    }
+
+    export function goldAndPointsForVictoryTokens(goldPerToken: number, pointsPerToken: number) {
+        let container = new PIXI.Container();
+        container.addChild(militaryTokenPositiveBlank());
+        let goldCoin = gold(goldPerToken);
+        goldCoin.scale.set(0.6);
+        goldCoin.position.set(-45, 30);
+        container.addChild(goldCoin);
+        let pointsWreath = victoryPoints(pointsPerToken);
+        pointsWreath.scale.set(0.6);
+        pointsWreath.position.set(45, 30);
+        container.addChild(pointsWreath);
+        return container;
+    }
+
+    export function discardDefeatTokens() {
+        let container = new PIXI.Container();
+        let token = militaryTokenNegative(1);
+        token.scale.set(0.9);
+        container.addChild(token);
+        let crackk = crack();
+        container.addChild(crackk);
+        let crackMask = Shapes.filledOctagon(0, 0, 50, 0xFFFFFF);
+        crackMask.scale.set(0.9);
+        container.addChild(crackMask);
+        crackk.mask = crackMask;
+        return container;
+    }
+
+    export function brokenGold(gold: number) {
+        let container = new PIXI.Container();
+        container.addChild(brokenGoldBlank());
+        container.addChild(Shapes.centeredText(0, 0, `${gold}`, 1, 0xFF0044));
+        return container;
+    }
+
+    export function brokenGoldBlank() {
+        let container = new PIXI.Container();
+        container.addChild(goldCoin());
+        let crackk = crack();
+        container.addChild(crackk);
+        let crackMask = Shapes.filledCircle(0, 0, 50, 0xFFFFFF);
+        container.addChild(crackMask);
+        crackk.mask = crackMask;
+        return container;
+    }
+
+    export function brokenGoldForStages(goldPerStage: number) {
+        let container = new PIXI.Container();
+        container.addChild(pyramidStages());
+        let goldCoin = brokenGold(goldPerStage);
+        goldCoin.scale.set(0.6);
+        goldCoin.position.set(-45, 30);
+        container.addChild(goldCoin);
+        return container;
+    }
+
+    export function brokenGoldForVictoryTokens(goldPerToken: number) {
+        let container = new PIXI.Container();
+        let token = militaryTokenPositiveBlank();
+        token.scale.set(0.9);
+        container.addChild(token);
+        let goldCoin = brokenGold(goldPerToken);
+        goldCoin.scale.set(0.6);
+        goldCoin.position.set(-45, 30);
+        container.addChild(goldCoin);
+        return container;
+    }
+
 
     /* COMPONENTS */
 
@@ -927,6 +1019,17 @@ namespace ArtCommon {
 
     export function militaryTokenPositive(amount: number) {
         let container = new PIXI.Container();
+        container.addChild(militaryTokenPositiveBlank());
+        let wreath = pointsWreath();
+        wreath.scale.set(0.465);
+        wreath.position.set(0, 15.5);
+        container.addChild(wreath);
+        container.addChild(Shapes.centeredText(0, 15.5, `${amount}`, 0.3875, 0x000000));
+        return container;
+    }
+
+    export function militaryTokenPositiveBlank() {
+        let container = new PIXI.Container();
         let innerContainer = new PIXI.Container();
         innerContainer.addChild(Shapes.filledRect(-50, -20, 100, 80, 0xCC1D17));
         let sprite = new PIXI.Sprite(PIXI.Texture.from('falcon'));
@@ -934,11 +1037,6 @@ namespace ArtCommon {
         sprite.scale.set(0.65);
         sprite.position.set(-1, -20);
         innerContainer.addChild(sprite);
-        let wreath = pointsWreath();
-        wreath.scale.set(0.6);
-        wreath.position.set(0, 20);
-        innerContainer.addChild(wreath);
-        innerContainer.addChild(Shapes.centeredText(0, 20, `${amount}`, 0.5, 0x000000));
         innerContainer.scale.set(0.775);
         container.addChild(innerContainer);
         return container;
@@ -957,12 +1055,18 @@ namespace ArtCommon {
 
     export function debtToken() {
         let container = new PIXI.Container();
+        container.addChild(debtTokenBlank());
+        container.addChild(Shapes.filledRect(-26, 0, 12, 6, 0xCC1D17));
+        container.addChild(Shapes.centeredText(2, 0, `1`, 0.6, 0xCC1D17));
+        return container;
+    }
+
+    export function debtTokenBlank() {
+        let container = new PIXI.Container();
         container.addChild(Shapes.filledRect(-50, -50, 100, 100, 0x444444));
         let wreath = pointsWreath();
         wreath.scale.set(0.7);
         container.addChild(wreath);
-        container.addChild(Shapes.filledRect(-26, 0, 12, 6, 0xCC1D17));
-        container.addChild(Shapes.centeredText(2, 0, `1`, 0.6, 0xCC1D17));
         return container;
     }
 
@@ -971,6 +1075,13 @@ namespace ArtCommon {
         container.addChild(Shapes.filledCircle(0, 0, 50, cardBannerForColor('brown')));
         container.addChild(Shapes.filledPolygon(0, 0, [0, -50, 22, -50, 50, -22, 50, 22, 22, 50, 0, 50], cardBannerForColor('grey')));
         return container;
+    }
+
+    export function crack() {
+        let crack = new PIXI.Sprite(PIXI.Texture.from('crack'));
+        crack.anchor.set(0.5, 0.5);
+        crack.scale.set(0.7);
+        return crack;
     }
 
     export function payment(amount: number, canChooseFree: boolean) {
@@ -1013,6 +1124,10 @@ namespace ArtCommon {
         container.addChild(rect1);
         container.addChild(rect2);
         return container;
+    }
+
+    export function endScreenFinanceMarker() {
+        return combineEffectArt([goldCoin(), slash(), debtToken()], 8);
     }
 
     function slash() {

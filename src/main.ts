@@ -108,6 +108,7 @@ class Main {
                 PIXI.Loader.shared.add('mask', 'assets/mask.svg');
                 PIXI.Loader.shared.add('unproduced_resource', 'assets/unproduced_resource.svg');
                 PIXI.Loader.shared.add('dove', 'assets/dove.svg');
+                PIXI.Loader.shared.add('crack', 'assets/crack.svg');
                 PIXI.Loader.shared.load((loader: any, resources: Dict<PIXI.LoaderResource>) => {
                     for (let resource in resources) {
                         Resources.PIXI_TEXTURES[resource] = resources[resource].texture;
@@ -171,6 +172,7 @@ class Main {
                 this.sendUpdate();
                 return;
             } else if (Main.gamestate.state === 'CHOOSE_WONDER_SIDE') {
+                console.log('diffing cws')
                 if (gamestate.state === 'CHOOSE_WONDER_SIDE') {
                     let diffResult = GameStateDiffer.diffChooseSide(gamestate);
                     this.scriptManager.runScript(S.chain(
@@ -188,6 +190,7 @@ class Main {
                     this.sendUpdate();
                 }
             } else if (gamestate.turn === Main.gamestate.turn) {
+                console.log('diffing nonturn')
                 let diffResult = GameStateDiffer.diffNonTurn(gamestate, true);
                 this.scriptManager.runScript(S.chain(
                     S.simul(...diffResult.scripts),
@@ -197,6 +200,7 @@ class Main {
                     })
                 ));
             } else {
+                console.log('diffing turn')
                 let diffResult = GameStateDiffer.diffTurn(gamestate);
                 this.diffing = true;
                 this.scriptManager.runScript(S.chain(
@@ -261,6 +265,16 @@ class Main {
         this.moveImmuneTime = 1;
     }
 
+    static chooseGoldToLose(gold_to_lose: number) {
+        API.choosegoldtolose(this.gameid, this.gamestate.turn, this.player, this.password_hash, gold_to_lose, (error: string) => {
+            if (error) {
+                this.error(error);
+                return;
+            }
+            console.log('Chose gold to lose:', gold_to_lose);
+        });
+    }
+
     static setStatus() {
         let status = <HTMLParagraphElement>document.querySelector('#status');
         let statusText = <HTMLParagraphElement>document.querySelector('#status > p');
@@ -291,6 +305,17 @@ class Main {
             } else {
                 statusText.textContent = "You must choose your wonder side";
             }
+        } else if (gamestate.state === 'CHOOSE_GOLD_TO_LOSE') {
+            if (playerData.currentMove || gamestate.playerData[this.player].goldToLose <= 0) {
+                let playersLeft = gamestate.chooseGoldToLosePlayers.filter(player => !gamestate.playerData[player].currentMove);
+                if (playersLeft.length === 1) {
+                    statusText.textContent = `Waiting for ${playersLeft[0]} to handle gold loss`;
+                } else {
+                    statusText.textContent = "Waiting for others to handle gold loss";
+                }
+            } else {
+                statusText.textContent = "You must handle your gold loss";
+            }
         } else if (gamestate.state === 'NORMAL_MOVE') {
             if (playerData.currentMove) {
                 statusText.textContent = "Waiting for others to move";
@@ -299,8 +324,9 @@ class Main {
             }
         } else if (gamestate.state === 'LAST_CARD_MOVE') {
             if (playerData.currentMove || gamestate.validMoves.length === 0) {
-                if (gamestate.lastCardPlayers.length === 1) {
-                    statusText.textContent = `Waiting for ${gamestate.lastCardPlayers[0]} to play their last card`;
+                let playersLeft = gamestate.lastCardPlayers.filter(player => !gamestate.playerData[player].currentMove);
+                if (playersLeft.length === 1) {
+                    statusText.textContent = `Waiting for ${playersLeft[0]} to play their last card`;
                 } else {
                     statusText.textContent = "Waiting for others to play their last cards";
                 }
@@ -331,6 +357,15 @@ class Main {
                             return;
                         }
                         console.log('Successfully chose bot wonder side:', side);
+                    });
+                } else if (this.gamestate.state === 'CHOOSE_GOLD_TO_LOSE' && this.gamestate.playerData[botPlayer].goldToLose > 0) {
+                    let gold_to_lose = Bot.getGoldToLose(this.gamestate.playerData[botPlayer].gold, this.gamestate.playerData[botPlayer].goldToLose);
+                    API.choosegoldtolose(this.gameid, this.gamestate.turn, botPlayer, undefined, gold_to_lose, (error: string) => {
+                        if (error) {
+                            this.error(error);
+                            return;
+                        }
+                        console.log('Successfully chose bot gold to lose:', gold_to_lose);
                     });
                 } else {
                     let turn = this.gamestate.turn;

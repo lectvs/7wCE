@@ -24,14 +24,15 @@ class TokenRack extends GameElement {
 
     addToken(token: HTMLCanvasElement) {
         token.style.position = 'absolute';
-        token.style.left = `${this.offsetX + this.dx*this.getTokenCount()}px`;
         this.div.appendChild(token);
         this.tokens.push(token);
+        this.adjustTokenPositions();
     }
 
-    removeToken() {
+    removeToken(i: number) {
         let token = this.tokens.pop();
         token.parentElement.removeChild(token);
+        this.adjustTokenPositions();
     }
 
     getTokenPosition(i: number) {
@@ -40,5 +41,11 @@ class TokenRack extends GameElement {
 
     getTokenCount() {
         return this.tokens.length;
+    }
+
+    private adjustTokenPositions() {
+        for (let i = 0; i < this.tokens.length; i++) {
+            this.tokens[i].style.left = `${this.offsetX + this.dx*i}px`;
+        }
     }
 }

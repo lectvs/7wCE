@@ -7,6 +7,7 @@ class GameScene extends Scene {
     discardPile: DiscardPile;
     discardHand: Hand;
     paymentDialog: PaymentDialog;
+    chooseGoldToLoseDialog: ChooseGoldToLoseDialog;
     popup: Popup;
     actionButton: ActionButton;
 
@@ -15,6 +16,7 @@ class GameScene extends Scene {
     get hand() { return this.hands[Main.gamestate.players.indexOf(Main.player)]; }
     get topWonder() { return this.wonders[Main.gamestate.players.indexOf(Main.player)]; }
     get isPaymentMenuActive() { return !!this.paymentDialog; }
+    get isChooseGoldToLoseMenuActive() { return !!this.chooseGoldToLoseDialog; }
 
     constructor() {
         super();
@@ -39,6 +41,10 @@ class GameScene extends Scene {
 
         if (this.paymentDialog) {
             this.paymentDialog.update();
+        }
+
+        if (this.chooseGoldToLoseDialog) {
+            this.chooseGoldToLoseDialog.update();
         }
     }
 
@@ -118,7 +124,9 @@ class GameScene extends Scene {
         this.actionButton.y = C.ACTION_BUTTON_Y;
         this.actionButton.addToGame();
 
-        this.hand.reflectMove(gamestate.playerData[Main.player].currentMove);
+        if (gamestate.state !== 'CHOOSE_GOLD_TO_LOSE') {
+            this.hand.reflectMove(gamestate.playerData[Main.player].currentMove);
+        }
 
         this.discardPile = new DiscardPile();
         this.discardPile.x = C.DISCARD_PILE_X;
@@ -130,6 +138,11 @@ class GameScene extends Scene {
         this.discardHand.state = { type: 'back', moved: false };
         this.discardHand.setZIndex(C.Z_INDEX_DISCARD_CARDS);
         this.discardHand.snap();
+
+        console.log('created scene', gamestate.state, gamestate.chooseGoldToLosePlayers)
+        if (gamestate.state === 'CHOOSE_GOLD_TO_LOSE' && contains(gamestate.chooseGoldToLosePlayers, Main.player)) {
+            this.startChooseGoldToLoseDialog();
+        }
 
         this.update();
     }
@@ -143,18 +156,34 @@ class GameScene extends Scene {
             wonder.destroy();
         }
 
+        this.paymentDialog = undefined;
+        this.chooseGoldToLoseDialog = undefined;
+
         while (Main.game.firstChild) {
             Main.game.removeChild(Main.game.firstChild);
         }
     }
 
     startPaymentDialog(card: Card, move: API.Move) {
+        if (this.chooseGoldToLoseDialog) return;
         if (this.paymentDialog) {
             this.paymentDialog.removeFromGame();
         }
-        this.paymentDialog = new PaymentDialog(this, card, move, this.wonders[Main.gamestate.players.indexOf(Main.player)]);
+        this.paymentDialog = new PaymentDialog(this, card, move, this.topWonder);
         this.paymentDialog.zIndex = C.Z_INDEX_PAYMENT_DIALOG;
         this.paymentDialog.addToGame();
+    }
+
+    startChooseGoldToLoseDialog() {
+        if (this.chooseGoldToLoseDialog) return;
+        if (this.paymentDialog) {
+            this.paymentDialog.removeFromGame();
+        }
+        let gold = Main.gamestate.playerData[Main.player].gold;
+        let goldToLose = Main.gamestate.playerData[Main.player].goldToLose;
+        this.chooseGoldToLoseDialog = new ChooseGoldToLoseDialog(this, gold, goldToLose, this.topWonder);
+        this.chooseGoldToLoseDialog.zIndex = C.Z_INDEX_CGTL_DIALOG;
+        this.chooseGoldToLoseDialog.addToGame();
     }
 
     getSourceSinkPosition() {

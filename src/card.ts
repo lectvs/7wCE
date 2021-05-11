@@ -416,8 +416,9 @@ class Card extends GameElement {
     }
 
     canBeInteractable() {
-        if (this.scene.isPaymentMenuActive) return false;
+        if (this.scene.isPaymentMenuActive || this.scene.isChooseGoldToLoseMenuActive) return false;
         if (Main.diffing) return false;
+        if (Main.gamestate.state === 'CHOOSE_GOLD_TO_LOSE') return false;
         if (!this.allowPlay && this.allowBuildStages.length === 0 && !this.allowThrow) return false;
         return true;
     }

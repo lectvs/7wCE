@@ -1,8 +1,9 @@
 namespace API {
     export type GameState = {
-        state: 'CHOOSE_WONDER_SIDE' | 'NORMAL_MOVE' | 'LAST_CARD_MOVE' | 'DISCARD_MOVE' | 'GAME_COMPLETE';
+        state: 'CHOOSE_WONDER_SIDE' | 'NORMAL_MOVE' | 'LAST_CARD_MOVE' | 'DISCARD_MOVE' | 'CHOOSE_GOLD_TO_LOSE' | 'GAME_COMPLETE';
         discardMoveQueue: string[];
         lastCardPlayers: string[];
+        chooseGoldToLosePlayers: string[];
         fightingPlayers?: string[];
         diplomacyPlayers?: string[];
         players: string[];
@@ -29,6 +30,7 @@ namespace API {
         militaryTokens: number[];
         gainedMilitaryTokensFromConflict?: number[];
         debtTokens: number;
+        goldToLose: number;
         diplomacyTokens: number;
         handCount: number;
         zeusUsed: boolean;
@@ -99,6 +101,7 @@ namespace API {
         points_per_card?: number;
         points_per_stage?: number;
         points_per_token?: number;
+        token_value?: number;
     }
 
     export type Wonder = {
@@ -122,6 +125,7 @@ namespace API {
         stage?: number;
         payment?: Payment;
         side?: number;
+        gold_to_lose?: number;
     }
 
     export type Payment = {
@@ -325,6 +329,12 @@ namespace API {
 
     export function chooseside(gameid: string, player: string, password_hash: string, side: number, callback: (error: string) => any) {
         httpRequest(`${LAMBDA_URL}?operation=chooseside&gameid=${gameid}&player=${player}&password_hash=${password_hash}&side=${side}`, (responseJson: any, error: string) => {
+            callback(error);
+        });
+    }
+
+    export function choosegoldtolose(gameid: string, turn: number, player: string, password_hash: string, gold_to_lose: number, callback: (error: string) => any) {
+        httpRequest(`${LAMBDA_URL}?operation=choosegoldtolose&gameid=${gameid}&turn=${turn}&player=${player}&password_hash=${password_hash}&gold_to_lose=${gold_to_lose}`, (responseJson: any, error: string) => {
             callback(error);
         });
     }

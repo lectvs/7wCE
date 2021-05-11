@@ -29,7 +29,7 @@ namespace GameStateDiffer {
             diffDiplomacyPreConflict(gamestate, player, result);
             diffMilitaryTokensPreConflict(gamestate, player, result);
             diffDebtTokens(gamestate, player, result);
-            if (midturn) diffCurrentMove(gamestate, player, result);
+            if (midturn && Main.gamestate.state !== 'CHOOSE_GOLD_TO_LOSE') diffCurrentMove(gamestate, player, result);
         }
 
         return result;
@@ -50,131 +50,148 @@ namespace GameStateDiffer {
 
         result.scripts.push(function*() {
             // Animate all moves performed by players
-            let moveScripts = gamestate.players.map(player => {
-                return function*() {
-                    let i = gamestate.players.indexOf(player);
-                    let neg = mod(i-1, gamestate.players.length);
-                    let pos = mod(i+1, gamestate.players.length);
-                    let hand = scene.hands[i];
-                    let lastMove = gamestate.playerData[player].lastMove;
-                    if (!lastMove) return;
+            let moveScripts: Script.Function[];
+            if (Main.gamestate.state === 'CHOOSE_GOLD_TO_LOSE') {
+                moveScripts = gamestate.players.map(player => {
+                    return function*() {
+                        let i = gamestate.players.indexOf(player);
+                        let lastMove = gamestate.playerData[player].lastMove;
+                        if (!lastMove) return;
 
-                    if (player === Main.player) {
-                        scene.hand.reflectMove(lastMove);
-                        yield* S.wait(0.5)();
-                        
-                        let selectedCard = scene.hand.selectedCard;
-                        scene.hand.cards.splice(scene.hand.cards.indexOf(selectedCard), 1);
-                        scene.hand.playedCard = selectedCard;
-                        if (selectedCard) {
-                            if (lastMove.action === 'play') {
-                                if (selectedCard.apiCard.color === 'red' && hasDiplomacyTokenAtStartOfTurn(gamestate, player)) {
-                                    selectedCard.setGrayedOut(true);
-                                }
-                            } else if (lastMove.action === 'throw') {
-                                scene.discardHand.cards.push(selectedCard);
-                            }
+                        if (lastMove.gold_to_lose) {
+                            yield* animateGoldMovement(scene.wonders[i].getGoldCoinWorldPosition(),
+                                                       scene.getSourceSinkPosition(), lastMove.gold_to_lose)();
                         }
-                    } else {
-                        // Make sure move-cards are extended
-                        if (Main.gamestate.state !== 'DISCARD_MOVE') {
-                            hand.state = { type: 'back', moved: true };
-                        }
-                        yield* S.wait(0.5)();
                     }
+                });
+                moveScripts.push(S.call(() => scene.chooseGoldToLoseDialog?.removeFromGame()));
+            } else {
+                moveScripts = gamestate.players.map(player => {
+                    return function*() {
+                        let i = gamestate.players.indexOf(player);
+                        let neg = mod(i-1, gamestate.players.length);
+                        let pos = mod(i+1, gamestate.players.length);
+                        let hand = scene.hands[i];
+                        let lastMove = gamestate.playerData[player].lastMove;
+                        if (!lastMove) return;
 
-                    if (API.totalPaymentAmount(lastMove.payment) > 0) {
-                        let paymentScripts: Script.Function[] = [];
-                        if (lastMove.payment.neg) {
+                        if (player === Main.player) {
+                            scene.hand.reflectMove(lastMove);
+                            yield* S.wait(0.5)();
                             
-                            paymentScripts.push(animateGoldMovement(scene.wonders[i].getGoldCoinWorldPosition(),
-                                                                    scene.wonders[neg].getGoldCoinWorldPosition(), lastMove.payment.neg));
-                        }
-                        if (lastMove.payment.pos) {
-                            paymentScripts.push(animateGoldMovement(scene.wonders[i].getGoldCoinWorldPosition(),
-                                                                    scene.wonders[pos].getGoldCoinWorldPosition(), lastMove.payment.pos));
-                        }
-                        if (lastMove.payment.bank) {
-                            paymentScripts.push(animateGoldMovement(scene.wonders[i].getGoldCoinWorldPosition(),
-                                                                    scene.getSourceSinkPosition(), lastMove.payment.bank));
-                        }
-                        Main.scriptManager.runScript(S.simul(...paymentScripts));
-                    }
-
-                    let goldGain = API.goldGain(Main.gamestate.playerData[player].gold, gamestate.playerData[player].gold,
-                        gamestate.playerData[player].lastMove.payment, gamestate.playerData[gamestate.players[neg]].lastMove?.payment, gamestate.playerData[gamestate.players[pos]].lastMove?.payment);
-                    if (goldGain > 0) {
-                        Main.scriptManager.runScript(animateGoldMovement(scene.getSourceSinkPosition(),
-                                                                         scene.wonders[i].getGoldCoinWorldPosition(), goldGain));
-                    }
-
-                    // Main player will not participate in the below actions
-                    if (player === Main.player) return;
-
-                    if (lastMove.action === 'play') {
-                        let card: Card;
-                        if (Main.gamestate.state === 'DISCARD_MOVE') {
-                            card = scene.discardHand.cards.pop();
+                            let selectedCard = scene.hand.selectedCard;
+                            scene.hand.cards.splice(scene.hand.cards.indexOf(selectedCard), 1);
+                            scene.hand.playedCard = selectedCard;
+                            if (selectedCard) {
+                                if (lastMove.action === 'play') {
+                                    if (selectedCard.apiCard.color === 'red' && hasDiplomacyTokenAtStartOfTurn(gamestate, player)) {
+                                        selectedCard.setGrayedOut(true);
+                                    }
+                                } else if (lastMove.action === 'throw') {
+                                    scene.discardHand.cards.push(selectedCard);
+                                }
+                            }
                         } else {
-                            card = hand.cards.pop();
-                            hand.state = { type: 'back', moved: false };
+                            // Make sure move-cards are extended
+                            if (Main.gamestate.state !== 'DISCARD_MOVE') {
+                                hand.state = { type: 'back', moved: true };
+                            }
+                            yield* S.wait(0.5)();
                         }
-                        card.destroy();
-                        card.create(lastMove.card, false);
 
-                        card.state = { type: 'full', justPlayed: false };
-                        yield* S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, t => { card.update() })();
+                        
+                        if (API.totalPaymentAmount(lastMove.payment) > 0) {
+                            let paymentScripts: Script.Function[] = [];
+                            if (lastMove.payment.neg) {
+                                paymentScripts.push(animateGoldMovement(scene.wonders[i].getGoldCoinWorldPosition(),
+                                                                        scene.wonders[neg].getGoldCoinWorldPosition(), lastMove.payment.neg));
+                            }
+                            if (lastMove.payment.pos) {
+                                paymentScripts.push(animateGoldMovement(scene.wonders[i].getGoldCoinWorldPosition(),
+                                                                        scene.wonders[pos].getGoldCoinWorldPosition(), lastMove.payment.pos));
+                            }
+                            if (lastMove.payment.bank) {
+                                paymentScripts.push(animateGoldMovement(scene.wonders[i].getGoldCoinWorldPosition(),
+                                                                        scene.getSourceSinkPosition(), lastMove.payment.bank));
+                            }
+                            Main.scriptManager.runScript(S.simul(...paymentScripts));
+                        }                        
 
-                        scene.hands[i].playedCard = card;
-                        card.state = { type: 'effect', justPlayed: false };
-                        card.zIndex = C.Z_INDEX_CARD_PLAYED;
-                        let playedPoint = scene.wonders[i].getNewCardEffectWorldPosition(card);
-                        yield* S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, t => {
-                            card.targetPosition.x = lerpTime(card.targetPosition.x, playedPoint.x, Math.tan(Math.PI/2*t**2), Main.delta);
-                            card.targetPosition.y = lerpTime(card.targetPosition.y, playedPoint.y, Math.tan(Math.PI/2*t**2), Main.delta);
-                            card.scale = lerpTime(card.scale, 1, Math.tan(Math.PI/2*t**2), Main.delta);
-                            card.update();
-                        })();
-                        card.snap();
-                        scene.wonders[i].playedCardEffectRolls[card.apiCard.color].addCard(card);
-                    } else if (lastMove.action === 'wonder') {
-                        let card = hand.cards.pop();
-                        hand.state = { type: 'back', moved: false };
+                        let goldGain = API.goldGain(Main.gamestate.playerData[player].gold, gamestate.playerData[player].gold,
+                            gamestate.playerData[player].lastMove.payment, gamestate.playerData[gamestate.players[neg]].lastMove?.payment, gamestate.playerData[gamestate.players[pos]].lastMove?.payment);
+                        if (goldGain > 0) {
+                            Main.scriptManager.runScript(animateGoldMovement(scene.getSourceSinkPosition(),
+                                                                            scene.wonders[i].getGoldCoinWorldPosition(), goldGain));
+                        }
 
-                        card.checkMarkVisible = false;
-                        yield* S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, t => { card.update() })();
+                        // Main player will not participate in the below actions
+                        if (player === Main.player) return;
 
-                        card.state = { type: 'flipped', justPlayed: false };
-                        card.zIndex = C.Z_INDEX_CARD_WONDER;
-                        let wonderPoint = scene.wonders[i].getCardPositionForStage(lastMove.stage);
-                        yield* S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, t => {
-                            card.targetPosition.x = lerpTime(card.targetPosition.x, wonderPoint.x, Math.tan(Math.PI/2*t**2), Main.delta);
-                            card.targetPosition.y = lerpTime(card.targetPosition.y, wonderPoint.y, Math.tan(Math.PI/2*t**2), Main.delta);
-                            card.scale = lerpTime(card.scale, 1, Math.tan(Math.PI/2*t**2), Main.delta);
-                            card.update();
-                        })();
-                        card.snap();
-                    } else if (lastMove.action === 'throw') {
-                        let card = hand.cards.pop();
-                        hand.state = { type: 'back', moved: false };
+                        if (lastMove.action === 'play') {
+                            let card: Card;
+                            if (Main.gamestate.state === 'DISCARD_MOVE') {
+                                card = scene.discardHand.cards.pop();
+                            } else {
+                                card = hand.cards.pop();
+                                hand.state = { type: 'back', moved: false };
+                            }
+                            card.destroy();
+                            card.create(lastMove.card, false);
 
-                        card.checkMarkVisible = false;
-                        yield* S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, t => { card.update() })();
+                            card.state = { type: 'full', justPlayed: false };
+                            yield* S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, t => { card.update() })();
 
-                        card.state = { type: 'flipped', justPlayed: false };
-                        card.zIndex = C.Z_INDEX_CARD_MOVING;
-                        let discardPoint = scene.discardPile.getDiscardLockPoint();
-                        yield* S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, t => {
-                            card.targetPosition.x = lerpTime(card.targetPosition.x, discardPoint.x, Math.tan(Math.PI/2*t**2), Main.delta);
-                            card.targetPosition.y = lerpTime(card.targetPosition.y, discardPoint.y, Math.tan(Math.PI/2*t**2), Main.delta);
-                            card.scale = lerpTime(card.scale, 1, Math.tan(Math.PI/2*t**2), Main.delta);
-                            card.update();
-                        })();
-                        card.snap();
-                        scene.discardHand.cards.push(card);
-                    }
-                };
-            });
+                            scene.hands[i].playedCard = card;
+                            card.state = { type: 'effect', justPlayed: false };
+                            card.zIndex = C.Z_INDEX_CARD_PLAYED;
+                            let playedPoint = scene.wonders[i].getNewCardEffectWorldPosition(card);
+                            yield* S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, t => {
+                                card.targetPosition.x = lerpTime(card.targetPosition.x, playedPoint.x, Math.tan(Math.PI/2*t**2), Main.delta);
+                                card.targetPosition.y = lerpTime(card.targetPosition.y, playedPoint.y, Math.tan(Math.PI/2*t**2), Main.delta);
+                                card.scale = lerpTime(card.scale, 1, Math.tan(Math.PI/2*t**2), Main.delta);
+                                card.update();
+                            })();
+                            card.snap();
+                            scene.wonders[i].playedCardEffectRolls[card.apiCard.color].addCard(card);
+                        } else if (lastMove.action === 'wonder') {
+                            let card = hand.cards.pop();
+                            hand.state = { type: 'back', moved: false };
+
+                            card.checkMarkVisible = false;
+                            yield* S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, t => { card.update() })();
+
+                            card.state = { type: 'flipped', justPlayed: false };
+                            card.zIndex = C.Z_INDEX_CARD_WONDER;
+                            let wonderPoint = scene.wonders[i].getCardPositionForStage(lastMove.stage);
+                            yield* S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, t => {
+                                card.targetPosition.x = lerpTime(card.targetPosition.x, wonderPoint.x, Math.tan(Math.PI/2*t**2), Main.delta);
+                                card.targetPosition.y = lerpTime(card.targetPosition.y, wonderPoint.y, Math.tan(Math.PI/2*t**2), Main.delta);
+                                card.scale = lerpTime(card.scale, 1, Math.tan(Math.PI/2*t**2), Main.delta);
+                                card.update();
+                            })();
+                            card.snap();
+                        } else if (lastMove.action === 'throw') {
+                            let card = hand.cards.pop();
+                            hand.state = { type: 'back', moved: false };
+
+                            card.checkMarkVisible = false;
+                            yield* S.doOverTime(C.ANIMATION_TURN_REVEAL_TIME, t => { card.update() })();
+
+                            card.state = { type: 'flipped', justPlayed: false };
+                            card.zIndex = C.Z_INDEX_CARD_MOVING;
+                            let discardPoint = scene.discardPile.getDiscardLockPoint();
+                            yield* S.doOverTime(C.ANIMATION_TURN_PLAY_TIME, t => {
+                                card.targetPosition.x = lerpTime(card.targetPosition.x, discardPoint.x, Math.tan(Math.PI/2*t**2), Main.delta);
+                                card.targetPosition.y = lerpTime(card.targetPosition.y, discardPoint.y, Math.tan(Math.PI/2*t**2), Main.delta);
+                                card.scale = lerpTime(card.scale, 1, Math.tan(Math.PI/2*t**2), Main.delta);
+                                card.update();
+                            })();
+                            card.snap();
+                            scene.discardHand.cards.push(card);
+                        }
+                    };
+                });
+            }
 
             yield* S.simul(...moveScripts)();
 
@@ -238,7 +255,26 @@ namespace GameStateDiffer {
                 yield* S.wait(0.5)();
             }
 
-            if (gamestate.state === 'LAST_CARD_MOVE') {
+            if (gamestate.state === 'CHOOSE_GOLD_TO_LOSE') {
+                if (contains(gamestate.chooseGoldToLosePlayers, Main.player)) {
+                    let topWonder = scene.topWonder;
+                    let goldLossEffect = new GoldLossEffect();
+                    goldLossEffect.x = topWonder.x;
+                    goldLossEffect.y = topWonder.y;
+                    goldLossEffect.addToGame();
+                    yield* S.doOverTime(2, t => {
+                        goldLossEffect.alpha = t*t;
+                        goldLossEffect.amplitude = 50*(1-t);
+                        goldLossEffect.update();
+                    })();
+                    yield* S.wait(1)();
+                    yield* S.doOverTime(0.5, t => {
+                        goldLossEffect.alpha = 1-t;
+                        goldLossEffect.update();
+                    })();
+                    goldLossEffect.removeFromGame();
+                }
+            } else if (gamestate.state === 'LAST_CARD_MOVE') {
                 // Nothing
             } else if (gamestate.state === 'DISCARD_MOVE') {
                 if (gamestate.discardMoveQueue[0] === Main.player) {
@@ -321,7 +357,7 @@ namespace GameStateDiffer {
                     token.x = tokenPos.x;
                     token.y = tokenPos.y;
                     token.addToGame();
-                    wonder.diplomacyTokenRack.removeToken();
+                    wonder.diplomacyTokenRack.removeToken(wonder.diplomacyTokenRack.getTokenCount()-1);
                     let targetPosition = scene.getSourceSinkPosition();
                     let lerpt = 0;
                     yield* S.doOverTime(C.ANIMATION_TOKEN_DISTRIBUTE_TIME, t => {
@@ -607,11 +643,10 @@ namespace GameStateDiffer {
             addedIndices.push(...range(j, newTokens.length-1));
         }
 
-        console.log(player, oldTokens, removedIndices, newTokens, addedIndices);
-
-        let scripts = [...addedIndices.map(j => animateGiveMilitaryToken(scene, gamestate, player, newTokens[j]))];
-
-        result.scripts.push(S.chain(...scripts));
+        result.scripts.push(S.chain(
+            ...removedIndices.sort((a,b) => b-a).map(i => animateRemoveMilitaryToken(scene, gamestate, player, i, oldTokens[i])),
+            ...addedIndices.map(j => animateGiveMilitaryToken(scene, gamestate, player, newTokens[j]))
+        ));
     }
 
     function diffDebtTokens(gamestate: API.GameState, player: string, result: DiffResult) {
@@ -645,7 +680,7 @@ namespace GameStateDiffer {
                 })();
 
                 goldCoin.removeFromGame();
-            }
+            },
         )));
     }
 
@@ -665,6 +700,27 @@ namespace GameStateDiffer {
                 token.y = lerpTime(sourceSink.y, targetPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
             })();
             wonder.addMilitaryToken(value);
+            token.removeFromGame();
+        }
+    }
+
+    function animateRemoveMilitaryToken(scene: GameScene, gamestate: API.GameState, player: string, i: number, value: number) {
+        return function*() {
+            let wonder = scene.wonders[gamestate.players.indexOf(player)];
+            let tokenPos = wonder.getMilitaryTokenWorldPosition(i);
+            let token = new MilitaryToken(value);
+            token.x = tokenPos.x;
+            token.y = tokenPos.y;
+            token.addToGame();
+            wonder.militaryTokenRack.removeToken(i);
+            let targetPosition = scene.getSourceSinkPosition();
+            let lerpt = 0;
+            yield* S.doOverTime(C.ANIMATION_TOKEN_DISTRIBUTE_TIME, t => {
+                lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI/2*t**2), Main.delta);
+                token.x = lerpTime(tokenPos.x, targetPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                token.y = lerpTime(tokenPos.y, targetPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
+                token.scale = lerpTime(1, 0, Math.tan(Math.PI/2*lerpt), Main.delta);
+            })();
             token.removeFromGame();
         }
     }

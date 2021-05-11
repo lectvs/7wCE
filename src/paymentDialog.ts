@@ -93,7 +93,7 @@ class PaymentDialog extends GameElement {
             payButton.style.top = '50%';
             payButton.style.transform = 'translate(-50%, -50%)';
             payButton.style.cursor = 'pointer';
-            payButton.style.color = '#FFFFFF';
+            payButton.style.color = C.PAYMENT_DIALOG_PAY_BUTTON_TEXT_COLOR;
             payButton.onclick = (event: MouseEvent) => {
                 let trueMove: API.Move = {
                     action: this.move.action,

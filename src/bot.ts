@@ -22,4 +22,8 @@ namespace Bot {
 
         return randElement(validMoves);
     }
+
+    export function getGoldToLose(gold: number, goldToLose: number) {
+        return randInt(0, Math.min(gold, goldToLose));
+    }
 }

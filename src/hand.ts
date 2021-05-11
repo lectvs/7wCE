@@ -58,7 +58,7 @@ class Hand {
                     this.cards[i].scale = this.scale;
                 }
 
-                this.cards[i].checkMarkVisible = (this.state.moved && i === this.cards.length-1);
+                this.cards[i].checkMarkVisible = (Main.gamestate.state !== 'CHOOSE_GOLD_TO_LOSE' && this.state.moved && i === this.cards.length-1);
             }
             this.cards[i].update();
         }

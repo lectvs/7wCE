@@ -66,11 +66,23 @@ function getDescriptionForEffect(effect: API.Effect) {
     } else if (effect.type === 'dove') {
         return `Gain 1 diplomacy token`;
     } else if (effect.type === 'gain_victory_token') {
-        return `Gain a military victory token worth ${effect.points} VP`;
+        return `Gain a military victory token worth ${effect.token_value} VP`;
     } else if (effect.type === 'debt_for_neighbor') {
         return `Gives a debt token to your ${effect.direction === 'neg' ? 'left' : 'right'} neighbor`;
     } else if (effect.type === 'gold_for_defeat_tokens') {
         return `Gain ${effect.gold_per_token} gold for each military defeat token you have`;
+    } else if (effect.type === 'points_for_victory_tokens') {
+        return `${effect.points_per_token} VP for each ${effect.token_value}-VP military victory token you have`;
+    } else if (effect.type === 'gold_and_points_for_victory_tokens') {
+        return `${effect.gold_per_token} gold and ${effect.points_per_token} VP for each military victory token you have`;
+    } else if (effect.type === 'discard_defeat_tokens') {
+        return `Discard all of your current military defeat tokens`;
+    } else if (effect.type === 'broken_gold') {
+        return `All players except you lose ${effect.gold} gold`;
+    } else if (effect.type === 'broken_gold_for_stages') {
+        return `All players except you lose ${effect.gold_per_stage} gold per wonder stage they have built`;
+    } else if (effect.type === 'broken_gold_for_victory_tokens') {
+        return `All players except you lose ${effect.gold_per_token} gold per military victory token they have`;
     }
     console.error('Effect type not found:', effect.type);
     return "Description not found";

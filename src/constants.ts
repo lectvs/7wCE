@@ -10,10 +10,12 @@ class C {
     public static readonly Z_INDEX_CARD_MOVING = 13;
     public static readonly Z_INDEX_CARD_DRAGGING = 100;
     public static readonly Z_INDEX_MILITARY_OVERLAY = 101;
+    public static readonly Z_INDEX_GOLD_LOSS_EFFECT = 101;
     public static readonly Z_INDEX_TOKEN_MOVING = 102;
     public static readonly Z_INDEX_GOLD_COIN = 102;
     public static readonly Z_INDEX_PAYMENT_DIALOG = 1000;
-    public static readonly Z_INDEX_CARD_POPUP = 1001;
+    public static readonly Z_INDEX_CGTL_DIALOG = 1001;
+    public static readonly Z_INDEX_CARD_POPUP = 1002;
 
     public static readonly GAME_HEIGHT_PADDING_3P = 400;
     public static readonly GAME_HEIGHT_PADDING_4567P = 200;
@@ -185,10 +187,26 @@ class C {
     public static readonly PAYMENT_DIALOG_PAY_BUTTON_WIDTH = 56;
     public static readonly PAYMENT_DIALOG_PAY_BUTTON_HEIGHT = 30;
     public static readonly PAYMENT_DIALOG_PAY_BUTTON_COLOR = '#000088';
+    public static readonly PAYMENT_DIALOG_PAY_BUTTON_TEXT_COLOR = '#FFFFFF';
     public static readonly PAYMENT_DIALOG_CLOSE_BUTTON_OFFSET_X = 15;
     public static readonly PAYMENT_DIALOG_CLOSE_BUTTON_OFFSET_Y = 15;
     public static readonly PAYMENT_DIALOG_CLOSE_BUTTON_COLOR = 0x000000;
     public static readonly PAYMENT_DIALOG_CLOSE_BUTTON_SCALE = 0.15;
+
+    public static readonly CGTL_DIALOG_OFFSET_X = -512;
+    public static readonly CGTL_DIALOG_OFFSET_Y = -330;
+    public static readonly CGTL_DIALOG_WIDTH = 375;
+    public static readonly CGTL_DIALOG_EXTRA_HEIGHT = 70;
+    public static readonly CGTL_DIALOG_CORNER_RADIUS = 8;
+    public static readonly CGTL_DIALOG_COLOR = '#FFFFFF';
+    public static readonly CGTL_DIALOG_TITLE_SIZE = 12;
+    public static readonly CGTL_DIALOG_TITLE_PADDING = 12;
+    public static readonly CGTL_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT = 24;
+    public static readonly CGTL_DIALOG_PAYMENTS_DY = 37.5;
+    public static readonly CGTL_DIALOG_PAYMENTS_TEXT_SIZE = 12;
+    public static readonly CGTL_DIALOG_PAY_BUTTON_WIDTH = 40;
+    public static readonly CGTL_DIALOG_PAY_BUTTON_HEIGHT = 30;
+    public static readonly CGTL_DIALOG_PAY_BUTTON_COLOR = '#880000';
 
     public static readonly END_SCREEN_PLACEMENTS_Y = 50;
     public static readonly END_SCREEN_NAMES_Y = 80;

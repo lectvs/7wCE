@@ -48,8 +48,8 @@ class EndScreen {
 
         let shield = ArtCommon.shield();
         shield.scale.set(0.25);
-        let goldCoin = ArtCommon.goldCoin();
-        goldCoin.scale.set(0.25);
+        let endScreenFinanceMarker = ArtCommon.endScreenFinanceMarker();
+        endScreenFinanceMarker.scale.set(0.25);
         let pyramid = ArtCommon.pyramidFull();
         pyramid.scale.set(0.25);
         let blueCard = ArtCommon.cardForEffect(ArtCommon.cardBannerForColor('blue'));
@@ -63,7 +63,7 @@ class EndScreen {
 
         let x = (-1 - (players.length - 1) / 2) * C.END_SCREEN_POINTS_DX;
         endscreen.appendChild(this.scoreArt(shield, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*0}px`));
-        endscreen.appendChild(this.scoreArt(goldCoin, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*1}px`));
+        endscreen.appendChild(this.scoreArt(endScreenFinanceMarker, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*1}px`));
         endscreen.appendChild(this.scoreArt(pyramid, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*2}px`));
         endscreen.appendChild(this.scoreArt(blueCard, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*3}px`));
         endscreen.appendChild(this.scoreArt(greenCard, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*4}px`));

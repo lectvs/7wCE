@@ -1,29 +1,9 @@
 cities
-- new effects
-    - discard_defeat_tokens
-    - points_for_victory_tokens (value, points_per_token)
-    - gold_and_points_per_victory_token (gold_per_token, points_per_token)
-    - broken_gold (amount)
-    - broken_gold_per_victory_token (amount)
-    - broken_gold_per_stage (amount)
-    - (complete) gold_per_defeat_token (amount)
-    - (complete) debt_for_neighbor (direction)
-    - (complete) gain_victory_token (value)
-    - (complete) diplomacy
-    - (complete) wharf (direction)
-    - (complete) smugglers_cache
-    - (complete) mask
-    - (complete) waive_wonder_resource_costs
-    - (complete) duplicate_produced_resource
-    - (complete) unproduced_resource
-    - (complete) gold_for_others (amount)
-    - (complete) gold_for_neighbor (amount, direction)
 - 42 new cards + 8 cards per hand
 - discard play ordering
 - new wonders
     - byzantium
     - petra
-    - the great wall
 
 todo
 - art refinement
