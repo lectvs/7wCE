@@ -102,6 +102,7 @@ namespace API {
         points_per_stage?: number;
         points_per_token?: number;
         token_value?: number;
+        priority?: number;
     }
 
     export type Wonder = {

@@ -1,9 +1,9 @@
 cities
 - 42 new cards + 8 cards per hand
-- discard play ordering
 - new wonders
     - byzantium
     - petra
+- fix effect roll visual glitch
 
 todo
 - art refinement
