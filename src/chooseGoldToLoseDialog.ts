@@ -5,6 +5,8 @@ class ChooseGoldToLoseDialog extends GameElement {
     private goldToLose: number;
     private activeWonder: Wonder;
 
+    private buttons: HTMLDivElement[];
+
     constructor(scene: GameScene, gold: number, goldToLose: number, activeWonder: Wonder) {
         super();
         this.scene = scene;
@@ -32,6 +34,8 @@ class ChooseGoldToLoseDialog extends GameElement {
 
         let dialogTitle = dialogDiv.appendChild(this.drawText(`You've lost ${this.goldToLose} gold!<br/>You may choose to take debt tokens instead`, C.CGTL_DIALOG_TITLE_SIZE));
         dialogTitle.style.padding = `${C.CGTL_DIALOG_TITLE_PADDING}px`;
+
+        this.buttons = [];
 
         for (let i = 0; i <= maxGoldToLose; i++) {
             let leftDiv = dialogDiv.appendChild(document.createElement('div'));
@@ -81,11 +85,22 @@ class ChooseGoldToLoseDialog extends GameElement {
             payButton.style.cursor = 'pointer';
             payButton.onclick = (event: MouseEvent) => {
                 Main.chooseGoldToLose(goldToLose);
-                //this.removeFromGame();
+                this.select(i);
             }
+            this.buttons.push(payButton);
         }
         
         return dialogDiv;
+    }
+
+    private select(i: number) {
+        for (let j = 0; j < this.buttons.length; j++) {
+            if (j === i) {
+                this.buttons[j].style.backgroundColor = C.CGTL_DIALOG_PAY_BUTTON_COLOR_SELECTED;
+            } else {
+                this.buttons[j].style.backgroundColor = C.CGTL_DIALOG_PAY_BUTTON_COLOR;
+            }
+        }
     }
 
     private drawText(text: string, fontSize: number) {

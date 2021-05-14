@@ -46,9 +46,11 @@ class EndScreen {
 
         let endscreen = document.getElementById('endscreen');
 
+        let c = Main.gamestate.citiesEnabled;
+
         let shield = ArtCommon.shield();
         shield.scale.set(0.25);
-        let endScreenFinanceMarker = ArtCommon.endScreenFinanceMarker();
+        let endScreenFinanceMarker = c ? ArtCommon.endScreenFinanceMarker() : ArtCommon.goldCoin();
         endScreenFinanceMarker.scale.set(0.25);
         let pyramid = ArtCommon.pyramidFull();
         pyramid.scale.set(0.25);
@@ -60,6 +62,8 @@ class EndScreen {
         yellowCard.scale.set(0.25);
         let purpleCard = ArtCommon.cardForEffect(ArtCommon.cardBannerForColor('purple'));
         purpleCard.scale.set(0.25);
+        let blackCard = ArtCommon.cardForEffect(ArtCommon.cardBannerForColor('black'));
+        blackCard.scale.set(0.25);
 
         let x = (-1 - (players.length - 1) / 2) * C.END_SCREEN_POINTS_DX;
         endscreen.appendChild(this.scoreArt(shield, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*0}px`));
@@ -69,7 +73,8 @@ class EndScreen {
         endscreen.appendChild(this.scoreArt(greenCard, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*4}px`));
         endscreen.appendChild(this.scoreArt(yellowCard, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*5}px`));
         endscreen.appendChild(this.scoreArt(purpleCard, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*6}px`));
-        endscreen.appendChild(this.scoreText('Total', C.END_SCREEN_TEXT_SIZE, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*7}px`));
+        if (c) endscreen.appendChild(this.scoreArt(blackCard, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*7}px`));
+        endscreen.appendChild(this.scoreText('Total', C.END_SCREEN_TEXT_SIZE, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*(c?8:7)}px`));
 
         for (let i = 0; i < players.length; i++) {
             let x = (i - (players.length - 1) / 2) * C.END_SCREEN_POINTS_DX;
@@ -83,7 +88,8 @@ class EndScreen {
             endscreen.appendChild(this.scoreText(`${pointsDistributions[i].science}`, C.END_SCREEN_TEXT_SIZE,  `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*4}px`));
             endscreen.appendChild(this.scoreText(`${pointsDistributions[i].commerce}`, C.END_SCREEN_TEXT_SIZE, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*5}px`));
             endscreen.appendChild(this.scoreText(`${pointsDistributions[i].guild}`, C.END_SCREEN_TEXT_SIZE,    `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*6}px`));
-            endscreen.appendChild(this.scoreText(`${pointsTotals[i]}`, C.END_SCREEN_TEXT_SIZE, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*7}px`));
+            if (c) endscreen.appendChild(this.scoreText(`${pointsDistributions[i].black}`, C.END_SCREEN_TEXT_SIZE,    `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*7}px`));
+            endscreen.appendChild(this.scoreText(`${pointsTotals[i]}`, C.END_SCREEN_TEXT_SIZE, `calc(50% + ${x}px)`, `${C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY*(c?8:7)}px`));
         }
     }
 

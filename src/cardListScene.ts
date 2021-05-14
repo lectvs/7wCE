@@ -27,9 +27,9 @@ class CardListScene {
             let y = 0;
 
             for (let cardInfo of deck[age]) {
-                let card = new CardForList(this, cardInfo.id, cardInfo.count);
-                card.x = x;
-                card.y = y;
+                let card = new CardForList(this, cardInfo.id);
+                card.x = x - C.CARD_LIST_CARD_WIDTH/2;
+                card.y = y - C.CARD_LIST_CARD_HEIGHT/2;
                 card.addToGame(Main.cardList);
 
                 y += C.CARD_LIST_CARD_DY;

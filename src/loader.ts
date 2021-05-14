@@ -99,8 +99,11 @@ class Loader {
 
             let costContainer = ArtCommon.getArtForCost(card.cost);
             if (costContainer) {
-                costContainer.scale.set(C.CARD_COST_SCALE);
                 costContainer.position.set(C.CARD_COST_X, C.CARD_COST_Y);
+                costContainer.scale.set(C.CARD_COST_SCALE);
+                if (costContainer.height > C.CARD_COST_MAX_HEIGHT) {
+                    costContainer.scale.set(C.CARD_COST_SCALE * C.CARD_COST_MAX_HEIGHT / costContainer.height);
+                }
 
                 let costBanner = Shapes.filledRoundedRect(-costContainer.width/2 - C.CARD_COST_PADDING, -C.CARD_COST_PADDING,
                                                         costContainer.width + 2*C.CARD_COST_PADDING, costContainer.height + 2*C.CARD_COST_PADDING,
@@ -121,6 +124,9 @@ class Loader {
             effectContainer.addChild(ArtCommon.getArtForEffects(card.effects));
             effectContainer.position.set(C.CARD_WIDTH/2, C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT/2);
             effectContainer.scale.set(C.CARD_EFFECT_SCALE);
+            if (effectContainer.width > C.CARD_EFFECT_MAX_WIDTH) {
+                effectContainer.scale.set(C.CARD_EFFECT_SCALE * C.CARD_EFFECT_MAX_WIDTH / effectContainer.width);
+            }
             front.addChild(effectContainer);
 
             let fullClipRect = new PIXI.Rectangle(0, -C.CARD_PAYMENT_HEIGHT, C.CARD_WIDTH, C.CARD_HEIGHT + C.CARD_PAYMENT_HEIGHT);
@@ -286,6 +292,9 @@ class Loader {
                     effectContainer.addChild(ArtCommon.getShadowForEffects(card.effects, 'dark'));
                     effectContainer.addChild(ArtCommon.getArtForEffects(card.effects));
                     effectContainer.scale.set(C.CARD_LIST_EFFECT_SCALE);
+                    if (effectContainer.width > C.CARD_LIST_EFFECT_MAX_WIDTH) {
+                        effectContainer.scale.set(C.CARD_LIST_EFFECT_SCALE * C.CARD_LIST_EFFECT_MAX_WIDTH / effectContainer.width);
+                    }
                     cardForList.addChild(effectContainer);
 
                     if (cardInfo.count > 1) {
@@ -299,19 +308,19 @@ class Loader {
             
                     if (card.cost) {
                         let currentX = 70;
-                        for (let i = 0; i < resourceCost.length; i++) {
-                            let resource = ArtCommon.resource(resourceCost[i]);
-                            resource.scale.set(0.2);
-                            resource.position.set(currentX, 0);
-                            cardForList.addChild(resource);
-                            currentX += 22;
-                        }
-            
                         if (goldCost > 0) {
                             let gold = ArtCommon.gold(goldCost);
                             gold.scale.set(0.2);
                             gold.position.set(currentX, 0);
                             cardForList.addChild(gold);
+                            currentX += 22;
+                        }
+
+                        for (let i = 0; i < resourceCost.length; i++) {
+                            let resource = ArtCommon.resource(resourceCost[i]);
+                            resource.scale.set(0.2);
+                            resource.position.set(currentX, 0);
+                            cardForList.addChild(resource);
                             currentX += 22;
                         }
                     }

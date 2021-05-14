@@ -1,6 +1,7 @@
 namespace API {
     export type GameState = {
         state: 'CHOOSE_WONDER_SIDE' | 'NORMAL_MOVE' | 'LAST_CARD_MOVE' | 'DISCARD_MOVE' | 'CHOOSE_GOLD_TO_LOSE' | 'GAME_COMPLETE';
+        citiesEnabled: boolean;
         discardMoveQueue: string[];
         lastCardPlayers: string[];
         chooseGoldToLosePlayers: string[];
@@ -55,6 +56,7 @@ namespace API {
         commerce: number;
         guild: number;
         science: number;
+        black: number;
         total: number;
     }
 
@@ -94,6 +96,7 @@ namespace API {
         direction?: string;
         gold?: number;
         points?: number;
+        shields?: number;
         color?: string;
         gold_per_card?: number;
         gold_per_stage?: number;

@@ -16,6 +16,7 @@ class Wonder extends GameElement {
         purple: PlayedCardEffectRoll;
         blue: PlayedCardEffectRoll;
         green: PlayedCardEffectRoll;
+        black: PlayedCardEffectRoll;
         overflow: PlayedCardEffectRoll;
     } & Dict<PlayedCardEffectRoll>;
     builtWonderCards: Card[];
@@ -48,7 +49,8 @@ class Wonder extends GameElement {
         boardDiv.appendChild(this.wonderResource.board);
 
         let payments = boardDiv.appendChild(this.drawPayments());
-        payments.style.transform = `translate(-50%, ${C.WONDER_BOARD_HEIGHT/2 - C.WONDER_STAGE_HEIGHT + C.WONDER_STAGE_PAYMENT_OFFSET_Y}px)`
+        payments.style.transform = `translate(-50%, ${C.WONDER_BOARD_HEIGHT/2 - C.WONDER_STAGE_HEIGHT + C.WONDER_STAGE_PAYMENT_OFFSET_Y}px)`;
+        payments.style.zIndex = '10000';
 
         this.sidebar = this.div.appendChild(this.drawSidebar());
         this.sidebar.style.left = `${C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_WIDTH}px`;
@@ -72,14 +74,17 @@ class Wonder extends GameElement {
         }
         this.debtTokenRack.addToGame();
 
+        let c = Main.gamestate.citiesEnabled;
+
         this.playedCardEffectRolls = {
             brown: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2, -C.WONDER_BOARD_HEIGHT/2 - C.WONDER_RESOURCE_ROLL_OFFSET_Y, false, C.SORT_CMP_RESOURCES),
             grey: undefined,  // Defined right after this, below.
             red: new PlayedCardEffectRoll(C.WONDER_RED_ROLL_X, -C.WONDER_BOARD_HEIGHT/2 + C.WONDER_RED_ROLL_Y, false, null),
-            yellow: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2 + C.WONDER_BOARD_BORDER, C.WONDER_YELLOW_ROLL_Y, false, null),
-            purple: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2 + C.WONDER_BOARD_BORDER, C.WONDER_PURPLE_ROLL_Y, false, null),
-            blue: new PlayedCardEffectRoll(C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_BORDER, C.WONDER_BLUE_ROLL_Y, true, null),
-            green: new PlayedCardEffectRoll(C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_BORDER, C.WONDER_GREEN_ROLL_Y, true, C.SORT_CMP_SCIENCE),
+            yellow: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2 + C.WONDER_BOARD_BORDER, C.WONDER_YELLOW_ROLL_Y(c), false, null),
+            purple: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2 + C.WONDER_BOARD_BORDER, C.WONDER_PURPLE_ROLL_Y(c), false, null),
+            blue: new PlayedCardEffectRoll(C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_BORDER, C.WONDER_BLUE_ROLL_Y(c), true, null),
+            green: new PlayedCardEffectRoll(C.WONDER_BOARD_WIDTH/2 - C.WONDER_BOARD_BORDER, C.WONDER_GREEN_ROLL_Y(c), true, C.SORT_CMP_SCIENCE),
+            black: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2 + C.WONDER_BOARD_BORDER, C.WONDER_BLACK_ROLL_Y, false, null),
             overflow: new PlayedCardEffectRoll(-C.WONDER_BOARD_WIDTH/2, -C.WONDER_BOARD_HEIGHT/2 - C.WONDER_OVERFLOW_ROLL_OFFSET_Y, false, null),
         };
         this.playedCardEffectRolls.grey = this.playedCardEffectRolls.brown;
@@ -88,7 +93,7 @@ class Wonder extends GameElement {
             let points = apiCardId in playerData.cardPoints ? playerData.cardPoints[apiCardId] : undefined;
             let card = new Card(this.scene, apiCardId, -1, points, undefined, this, []);
             this.addNewCardEffect(card);
-            if (card.apiCard.color === 'red' && playerData.diplomacyTokens > 0) {
+            if (card.isMilitary() && playerData.diplomacyTokens > 0) {
                 card.setGrayedOut(true);
             }
             card.addToGame();
@@ -269,7 +274,7 @@ class Wonder extends GameElement {
     adjustToDiplomacy(diplomacy: boolean) {
         for (let key in this.playedCardEffectRolls) {
             for (let card of this.playedCardEffectRolls[key].cards) {
-                if (card.apiCard.color === 'red') card.setGrayedOut(diplomacy);
+                if (card.isMilitary()) card.setGrayedOut(diplomacy);
             }
         }
     }
@@ -301,13 +306,14 @@ class Wonder extends GameElement {
 
     private getCardEffectRollMaxWidth(color: string) {
         return {
-            'brown': C.WONDER_BOARD_WIDTH,
-            'grey': C.WONDER_BOARD_WIDTH,
+            'brown': C.WONDER_BOARD_WIDTH - C.WONDER_RESOURCE_ROLL_INFO_WIDTH,
+            'grey': C.WONDER_BOARD_WIDTH - C.WONDER_RESOURCE_ROLL_INFO_WIDTH,
             'red': C.WONDER_RED_ROLL_MAX_X - C.WONDER_RED_ROLL_X,
             'yellow': C.WONDER_BOARD_WIDTH - 2*C.WONDER_BOARD_BORDER - this.playedCardEffectRolls['blue'].width,
             'purple': C.WONDER_BOARD_WIDTH - 2*C.WONDER_BOARD_BORDER - this.playedCardEffectRolls['green'].width,
             'blue': C.WONDER_BOARD_WIDTH - 2*C.WONDER_BOARD_BORDER - this.playedCardEffectRolls['yellow'].width,
             'green': C.WONDER_BOARD_WIDTH - 2*C.WONDER_BOARD_BORDER - this.playedCardEffectRolls['purple'].width,
+            'black': C.WONDER_BOARD_WIDTH - 2*C.WONDER_BOARD_BORDER,
         }[color];
     }
 

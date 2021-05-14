@@ -3,7 +3,7 @@ class CardForList extends GameElement {
 
     apiCard: API.Card;
 
-    constructor(scene: CardListScene, cardId: number, count: number) {
+    constructor(scene: CardListScene, cardId: number) {
         super();
 
         this.scene = scene;
@@ -11,7 +11,6 @@ class CardForList extends GameElement {
 
         this.div.style.width = `${C.CARD_LIST_CARD_WIDTH}px`;
         this.div.style.height = `${C.CARD_LIST_CARD_HEIGHT}px`;
-        this.div.style.transform = 'translate(-50%, -50%)';
 
         // Popup
         this.div.onmousemove = () => {
@@ -19,7 +18,7 @@ class CardForList extends GameElement {
                 this.scene.stopPopup(this);
                 return;
             }
-            this.scene.updatePopup(this, this.x - C.CARD_LIST_CARD_WIDTH/2, this.y + C.CARD_LIST_CARD_HEIGHT/2);
+            this.scene.updatePopup(this, this.x, this.y + C.CARD_LIST_CARD_HEIGHT);
         };
 
         this.div.onmouseleave = () => {

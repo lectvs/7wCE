@@ -44,6 +44,7 @@ namespace ArtCommon {
         if (color === 'blue') return 0x2A95D7;
         if (color === 'yellow') return 0xF2AA0C;
         if (color === 'purple') return 0x7054AB;
+        if (color === 'black') return 0x555555;
         console.error('Could not find color:', color);
         return 0xFF00FF;
     }
@@ -56,6 +57,7 @@ namespace ArtCommon {
         if (color === 'blue') return '#2A95D7';
         if (color === 'yellow') return '#F2AA0C';
         if (color === 'purple') return '#7054AB';
+        if (color === 'black') return '#555555';
         console.error('Could not find color:', color);
         return '#FF00FF';
     }
@@ -68,6 +70,8 @@ namespace ArtCommon {
                 return multiResource(effect.resources.split('/'));
             } else if (effect.type === 'shield') {
                 return shield();
+            } else if (effect.type === 'shields') {
+                return shields(effect.shields);
             } else if (effect.type === 'science') {
                 return science(effect.symbol);
             } else if (effect.type === 'points') {
@@ -177,12 +181,11 @@ namespace ArtCommon {
         }
 
         let costArts = [];
-        for (let r of cost.resources || []) {
-            costArts.push(resource(r));
-        }
-
         if (cost.gold) {
             costArts.push(gold(cost.gold));
+        }
+        for (let r of cost.resources || []) {
+            costArts.push(resource(r));
         }
 
         return combineCostArt(costArts, 16);
@@ -194,12 +197,11 @@ namespace ArtCommon {
         }
 
         let costArts = [];
-        for (let r of cost.resources || []) {
-            costArts.push(resource(r));
-        }
-
         if (cost.gold) {
             costArts.push(gold(cost.gold));
+        }
+        for (let r of cost.resources || []) {
+            costArts.push(resource(r));
         }
 
         return combineStageCostArt(costArts, 16);
@@ -270,14 +272,22 @@ namespace ArtCommon {
     export function victoryPoints(points: number) {
         let container = new PIXI.Container();
         container.addChild(pointsWreath());
-        container.addChild(Shapes.centeredText(0, 0, `${points}`, 0.8, 0x000000));
+        let text = Shapes.centeredText(0, 0, `${points}`, 0.8, 0x000000);
+        if (`${points}`.length > 1) {
+            text.scale.set(0.65);
+        }
+        container.addChild(text);
         return container;
     }
 
     export function gold(gold: number) {
         let container = new PIXI.Container();
         container.addChild(goldCoin());
-        container.addChild(Shapes.centeredText(0, 0, `${gold}`, 0.8, 0x000000));
+        let text = Shapes.centeredText(0, 0, `${gold}`, 0.8, 0x000000)
+        if (`${gold}`.length > 1) {
+            text.scale.set(0.65);
+        }
+        container.addChild(text);
         return container;
     }
 
@@ -840,6 +850,23 @@ namespace ArtCommon {
         goldCoin.position.set(-45, 30);
         container.addChild(goldCoin);
         return container;
+    }
+
+    export function shields(shields: number) {
+        if (shields === 5) {
+            let dx = 60, dy = 25;
+            let container = new PIXI.Container();
+            let shields = new PIXI.Container();
+            shields.addChild(shield()).position.set(-dx, -dy);
+            shields.addChild(shield()).position.set(dx, -dy);
+            shields.addChild(shield()).position.set(-2*dx, dy);
+            shields.addChild(shield()).position.set(0, dy);
+            shields.addChild(shield()).position.set(2*dx, dy);
+            shields.scale.set(2/3);
+            container.addChild(shields);
+            return container;
+        }
+        return combineEffectArt(range(1, shields).map(i => shield()), 8);
     }
 
 

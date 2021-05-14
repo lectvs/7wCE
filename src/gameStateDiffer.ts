@@ -84,8 +84,9 @@ namespace GameStateDiffer {
                             scene.hand.playedCard = selectedCard;
                             if (selectedCard) {
                                 if (lastMove.action === 'play') {
-                                    if (selectedCard.apiCard.color === 'red' && hasDiplomacyTokenAtStartOfTurn(gamestate, player)) {
+                                    if (selectedCard.isMilitary() && hasDiplomacyTokenAtStartOfTurn(scene, gamestate, player)) {
                                         selectedCard.setGrayedOut(true);
+                                        yield* S.wait(1)();
                                     }
                                 } else if (lastMove.action === 'throw') {
                                     scene.discardHand.cards.push(selectedCard);
@@ -152,7 +153,14 @@ namespace GameStateDiffer {
                                 card.update();
                             })();
                             card.snap();
-                            scene.wonders[i].playedCardEffectRolls[card.apiCard.color].addCard(card);
+                            if (card.isMilitary() && hasDiplomacyTokenAtStartOfTurn(scene, gamestate, player)) {
+                                console.log('military')
+                                card.setGrayedOut(true);
+                                yield* S.wait(1)();
+                            }
+                            // scene.wonders[i].playedCardEffectRolls[card.apiCard.color].addCard(card);
+                            // scene.hands[i].playedCard = null;
+                            // scene.wonders[i].playedCardEffectRolls[card.apiCard.color].removePlaceholder();
                         } else if (lastMove.action === 'wonder') {
                             let card = hand.cards.pop();
                             hand.state = { type: 'back', moved: false };
@@ -258,7 +266,7 @@ namespace GameStateDiffer {
             if (gamestate.state === 'CHOOSE_GOLD_TO_LOSE') {
                 if (contains(gamestate.chooseGoldToLosePlayers, Main.player)) {
                     let topWonder = scene.topWonder;
-                    let goldLossEffect = new GoldLossEffect();
+                    let goldLossEffect = new GoldLossEffect(gamestate.playerData[Main.player].goldToLose);
                     goldLossEffect.x = topWonder.x;
                     goldLossEffect.y = topWonder.y;
                     goldLossEffect.addToGame();
@@ -347,7 +355,7 @@ namespace GameStateDiffer {
                 yield* S.wait(0.5)();
 
                 // Remove diplomacies if applicable
-                for (let player of gamestate.diplomacyPlayers) {
+                yield* S.simul(...gamestate.diplomacyPlayers.map(player => function*() {
                     let tokens = gamestate.playerData[player].diplomacyTokens;
                     let wonder = scene.wonders[gamestate.players.indexOf(player)];
                     wonder.adjustToDiplomacy(tokens > 0);
@@ -367,7 +375,7 @@ namespace GameStateDiffer {
                         token.scale = lerpTime(1, 0, Math.tan(Math.PI/2*lerpt), Main.delta);
                     })();
                     token.removeFromGame();
-                }
+                }))();
 
                 if (gamestate.state !== 'GAME_COMPLETE') {
                     // Deal new cards
@@ -584,7 +592,7 @@ namespace GameStateDiffer {
 
         result.scripts.push(S.chain(
             S.call(() => {
-                scene.wonders[gamestate.players.indexOf(player)].adjustToDiplomacy(hasDiplomacyTokenAtStartOfTurn(gamestate, player));
+                scene.wonders[gamestate.players.indexOf(player)].adjustToDiplomacy(hasDiplomacyTokenAtStartOfTurn(scene, gamestate, player));
             }),
             S.wait(0.5),
             S.simul(...newTokenIndices.map(i => function*() {
@@ -755,6 +763,9 @@ namespace GameStateDiffer {
             showings[gamestate.players.indexOf(Main.player)] = { type: 'diplomacy' };
 
             return [showings];
+        } else if (gamestate.fightingPlayers.length === 2) {
+            let showings = filledMilitaryShowings(gamestate, true, false);
+            return [showings];
         } else {
             let showings1 = filledMilitaryShowings(gamestate, true, false);
             let showings2 = filledMilitaryShowings(gamestate, false, true);
@@ -769,18 +780,18 @@ namespace GameStateDiffer {
         let l: number = p;
         if (left) {
             l = mod(p-1, gamestate.players.length);
-            while(contains(gamestate.diplomacyPlayers, gamestate.players[l])) {
+            while(l !== p && contains(gamestate.diplomacyPlayers, gamestate.players[l])) {
                 showings[l] = { type: 'diplomacy' };
-                l = mod(p-1, gamestate.players.length);
+                l = mod(l-1, gamestate.players.length);
             }
         }
 
         let r: number = p;
         if (right) {
             r = mod(p+1, gamestate.players.length);
-            while(contains(gamestate.diplomacyPlayers, gamestate.players[r])) {
+            while(r !== p && contains(gamestate.diplomacyPlayers, gamestate.players[r])) {
                 showings[r] = { type: 'diplomacy' };
-                r = mod(p+1, gamestate.players.length);
+                r = mod(r+1, gamestate.players.length);
             }
         }
 
@@ -804,8 +815,10 @@ namespace GameStateDiffer {
         return showings;
     }
 
-    function hasDiplomacyTokenAtStartOfTurn(gamestate: API.GameState, player: string) {
-        return gamestate.playerData[player].diplomacyTokens > 0 || gainedDiplomacyTokens(gamestate, player) > 0;
+    function hasDiplomacyTokenAtStartOfTurn(scene: GameScene, gamestate: API.GameState, player: string) {
+        return gamestate.playerData[player].diplomacyTokens > 0
+            || gainedDiplomacyTokens(gamestate, player) > 0
+            || scene.wonders[gamestate.players.indexOf(player)].diplomacyTokenRack.getTokenCount() > 0;
     }
 
     function gainedDiplomacyTokens(gamestate: API.GameState, player: string) {

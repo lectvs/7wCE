@@ -1,19 +1,14 @@
-cities
-- 42 new cards + 8 cards per hand
-- new wonders
-    - byzantium
-    - petra
-- fix effect roll visual glitch
-
 todo
+- calculate points in getGameState?
 - art refinement
+- fade card highlights before move
 - different color game tab
+- deprecate 'shield' effect type in favor of 'shields'
+- new 'resources' effect similar to 'shields'?
 - fix issue with science sorted rolls collapsing briefly during animation (when play gear?)
 - custom blur filter
 - fix scene cannot scroll left when zoomed in
 - delay military points until after animation end
-- consolidate loading percentage
-- combine identical effects on info popups
 - names bleeding into other names
 - which players are online?
 - BGA move mode

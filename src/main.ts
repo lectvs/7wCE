@@ -358,15 +358,17 @@ class Main {
                         }
                         console.log('Successfully chose bot wonder side:', side);
                     });
-                } else if (this.gamestate.state === 'CHOOSE_GOLD_TO_LOSE' && this.gamestate.playerData[botPlayer].goldToLose > 0) {
-                    let gold_to_lose = Bot.getGoldToLose(this.gamestate.playerData[botPlayer].gold, this.gamestate.playerData[botPlayer].goldToLose);
-                    API.choosegoldtolose(this.gameid, this.gamestate.turn, botPlayer, undefined, gold_to_lose, (error: string) => {
-                        if (error) {
-                            this.error(error);
-                            return;
-                        }
-                        console.log('Successfully chose bot gold to lose:', gold_to_lose);
-                    });
+                } else if (this.gamestate.state === 'CHOOSE_GOLD_TO_LOSE') {
+                    if (this.gamestate.playerData[botPlayer].goldToLose > 0) {
+                        let gold_to_lose = Bot.getGoldToLose(this.gamestate.playerData[botPlayer].gold, this.gamestate.playerData[botPlayer].goldToLose);
+                        API.choosegoldtolose(this.gameid, this.gamestate.turn, botPlayer, undefined, gold_to_lose, (error: string) => {
+                            if (error) {
+                                this.error(error);
+                                return;
+                            }
+                            console.log('Successfully chose bot gold to lose:', gold_to_lose);
+                        });
+                    }
                 } else {
                     let turn = this.gamestate.turn;
                     API.getvalidmoves(this.gameid, this.gamestate.turn, botPlayer, undefined, (validMoves: API.Move[], error: string) => {

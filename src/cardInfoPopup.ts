@@ -32,19 +32,6 @@ class CardInfoPopup extends Popup {
 
         if (this.card.apiCard.cost) {
             let currentX = 60;
-            for (let i = 0; i < resourceCost.length; i++) {
-                let resource = box.appendChild(document.createElement('div'));
-                let resourceArt = new PIXI.Container();
-                resourceArt.addChild(ArtCommon.getShadowForArt(() => ArtCommon.resource(resourceCost[i]), 'dark'));
-                resourceArt.addChild(ArtCommon.resource(resourceCost[i]));
-                resource.appendChild(ArtCommon.domElementForArt(resourceArt, 1, 10));
-                resource.style.transform = 'scale(0.2)';
-                resource.style.position = 'absolute';
-                resource.style.left = `${currentX}px`;
-                resource.style.top = `${currentY}px`;
-                currentX += 22;
-            }
-
             if (goldCost > 0) {
                 let gold = box.appendChild(document.createElement('div'));
                 let goldArt = new PIXI.Container();
@@ -55,6 +42,18 @@ class CardInfoPopup extends Popup {
                 gold.style.position = 'absolute';
                 gold.style.left = `${currentX}px`;
                 gold.style.top = `${currentY}px`;
+                currentX += 22;
+            }
+            for (let i = 0; i < resourceCost.length; i++) {
+                let resource = box.appendChild(document.createElement('div'));
+                let resourceArt = new PIXI.Container();
+                resourceArt.addChild(ArtCommon.getShadowForArt(() => ArtCommon.resource(resourceCost[i]), 'dark'));
+                resourceArt.addChild(ArtCommon.resource(resourceCost[i]));
+                resource.appendChild(ArtCommon.domElementForArt(resourceArt, 1, 10));
+                resource.style.transform = 'scale(0.2)';
+                resource.style.position = 'absolute';
+                resource.style.left = `${currentX}px`;
+                resource.style.top = `${currentY}px`;
                 currentX += 22;
             }
 

@@ -3,10 +3,10 @@ class GoldLossEffect extends GameElement {
 
     amplitude: number = 0;
     
-    constructor() {
+    constructor(goldToLose: number) {
         super();
 
-        this.brokenGold = this.div.appendChild(this.draw());
+        this.brokenGold = this.div.appendChild(this.draw(goldToLose));
         this.zIndex = C.Z_INDEX_GOLD_LOSS_EFFECT;
     }
 
@@ -15,8 +15,8 @@ class GoldLossEffect extends GameElement {
         this.brokenGold.style.top = `${randInt(-this.amplitude, this.amplitude)}px`;
     }
 
-    private draw() {
-        let brokenGold = ArtCommon.domElementForArt(ArtCommon.brokenGoldBlank(), 1.5);
+    private draw(goldToLose: number) {
+        let brokenGold = ArtCommon.domElementForArt(ArtCommon.brokenGold(goldToLose), 1.5);
         brokenGold.style.position = 'absolute';
         return brokenGold;
     }

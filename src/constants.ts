@@ -49,9 +49,11 @@ class C {
     public static readonly CARD_EFFECT_SCALE = 0.24;
     public static readonly CARD_EFFECT_CLIP_PADDING = 4.5;
     public static readonly CARD_EFFECT_HEIGHT = 24;
+    public static readonly CARD_EFFECT_MAX_WIDTH = 80;
     public static readonly CARD_COST_X = 12.375;
     public static readonly CARD_COST_Y = C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT;
     public static readonly CARD_COST_SCALE = 0.13;
+    public static readonly CARD_COST_MAX_HEIGHT = 97;
     public static readonly CARD_COST_PADDING = 6;
     public static readonly CARD_POINTS_SUMMARY_WIDTH = (n: number) => 6*n + 3;
     public static readonly CARD_POINTS_SUMMARY_HEIGHT = 11;
@@ -103,13 +105,15 @@ class C {
     public static readonly WONDER_BUILT_STAGE_OFFSET_Y = -100;
     public static readonly WONDER_PAYMENT_HEIGHT = 24;
     public static readonly WONDER_RESOURCE_ROLL_OFFSET_Y = 22.5;
+    public static readonly WONDER_RESOURCE_ROLL_INFO_WIDTH = 120;
     public static readonly WONDER_RED_ROLL_X = -150;
     public static readonly WONDER_RED_ROLL_Y = C.WONDER_BOARD_BORDER + C.CARD_EFFECT_CLIP_PADDING + C.CARD_EFFECT_HEIGHT/2;
     public static readonly WONDER_RED_ROLL_MAX_X = 110;
-    public static readonly WONDER_YELLOW_ROLL_Y = -18;
-    public static readonly WONDER_PURPLE_ROLL_Y = 18;
-    public static readonly WONDER_BLUE_ROLL_Y = -18;
-    public static readonly WONDER_GREEN_ROLL_Y = 18;
+    public static readonly WONDER_YELLOW_ROLL_Y = cities => cities ? -6 : -18;
+    public static readonly WONDER_PURPLE_ROLL_Y = cities => cities ? 28 : 18;
+    public static readonly WONDER_BLUE_ROLL_Y = cities => cities ? -6 : -18;
+    public static readonly WONDER_GREEN_ROLL_Y = cities => cities ? 28 : 18;
+    public static readonly WONDER_BLACK_ROLL_Y = -40;
     public static readonly WONDER_OVERFLOW_ROLL_OFFSET_Y = C.WONDER_RESOURCE_ROLL_OFFSET_Y + 38;
     public static readonly WONDER_SIDEBAR_NAME_X = -2;
     public static readonly WONDER_SIDEBAR_NAME_Y = -36;
@@ -207,6 +211,7 @@ class C {
     public static readonly CGTL_DIALOG_PAY_BUTTON_WIDTH = 40;
     public static readonly CGTL_DIALOG_PAY_BUTTON_HEIGHT = 30;
     public static readonly CGTL_DIALOG_PAY_BUTTON_COLOR = '#880000';
+    public static readonly CGTL_DIALOG_PAY_BUTTON_COLOR_SELECTED = '#FF0000';
 
     public static readonly END_SCREEN_PLACEMENTS_Y = 50;
     public static readonly END_SCREEN_NAMES_Y = 80;
@@ -224,6 +229,7 @@ class C {
     public static readonly CARD_LIST_CARD_WIDTH = 96;
     public static readonly CARD_LIST_CARD_HEIGHT = 40;
     public static readonly CARD_LIST_EFFECT_SCALE = 0.24;
+    public static readonly CARD_LIST_EFFECT_MAX_WIDTH = 80;
     public static readonly CARD_LIST_INFO_TEXT_SIZE = 16;
     public static readonly CARD_LIST_INFO_TEXT_COLOR = '#FFFFFF';
     public static readonly CARD_LIST_CARD_DX = 400;

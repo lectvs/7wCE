@@ -59,8 +59,10 @@ class PlayedCardEffectRoll {
 
     addPlaceholder(card: Card) {
         this.removePlaceholder();
-        this.placeholderIndex = this.getSortedIndex(card);
-        this.placeholderWidth = card.effectWidth;
+        if (!contains(this.cards, card)) {
+            this.placeholderIndex = this.getSortedIndex(card);
+            this.placeholderWidth = card.effectWidth;
+        }
     }
 
     removePlaceholder() {

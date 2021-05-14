@@ -437,6 +437,10 @@ class Card extends GameElement {
         discardCount.style.transform = 'translate(-50%, -50%)';
     }
 
+    isMilitary() {
+        return this.apiCard.effects.every(effect => effect.type === 'shield' || effect.type === 'shields');
+    }
+
     setGrayedOut(grayedOut: boolean) {
         this.frontProxy.style.filter = grayedOut ? 'grayscale(100%) brightness(50%)' : 'grayscale(0%) brightness(100%)';
     }
