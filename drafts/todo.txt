@@ -1,18 +1,22 @@
 todo
-- calculate points in getGameState?
+easy
 - art refinement
 - fade card highlights before move
-- different color game tab
-- deprecate 'shield' effect type in favor of 'shields'
-- new 'resources' effect similar to 'shields'?
-- fix issue with science sorted rolls collapsing briefly during animation (when play gear?)
 - custom blur filter
 - fix scene cannot scroll left when zoomed in
-- delay military points until after animation end
 - names bleeding into other names
-- which players are online?
 - BGA move mode
-- store lambda code in version control?
-- allow any player to updateGame?
 - avoid multiple people creating games at the same time
+- ??? ????? ????
+- ???????? ???
+
+hard
+- calculate points in getGameState
+- deprecate 'shield' effect type in favor of 'shields'
+- new 'resources' effect similar to 'shields'
+- fix issue with science sorted rolls collapsing briefly during animation (when play gear?)
+- delay military points until after animation end
+- which players are online?
+- allow any player to updateGame?
 - can't get same wonder N times in a row
+- game update even when not in focus

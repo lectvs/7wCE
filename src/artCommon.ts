@@ -44,7 +44,7 @@ namespace ArtCommon {
         if (color === 'blue') return 0x2A95D7;
         if (color === 'yellow') return 0xF2AA0C;
         if (color === 'purple') return 0x7054AB;
-        if (color === 'black') return 0x555555;
+        if (color === 'black') return 0x444444;
         console.error('Could not find color:', color);
         return 0xFF00FF;
     }
@@ -57,7 +57,7 @@ namespace ArtCommon {
         if (color === 'blue') return '#2A95D7';
         if (color === 'yellow') return '#F2AA0C';
         if (color === 'purple') return '#7054AB';
-        if (color === 'black') return '#555555';
+        if (color === 'black') return '#444444';
         console.error('Could not find color:', color);
         return '#FF00FF';
     }

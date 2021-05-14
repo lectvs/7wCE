@@ -282,7 +282,7 @@ class Main {
         if (Main.currentError) {
             status.style.backgroundColor = C.ERROR_BG_COLOR;
             status.style.color = C.ERROR_TEXT_COLOR;
-            statusText.textContent = Main.currentError;
+            statusText.innerHTML = Main.currentError;
             return;
         } 
 
@@ -292,7 +292,7 @@ class Main {
         }
     
         if (!this.loader.isLoaded) {
-            statusText.textContent = `Loading... ${this.loader.loadPercentage}%`;
+            statusText.innerHTML = `Loading... ${this.loader.loadPercentage}%`;
             return;
         }
 
@@ -301,46 +301,46 @@ class Main {
 
         if (gamestate.state === 'CHOOSE_WONDER_SIDE') {
             if (playerData.currentMove) {
-                statusText.textContent = "Waiting for others to choose their wonder side";
+                statusText.innerHTML = "Waiting for others to choose their wonder side";
             } else {
-                statusText.textContent = "You must choose your wonder side";
+                statusText.innerHTML = "<span class='statustextactive'>You must choose your wonder side</span>";
             }
         } else if (gamestate.state === 'CHOOSE_GOLD_TO_LOSE') {
             if (playerData.currentMove || gamestate.playerData[this.player].goldToLose <= 0) {
                 let playersLeft = gamestate.chooseGoldToLosePlayers.filter(player => !gamestate.playerData[player].currentMove);
                 if (playersLeft.length === 1) {
-                    statusText.textContent = `Waiting for ${playersLeft[0]} to handle gold loss`;
+                    statusText.innerHTML = `Waiting for ${playersLeft[0]} to handle gold loss`;
                 } else {
-                    statusText.textContent = "Waiting for others to handle gold loss";
+                    statusText.innerHTML = "Waiting for others to handle gold loss";
                 }
             } else {
-                statusText.textContent = "You must handle your gold loss";
+                statusText.innerHTML = "<span class='statustextactive'>You must handle your gold loss</span>";
             }
         } else if (gamestate.state === 'NORMAL_MOVE') {
             if (playerData.currentMove) {
-                statusText.textContent = "Waiting for others to move";
+                statusText.innerHTML = "Waiting for others to move";
             } else {
-                statusText.textContent = "You must play a card";
+                statusText.innerHTML = "<span class='statustextactive'>You must play a card</span>";
             }
         } else if (gamestate.state === 'LAST_CARD_MOVE') {
             if (playerData.currentMove || gamestate.validMoves.length === 0) {
                 let playersLeft = gamestate.lastCardPlayers.filter(player => !gamestate.playerData[player].currentMove);
                 if (playersLeft.length === 1) {
-                    statusText.textContent = `Waiting for ${playersLeft[0]} to play their last card`;
+                    statusText.innerHTML = `Waiting for ${playersLeft[0]} to play their last card`;
                 } else {
-                    statusText.textContent = "Waiting for others to play their last cards";
+                    statusText.innerHTML = "Waiting for others to play their last cards";
                 }
             } else {
-                statusText.textContent = "You may play your last card";
+                statusText.innerHTML = "<span class='statustextactive'>You may play your last card</span>";
             }
         } else if (gamestate.state === 'DISCARD_MOVE') {
             if (gamestate.discardMoveQueue[0] === this.player) {
-                statusText.textContent = "You may build a card from the discard pile";
+                statusText.innerHTML = "<span class='statustextactive'>You may build a card from the discard pile</span>";
             } else {
-                statusText.textContent = `Waiting for ${gamestate.discardMoveQueue[0]} to build a card from the discard pile`;
+                statusText.innerHTML = `Waiting for ${gamestate.discardMoveQueue[0]} to build a card from the discard pile`;
             }
         } else if (gamestate.state === 'GAME_COMPLETE') {
-            statusText.textContent = "Game complete";
+            statusText.innerHTML = "Game complete";
         }
     }
 

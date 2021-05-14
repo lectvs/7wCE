@@ -159,10 +159,10 @@ class LobbyMain {
 
         if (this.inviteGameids && this.inviteGameids.length > 0) {
             let links = this.inviteGameids.map(gameid => `<a href="./game.html?gameid=${gameid}">${gameid}</a>`);
-            let text = `Current Games: ${links.join(', ')}`;
+            let text = `<span class="statustextactive">Current Games:</span> ${links.join(', ')}`;
             if (statusText.innerHTML !== text) statusText.innerHTML = text;
         } else {
-            statusText.textContent = "No current games"
+            statusText.innerHTML = "No current games"
         }
     }
 

@@ -13,6 +13,11 @@
     border-bottom-right-radius: 8px;
 }
 
+.statustextactive {
+    color: red;
+    font-weight: bold;
+}
+
 a#backtolobby {
     font-family: 'Courier New', Courier, monospace;
     position: absolute;

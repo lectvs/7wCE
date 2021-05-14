@@ -630,7 +630,7 @@ var ArtCommon;
         if (color === 'purple')
             return 0x7054AB;
         if (color === 'black')
-            return 0x555555;
+            return 0x444444;
         console.error('Could not find color:', color);
         return 0xFF00FF;
     }
@@ -651,7 +651,7 @@ var ArtCommon;
         if (color === 'purple')
             return '#7054AB';
         if (color === 'black')
-            return '#555555';
+            return '#444444';
         console.error('Could not find color:', color);
         return '#FF00FF';
     }
@@ -5630,7 +5630,7 @@ var Main = /** @class */ (function () {
         if (Main.currentError) {
             status.style.backgroundColor = C.ERROR_BG_COLOR;
             status.style.color = C.ERROR_TEXT_COLOR;
-            statusText.textContent = Main.currentError;
+            statusText.innerHTML = Main.currentError;
             return;
         }
         if (this.scene) {
@@ -5638,65 +5638,65 @@ var Main = /** @class */ (function () {
             status.style.color = C.OK_TEXT_COLOR;
         }
         if (!this.loader.isLoaded) {
-            statusText.textContent = "Loading... " + this.loader.loadPercentage + "%";
+            statusText.innerHTML = "Loading... " + this.loader.loadPercentage + "%";
             return;
         }
         var gamestate = this.gamestate;
         var playerData = gamestate.playerData[this.player];
         if (gamestate.state === 'CHOOSE_WONDER_SIDE') {
             if (playerData.currentMove) {
-                statusText.textContent = "Waiting for others to choose their wonder side";
+                statusText.innerHTML = "Waiting for others to choose their wonder side";
             }
             else {
-                statusText.textContent = "You must choose your wonder side";
+                statusText.innerHTML = "<span class='statustextactive'>You must choose your wonder side</span>";
             }
         }
         else if (gamestate.state === 'CHOOSE_GOLD_TO_LOSE') {
             if (playerData.currentMove || gamestate.playerData[this.player].goldToLose <= 0) {
                 var playersLeft = gamestate.chooseGoldToLosePlayers.filter(function (player) { return !gamestate.playerData[player].currentMove; });
                 if (playersLeft.length === 1) {
-                    statusText.textContent = "Waiting for " + playersLeft[0] + " to handle gold loss";
+                    statusText.innerHTML = "Waiting for " + playersLeft[0] + " to handle gold loss";
                 }
                 else {
-                    statusText.textContent = "Waiting for others to handle gold loss";
+                    statusText.innerHTML = "Waiting for others to handle gold loss";
                 }
             }
             else {
-                statusText.textContent = "You must handle your gold loss";
+                statusText.innerHTML = "<span class='statustextactive'>You must handle your gold loss</span>";
             }
         }
         else if (gamestate.state === 'NORMAL_MOVE') {
             if (playerData.currentMove) {
-                statusText.textContent = "Waiting for others to move";
+                statusText.innerHTML = "Waiting for others to move";
             }
             else {
-                statusText.textContent = "You must play a card";
+                statusText.innerHTML = "<span class='statustextactive'>You must play a card</span>";
             }
         }
         else if (gamestate.state === 'LAST_CARD_MOVE') {
             if (playerData.currentMove || gamestate.validMoves.length === 0) {
                 var playersLeft = gamestate.lastCardPlayers.filter(function (player) { return !gamestate.playerData[player].currentMove; });
                 if (playersLeft.length === 1) {
-                    statusText.textContent = "Waiting for " + playersLeft[0] + " to play their last card";
+                    statusText.innerHTML = "Waiting for " + playersLeft[0] + " to play their last card";
                 }
                 else {
-                    statusText.textContent = "Waiting for others to play their last cards";
+                    statusText.innerHTML = "Waiting for others to play their last cards";
                 }
             }
             else {
-                statusText.textContent = "You may play your last card";
+                statusText.innerHTML = "<span class='statustextactive'>You may play your last card</span>";
             }
         }
         else if (gamestate.state === 'DISCARD_MOVE') {
             if (gamestate.discardMoveQueue[0] === this.player) {
-                statusText.textContent = "You may build a card from the discard pile";
+                statusText.innerHTML = "<span class='statustextactive'>You may build a card from the discard pile</span>";
             }
             else {
-                statusText.textContent = "Waiting for " + gamestate.discardMoveQueue[0] + " to build a card from the discard pile";
+                statusText.innerHTML = "Waiting for " + gamestate.discardMoveQueue[0] + " to build a card from the discard pile";
             }
         }
         else if (gamestate.state === 'GAME_COMPLETE') {
-            statusText.textContent = "Game complete";
+            statusText.innerHTML = "Game complete";
         }
     };
     Main.updateBotMoves = function () {
@@ -7292,12 +7292,12 @@ var LobbyMain = /** @class */ (function () {
         status.style.color = C.OK_TEXT_COLOR;
         if (this.inviteGameids && this.inviteGameids.length > 0) {
             var links = this.inviteGameids.map(function (gameid) { return "<a href=\"./game.html?gameid=" + gameid + "\">" + gameid + "</a>"; });
-            var text = "Current Games: " + links.join(', ');
+            var text = "<span class=\"statustextactive\">Current Games:</span> " + links.join(', ');
             if (statusText.innerHTML !== text)
                 statusText.innerHTML = text;
         }
         else {
-            statusText.textContent = "No current games";
+            statusText.innerHTML = "No current games";
         }
     };
     LobbyMain.error = function (error, fatal) {
