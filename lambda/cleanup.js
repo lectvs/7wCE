@@ -5,6 +5,8 @@ const dynamo = new AWS.DynamoDB.DocumentClient();
 
 exports.cleanup = async () => {
     
+    throw new Error("cleanup operation disabled");
+    
     // Delete stale games
     let items = [];
     let lastEvaluatedKey = undefined;

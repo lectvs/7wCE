@@ -3,8 +3,6 @@ function getDescriptionForEffect(effect: API.Effect) {
         return `Gives ${effect.resource} each turn`;
     } else if (effect.type === 'multi_resource') {
         return `Gives one of ${effect.resources} each turn`
-    } else if (effect.type === 'shield') {
-        return `Military shield`;
     } else if (effect.type === 'shields') {
         let s = effect.shields === 1 ? '' : 's';
         return `${effect.shields} military shield${s}`;

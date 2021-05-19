@@ -7,10 +7,12 @@ const dynamo = new AWS.DynamoDB.DocumentClient();
 
 exports.creategame = async (players, flags) => {
     
+    let isTestGame = flags.includes('test');
+    
     // Generate a new gameid
     let gameid;
     do {
-        let prefix = flags.includes('test') ? 'T' : '';
+        let prefix = isTestGame ? 'T' : '';
         gameid = `${prefix}${utils.randInt(1000, 9999)}`;
     } while ((await dynamo.get({ TableName: '7wCE_games', Key: { gameid } }).promise()).Item);
     console.log(`Generated new gameid: ${gameid}`);
@@ -84,6 +86,11 @@ exports.creategame = async (players, flags) => {
         cards: cardData.getAllCards(),
         wonderChoices: wonderData.getWonderChoicesForPlayers(draftOrderPlayers, wonderPreferences, isDebug)
     };
+    
+    // Make sure another game hasn't been created recently.
+    if (!isTestGame) {
+        await verifyGameNotCreated(players);
+    }
 
     await dynamo.put({
         TableName : '7wCE_games',
@@ -172,4 +179,32 @@ function convertCardListToCountMap(cardList) {
         return e.id - f.id;
     });
     return result;
+}
+
+async function verifyGameNotCreated(players) {
+    let ddbresult = await dynamo.scan({
+        TableName: '7wCE_invites',
+        FilterExpression: 'player = :player',
+        ExpressionAttributeValues: {
+            ':player': players[0]
+        }
+    }).promise();
+    
+    if (!ddbresult || !ddbresult.Items || ddbresult.Items.length === 0) {
+        return;
+    }
+
+    let gameids = ddbresult.Items.map(item => item.gameid);
+    
+    ddbresult = await dynamo.batchGet({ RequestItems: { '7wCE_games': { Keys: gameids.map(gameid => ({ gameid })) } } }).promise();
+
+    if (!ddbresult || !ddbresult.Responses ||  ddbresult.Responses['7wCE_games'].length === 0) {
+        return;
+    }
+    
+    for (let response of ddbresult.Responses['7wCE_games']) {
+        if (utils.currentTime() - response.createtime < 10) {
+            throw new Error('Game already created');
+        }
+    }
 }

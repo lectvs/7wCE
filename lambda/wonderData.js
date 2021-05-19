@@ -58,7 +58,7 @@ const wonders = {
         starting_effects: [{ type: "resource", resource: "ore" }],
         stages: [
             { cost: { resources: ["wood", "wood"] }, effects: [{ type: 'points', points: 3 }] },
-            { cost: { resources: ["clay", "clay", "clay"] }, effects: [{ type: 'shield' }, { type: 'shield' }] },
+            { cost: { resources: ["clay", "clay", "clay"] }, effects: [{ type: 'shields', shields: 2 }] },
             { cost: { resources: ["ore", "ore", "ore"] }, effects: [{ type: 'points', points: 7 }] },
         ]
     },
@@ -69,8 +69,8 @@ const wonders = {
         starting_effect_color: "brown",
         starting_effects: [{ type: "resource", resource: "ore" }],
         stages: [
-            { cost: { resources: ["stone", "stone", "stone"] }, effects: [{ type: 'shield' }, { type: 'gold', gold: 3 }, { type: 'points', points: 3 }] },
-            { cost: { resources: ["ore", "ore", "ore", "ore"] }, effects: [{ type: 'shield' }, { type: 'gold', gold: 4 }, { type: 'points', points: 4 }] },
+            { cost: { resources: ["stone", "stone", "stone"] }, effects: [{ type: 'shields', shields: 1 }, { type: 'gold', gold: 3 }, { type: 'points', points: 3 }] },
+            { cost: { resources: ["ore", "ore", "ore", "ore"] }, effects: [{ type: 'shields', shields: 1 }, { type: 'gold', gold: 4 }, { type: 'points', points: 4 }] },
         ]
     },
     '6': {

@@ -139,7 +139,6 @@ class GameScene extends Scene {
         this.discardHand.setZIndex(C.Z_INDEX_DISCARD_CARDS);
         this.discardHand.snap();
 
-        console.log('created scene', gamestate.state, gamestate.chooseGoldToLosePlayers)
         if (gamestate.state === 'CHOOSE_GOLD_TO_LOSE' && contains(gamestate.chooseGoldToLosePlayers, Main.player)) {
             this.startChooseGoldToLoseDialog();
         }

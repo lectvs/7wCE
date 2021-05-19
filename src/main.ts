@@ -172,7 +172,6 @@ class Main {
                 this.sendUpdate();
                 return;
             } else if (Main.gamestate.state === 'CHOOSE_WONDER_SIDE') {
-                console.log('diffing cws')
                 if (gamestate.state === 'CHOOSE_WONDER_SIDE') {
                     let diffResult = GameStateDiffer.diffChooseSide(gamestate);
                     this.scriptManager.runScript(S.chain(
@@ -190,7 +189,6 @@ class Main {
                     this.sendUpdate();
                 }
             } else if (gamestate.turn === Main.gamestate.turn) {
-                console.log('diffing nonturn')
                 let diffResult = GameStateDiffer.diffNonTurn(gamestate, true);
                 this.scriptManager.runScript(S.chain(
                     S.simul(...diffResult.scripts),
@@ -200,7 +198,6 @@ class Main {
                     })
                 ));
             } else {
-                console.log('diffing turn')
                 let diffResult = GameStateDiffer.diffTurn(gamestate);
                 this.diffing = true;
                 this.scriptManager.runScript(S.chain(

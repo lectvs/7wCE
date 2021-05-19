@@ -2,20 +2,22 @@
 exports.getpatchnotes = async () => {
     
     let patchNotes = [`
-        <p style="font-weight:bold">v1.1: Cities</p>
+        <p style="font-weight:bold">v1.1: CITIES</p>
         <br/>
-        <p>At long last, 7WCE is serving its original purpose - to bring the Cities expansion to you!</p>
-        <br/><br/><br/><br/>
-        <p style="color: gold">The <a class="userinfolink" href="https://www.rprod.com/en/games/7-wonders/cities">Cities</a> expansion includes:</p>
+        <p>At long last, 7WCE is serving its original purpose - to bring the <a class="userinfolink" href="https://www.rprod.com/en/games/7-wonders/cities">Cities Expansion</a> to you!</p>
+        <br/><br/><br/>
+        <p style="color: gold">The Cities Expansion includes:</p>
         <p class="pnci">- 42 new black cards, with 18 new and unique effects!</p>
         <p class="pnci">- 2 new wonders: Byzantium and Petra!</p>
         <p class="pnci">- Diplomacy! Debt! Yay!</p>
-        <br/><br/><br/><br/>
+        <br/><br/><br/>
+        <p style="color: gold">7WCE is open-source! <a class="userinfolink" href="https://github.com/lectvs/7wCE">Check it out</a>!</p>
+        <br/><br/>
         <p>Upcoming changes:</p>
         <p class="pnci">- Two more wonders</p>
         <p class="pnci">- BGA move mode</p>
         <p class="pnci">- Game creation limit</p>
-        <p class="pnci">- Some small quality of life improvements</p>
+        <p class="pnci">- Small quality of life improvements</p>
     `,
     `
         <p style="font-weight:bold">v1.0: 7WCE</p>

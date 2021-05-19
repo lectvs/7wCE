@@ -68,8 +68,6 @@ namespace ArtCommon {
                 return resource(effect.resource);
             } else if (effect.type === 'multi_resource') {
                 return multiResource(effect.resources.split('/'));
-            } else if (effect.type === 'shield') {
-                return shield();
             } else if (effect.type === 'shields') {
                 return shields(effect.shields);
             } else if (effect.type === 'science') {
@@ -1133,7 +1131,7 @@ namespace ArtCommon {
     export function checkMark() {
         let graphics = new PIXI.Graphics();
         graphics.beginFill(freeColor, 1);
-        graphics.drawPolygon([ -50, 0, -15, 50, 50, -50, -15, 20 ]);
+        graphics.drawPolygon([ -38, -10, -50, 0, -15, 50, 50, -40, 35, -50, -15, 25 ]);
         graphics.endFill();
         return graphics;
     }

@@ -664,9 +664,6 @@ var ArtCommon;
             else if (effect.type === 'multi_resource') {
                 return multiResource(effect.resources.split('/'));
             }
-            else if (effect.type === 'shield') {
-                return shield();
-            }
             else if (effect.type === 'shields') {
                 return shields(effect.shields);
             }
@@ -1808,7 +1805,7 @@ var ArtCommon;
     function checkMark() {
         var graphics = new PIXI.Graphics();
         graphics.beginFill(ArtCommon.freeColor, 1);
-        graphics.drawPolygon([-50, 0, -15, 50, 50, -50, -15, 20]);
+        graphics.drawPolygon([-38, -10, -50, 0, -15, 50, 50, -40, 35, -50, -15, 25]);
         graphics.endFill();
         return graphics;
     }
@@ -2415,7 +2412,7 @@ var Card = /** @class */ (function (_super) {
         discardCount.style.transform = 'translate(-50%, -50%)';
     };
     Card.prototype.isMilitary = function () {
-        return this.apiCard.effects.every(function (effect) { return effect.type === 'shield' || effect.type === 'shields'; });
+        return this.apiCard.effects.every(function (effect) { return effect.type === 'shields'; });
     };
     Card.prototype.setGrayedOut = function (grayedOut) {
         this.frontProxy.style.filter = grayedOut ? 'grayscale(100%) brightness(50%)' : 'grayscale(0%) brightness(100%)';
@@ -3365,9 +3362,6 @@ function getDescriptionForEffect(effect) {
     else if (effect.type === 'multi_resource') {
         return "Gives one of " + effect.resources + " each turn";
     }
-    else if (effect.type === 'shield') {
-        return "Military shield";
-    }
     else if (effect.type === 'shields') {
         var s = effect.shields === 1 ? '' : 's';
         return effect.shields + " military shield" + s;
@@ -3735,7 +3729,6 @@ var GameScene = /** @class */ (function (_super) {
         this.discardHand.state = { type: 'back', moved: false };
         this.discardHand.setZIndex(C.Z_INDEX_DISCARD_CARDS);
         this.discardHand.snap();
-        console.log('created scene', gamestate.state, gamestate.chooseGoldToLosePlayers);
         if (gamestate.state === 'CHOOSE_GOLD_TO_LOSE' && contains(gamestate.chooseGoldToLosePlayers, Main.player)) {
             this.startChooseGoldToLoseDialog();
         }
@@ -5527,7 +5520,6 @@ var Main = /** @class */ (function () {
                 return;
             }
             else if (Main.gamestate.state === 'CHOOSE_WONDER_SIDE') {
-                console.log('diffing cws');
                 if (gamestate.state === 'CHOOSE_WONDER_SIDE') {
                     var diffResult = GameStateDiffer.diffChooseSide(gamestate);
                     _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {
@@ -5544,7 +5536,6 @@ var Main = /** @class */ (function () {
                 }
             }
             else if (gamestate.turn === Main.gamestate.turn) {
-                console.log('diffing nonturn');
                 var diffResult = GameStateDiffer.diffNonTurn(gamestate, true);
                 _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {
                     _this.gamestate = gamestate;
@@ -5552,7 +5543,6 @@ var Main = /** @class */ (function () {
                 })));
             }
             else {
-                console.log('diffing turn');
                 var diffResult = GameStateDiffer.diffTurn(gamestate);
                 _this.diffing = true;
                 _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {

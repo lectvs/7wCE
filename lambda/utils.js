@@ -428,9 +428,7 @@ exports.getPurchasableResources = (effects) => {
 exports.getShields = (effects) => {
     let shields = 0;
     for (let effect of effects) {
-        if (effect.type === 'shield') {
-            shields++;
-        } else if (effect.type === 'shields') {
+        if (effect.type === 'shields') {
             shields += effect.shields;
         }
     }

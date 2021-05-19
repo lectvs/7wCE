@@ -438,7 +438,7 @@ class Card extends GameElement {
     }
 
     isMilitary() {
-        return this.apiCard.effects.every(effect => effect.type === 'shield' || effect.type === 'shields');
+        return this.apiCard.effects.every(effect => effect.type === 'shields');
     }
 
     setGrayedOut(grayedOut: boolean) {

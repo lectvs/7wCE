@@ -1,19 +1,16 @@
 todo
 easy
-- art refinement
 - fade card highlights before move
 - custom blur filter
+- clipping issue when zoomed
 - fix scene cannot scroll left when zoomed in
 - names bleeding into other names
 - BGA move mode
-- avoid multiple people creating games at the same time
 - ??? ????? ????
 - ???????? ???
 
 hard
 - calculate points in getGameState
-- deprecate 'shield' effect type in favor of 'shields'
-- new 'resources' effect similar to 'shields'
 - fix issue with science sorted rolls collapsing briefly during animation (when play gear?)
 - delay military points until after animation end
 - which players are online?
