@@ -62,6 +62,10 @@ class Hand {
             }
             this.cards[i].update();
         }
+
+        if (this.playedCard && !contains(this.cards, this.playedCard)) {
+            this.playedCard.update();
+        }
     }
 
     createWithData(handData: HandData) {

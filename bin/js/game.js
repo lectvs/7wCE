@@ -3991,13 +3991,11 @@ var GameStateDiffer;
                                                         card_1.targetPosition.x = lerpTime(card_1.targetPosition.x, playedPoint_1.x, Math.tan(Math.PI / 2 * Math.pow(t, 2)), Main.delta);
                                                         card_1.targetPosition.y = lerpTime(card_1.targetPosition.y, playedPoint_1.y, Math.tan(Math.PI / 2 * Math.pow(t, 2)), Main.delta);
                                                         card_1.scale = lerpTime(card_1.scale, 1, Math.tan(Math.PI / 2 * Math.pow(t, 2)), Main.delta);
-                                                        card_1.update();
                                                     })())];
                                             case 10:
                                                 _c.sent();
                                                 card_1.snap();
                                                 if (!(card_1.isMilitary() && hasDiplomacyTokenAtStartOfTurn(scene, gamestate, player))) return [3 /*break*/, 12];
-                                                console.log('military');
                                                 card_1.setGrayedOut(true);
                                                 return [5 /*yield**/, __values(S.wait(1)())];
                                             case 11:
@@ -4904,6 +4902,9 @@ var Hand = /** @class */ (function () {
                 this.cards[i].checkMarkVisible = (Main.gamestate.state !== 'CHOOSE_GOLD_TO_LOSE' && this.state.moved && i === this.cards.length - 1);
             }
             this.cards[i].update();
+        }
+        if (this.playedCard && !contains(this.cards, this.playedCard)) {
+            this.playedCard.update();
         }
     };
     Hand.prototype.createWithData = function (handData) {

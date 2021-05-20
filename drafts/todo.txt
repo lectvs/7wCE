@@ -5,6 +5,5 @@ easy
 
 hard
 - calculate points in getGameState
-- fix issue with science sorted rolls collapsing briefly during animation (when play gear?)
 - delay military points until after animation end
 - allow any player to updateGame?

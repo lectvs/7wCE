@@ -150,11 +150,9 @@ namespace GameStateDiffer {
                                 card.targetPosition.x = lerpTime(card.targetPosition.x, playedPoint.x, Math.tan(Math.PI/2*t**2), Main.delta);
                                 card.targetPosition.y = lerpTime(card.targetPosition.y, playedPoint.y, Math.tan(Math.PI/2*t**2), Main.delta);
                                 card.scale = lerpTime(card.scale, 1, Math.tan(Math.PI/2*t**2), Main.delta);
-                                card.update();
                             })();
                             card.snap();
                             if (card.isMilitary() && hasDiplomacyTokenAtStartOfTurn(scene, gamestate, player)) {
-                                console.log('military')
                                 card.setGrayedOut(true);
                                 yield* S.wait(1)();
                             }
