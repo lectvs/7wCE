@@ -78,7 +78,7 @@ class C {
     public static readonly WONDER_OTHERS_DX = 470;
     public static readonly WONDER_OTHERS_DY = 330;
     public static readonly WONDER_OTHERS_DX_LAST_7P = 270;
-    public static readonly WONDER_LAST_Y_4P = 1040;
+    public static readonly WONDER_LAST_Y_4P = 1070;
     public static readonly WONDER_LAST_Y_6P = 1120;
     public static readonly WONDER_BOARD_WIDTH = 450;
     public static readonly WONDER_BOARD_HEIGHT = 225;
@@ -167,7 +167,7 @@ class C {
     public static readonly GOLD_COIN_SCALE = 0.225;
 
     public static readonly DISCARD_PILE_X = 0;
-    public static readonly DISCARD_PILE_Y = 720;
+    public static readonly DISCARD_PILE_Y = 750;
     public static readonly DISCARD_PILE_AREA_WIDTH = 200;
     public static readonly DISCARD_PILE_AREA_HEIGHT = 240;
     public static readonly DISCARD_PILE_AREA_CORNER_RADIUS = 8;

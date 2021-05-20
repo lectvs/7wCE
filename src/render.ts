@@ -1,5 +1,5 @@
 const renderer: PIXI.Renderer = new PIXI.Renderer({ antialias: true, transparent: true });
-const resolution = 2 * (window.devicePixelRatio || 1);
+const resolution = Math.min(2 * (window.devicePixelRatio || 1), 3); // Cap resolution at 3x
 
 function render(object: PIXI.DisplayObject, width: number, height: number) {
     renderer.view.width = width * resolution;

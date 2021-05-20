@@ -28,9 +28,16 @@ exports.updategame = async (gameid) => {
     }).promise();
     
     let movesByPlayer = {};
+    let latestMoveTime = 0;
     for (let item of ddbresult.Responses['7wCE_moves']) {
         let player = item.gameid_turn_player.split('_').pop();
         movesByPlayer[player] = JSON.parse(item.move);
+        latestMoveTime = Math.max(latestMoveTime, item.createtime || 0);
+    }
+    
+    // No update if latest move occurred less than a second ago.
+    if (latestMoveTime > 0 && utils.currentTime() - latestMoveTime <= 1) {
+        return { result: 'NO_UPDATE' };
     }
     
     // Only update if all required players have moved

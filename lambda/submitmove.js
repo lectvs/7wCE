@@ -61,7 +61,8 @@ exports.submitmove = async (gameid, turn, player, password_hash, move) => {
         TableName : '7wCE_moves',
         Item: {
             gameid_turn_player: `${gameid}_${turn}_${player}`,
-            move: JSON.stringify(move)
+            move: JSON.stringify(move),
+            createtime: utils.currentTime()
         }
     }).promise();
 

@@ -1,11 +1,5 @@
 todo
 easy
-- fade card highlights before move
-- custom blur filter
-- clipping issue when zoomed
-- fix scene cannot scroll left when zoomed in
-- names bleeding into other names
-- BGA move mode
 - ??? ????? ????
 - ???????? ???
 
@@ -13,7 +7,4 @@ hard
 - calculate points in getGameState
 - fix issue with science sorted rolls collapsing briefly during animation (when play gear?)
 - delay military points until after animation end
-- which players are online?
 - allow any player to updateGame?
-- can't get same wonder N times in a row
-- game update even when not in focus

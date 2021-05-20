@@ -1943,6 +1943,13 @@ var ArtCommon;
         return Shapes.filledRect(-50, -50, 100, 100, 0xFF00FF);
     }
 })(ArtCommon || (ArtCommon = {}));
+var BlurFilter = /** @class */ (function (_super) {
+    __extends(BlurFilter, _super);
+    function BlurFilter() {
+        return _super.call(this, undefined, "\n            varying vec2 vTextureCoord;\n\n            uniform sampler2D uSampler;\n\n            vec4 getColor(float xi, float yi) {\n                float wi = 1.0 / 100.0;\n                float hi = 1.0 / 100.0;\n                vec2 coord = vTextureCoord + vec2(xi*wi + yi*hi);\n                if (coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0) {\n                    return vec4(0.0, 0.0, 0.0, 0.0);\n                }\n                return texture2D(uSampler, coord);\n            }\n\n            void main(void){\n                gl_FragColor = getColor(0.0, 0.0);\n\n                const float PI = 3.14159;\n\n                for (float angle = 0.0; angle < 2.0*PI; angle += PI/8.0) {\n                    for (float dist = 1.0; dist <= 4.0; dist += 1.0) {\n                        gl_FragColor += getColor(dist * cos(angle), dist * sin(angle));\n                    }\n                }\n                gl_FragColor /= 1.0 + 16.0 * 4.0;\n            }\n        ", {}) || this;
+    }
+    return BlurFilter;
+}(PIXI.Filter));
 var Bot;
 (function (Bot) {
     function chooseSide(wonderChoices) {
@@ -1986,6 +1993,7 @@ var Card = /** @class */ (function (_super) {
         _this.points = points;
         _this.handPosition = handPosition;
         _this.activeWonder = activeWonder;
+        _this.highlightAlpha = 0;
         _this.targetPosition = new PIXI.Point();
         _this.visualState = 'full';
         _this.state = { type: 'in_hand', visualState: 'full' };
@@ -2298,7 +2306,10 @@ var Card = /** @class */ (function (_super) {
             this.flippedT = lerpTime(this.flippedT, 0, 0.25, Main.delta);
         }
         var alpha;
-        if (this.state.type.startsWith('locked')) {
+        if (Main.diffing) {
+            alpha = 0;
+        }
+        else if (this.state.type.startsWith('locked')) {
             alpha = (Math.sin(Main.time * 8) + 1) / 2;
         }
         else if ((this.state.type === 'effect' || this.state.type === 'flipped') && this.state.justPlayed) {
@@ -3139,7 +3150,7 @@ var C = /** @class */ (function () {
     C.WONDER_OTHERS_DX = 470;
     C.WONDER_OTHERS_DY = 330;
     C.WONDER_OTHERS_DX_LAST_7P = 270;
-    C.WONDER_LAST_Y_4P = 1040;
+    C.WONDER_LAST_Y_4P = 1070;
     C.WONDER_LAST_Y_6P = 1120;
     C.WONDER_BOARD_WIDTH = 450;
     C.WONDER_BOARD_HEIGHT = 225;
@@ -3223,7 +3234,7 @@ var C = /** @class */ (function () {
     C.DIPLOMACY_TOKEN_SCALE = 0.25;
     C.GOLD_COIN_SCALE = 0.225;
     C.DISCARD_PILE_X = 0;
-    C.DISCARD_PILE_Y = 720;
+    C.DISCARD_PILE_Y = 750;
     C.DISCARD_PILE_AREA_WIDTH = 200;
     C.DISCARD_PILE_AREA_HEIGHT = 240;
     C.DISCARD_PILE_AREA_CORNER_RADIUS = 8;
@@ -6092,7 +6103,7 @@ var PlayedCardEffectRoll = /** @class */ (function () {
     return PlayedCardEffectRoll;
 }());
 var renderer = new PIXI.Renderer({ antialias: true, transparent: true });
-var resolution = 2 * (window.devicePixelRatio || 1);
+var resolution = Math.min(2 * (window.devicePixelRatio || 1), 3); // Cap resolution at 3x
 function render(object, width, height) {
     renderer.view.width = width * resolution;
     renderer.view.height = height * resolution;
