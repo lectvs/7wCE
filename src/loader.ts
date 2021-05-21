@@ -181,8 +181,8 @@ class Loader {
     
             // Starting effects
             let startingEffectContainer = new PIXI.Container();
-            startingEffectContainer.addChild(ArtCommon.getShadowForEffects(wonder.starting_effects, 'dark'));
-            startingEffectContainer.addChild(ArtCommon.getArtForEffects(wonder.starting_effects));
+            startingEffectContainer.addChild(ArtCommon.getShadowForEffects(wonder.starting_effects, 'dark', 5, 5, 24));
+            startingEffectContainer.addChild(ArtCommon.getArtForEffects(wonder.starting_effects, 24));
             startingEffectContainer.scale.set(C.WONDER_STARTING_EFFECTS_SCALE);
             let startingEffectsBounds = startingEffectContainer.getBounds();
             startingEffectContainer.position.set(C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.left - startingEffectContainer.x),

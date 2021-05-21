@@ -120,9 +120,6 @@ function updateChooseSide(gamestate, movesByPlayer) {
         let player = gamestate.players[i];
         gamestate.playerData[player].hand = hands[i];
     }
-    for (let player of gamestate.players) {
-        gamestate.playerData[player].pointsDistribution = utils.computePointsDistribution(gamestate, player);
-    }
 }
 
 function updateGameMoves(gamestate, movesByPlayer) {
@@ -367,11 +364,6 @@ function updatePostMove(gamestate) {
     }
     
     gamestate.turn++;
-    
-    // Compute points
-    for (let player of gamestate.players) {
-        gamestate.playerData[player].pointsDistribution = utils.computePointsDistribution(gamestate, player);
-    }
 }
 
 async function updateElos(gamestate) {

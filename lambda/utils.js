@@ -100,8 +100,8 @@ exports.getNeighbors = (gamestate, player) => {
 }
 
 exports.getScoreResultForElo = (gamestate, player1, player2) => {
-    let points1 = gamestate.playerData[player1].pointsDistribution.total;
-    let points2 = gamestate.playerData[player2].pointsDistribution.total;
+    let points1 = exports.computePointsDistribution(gamestate, player1).total;
+    let points2 = exports.computePointsDistribution(gamestate, player2).total;
     let gold1 = gamestate.playerData[player1].gold;
     let gold2 = gamestate.playerData[player2].gold;
     if (points1 < points2) return 0;
@@ -463,8 +463,14 @@ exports.getValidMoves = (gamestate, player) => {
     let hand = gamestate.playerData[player].hand;
     
     let possibleStagesToBuild = [];
-    if (gamestate.playerData[player].stagesBuilt.length < gamestate.wonders[player].stages.length) {
-        possibleStagesToBuild.push(gamestate.playerData[player].stagesBuilt.length);
+    if (exports.hasEffect(exports.getAllEffects(gamestate, player), 'turret')) {
+        // Can build any wonder stage
+        possibleStagesToBuild.push(...exports.range(0, gamestate.wonders[player].stages.length-1).filter(stage => !gamestate.playerData[player].stagesBuilt.includes(stage)));
+    } else {
+        // Can only build next wonder stage
+        if (gamestate.playerData[player].stagesBuilt.length < gamestate.wonders[player].stages.length) {
+            possibleStagesToBuild.push(gamestate.playerData[player].stagesBuilt.length);
+        }
     }
     
     let possibleStagesPaymentOptions = possibleStagesToBuild.map(stageIndex => exports.getPaymentOptions(gamestate, player, { action: 'wonder', stage: stageIndex }));
@@ -525,9 +531,6 @@ exports.getPaymentOptions = (gamestate, player, move) => {
     let negPurchasableStartingResources = exports.getPurchasableResources(exports.getAllStartingEffects(gamestate, neg_player));
     let posPurchasableStartingResources = exports.getPurchasableResources(exports.getAllStartingEffects(gamestate, pos_player));
     
-    console.log('starting:', negPurchasableStartingResources, posPurchasableStartingResources);
-    console.log('initial:', negPurchasableResources, posPurchasableResources);
-    
     // De-dupe the starting purchasable resources from the regular ones.
     for (let r of negPurchasableStartingResources) {
         let i = exports.indexOfArray(negPurchasableResources, r);
@@ -537,8 +540,6 @@ exports.getPaymentOptions = (gamestate, player, move) => {
         let i = exports.indexOfArray(posPurchasableResources, r);
         if (i >= 0) posPurchasableResources.splice(i, 1);
     }
-    
-    console.log('after:', negPurchasableResources, posPurchasableResources);
     
     let hasNegTradingPost = exports.hasEffect(effects, 'trading_post', 'neg') || exports.hasEffect(effects, 'double_trading_post');
     let hasPosTradingPost = exports.hasEffect(effects, 'trading_post', 'pos') || exports.hasEffect(effects, 'double_trading_post');

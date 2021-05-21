@@ -350,7 +350,9 @@ namespace GameStateDiffer {
                 });
 
                 yield* S.simul(...militaryTokenDistributionScripts)();
-                yield* S.wait(0.5)();
+
+                let pointChangeScripts = gamestate.players.map(player => animatePointsChange(scene, player, gamestate.playerData[player].pointsDistribution.total));
+                yield* S.simul(...pointChangeScripts)();
 
                 // Remove diplomacies if applicable
                 yield* S.simul(...gamestate.diplomacyPlayers.map(player => function*() {
@@ -485,21 +487,14 @@ namespace GameStateDiffer {
 
         let oldPoints = Main.gamestate.playerData[player].pointsDistribution.total;
         let newPoints = gamestate.playerData[player].pointsDistribution.total;
-        let playeri = Main.gamestate.players.indexOf(player);
+
+        if (gamestate.age > Main.gamestate.age || gamestate.state === 'GAME_COMPLETE') {
+            newPoints -= sum(gamestate.playerData[player].gainedMilitaryTokensFromConflict, token => token);
+        }
 
         if (newPoints === oldPoints) return;
 
-        result.scripts.push(function*() {
-            let pointsText = scene.wonders[playeri].pointsText;
-
-            pointsText.style.color = '#FF0000';
-            
-            yield* S.doOverTime(1, t => {
-                pointsText.textContent = `${Math.round(lerp(oldPoints, newPoints, t))}`;
-            })();
-
-            pointsText.style.color = '#FFFFFF';
-        });
+        result.scripts.push(animatePointsChange(scene, player, newPoints));
     }
 
     function diffGold(gamestate: API.GameState, player: string, result: DiffResult) {
@@ -665,6 +660,21 @@ namespace GameStateDiffer {
         if (oldTokens >= newTokens) return;
 
         result.scripts.push(S.chain(...range(1, newTokens-oldTokens).map(j => animateGiveDebtToken(scene, gamestate, player))));
+    }
+
+    function animatePointsChange(scene: GameScene, player: string, newPoints: number) {
+        return function*() {
+            let pointsText = scene.wonders[Main.gamestate.players.indexOf(player)].pointsText;
+            let oldPoints = parseInt(pointsText.textContent);
+
+            pointsText.style.color = '#FF0000';
+            
+            yield* S.doOverTime(1, t => {
+                pointsText.textContent = `${Math.round(lerp(oldPoints, newPoints, t))}`;
+            })();
+
+            pointsText.style.color = '#FFFFFF';
+        }
     }
 
     function animateGoldMovement(fromPos: PIXI.Point, toPos: PIXI.Point, gold: number) {

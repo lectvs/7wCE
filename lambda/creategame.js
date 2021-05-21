@@ -29,7 +29,7 @@ exports.creategame = async (players, flags) => {
         }
     }
     
-    let isDebug = false;
+    let isDebug = isTestGame;
     
     let wonderPreferences = {};
     if (flags.includes('respect_preferences')) {

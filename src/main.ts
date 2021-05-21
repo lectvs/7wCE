@@ -109,6 +109,7 @@ class Main {
                 PIXI.Loader.shared.add('unproduced_resource', 'assets/unproduced_resource.svg');
                 PIXI.Loader.shared.add('dove', 'assets/dove.svg');
                 PIXI.Loader.shared.add('crack', 'assets/crack.svg');
+                PIXI.Loader.shared.add('turret', 'assets/turret.svg');
                 PIXI.Loader.shared.load((loader: any, resources: Dict<PIXI.LoaderResource>) => {
                     for (let resource in resources) {
                         Resources.PIXI_TEXTURES[resource] = resources[resource].texture;
@@ -169,8 +170,11 @@ class Main {
 
             if (gamestate.turn < Main.gamestate.turn) {
                 Main.error(`Error: local turn (${Main.gamestate.turn}) is greater than the game's (${gamestate.turn})?`);
+                this.diffing = false;
+                this.gamestate = gamestate;
+                this.scene.destroy();
+                this.scene.create();
                 this.sendUpdate();
-                return;
             } else if (Main.gamestate.state === 'CHOOSE_WONDER_SIDE') {
                 if (gamestate.state === 'CHOOSE_WONDER_SIDE') {
                     let diffResult = GameStateDiffer.diffChooseSide(gamestate);

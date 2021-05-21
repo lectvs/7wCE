@@ -84,6 +84,8 @@ function getDescriptionForEffect(effect: API.Effect) {
         return `All players except you lose ${effect.gold_per_stage} gold per wonder stage they have built`;
     } else if (effect.type === 'broken_gold_for_victory_tokens') {
         return `All players except you lose ${effect.gold_per_token} gold per military victory token they have`;
+    } else if (effect.type === 'turret') {
+        return `You may build your wonder stages in any order`;
     }
     console.error('Effect type not found:', effect.type);
     return "Description not found";

@@ -62,7 +62,7 @@ namespace ArtCommon {
         return '#FF00FF';
     }
 
-    export function getArtForEffects(effects: API.Effect[]) {
+    export function getArtForEffects(effects: API.Effect[], padding: number = 8) {
         let effectArts = effects.map(effect => {
             if (effect.type === 'resource') {
                 return resource(effect.resource);
@@ -150,12 +150,14 @@ namespace ArtCommon {
                 return brokenGoldForStages(effect.gold_per_stage);
             } else if (effect.type === 'broken_gold_for_victory_tokens') {
                 return brokenGoldForVictoryTokens(effect.gold_per_token);
+            } else if (effect.type === 'turret') {
+                return turret();
             }
             console.error('Effect type not found:', effect.type);
             return effectNotFound();
         });
 
-        return combineEffectArt(effectArts, 8);
+        return combineEffectArt(effectArts, padding);
     }
 
     export function getShadowForArt(artFactory: () => PIXI.DisplayObject, type: 'light' | 'dark', dx: number = 5, dy: number = 5) {
@@ -169,8 +171,8 @@ namespace ArtCommon {
         return container;
     }
 
-    export function getShadowForEffects(effects: API.Effect[], type: 'light' | 'dark', dx: number = 5, dy: number = 5) {
-        return getShadowForArt(() => ArtCommon.getArtForEffects(effects), type, dx, dy);
+    export function getShadowForEffects(effects: API.Effect[], type: 'light' | 'dark', dx: number = 5, dy: number = 5, padding: number = 8) {
+        return getShadowForArt(() => ArtCommon.getArtForEffects(effects, padding), type, dx, dy);
     }
 
     export function getArtForCost(cost: API.Cost) {
@@ -1107,6 +1109,13 @@ namespace ArtCommon {
         crack.anchor.set(0.5, 0.5);
         crack.scale.set(0.7);
         return crack;
+    }
+
+    export function turret() {
+        let turret = new PIXI.Sprite(PIXI.Texture.from('turret'));
+        turret.anchor.set(0.5, 0.5);
+        turret.scale.set(0.7);
+        return turret;
     }
 
     export function payment(amount: number, canChooseFree: boolean) {

@@ -437,7 +437,10 @@ var API;
     /* API METHODS */
     function getgamestate(gameid, player, password_hash, callback) {
         httpRequest(LAMBDA_URL + "?operation=getgamestate&gameid=" + gameid + "&player=" + player + "&password_hash=" + password_hash, function (responseJson, error) {
-            if (error) {
+            if (!responseJson) {
+                callback(undefined, "No gamestate received");
+            }
+            else if (error) {
                 callback(undefined, error);
             }
             else {
@@ -448,7 +451,10 @@ var API;
     API.getgamestate = getgamestate;
     function getvalidmoves(gameid, turn, player, password_hash, callback) {
         httpRequest(LAMBDA_URL + "?operation=getvalidmoves&gameid=" + gameid + "&turn=" + turn + "&player=" + player + "&password_hash=" + password_hash, function (responseJson, error) {
-            if (error) {
+            if (!responseJson || !responseJson['validMoves']) {
+                callback(undefined, "No valid moves received");
+            }
+            else if (error) {
                 callback(undefined, error);
             }
             else {
@@ -494,7 +500,10 @@ var API;
     API.updategame = updategame;
     function getusers(usernames, callback) {
         httpRequest(LAMBDA_URL + "?operation=getusers&usernames=" + usernames.join(','), function (responseJson, error) {
-            if (error) {
+            if (!responseJson || !responseJson['users']) {
+                callback(undefined, "No users received");
+            }
+            else if (error) {
                 callback(undefined, error);
             }
             else {
@@ -505,7 +514,10 @@ var API;
     API.getusers = getusers;
     function getinvites(username, callback) {
         httpRequest(LAMBDA_URL + "?operation=getinvites&username=" + username, function (responseJson, error) {
-            if (error) {
+            if (!responseJson || !responseJson['gameids']) {
+                callback(undefined, "No invites received");
+            }
+            else if (error) {
                 callback(undefined, error);
             }
             else {
@@ -523,7 +535,10 @@ var API;
     API.setwonderpreferences = setwonderpreferences;
     function creategame(options, callback) {
         httpRequest(LAMBDA_URL + "?operation=creategame&players=" + options.players.join(',') + "&flags=" + options.flags.join(','), function (responseJson, error) {
-            if (error) {
+            if (!responseJson || !responseJson['gameid']) {
+                callback(undefined, "No gameid received");
+            }
+            else if (error) {
                 callback(undefined, error);
             }
             else {
@@ -540,7 +555,10 @@ var API;
     API.login = login;
     function getpatchnotes(callback) {
         httpRequest(LAMBDA_URL + "?operation=getpatchnotes", function (responseJson, error) {
-            if (error) {
+            if (!responseJson || !responseJson['patchNotes']) {
+                callback(undefined, "No patch notes received");
+            }
+            else if (error) {
                 callback(undefined, error);
             }
             else {
@@ -656,7 +674,8 @@ var ArtCommon;
         return '#FF00FF';
     }
     ArtCommon.cardBannerForColorHtml = cardBannerForColorHtml;
-    function getArtForEffects(effects) {
+    function getArtForEffects(effects, padding) {
+        if (padding === void 0) { padding = 8; }
         var effectArts = effects.map(function (effect) {
             if (effect.type === 'resource') {
                 return resource(effect.resource);
@@ -787,10 +806,13 @@ var ArtCommon;
             else if (effect.type === 'broken_gold_for_victory_tokens') {
                 return brokenGoldForVictoryTokens(effect.gold_per_token);
             }
+            else if (effect.type === 'turret') {
+                return turret();
+            }
             console.error('Effect type not found:', effect.type);
             return effectNotFound();
         });
-        return combineEffectArt(effectArts, 8);
+        return combineEffectArt(effectArts, padding);
     }
     ArtCommon.getArtForEffects = getArtForEffects;
     function getShadowForArt(artFactory, type, dx, dy) {
@@ -806,10 +828,11 @@ var ArtCommon;
         return container;
     }
     ArtCommon.getShadowForArt = getShadowForArt;
-    function getShadowForEffects(effects, type, dx, dy) {
+    function getShadowForEffects(effects, type, dx, dy, padding) {
         if (dx === void 0) { dx = 5; }
         if (dy === void 0) { dy = 5; }
-        return getShadowForArt(function () { return ArtCommon.getArtForEffects(effects); }, type, dx, dy);
+        if (padding === void 0) { padding = 8; }
+        return getShadowForArt(function () { return ArtCommon.getArtForEffects(effects, padding); }, type, dx, dy);
     }
     ArtCommon.getShadowForEffects = getShadowForEffects;
     function getArtForCost(cost) {
@@ -1785,6 +1808,13 @@ var ArtCommon;
         return crack;
     }
     ArtCommon.crack = crack;
+    function turret() {
+        var turret = new PIXI.Sprite(PIXI.Texture.from('turret'));
+        turret.anchor.set(0.5, 0.5);
+        turret.scale.set(0.7);
+        return turret;
+    }
+    ArtCommon.turret = turret;
     function payment(amount, canChooseFree) {
         var errorColor = canChooseFree ? ArtCommon.freeColor : ArtCommon.cantAffordColor;
         var costColor = canChooseFree ? ArtCommon.freeColor : ArtCommon.affordColor;
@@ -3494,6 +3524,9 @@ function getDescriptionForEffect(effect) {
     else if (effect.type === 'broken_gold_for_victory_tokens') {
         return "All players except you lose " + effect.gold_per_token + " gold per military victory token they have";
     }
+    else if (effect.type === 'turret') {
+        return "You may build your wonder stages in any order";
+    }
     console.error('Effect type not found:', effect.type);
     return "Description not found";
 }
@@ -3873,7 +3906,7 @@ var GameStateDiffer;
             return result;
         }
         result.scripts.push(function () {
-            var moveScripts, handPosition_1, targetHandPosition_1, discardHandPosition_1, targetDiscardHandPosition_1, lerpt_1, isEndOfAge, currentHandPositions_1, targetHandPosition_2, discardScripts, _loop_3, i, topWonder, goldLossEffect_1, handPosition_2, targetHandPosition_3, discardHandPosition_2, discardTargetPosition_1, lerpt_2, p, l, r, militaryShowings, _loop_4, militaryShowings_1, militaryShowings_1_1, showings, e_27_1, militaryTokenDistributionScripts, hands_1, entryPoint, i_2, startPosition_1, endPosition_1, lerpt_3, i_3, _loop_5, count, currentHandPositions_2, targetHandPositions_1, newHandi_1, lerpt_4;
+            var moveScripts, handPosition_1, targetHandPosition_1, discardHandPosition_1, targetDiscardHandPosition_1, lerpt_1, isEndOfAge, currentHandPositions_1, targetHandPosition_2, discardScripts, _loop_3, i, topWonder, goldLossEffect_1, handPosition_2, targetHandPosition_3, discardHandPosition_2, discardTargetPosition_1, lerpt_2, p, l, r, militaryShowings, _loop_4, militaryShowings_1, militaryShowings_1_1, showings, e_27_1, militaryTokenDistributionScripts, pointChangeScripts, hands_1, entryPoint, i_2, startPosition_1, endPosition_1, lerpt_3, i_3, _loop_5, count, currentHandPositions_2, targetHandPositions_1, newHandi_1, lerpt_4;
             var e_27, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
@@ -4251,7 +4284,8 @@ var GameStateDiffer;
                         return [5 /*yield**/, __values(S.simul.apply(S, __spread(militaryTokenDistributionScripts))())];
                     case 28:
                         _b.sent();
-                        return [5 /*yield**/, __values(S.wait(0.5)())];
+                        pointChangeScripts = gamestate.players.map(function (player) { return animatePointsChange(scene, player, gamestate.playerData[player].pointsDistribution.total); });
+                        return [5 /*yield**/, __values(S.simul.apply(S, __spread(pointChangeScripts))())];
                     case 29:
                         _b.sent();
                         // Remove diplomacies if applicable
@@ -4429,26 +4463,12 @@ var GameStateDiffer;
         var scene = Main.scene;
         var oldPoints = Main.gamestate.playerData[player].pointsDistribution.total;
         var newPoints = gamestate.playerData[player].pointsDistribution.total;
-        var playeri = Main.gamestate.players.indexOf(player);
+        if (gamestate.age > Main.gamestate.age || gamestate.state === 'GAME_COMPLETE') {
+            newPoints -= sum(gamestate.playerData[player].gainedMilitaryTokensFromConflict, function (token) { return token; });
+        }
         if (newPoints === oldPoints)
             return;
-        result.scripts.push(function () {
-            var pointsText;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        pointsText = scene.wonders[playeri].pointsText;
-                        pointsText.style.color = '#FF0000';
-                        return [5 /*yield**/, __values(S.doOverTime(1, function (t) {
-                                pointsText.textContent = "" + Math.round(lerp(oldPoints, newPoints, t));
-                            })())];
-                    case 1:
-                        _a.sent();
-                        pointsText.style.color = '#FFFFFF';
-                        return [2 /*return*/];
-                }
-            });
-        });
+        result.scripts.push(animatePointsChange(scene, player, newPoints));
     }
     function diffGold(gamestate, player, result) {
         if (!(Main.scene instanceof GameScene))
@@ -4633,6 +4653,26 @@ var GameStateDiffer;
         if (oldTokens >= newTokens)
             return;
         result.scripts.push(S.chain.apply(S, __spread(range(1, newTokens - oldTokens).map(function (j) { return animateGiveDebtToken(scene, gamestate, player); }))));
+    }
+    function animatePointsChange(scene, player, newPoints) {
+        return function () {
+            var pointsText, oldPoints;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        pointsText = scene.wonders[Main.gamestate.players.indexOf(player)].pointsText;
+                        oldPoints = parseInt(pointsText.textContent);
+                        pointsText.style.color = '#FF0000';
+                        return [5 /*yield**/, __values(S.doOverTime(1, function (t) {
+                                pointsText.textContent = "" + Math.round(lerp(oldPoints, newPoints, t));
+                            })())];
+                    case 1:
+                        _a.sent();
+                        pointsText.style.color = '#FFFFFF';
+                        return [2 /*return*/];
+                }
+            });
+        };
     }
     function animateGoldMovement(fromPos, toPos, gold) {
         return S.simul.apply(S, __spread(range(0, gold - 1).map(function (i) { return S.chain(S.wait(0.2 * i), function () {
@@ -5248,8 +5288,8 @@ var Loader = /** @class */ (function () {
             wonderBoard.addChild(boardBgMask);
             // Starting effects
             var startingEffectContainer = new PIXI.Container();
-            startingEffectContainer.addChild(ArtCommon.getShadowForEffects(wonder.starting_effects, 'dark'));
-            startingEffectContainer.addChild(ArtCommon.getArtForEffects(wonder.starting_effects));
+            startingEffectContainer.addChild(ArtCommon.getShadowForEffects(wonder.starting_effects, 'dark', 5, 5, 24));
+            startingEffectContainer.addChild(ArtCommon.getArtForEffects(wonder.starting_effects, 24));
             startingEffectContainer.scale.set(C.WONDER_STARTING_EFFECTS_SCALE);
             var startingEffectsBounds = startingEffectContainer.getBounds();
             startingEffectContainer.position.set(C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.left - startingEffectContainer.x), C.WONDER_BOARD_BORDER + C.WONDER_STARTING_EFFECTS_PADDING - (startingEffectsBounds.top - startingEffectContainer.y));
@@ -5471,6 +5511,7 @@ var Main = /** @class */ (function () {
                 PIXI.Loader.shared.add('unproduced_resource', 'assets/unproduced_resource.svg');
                 PIXI.Loader.shared.add('dove', 'assets/dove.svg');
                 PIXI.Loader.shared.add('crack', 'assets/crack.svg');
+                PIXI.Loader.shared.add('turret', 'assets/turret.svg');
                 PIXI.Loader.shared.load(function (loader, resources) {
                     for (var resource in resources) {
                         Resources.PIXI_TEXTURES[resource] = resources[resource].texture;
@@ -5528,8 +5569,11 @@ var Main = /** @class */ (function () {
             }
             if (gamestate.turn < Main.gamestate.turn) {
                 Main.error("Error: local turn (" + Main.gamestate.turn + ") is greater than the game's (" + gamestate.turn + ")?");
+                _this.diffing = false;
+                _this.gamestate = gamestate;
+                _this.scene.destroy();
+                _this.scene.create();
                 _this.sendUpdate();
-                return;
             }
             else if (Main.gamestate.state === 'CHOOSE_WONDER_SIDE') {
                 if (gamestate.state === 'CHOOSE_WONDER_SIDE') {

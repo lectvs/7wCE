@@ -238,6 +238,32 @@ const wonders = {
             { cost: { gold: 10 }, effects: [{ type: 'points', points: 14 }] },
         ]
     },
+    '20': {
+        name: 'The Great Wall',
+        side: 'A',
+        outline_color: 0xD89000,
+        starting_effect_color: "grey",
+        starting_effects: [{ type: "resource", resource: "loom" }, { type: "turret" }],
+        stages: [
+            { cost: { resources: ["wood", "wood"] }, effects: [{ type: 'gold', gold: 8 }] },
+            { cost: { resources: ["press", "glass", "clay"] }, effects: [{ type: "multi_science", symbols: "compass/tablet/gear" }] },
+            { cost: { resources: ["stone", "stone", "stone"] }, effects: [{ type: 'shields', shields: 2 }] },
+            { cost: { resources: ["ore", "ore", "ore"] }, effects: [{ type: 'build_from_discard', priority: 50 }] },
+        ]
+    },
+    '21': {
+        name: 'The Great Wall',
+        side: 'B',
+        outline_color: 0xD89000,
+        starting_effect_color: "grey",
+        starting_effects: [{ type: "resource", resource: "loom" }, { type: "turret" }],
+        stages: [
+            { cost: { resources: ["press", "wood"] }, effects: [{ type: "gold_for_neighbor", gold: 2, direction: "neg" }, { type: "gold", gold: 8 }, { type: "gold_for_neighbor", gold: 2, direction: "pos" }] },
+            { cost: { resources: ["ore", "clay", "clay"] }, effects: [{ type: "mask" }] },
+            { cost: { resources: ["press", "wood", "wood"] }, effects: [{ type: 'dove' }, { type: 'broken_gold', gold: 2 }] },
+            { cost: { resources: ["stone", "stone"] }, effects: [{ type: 'unproduced_resource' }] },
+        ]
+    },
     '100': {
         name: 'Test',
         side: 'A',
@@ -333,7 +359,7 @@ exports.getWonderChoicesForPlayers = (players, wonderPreferences, isDebug) => {
     }
     
     if (isDebug) {
-        // result['Dartm'] = [wonders['100']];
+        result['Dartm'] = [wonders['21']];
         // result['BOT1'] = [wonders['16'], wonders['17']];
         // result['BOT2'] = [wonders['18'], wonders['19']];
     }

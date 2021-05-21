@@ -66,10 +66,15 @@ exports.getgamestate = async (gameid, player, password_hash) => {
             delete gamestate.playerData[p].hand;
         }
         
+        // Compute points distribution
+        for (let p in gamestate.playerData) {
+            gamestate.playerData[p].pointsDistribution = utils.computePointsDistribution(gamestate, p);
+        }
+        
         // Helper: list all last-card-players
         gamestate.lastCardPlayers = (gamestate.state === 'LAST_CARD_MOVE') ? gamestate.players.filter(player => utils.hasEffect(utils.getAllWonderEffects(gamestate, player), 'play_last_card')) : [];
         
-        // Helper: list all last-card-players
+        // Helper: list all gold-loss-players
         gamestate.chooseGoldToLosePlayers = (gamestate.state === 'CHOOSE_GOLD_TO_LOSE') ? gamestate.players.filter(player => gamestate.playerData[player].goldToLose > 0) : [];
         
         // Helper: list all players' shield counts
@@ -87,7 +92,6 @@ exports.getgamestate = async (gameid, player, password_hash) => {
             }
             gamestate.playerData[p].cardPoints = cardPoints;
         }
-
     }
 
     // Hide initial hands
