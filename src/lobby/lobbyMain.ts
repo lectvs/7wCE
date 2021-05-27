@@ -42,8 +42,6 @@ class LobbyMain {
         this.username = userpass.username;
         this.password_hash = userpass.password_hash;
 
-        document.getElementsByClassName('userinfo')[0].innerHTML = `Logged in as ${this.username} (<a class="userinfolink" href="" onclick="Login.logout()">Logout</a>)`;
-
         PIXI.Ticker.shared.add(delta => {
             this.delta = delta/60;
             this.update();
@@ -75,6 +73,8 @@ class LobbyMain {
     }
 
     static load() {
+        document.getElementsByClassName('userinfo')[0].innerHTML = `Logged in as ${this.user.username} | ${Math.round(this.user.elo)} | <a class="userinfolink" href="" onclick="Login.logout()">Logout</a>`;
+
         this.wonderPreferenceList = new WonderPreferenceList();
         this.wonderPreferenceList.create();
         this.createGameSection = new CreateGameSection();

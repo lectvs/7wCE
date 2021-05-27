@@ -7225,7 +7225,6 @@ var LobbyMain = /** @class */ (function () {
         }
         this.username = userpass.username;
         this.password_hash = userpass.password_hash;
-        document.getElementsByClassName('userinfo')[0].innerHTML = "Logged in as " + this.username + " (<a class=\"userinfolink\" href=\"\" onclick=\"Login.logout()\">Logout</a>)";
         PIXI.Ticker.shared.add(function (delta) {
             _this.delta = delta / 60;
             _this.update();
@@ -7253,6 +7252,7 @@ var LobbyMain = /** @class */ (function () {
         });
     };
     LobbyMain.load = function () {
+        document.getElementsByClassName('userinfo')[0].innerHTML = "Logged in as " + this.user.username + " | " + Math.round(this.user.elo) + " | <a class=\"userinfolink\" href=\"\" onclick=\"Login.logout()\">Logout</a>";
         this.wonderPreferenceList = new WonderPreferenceList();
         this.wonderPreferenceList.create();
         this.createGameSection = new CreateGameSection();
