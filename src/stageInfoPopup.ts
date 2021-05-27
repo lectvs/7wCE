@@ -14,6 +14,10 @@ class StageInfoPopup extends Popup {
     }
 
     protected draw() {
+        return this.stage.copy_stage ? this.drawCopyStage() : this.drawNormalStage();
+    }
+
+    private drawNormalStage() {
         let box = document.createElement('div');
         box.style.backgroundColor = '#FFFFFF';
         box.style.position = 'absolute';
@@ -82,6 +86,42 @@ class StageInfoPopup extends Popup {
             box.appendChild(description);
             currentY += 24;
         }
+
+        let padding = 10;
+        box.style.width = `${this.width-padding}px`;
+        box.style.height = `${currentY}px`;
+        box.style.paddingRight = `${padding}px`;
+
+        return box;
+    }
+
+    private drawCopyStage() {
+        let box = document.createElement('div');
+        box.style.backgroundColor = '#FFFFFF';
+        box.style.position = 'absolute';
+
+        let currentY = 16;
+
+        // Name
+        box.appendChild(this.infoText('<span style="font-weight:bold">Wonder Stage</span>', '10px', `${currentY}px`));
+        currentY += 24;
+
+        let effect = box.appendChild(document.createElement('div'));
+        let copyArt = new PIXI.Container();
+        copyArt.addChild(ArtCommon.getShadowForStageCopy(this.stage.copy_stage.stage, this.stage.copy_stage.dir, 'dark'));
+        copyArt.addChild(ArtCommon.getArtForStageCopy(this.stage.copy_stage.stage, this.stage.copy_stage.dir));
+        effect.appendChild(ArtCommon.domElementForArt(copyArt, 1, 10));
+        effect.style.transform = 'scale(0.2)';
+        effect.style.position = 'absolute';
+        effect.style.left = `${10 + copyArt.width/10}px`;
+        effect.style.top = `${currentY}px`;
+
+        let description = this.infoText(`Copy the ${this.stage.copy_stage.stage} wonder stage of your ${this.stage.copy_stage.dir === 'neg' ? 'left' : 'right'} neighbor`,
+                                        `${20 + copyArt.width/5}px`, `${currentY}px`);
+        description.style.fontSize = `${C.CARD_INFO_EFFECT_DESCRIPTION_SIZE}px`;
+        description.style.marginRight = '10px';
+        box.appendChild(description);
+        currentY += 24;
 
         let padding = 10;
         box.style.width = `${this.width-padding}px`;

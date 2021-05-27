@@ -192,10 +192,6 @@ namespace ArtCommon {
     }
 
     export function getArtForStageCost(cost: API.Cost) {
-        if (!cost) {
-            return undefined;
-        }
-
         let costArts = [];
         if (cost.gold) {
             costArts.push(gold(cost.gold));
@@ -205,6 +201,45 @@ namespace ArtCommon {
         }
 
         return combineStageCostArt(costArts, 16);
+    }
+
+    export function getArtForStageCopy(stage: string, direction: string) {
+        let container = new PIXI.Container();
+        if (stage === 'first') {
+            container.addChild(copyStageFirst());
+        } else if (stage === 'second') {
+            container.addChild(copyStageSecond());
+        } else if (stage === 'last') {
+            container.addChild(copyStageLast());
+        } else {
+            console.error('Stage not found:', stage);
+            container.addChild(effectNotFound());
+        }
+
+        if (direction === 'pos') {
+            let arrow = arrowRight();
+            arrow.scale.set(0.5);
+            arrow.position.set(100, 0);
+            container.addChild(arrow);
+        }
+        if (direction === 'neg') {
+            let arrow = arrowLeft();
+            arrow.scale.set(0.5);
+            arrow.position.set(-100, 0);
+            container.addChild(arrow);
+        }
+
+        let parentContainer = new PIXI.Container();
+        parentContainer.addChild(container);
+
+        let lb = container.getLocalBounds();
+        container.x = -lb.x - lb.width/2;
+
+        return parentContainer;
+    }
+
+    export function getShadowForStageCopy(stage: string, direction: string, type: 'light' | 'dark', dx: number = 5, dy: number = 5) {
+        return getShadowForArt(() => ArtCommon.getArtForStageCopy(stage, direction), type, dx, dy);
     }
 
     
@@ -1013,6 +1048,33 @@ namespace ArtCommon {
     export function pyramidStages() {
         let container = new PIXI.Container();
         let sprite = new PIXI.Sprite(PIXI.Texture.from('pyramid_stages'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        container.addChild(sprite);
+        return container;
+    }
+
+    export function copyStageFirst() {
+        let container = new PIXI.Container();
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('copy_stage_first'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        container.addChild(sprite);
+        return container;
+    }
+
+    export function copyStageSecond() {
+        let container = new PIXI.Container();
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('copy_stage_second'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        container.addChild(sprite);
+        return container;
+    }
+
+    export function copyStageLast() {
+        let container = new PIXI.Container();
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('copy_stage_last'));
         sprite.anchor.set(0.5, 0.5);
         sprite.scale.set(0.7);
         container.addChild(sprite);

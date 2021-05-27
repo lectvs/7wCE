@@ -219,13 +219,19 @@ class Loader {
                 wonderBoard.addChild(stageBg);
     
                 let stageEffectContainer = new PIXI.Container();
-                stageEffectContainer.addChild(ArtCommon.getShadowForEffects(wonder.stages[i].effects, 'light'));
-                stageEffectContainer.addChild(ArtCommon.getArtForEffects(wonder.stages[i].effects));
+                if (wonder.stages[i].copy_stage) {
+                    stageEffectContainer.addChild(ArtCommon.getShadowForStageCopy(wonder.stages[i].copy_stage.stage, wonder.stages[i].copy_stage.dir, 'light'));
+                    stageEffectContainer.addChild(ArtCommon.getArtForStageCopy(wonder.stages[i].copy_stage.stage, wonder.stages[i].copy_stage.dir));
+
+                } else {
+                    stageEffectContainer.addChild(ArtCommon.getShadowForEffects(wonder.stages[i].effects, 'light'));
+                    stageEffectContainer.addChild(ArtCommon.getArtForEffects(wonder.stages[i].effects));
+                }
                 stageEffectContainer.scale.set(C.WONDER_STAGE_EFFECT_SCALE);
                 stageEffectContainer.position.set(stageXs[i], C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT/2);
                 wonderBoard.addChild(stageEffectContainer);
     
-                let stageCost = ArtCommon.getArtForStageCost(wonder.stages[i].cost);
+                let stageCost = wonder.stages[i]?.cost ? ArtCommon.getArtForStageCost(wonder.stages[i].cost) : undefined;
                 if (stageCost) {
                     stageCost.scale.set(C.WONDER_STAGE_COST_SCALE);
                     stageCost.position.set(stageXs[i] - C.WONDER_STAGE_WIDTH/2 + C.WONDER_STAGE_COST_OFFSET_X, C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_COST_OFFSET_Y);

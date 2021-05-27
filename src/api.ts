@@ -120,6 +120,12 @@ namespace API {
     export type WonderStage = {
         cost: Cost;
         effects: Effect[];
+        copy_stage?: CopyStageProperties;
+    }
+
+    export type CopyStageProperties = {
+        stage: 'first' | 'second' | 'last';
+        dir: 'pos' | 'neg';
     }
 
     export type Move = {

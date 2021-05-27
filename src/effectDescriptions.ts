@@ -35,7 +35,7 @@ function getDescriptionForEffect(effect: API.Effect) {
     } else if (effect.type === 'play_last_card') {
         return `You may play your last card instead of discarding it at the end of each age`;
     } else if (effect.type === 'build_from_discard') {
-        return `Play one card from the discard pile for free. Conflicts resolve in this order: Halikarnassos -> Forging Agency`;
+        return `Play one card from the discard pile for free. Conflicts resolve in this order: Halikarnassos -> The Great Wall -> Manneken Pis -> Forging Agency`;
     } else if (effect.type === 'build_free_first_color') {
         return `You may ignore the cost of any card, provided you have not already played one of the same color`;
     } else if (effect.type === 'build_free_first_card') {

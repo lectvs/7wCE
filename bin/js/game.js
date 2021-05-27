@@ -862,9 +862,6 @@ var ArtCommon;
     ArtCommon.getArtForCost = getArtForCost;
     function getArtForStageCost(cost) {
         var e_8, _a;
-        if (!cost) {
-            return undefined;
-        }
         var costArts = [];
         if (cost.gold) {
             costArts.push(gold(cost.gold));
@@ -885,6 +882,46 @@ var ArtCommon;
         return combineStageCostArt(costArts, 16);
     }
     ArtCommon.getArtForStageCost = getArtForStageCost;
+    function getArtForStageCopy(stage, direction) {
+        var container = new PIXI.Container();
+        if (stage === 'first') {
+            container.addChild(copyStageFirst());
+        }
+        else if (stage === 'second') {
+            container.addChild(copyStageSecond());
+        }
+        else if (stage === 'last') {
+            container.addChild(copyStageLast());
+        }
+        else {
+            console.error('Stage not found:', stage);
+            container.addChild(effectNotFound());
+        }
+        if (direction === 'pos') {
+            var arrow = arrowRight();
+            arrow.scale.set(0.5);
+            arrow.position.set(100, 0);
+            container.addChild(arrow);
+        }
+        if (direction === 'neg') {
+            var arrow = arrowLeft();
+            arrow.scale.set(0.5);
+            arrow.position.set(-100, 0);
+            container.addChild(arrow);
+        }
+        var parentContainer = new PIXI.Container();
+        parentContainer.addChild(container);
+        var lb = container.getLocalBounds();
+        container.x = -lb.x - lb.width / 2;
+        return parentContainer;
+    }
+    ArtCommon.getArtForStageCopy = getArtForStageCopy;
+    function getShadowForStageCopy(stage, direction, type, dx, dy) {
+        if (dx === void 0) { dx = 5; }
+        if (dy === void 0) { dy = 5; }
+        return getShadowForArt(function () { return ArtCommon.getArtForStageCopy(stage, direction); }, type, dx, dy);
+    }
+    ArtCommon.getShadowForStageCopy = getShadowForStageCopy;
     /* EFFECTS */
     function resource(resource) {
         if (resource === 'wood')
@@ -1716,6 +1753,33 @@ var ArtCommon;
         return container;
     }
     ArtCommon.pyramidStages = pyramidStages;
+    function copyStageFirst() {
+        var container = new PIXI.Container();
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('copy_stage_first'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        container.addChild(sprite);
+        return container;
+    }
+    ArtCommon.copyStageFirst = copyStageFirst;
+    function copyStageSecond() {
+        var container = new PIXI.Container();
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('copy_stage_second'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        container.addChild(sprite);
+        return container;
+    }
+    ArtCommon.copyStageSecond = copyStageSecond;
+    function copyStageLast() {
+        var container = new PIXI.Container();
+        var sprite = new PIXI.Sprite(PIXI.Texture.from('copy_stage_last'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        container.addChild(sprite);
+        return container;
+    }
+    ArtCommon.copyStageLast = copyStageLast;
     function goldCoin() {
         var container = new PIXI.Container();
         var sprite = new PIXI.Sprite(PIXI.Texture.from('goldcoin'));
@@ -3450,7 +3514,7 @@ function getDescriptionForEffect(effect) {
         return "You may play your last card instead of discarding it at the end of each age";
     }
     else if (effect.type === 'build_from_discard') {
-        return "Play one card from the discard pile for free. Conflicts resolve in this order: Halikarnassos -> Forging Agency";
+        return "Play one card from the discard pile for free. Conflicts resolve in this order: Halikarnassos -> The Great Wall -> Manneken Pis -> Forging Agency";
     }
     else if (effect.type === 'build_free_first_color') {
         return "You may ignore the cost of any card, provided you have not already played one of the same color";
@@ -5278,6 +5342,7 @@ var Loader = /** @class */ (function () {
     Loader.prototype.loadWonder = function (wonder) {
         var resource = this.addNewResource();
         resource.load = function () {
+            var _a;
             var wonderBoard = new PIXI.Container();
             // Board
             var boardBase = Shapes.filledRoundedRect(0, 0, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT, C.WONDER_BOARD_CORNER_RADIUS, wonder.outline_color);
@@ -5314,12 +5379,18 @@ var Loader = /** @class */ (function () {
                 stageBg.x = stageXs[i];
                 wonderBoard.addChild(stageBg);
                 var stageEffectContainer = new PIXI.Container();
-                stageEffectContainer.addChild(ArtCommon.getShadowForEffects(wonder.stages[i].effects, 'light'));
-                stageEffectContainer.addChild(ArtCommon.getArtForEffects(wonder.stages[i].effects));
+                if (wonder.stages[i].copy_stage) {
+                    stageEffectContainer.addChild(ArtCommon.getShadowForStageCopy(wonder.stages[i].copy_stage.stage, wonder.stages[i].copy_stage.dir, 'light'));
+                    stageEffectContainer.addChild(ArtCommon.getArtForStageCopy(wonder.stages[i].copy_stage.stage, wonder.stages[i].copy_stage.dir));
+                }
+                else {
+                    stageEffectContainer.addChild(ArtCommon.getShadowForEffects(wonder.stages[i].effects, 'light'));
+                    stageEffectContainer.addChild(ArtCommon.getArtForEffects(wonder.stages[i].effects));
+                }
                 stageEffectContainer.scale.set(C.WONDER_STAGE_EFFECT_SCALE);
                 stageEffectContainer.position.set(stageXs[i], C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT / 2);
                 wonderBoard.addChild(stageEffectContainer);
-                var stageCost = ArtCommon.getArtForStageCost(wonder.stages[i].cost);
+                var stageCost = ((_a = wonder.stages[i]) === null || _a === void 0 ? void 0 : _a.cost) ? ArtCommon.getArtForStageCost(wonder.stages[i].cost) : undefined;
                 if (stageCost) {
                     stageCost.scale.set(C.WONDER_STAGE_COST_SCALE);
                     stageCost.position.set(stageXs[i] - C.WONDER_STAGE_WIDTH / 2 + C.WONDER_STAGE_COST_OFFSET_X, C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_COST_OFFSET_Y);
@@ -5512,6 +5583,9 @@ var Main = /** @class */ (function () {
                 PIXI.Loader.shared.add('dove', 'assets/dove.svg');
                 PIXI.Loader.shared.add('crack', 'assets/crack.svg');
                 PIXI.Loader.shared.add('turret', 'assets/turret.svg');
+                PIXI.Loader.shared.add('copy_stage_first', 'assets/copy_stage_first.svg');
+                PIXI.Loader.shared.add('copy_stage_second', 'assets/copy_stage_second.svg');
+                PIXI.Loader.shared.add('copy_stage_last', 'assets/copy_stage_last.svg');
                 PIXI.Loader.shared.load(function (loader, resources) {
                     for (var resource in resources) {
                         Resources.PIXI_TEXTURES[resource] = resources[resource].texture;
@@ -6288,6 +6362,9 @@ var StageInfoPopup = /** @class */ (function (_super) {
         return this.stage;
     };
     StageInfoPopup.prototype.draw = function () {
+        return this.stage.copy_stage ? this.drawCopyStage() : this.drawNormalStage();
+    };
+    StageInfoPopup.prototype.drawNormalStage = function () {
         var _a, _b;
         var box = document.createElement('div');
         box.style.backgroundColor = '#FFFFFF';
@@ -6352,6 +6429,34 @@ var StageInfoPopup = /** @class */ (function (_super) {
             box.appendChild(description);
             currentY += 24;
         }
+        var padding = 10;
+        box.style.width = this.width - padding + "px";
+        box.style.height = currentY + "px";
+        box.style.paddingRight = padding + "px";
+        return box;
+    };
+    StageInfoPopup.prototype.drawCopyStage = function () {
+        var box = document.createElement('div');
+        box.style.backgroundColor = '#FFFFFF';
+        box.style.position = 'absolute';
+        var currentY = 16;
+        // Name
+        box.appendChild(this.infoText('<span style="font-weight:bold">Wonder Stage</span>', '10px', currentY + "px"));
+        currentY += 24;
+        var effect = box.appendChild(document.createElement('div'));
+        var copyArt = new PIXI.Container();
+        copyArt.addChild(ArtCommon.getShadowForStageCopy(this.stage.copy_stage.stage, this.stage.copy_stage.dir, 'dark'));
+        copyArt.addChild(ArtCommon.getArtForStageCopy(this.stage.copy_stage.stage, this.stage.copy_stage.dir));
+        effect.appendChild(ArtCommon.domElementForArt(copyArt, 1, 10));
+        effect.style.transform = 'scale(0.2)';
+        effect.style.position = 'absolute';
+        effect.style.left = 10 + copyArt.width / 10 + "px";
+        effect.style.top = currentY + "px";
+        var description = this.infoText("Copy the " + this.stage.copy_stage.stage + " wonder stage of your " + (this.stage.copy_stage.dir === 'neg' ? 'left' : 'right') + " neighbor", 20 + copyArt.width / 5 + "px", currentY + "px");
+        description.style.fontSize = C.CARD_INFO_EFFECT_DESCRIPTION_SIZE + "px";
+        description.style.marginRight = '10px';
+        box.appendChild(description);
+        currentY += 24;
         var padding = 10;
         box.style.width = this.width - padding + "px";
         box.style.height = currentY + "px";

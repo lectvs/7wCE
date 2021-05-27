@@ -110,6 +110,9 @@ class Main {
                 PIXI.Loader.shared.add('dove', 'assets/dove.svg');
                 PIXI.Loader.shared.add('crack', 'assets/crack.svg');
                 PIXI.Loader.shared.add('turret', 'assets/turret.svg');
+                PIXI.Loader.shared.add('copy_stage_first', 'assets/copy_stage_first.svg');
+                PIXI.Loader.shared.add('copy_stage_second', 'assets/copy_stage_second.svg');
+                PIXI.Loader.shared.add('copy_stage_last', 'assets/copy_stage_last.svg');
                 PIXI.Loader.shared.load((loader: any, resources: Dict<PIXI.LoaderResource>) => {
                     for (let resource in resources) {
                         Resources.PIXI_TEXTURES[resource] = resources[resource].texture;
