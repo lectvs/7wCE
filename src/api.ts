@@ -2,9 +2,11 @@ namespace API {
     export type GameState = {
         state: 'CHOOSE_WONDER_SIDE' | 'NORMAL_MOVE' | 'LAST_CARD_MOVE' | 'DISCARD_MOVE' | 'CHOOSE_GOLD_TO_LOSE' | 'GAME_COMPLETE';
         citiesEnabled: boolean;
+        sevenBlundersEnabled: boolean;
         discardMoveQueue: string[];
         lastCardPlayers: string[];
         chooseGoldToLosePlayers: string[];
+        turretPlayers: string[];
         fightingPlayers?: string[];
         diplomacyPlayers?: string[];
         players: string[];
@@ -46,6 +48,8 @@ namespace API {
     export type StageBuilt = {
         stage: number;
         cardAge: number;
+        copyPlayer?: string;
+        copyStage?: number;
     }
 
     export type PointsDistribution = {
@@ -136,6 +140,8 @@ namespace API {
         payment?: Payment;
         side?: number;
         gold_to_lose?: number;
+        copyPlayer?: string;
+        copyStage?: number;
     }
 
     export type Payment = {
@@ -169,6 +175,8 @@ namespace API {
         if (move1.card !== move2.card) return false;
         if (move1.stage !== move2.stage) return false;
         if (move1.stage !== move2.stage) return false;
+        if (move1.copyPlayer !== move2.copyPlayer) return false;
+        if (move1.copyStage !== move2.copyStage) return false;
         return eqPayment(move1.payment, move2.payment);
     }
 
@@ -197,6 +205,8 @@ namespace API {
             if (validMove.action !== move.action) continue;
             if (validMove.card !== move.card) continue;
             if (validMove.stage !== move.stage) continue;
+            if (validMove.copyPlayer !== move.copyPlayer) continue;
+            if (validMove.copyStage !== move.copyStage) continue;
             let bankPayment = validMove.payment?.bank || 0;
             if (!validMove.payment?.free_with_zeus && bankPayment < result) result = bankPayment;
         }
@@ -204,7 +214,7 @@ namespace API {
     }
 
     export function isPaymentSelectionNecessary(move: Move, validMoves: Move[]) {
-        let matchingMoves = validMoves.filter(validMove => validMove.action === move.action && validMove.card === move.card && validMove.stage === move.stage);
+        let matchingMoves = validMoves.filter(validMove => validMove.action === move.action && validMove.card === move.card && validMove.copyPlayer === move.copyPlayer && validMove.stage === move.stage && validMove.copyStage === move.copyStage);
 
         // If the move is already free...
         for (let validMove of matchingMoves) {
@@ -227,6 +237,13 @@ namespace API {
 
         // Otherwise, move requires neighbor payment.
         return true;
+    }
+
+    export function isCopyStageSelectionNecessary(stage: number, validMoves: Move[], turretPlayers: string[]) {
+        let options = copyStageOptions(stage, validMoves);
+        if (options.length === 0) return false;
+        if (options.length > 1) return true;
+        return contains(turretPlayers, options[0].copyPlayer);
     }
 
     export function isZeusActive(moves: Move[]) {
@@ -252,6 +269,8 @@ namespace API {
             if (validMove.action !== move.action) continue;
             if (validMove.card !== move.card) continue;
             if (validMove.stage !== move.stage) continue;
+            if (validMove.copyPlayer !== move.copyPlayer) continue;
+            if (validMove.copyStage !== move.copyStage) continue;
             options.push(validMove.payment);
         }
 
@@ -273,6 +292,22 @@ namespace API {
         }
 
         return options;
+    }
+
+    export function copyStageOptions(stage: number, validMoves: Move[]) {
+        let result: { copyPlayer: string, copyStage: number }[] = [];
+        for (let validMove of validMoves) {
+            if (validMove.action !== 'wonder') continue;
+            if (validMove.stage !== stage) continue;
+            if (validMove.copyPlayer === undefined || validMove.copyStage === undefined) continue;
+            let inResult = false;
+            for (let r of result) {
+                if (r.copyPlayer === validMove.copyPlayer && r.copyStage === validMove.copyStage) inResult = true;
+            }
+            if (inResult) continue;
+            result.push({ copyPlayer: validMove.copyPlayer, copyStage: validMove.copyStage });
+        }
+        return result;
     }
 
     export function goldGain(oldGold: number, newGold: number, payment: Payment, negPayment: Payment, posPayment: Payment) {

@@ -248,7 +248,7 @@ const wonders = {
             { cost: { resources: ["wood", "wood"] }, effects: [{ type: 'gold', gold: 8 }] },
             { cost: { resources: ["press", "glass", "clay"] }, effects: [{ type: "multi_science", symbols: "compass/tablet/gear" }] },
             { cost: { resources: ["stone", "stone", "stone"] }, effects: [{ type: 'shields', shields: 2 }] },
-            { cost: { resources: ["ore", "ore", "ore"] }, effects: [{ type: 'build_from_discard', priority: 50 }] },
+            { cost: { resources: ["ore", "ore", "ore"] }, effects: [{ type: 'build_from_discard', priority: 75 }] },
         ]
     },
     '21': {
@@ -262,6 +262,28 @@ const wonders = {
             { cost: { resources: ["ore", "clay", "clay"] }, effects: [{ type: "mask" }] },
             { cost: { resources: ["press", "wood", "wood"] }, effects: [{ type: 'dove' }, { type: 'broken_gold', gold: 2 }] },
             { cost: { resources: ["stone", "stone"] }, effects: [{ type: 'unproduced_resource' }] },
+        ]
+    },
+    '22': {
+        name: 'Manneken Pis',
+        side: 'A',
+        outline_color: 0xF2AA0C,
+        starting_effect_color: "yellow",
+        starting_effects: [{ type: "gold", gold: 4 }],
+        stages: [
+            { effects: [], copy_stage: { stage: 'first', dir: 'neg' } },
+            { effects: [], copy_stage: { stage: 'second', dir: 'pos' } },
+            { effects: [], copy_stage: { stage: 'last', dir: 'neg' } },
+        ]
+    },
+    '23': {
+        name: 'Manneken Pis',
+        side: 'B',
+        outline_color: 0xF2AA0C,
+        starting_effect_color: "yellow",
+        starting_effects: [{ type: "gold", gold: 4 }],
+        stages: [
+            { cost: { resources: ["glass", "press", "loom", "ore", "clay", "stone", "wood"] }, effects: [{ type: 'gold', gold: 7 }, { type: 'points', points: 7 }, { type: 'shields', shields: 1 }] },
         ]
     },
     '100': {
@@ -359,9 +381,9 @@ exports.getWonderChoicesForPlayers = (players, wonderPreferences, isDebug) => {
     }
     
     if (isDebug) {
-        result['Dartm'] = [wonders['21']];
-        // result['BOT1'] = [wonders['16'], wonders['17']];
-        // result['BOT2'] = [wonders['18'], wonders['19']];
+        result['Dartm'] = [wonders['22']];
+        //result['BOT1'] = [wonders['22']];
+        result['BOT2'] = [wonders['20']];
     }
     
     return result;

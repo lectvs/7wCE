@@ -116,7 +116,7 @@ const cards = {
     105: { age: 2, name: 'Black Market', color: "black", cost: { resources: ["ore", "loom"] }, effects: [{ type: "unproduced_resource" }] },
     106: { age: 2, name: 'Sepulcher',  color: "black", cost: { resources: ["stone", "loom", "glass"] }, effects: [{ type: "broken_gold_for_victory_tokens", gold_per_token: 1 }, { type: "points", points: 4 }] },
     107: { age: 2, name: 'Architect Firm', color: "black", cost: { resources: ["press"], gold: 1 }, effects: [{ type: "waive_wonder_resource_costs" }, { type: "points", points: 2 }] },
-    108: { age: 2, name: 'Forging Agency', color: "black", cost: { gold: 2 }, effects: [{ type: "build_from_discard", priority: 1 }] },
+    108: { age: 2, name: 'Forging Agency', color: "black", cost: { gold: 2 }, effects: [{ type: "build_from_discard", priority: 0 }] },
     /* Age 3 */
     109: { age: 3, name: 'Opium Distillery',  color: "black", cost: { resources: ["wood", "glass"] }, effects: [{ type: "gold", gold: 5 }, { type: "broken_gold", gold: 5 }] },
     110: { age: 3, name: 'Brotherhood', color: "black", cost: { resources: ["wood", "wood", "ore", "loom"] }, effects: [{ type: "broken_gold", gold: 3 }, { type: "points", points: 4 }] },

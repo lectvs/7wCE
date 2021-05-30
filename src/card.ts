@@ -236,11 +236,24 @@ class Card extends GameElement {
                     this.select(move);
                 } else if (contains(this.allowBuildStages, stage) && this.activeWonder.getStageRegion().contains(Main.mouseX, Main.mouseY)) {
                     let move: API.Move = { action: 'wonder', card: this.apiCardId, index: this.index, stage: stage };
-                    if (API.isPaymentSelectionNecessary(move, Main.gamestate.validMoves)) {
-                        this.scene.startPaymentDialog(this, move);
+                    if (API.isCopyStageSelectionNecessary(stage, Main.gamestate.validMoves, Main.gamestate.turretPlayers)) {
+                        this.scene.startCopyStageDialog(this, move);
                     } else {
-                        move.payment = { bank: Main.gamestate.wonders[Main.player].stages[stage]?.cost?.gold };
-                        Main.submitMove(move);
+                        let options = API.copyStageOptions(stage, Main.gamestate.validMoves);
+                        if (options.length > 0) {
+                            move.copyPlayer = options[0].copyPlayer;
+                            move.copyStage = options[0].copyStage;
+                        }
+                        if (API.isPaymentSelectionNecessary(move, Main.gamestate.validMoves)) {
+                            this.scene.startPaymentDialog(this, move);
+                        } else {
+                            if (options.length > 0) {
+                                move.payment = { bank: Main.gamestate.wonders[move.copyPlayer].stages[move.copyStage]?.cost?.gold };
+                            } else {
+                                move.payment = { bank: Main.gamestate.wonders[Main.player].stages[stage]?.cost?.gold };
+                            }
+                            Main.submitMove(move);
+                        }
                     }
                     this.select(move);
                 } else if (this.allowThrow && this.scene.discardPile.getDiscardRegion().contains(Main.mouseX, Main.mouseY)) {
@@ -421,10 +434,10 @@ class Card extends GameElement {
     }
 
     canBeInteractable() {
-        if (this.scene.isPaymentMenuActive || this.scene.isChooseGoldToLoseMenuActive) return false;
+        if (this.scene.isMenuActive) return false;
         if (Main.diffing) return false;
         if (Main.gamestate.state === 'CHOOSE_GOLD_TO_LOSE') return false;
-        if (!this.allowPlay && this.allowBuildStages.length === 0 && !this.allowThrow) return false;
+        //if (!this.allowPlay && this.allowBuildStages.length === 0 && !this.allowThrow) return false;
         return true;
     }
 

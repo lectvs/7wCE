@@ -66,6 +66,12 @@ class WonderBoardForChoose extends GameElement {
             let stageX = this.wonderResource.stageXs[i];
             let wonderStage = this.wonder.stages[i];
 
+            let stageSource = {
+                player: this.player,
+                stageIndex: i,
+                stage: wonderStage,
+            };
+
             let popupDiv = this.div.appendChild(document.createElement('div'));
             popupDiv.style.position = 'absolute';
             popupDiv.style.left = `${-C.WONDER_BOARD_WIDTH/2 + stageX - C.WONDER_STAGE_WIDTH/2}px`;
@@ -75,14 +81,14 @@ class WonderBoardForChoose extends GameElement {
 
             popupDiv.onmousemove = () => {
                 if (Main.scene.isCurrentlyDragging()) {
-                    Main.scene.stopPopup(wonderStage);
+                    Main.scene.stopPopup(stageSource);
                     return;
                 }
-                Main.scene.updatePopup(wonderStage, this.x - C.WONDER_BOARD_WIDTH/2 + stageX - C.WONDER_STAGE_WIDTH/2, this.y + C.WONDER_BOARD_HEIGHT/2);
+                Main.scene.updatePopup(stageSource, this.x - C.WONDER_BOARD_WIDTH/2 + stageX - C.WONDER_STAGE_WIDTH/2, this.y + C.WONDER_BOARD_HEIGHT/2);
             };
     
             popupDiv.onmouseleave = () => {
-                Main.scene.stopPopup(wonderStage);
+                Main.scene.stopPopup(stageSource);
             };
         }
 

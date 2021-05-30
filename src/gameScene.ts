@@ -8,6 +8,7 @@ class GameScene extends Scene {
     discardHand: Hand;
     paymentDialog: PaymentDialog;
     chooseGoldToLoseDialog: ChooseGoldToLoseDialog;
+    copyStageDialog: CopyStageDialog;
     popup: Popup;
     actionButton: ActionButton;
 
@@ -15,8 +16,11 @@ class GameScene extends Scene {
 
     get hand() { return this.hands[Main.gamestate.players.indexOf(Main.player)]; }
     get topWonder() { return this.wonders[Main.gamestate.players.indexOf(Main.player)]; }
+
+    get isMenuActive() { return this.isPaymentMenuActive || this.isChooseGoldToLoseMenuActive || this.isCopyStageMenuActive; }
     get isPaymentMenuActive() { return !!this.paymentDialog; }
     get isChooseGoldToLoseMenuActive() { return !!this.chooseGoldToLoseDialog; }
+    get isCopyStageMenuActive() { return !!this.copyStageDialog; }
 
     constructor() {
         super();
@@ -45,6 +49,10 @@ class GameScene extends Scene {
 
         if (this.chooseGoldToLoseDialog) {
             this.chooseGoldToLoseDialog.update();
+        }
+
+        if (this.copyStageDialog) {
+            this.copyStageDialog.update();
         }
     }
 
@@ -168,6 +176,9 @@ class GameScene extends Scene {
         if (this.paymentDialog) {
             this.paymentDialog.removeFromGame();
         }
+        if (this.copyStageDialog) {
+            this.copyStageDialog.removeFromGame();
+        }
         this.paymentDialog = new PaymentDialog(this, card, move, this.topWonder);
         this.paymentDialog.zIndex = C.Z_INDEX_PAYMENT_DIALOG;
         this.paymentDialog.addToGame();
@@ -178,11 +189,25 @@ class GameScene extends Scene {
         if (this.paymentDialog) {
             this.paymentDialog.removeFromGame();
         }
+        if (this.copyStageDialog) {
+            this.copyStageDialog.removeFromGame();
+        }
         let gold = Main.gamestate.playerData[Main.player].gold;
         let goldToLose = Main.gamestate.playerData[Main.player].goldToLose;
         this.chooseGoldToLoseDialog = new ChooseGoldToLoseDialog(this, gold, goldToLose, this.topWonder);
         this.chooseGoldToLoseDialog.zIndex = C.Z_INDEX_CGTL_DIALOG;
         this.chooseGoldToLoseDialog.addToGame();
+    }
+
+    startCopyStageDialog(card: Card, move: API.Move) {
+        if (this.chooseGoldToLoseDialog) return;
+        if (this.paymentDialog) return;
+        if (this.copyStageDialog) {
+            this.copyStageDialog.removeFromGame();
+        }
+        this.copyStageDialog = new CopyStageDialog(this, card, move, this.topWonder);
+        this.copyStageDialog.zIndex = C.Z_INDEX_PAYMENT_DIALOG;
+        this.copyStageDialog.addToGame();
     }
 
     getSourceSinkPosition() {

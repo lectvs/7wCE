@@ -42,6 +42,8 @@ exports.submitmove = async (gameid, turn, player, password_hash, move) => {
         if (move.action !== validMove.action) continue;
         if (move.card !== validMove.card) continue;
         if (move.stage !== validMove.stage) continue;
+        if (move.copyPlayer !== validMove.copyPlayer) continue;
+        if (move.copyStage !== validMove.copyStage) continue;
         
         let payment = getFullPayment(move);
         let validPayment = getFullPayment(validMove);

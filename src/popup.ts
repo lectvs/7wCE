@@ -1,5 +1,10 @@
 namespace Popup {
-    export type Source = Card | CardForList | API.WonderStage | API.Wonder;
+    export type Source = Card | CardForList | WonderStageSource | API.Wonder;
+    export type WonderStageSource = {
+        player: string;
+        stageIndex: number;
+        stage: API.WonderStage;
+    }
 }
 
 class Popup extends GameElement {

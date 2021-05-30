@@ -213,6 +213,26 @@ class C {
     public static readonly CGTL_DIALOG_PAY_BUTTON_COLOR = '#880000';
     public static readonly CGTL_DIALOG_PAY_BUTTON_COLOR_SELECTED = '#FF0000';
 
+    public static readonly COPY_STAGE_DIALOG_OFFSET_X = -512;
+    public static readonly COPY_STAGE_DIALOG_OFFSET_Y = -330;
+    public static readonly COPY_STAGE_DIALOG_WIDTH = 375;
+    public static readonly COPY_STAGE_DIALOG_EXTRA_HEIGHT = 60;
+    public static readonly COPY_STAGE_DIALOG_CORNER_RADIUS = 8;
+    public static readonly COPY_STAGE_DIALOG_COLOR = '#FFFFFF';
+    public static readonly COPY_STAGE_DIALOG_TITLE = "Choose stage to copy";
+    public static readonly COPY_STAGE_DIALOG_TITLE_SIZE = 18;
+    public static readonly COPY_STAGE_DIALOG_TITLE_PADDING = 12;
+    public static readonly COPY_STAGE_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT = 24;
+    public static readonly COPY_STAGE_DIALOG_PAYMENTS_DY = 37.5;
+    public static readonly COPY_STAGE_DIALOG_PAY_BUTTON_WIDTH = 56;
+    public static readonly COPY_STAGE_DIALOG_PAY_BUTTON_HEIGHT = 30;
+    public static readonly COPY_STAGE_DIALOG_PAY_BUTTON_COLOR = '#000088';
+    public static readonly COPY_STAGE_DIALOG_PAY_BUTTON_TEXT_COLOR = '#FFFFFF';
+    public static readonly COPY_STAGE_DIALOG_CLOSE_BUTTON_OFFSET_X = 15;
+    public static readonly COPY_STAGE_DIALOG_CLOSE_BUTTON_OFFSET_Y = 15;
+    public static readonly COPY_STAGE_DIALOG_CLOSE_BUTTON_COLOR = 0x000000;
+    public static readonly COPY_STAGE_DIALOG_CLOSE_BUTTON_SCALE = 0.15;
+
     public static readonly END_SCREEN_PLACEMENTS_Y = 50;
     public static readonly END_SCREEN_NAMES_Y = 80;
     public static readonly END_SCREEN_ELOS_Y = 105;

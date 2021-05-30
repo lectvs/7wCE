@@ -11,8 +11,10 @@ exports.getgamestate = async (gameid, player, password_hash) => {
         throw new Error('Invalid login');
     }
     
+    let s1 = utils.currentTime();
     let ddbresult = await dynamo.get({ TableName: '7wCE_games', Key: { gameid } }).promise();
     let gamestate = JSON.parse(ddbresult.Item.gamestate);
+    console.log(utils.currentTime() - s1);
     
     if (!gamestate.players.includes(player)) {
         throw new Error('Player not in game');
@@ -31,6 +33,7 @@ exports.getgamestate = async (gameid, player, password_hash) => {
         }
     }
 
+    let s2 = utils.currentTime();
     ddbresult = await dynamo.batchGet({
         RequestItems: {
             '7wCE_moves': {
@@ -40,6 +43,7 @@ exports.getgamestate = async (gameid, player, password_hash) => {
             }
         }
     }).promise();
+    console.log(utils.currentTime() - s2);
     
     // Set current and last moves
     for (let item of ddbresult.Responses['7wCE_moves']) {
@@ -72,10 +76,13 @@ exports.getgamestate = async (gameid, player, password_hash) => {
         }
         
         // Helper: list all last-card-players
-        gamestate.lastCardPlayers = (gamestate.state === 'LAST_CARD_MOVE') ? gamestate.players.filter(player => utils.hasEffect(utils.getAllWonderEffects(gamestate, player), 'play_last_card')) : [];
+        gamestate.lastCardPlayers = (gamestate.state === 'LAST_CARD_MOVE') ? gamestate.players.filter(player => utils.hasEffect(utils.getAllEffects(gamestate, player), 'play_last_card')) : [];
         
         // Helper: list all gold-loss-players
         gamestate.chooseGoldToLosePlayers = (gamestate.state === 'CHOOSE_GOLD_TO_LOSE') ? gamestate.players.filter(player => gamestate.playerData[player].goldToLose > 0) : [];
+        
+        // Helper: list all turret players
+        gamestate.turretPlayers = gamestate.players.filter(player => utils.hasEffect(utils.getAllEffects(gamestate, player), 'turret'));
         
         // Helper: list all players' shield counts
         for (let p in gamestate.playerData) {

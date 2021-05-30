@@ -236,6 +236,7 @@ class Main {
     static submitMove(move: API.Move) {
         API.submitmove(this.gameid, this.gamestate.turn, this.player, this.password_hash, move, (error: string) => {
             if (error) {
+                console.error(move);
                 this.error(error);
                 return;
             }
@@ -345,6 +346,10 @@ class Main {
             }
         } else if (gamestate.state === 'GAME_COMPLETE') {
             statusText.innerHTML = "Game complete";
+        }
+
+        if (gamestate.sevenBlundersEnabled) {
+            statusText.innerHTML = "7 Blunders: " + statusText.innerHTML;
         }
     }
 

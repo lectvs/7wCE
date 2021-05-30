@@ -70,6 +70,8 @@ exports.handler = async (event, context) => {
                 card: validateExists(move.card, 'move.card'),
                 index: move.index,
                 stage: move.stage,
+                copyPlayer: move.copyPlayer,
+                copyStage: move.copyStage,
                 payment: validateExists(move.payment, 'move.payment')
             };
             result = await submitmove(gameid, turn, player, password_hash, move);

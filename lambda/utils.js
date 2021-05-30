@@ -104,6 +104,15 @@ exports.getScoreResultForElo = (gamestate, player1, player2) => {
     let points2 = exports.computePointsDistribution(gamestate, player2).total;
     let gold1 = gamestate.playerData[player1].gold;
     let gold2 = gamestate.playerData[player2].gold;
+    
+    if (gamestate.sevenBlundersEnabled) {
+        if (points1 < points2) return 1;
+        if (points1 > points2) return 0;
+        if (gold1 < gold2) return 1;
+        if (gold1 > gold2) return 0;
+        return 0.5;
+    }
+    
     if (points1 < points2) return 0;
     if (points1 > points2) return 1;
     if (gold1 < gold2) return 0;
@@ -282,6 +291,14 @@ function computeSciencePointsFor(scienceAdditions, symbolCounts) {
     return maxPoints;
 }
 
+exports.resolveStage = (gamestate, player, stageBuilt) => {
+    if (stageBuilt.copyPlayer === undefined || stageBuilt.copyStage === undefined) {
+        return gamestate.wonders[player].stages[stageBuilt.stage];
+    }
+    
+    return gamestate.wonders[stageBuilt.copyPlayer].stages[stageBuilt.copyStage];
+}
+
 exports.getAllEffects = (gamestate, player) => {
     let cardEffects = exports.getAllCardEffects(gamestate, player);
     let startingEffects = exports.getAllStartingEffects(gamestate, player);
@@ -308,12 +325,12 @@ exports.getAllStartingEffects = (gamestate, player) => {
 }
 
 exports.getAllWonderEffects = (gamestate, player) => {
-    let wonder = gamestate.wonders[player];
     let stagesBuilt = gamestate.playerData[player].stagesBuilt;
     
     let effects = [];
     for (let stageBuilt of stagesBuilt) {
-        let stage = wonder.stages[stageBuilt.stage];
+        let stage = exports.resolveStage(gamestate, player, stageBuilt);
+        if (!stage) continue;
         for (let effect of stage.effects) {
             effects.push(effect);
         }
@@ -413,18 +430,6 @@ exports.getPurchasableResources = (effects) => {
     return purchasableResources;
 }
 
-exports.getPurchasableResources = (effects) => {
-    let purchasableResources = [];
-    for (let effect of effects) {
-        if (effect.type === 'resource') {
-            purchasableResources.push([effect.resource]);
-        } else if (effect.type === 'multi_resource' && effect.purchasable) {
-            purchasableResources.push(effect.resources.split('/'));
-        }
-    }
-    return purchasableResources;
-}
-
 exports.getShields = (effects) => {
     let shields = 0;
     for (let effect of effects) {
@@ -433,6 +438,72 @@ exports.getShields = (effects) => {
         }
     }
     return shields;
+}
+
+/* TURN */
+exports.applyImmediateEffect = (gamestate, player, effect, discardPlays) => {
+    let playerData = gamestate.playerData[player];
+    if (effect.type === 'gold') {
+        playerData.gold += effect.gold;
+    } else if (effect.type === 'gold_for_cards') {
+        let [negPlayer, posPlayer] = exports.getNeighbors(gamestate, player);
+        let cards = exports.getCardsOfColor(gamestate, player, effect.color);
+        let negCards = exports.getCardsOfColor(gamestate, negPlayer, effect.color);
+        let posCards = exports.getCardsOfColor(gamestate, posPlayer, effect.color);
+        playerData.gold += effect.gold_per_card * (cards + negCards + posCards);
+    } else if (effect.type === 'gold_and_points_for_cards') {
+        let cards = exports.getCardsOfColor(gamestate, player, effect.color);
+        playerData.gold += effect.gold_per_card * cards;
+    } else if (effect.type === 'gold_and_points_for_stages') {
+        let stages = playerData.stagesBuilt.length;
+        playerData.gold += effect.gold_per_stage * stages;
+    } else if (effect.type === 'build_from_discard') {
+        let priority = effect.priority || 0;
+        if (gamestate.wonders[player].name === 'Manneken Pis') priority /= 2;
+        discardPlays.push({ player: player, priority: priority });
+    } else if (effect.type === 'gold_for_others') {
+        for (let other of gamestate.players) {
+            if (other !== player) gamestate.playerData[other].gold += effect.gold;
+        }
+    } else if (effect.type === 'gold_for_neighbor') {
+        let [negPlayer, posPlayer] = exports.getNeighbors(gamestate, player);
+        if (effect.direction === 'neg') gamestate.playerData[negPlayer].gold += effect.gold;
+        if (effect.direction === 'pos') gamestate.playerData[posPlayer].gold += effect.gold;
+    } else if (effect.type === 'dove') {
+        playerData.diplomacyTokens++;
+    } else if (effect.type === 'gain_victory_token') {
+        playerData.militaryTokens.push(effect.token_value);
+    } else if (effect.type === 'debt_for_neighbor') {
+        let [negPlayer, posPlayer] = exports.getNeighbors(gamestate, player);
+        if (effect.direction === 'neg') gamestate.playerData[negPlayer].debtTokens++;
+        if (effect.direction === 'pos') gamestate.playerData[posPlayer].debtTokens++;
+    } else if (effect.type === 'gold_for_defeat_tokens') {
+        let tokens = playerData.militaryTokens.filter(value => value < 0).length;
+        playerData.gold += effect.gold_per_token * tokens;
+    } else if (effect.type === 'gold_and_points_for_victory_tokens') {
+        let tokens = playerData.militaryTokens.filter(value => value > 0).length;
+        playerData.gold += effect.gold_per_token * tokens;
+    } else if (effect.type === 'discard_defeat_tokens') {
+        playerData.militaryTokens = playerData.militaryTokens.filter(value => value >= 0);
+    } else if (effect.type === 'broken_gold') {
+        for (let other of gamestate.players) {
+            if (other !== player) gamestate.playerData[other].goldToLose += effect.gold;
+        }
+    } else if (effect.type === 'broken_gold_for_stages') {
+        for (let other of gamestate.players) {
+            if (other !== player) {
+                let stages = gamestate.playerData[other].stagesBuilt.length;
+                gamestate.playerData[other].goldToLose += effect.gold_per_stage * stages;
+            }
+        }
+    } else if (effect.type === 'broken_gold_for_victory_tokens') {
+        for (let other of gamestate.players) {
+            if (other !== player) {
+                let tokens = gamestate.playerData[other].militaryTokens.filter(value => value > 0).length;
+                gamestate.playerData[other].goldToLose += effect.gold_per_token * tokens;
+            }
+        }
+    }
 }
 
 /* VALID MOVES */
@@ -465,7 +536,7 @@ exports.getValidMoves = (gamestate, player) => {
     let possibleStagesToBuild = [];
     if (exports.hasEffect(exports.getAllEffects(gamestate, player), 'turret')) {
         // Can build any wonder stage
-        possibleStagesToBuild.push(...exports.range(0, gamestate.wonders[player].stages.length-1).filter(stage => !gamestate.playerData[player].stagesBuilt.includes(stage)));
+        possibleStagesToBuild.push(...exports.range(0, gamestate.wonders[player].stages.length-1).filter(stage => !gamestate.playerData[player].stagesBuilt.map(sb => sb.stage).includes(stage)));
     } else {
         // Can only build next wonder stage
         if (gamestate.playerData[player].stagesBuilt.length < gamestate.wonders[player].stages.length) {
@@ -473,12 +544,28 @@ exports.getValidMoves = (gamestate, player) => {
         }
     }
     
-    let possibleStagesPaymentOptions = possibleStagesToBuild.map(stageIndex => exports.getPaymentOptions(gamestate, player, { action: 'wonder', stage: stageIndex }));
+    let possibleStageBuildOptions = possibleStagesToBuild.map(stageIndex => {
+        let choices = resolveCopyStageChoices(gamestate, player, stageIndex);
+        if (choices.length === 0) {
+            return [{ stage: stageIndex, copyPlayer: player, copyStage: stageIndex }];
+        }
+        return choices.map(choice => ({ stage: stageIndex, copyPlayer: choice.player, copyStage: choice.stage }));
+    }).flat();
+    
+    let possibleStageBuildPaymentOptions = possibleStageBuildOptions.map(option => {
+        let wonderMove = { action: 'wonder', stage: option.stage };
+        if (option.copyPlayer !== player || option.copyStage !== option.stage) {
+            wonderMove.copyPlayer = option.copyPlayer;
+            wonderMove.copyStage = option.copyStage;
+        }
+        return { stage: wonderMove.stage, copyPlayer: wonderMove.copyPlayer, copyStage: wonderMove.copyStage, paymentOptions: exports.getPaymentOptions(gamestate, player, wonderMove) };
+    });
     
     let playedCardNames = gamestate.playerData[player].playedCards.map(cardId => gamestate.cards[cardId].name);
     
     let validMoves = [];
     for (let cardId of hand) {
+        
         if (!playedCardNames.includes(gamestate.cards[cardId].name)) {
             let playMove = { action: 'play', card: cardId };
             for (let paymentOption of exports.getPaymentOptions(gamestate, player, playMove)) {
@@ -486,16 +573,63 @@ exports.getValidMoves = (gamestate, player) => {
             }
         }
         
-        for (let i = 0; i < possibleStagesToBuild.length; i++) {
-            for (let paymentOption of possibleStagesPaymentOptions[i]) {
-                validMoves.push({ action: 'wonder', card: cardId, stage: possibleStagesToBuild[i], payment: paymentOption })
+        for (let stageBuildOptions of possibleStageBuildPaymentOptions) {
+            for (let paymentOption of stageBuildOptions.paymentOptions) {
+                validMoves.push({ action: 'wonder', card: cardId, stage: stageBuildOptions.stage, copyPlayer: stageBuildOptions.copyPlayer, copyStage: stageBuildOptions.copyStage, payment: paymentOption });
             }
         }
 
         validMoves.push({ action: 'throw', card: cardId, payment: {} });
     }
+
+    
+    if (gamestate.sevenBlundersEnabled) {
+        // In 7 Blunders, throwing is only valid if there are no other moves
+        let throwlessMoves = validMoves.filter(move => move.action !== 'throw');
+        if (throwlessMoves.length > 0) validMoves = throwlessMoves;
+    }
     
     return validMoves;
+}
+
+function resolveCopyStageChoices(gamestate, player, stageIndex, checkedPlayerStages = []) {
+    let stage = gamestate.wonders[player].stages[stageIndex];
+    if (!stage.copy_stage) return [{ player: player, stage: stageIndex }];
+    
+    let playerStage = `${player}_${stageIndex}`;
+    if (checkedPlayerStages.includes(playerStage)) return [];  // Infinite loop
+    
+    let [negPlayer, posPlayer] = exports.getNeighbors(gamestate, player);
+    let copyPlayer = stage.copy_stage.dir === 'neg' ? negPlayer : posPlayer;
+    
+    let copyStages = gamestate.wonders[copyPlayer].stages.length;
+    if (copyStages === 0) return [];
+    
+    let possibleStagesToCopy = [];
+    if (exports.hasEffect(exports.getAllEffects(gamestate, copyPlayer), 'turret')) {
+        possibleStagesToCopy.push(...exports.range(0, copyStages-1));
+    } else if (stage.copy_stage.stage === 'first') {
+        possibleStagesToCopy.push(0);
+    } else if (stage.copy_stage.stage === 'second') {
+        possibleStagesToCopy.push(copyStages === 1 ? 0 : 1);
+    } else if (stage.copy_stage.stage === 'last') {
+        possibleStagesToCopy.push(copyStages - 1);
+    }
+    
+    checkedPlayerStages.push(playerStage);
+    let result = possibleStagesToCopy.map(si => resolveCopyStageChoices(gamestate, copyPlayer, si, checkedPlayerStages)).flat();
+    checkedPlayerStages.pop();
+    
+    // Remove duplicates
+    for (let i = 0; i < result.length; i++) {
+        for (let j = result.length-1; j > i; j--) {
+            if (result[i].player !== result[j].player) continue;
+            if (result[i].stage !== result[j].stage) continue;
+            result.splice(j, 1);
+        }
+    }
+    
+    return result;
 }
 
 /* PAYMENT */
@@ -551,7 +685,13 @@ exports.getPaymentOptions = (gamestate, player, move) => {
     
     let cost;
     if (move.action === 'play') cost = gamestate.cards[move.card].cost;
-    if (move.action === 'wonder') cost = gamestate.wonders[player].stages[move.stage].cost;
+    if (move.action === 'wonder') {
+        if (move.copyPlayer) {
+            cost = gamestate.wonders[move.copyPlayer].stages[move.copyStage].cost;
+        } else {
+            cost = gamestate.wonders[player].stages[move.stage].cost;
+        }
+    }
 
     if (!cost) {
         return [{}];
@@ -577,6 +717,7 @@ exports.getPaymentOptions = (gamestate, player, move) => {
     }
     
     let resourceCost = (move.action === 'wonder' && exports.hasEffect(effects, 'waive_wonder_resource_costs')) ? [] : cost.resources;
+    adjustNeighborResourcesForResourceCost(resourceCost, negPurchasableResources, posPurchasableResources, negPurchasableStartingResources, posPurchasableStartingResources);
     
     let paymentOptions = getPaymentOptionsForResources(resourceCost, resources, negPurchasableResources, posPurchasableResources,
                                                        negPurchasableStartingResources, posPurchasableStartingResources, hasNegTradingPost, hasPosTradingPost, hasMarketplace, smugglersCaches);
@@ -672,6 +813,59 @@ function getPaymentOptionsForResources(costResources, resources, negPurchasableR
     costResources.unshift(costResource);
     
     return paymentOptions;
+}
+
+function adjustNeighborResourcesForResourceCost(resourceCost, negPurchasableResources, posPurchasableResources, negPurchasableStartingResources, posPurchasableStartingResources) {
+    let resources = sumResources(resourceCost);
+    let negResources = sumNeighborResources(negPurchasableResources, negPurchasableStartingResources);
+    let posResources = sumNeighborResources(posPurchasableResources, posPurchasableStartingResources);
+    
+    for (let r in resources) {
+        for (let count = resources[r]; count < negResources[r]; count++) {
+            negPurchasableResources.splice(exports.indexOfArray(negPurchasableResources, [r]), 1);
+        }
+        for (let count = resources[r]; count < posResources[r]; count++) {
+            posPurchasableResources.splice(exports.indexOfArray(posPurchasableResources, [r]), 1);
+        }
+    }
+    
+    console.log(negPurchasableResources, posPurchasableResources)
+}
+
+function sumResources(resources) {
+    let result = {
+        wood: 0,
+        ore: 0,
+        clay: 0,
+        stone: 0,
+        press: 0,
+        glass: 0,
+        loom: 0
+    };
+    for (let resource of resources) {
+        result[resource]++;
+    }
+    return result;
+}
+
+function sumNeighborResources(resources, startingResources) {
+    let result = {
+        wood: 0,
+        ore: 0,
+        clay: 0,
+        stone: 0,
+        press: 0,
+        glass: 0,
+        loom: 0
+    };
+    for (let resource of resources) {
+        if (resource.length === 1) result[resource[0]]++;
+    }
+    for (let resource of startingResources) {
+        if (resource.length === 1) result[resource[0]]--;
+        if (result[resource[0]] < 0) result[resource[0]] = 0;
+    }
+    return result;
 }
 
 function getTotalPaymentCost(payment) {

@@ -109,6 +109,11 @@ function updateChooseSide(gamestate, movesByPlayer) {
         let side = movesByPlayer[player].side;
         console.log(gamestate.wonders, gamestate.wonderChoices, player, side)
         gamestate.wonders[player] = gamestate.wonderChoices[player][side];
+        
+        // Apply immediate starting effects
+        for (let effect of gamestate.wonders[player].starting_effects) {
+            utils.applyImmediateEffect(gamestate, player, effect, []);
+        }
     }
     delete gamestate.wonderChoices;
     
@@ -148,8 +153,9 @@ function updateGameMoves(gamestate, movesByPlayer) {
             playerData.hand.splice(playerData.hand.indexOf(move.card), 1);
         } else if (move.action === 'wonder') {
             let card = gamestate.cards[move.card];
-            let stage = gamestate.wonders[player].stages[move.stage];
-            playerData.stagesBuilt.push({ stage: move.stage, cardAge: card.age });
+            let stageBuilt = { stage: move.stage, cardAge: card.age, copyPlayer: move.copyPlayer, copyStage: move.copyStage };
+            playerData.stagesBuilt.push(stageBuilt);
+            let stage = utils.resolveStage(gamestate, player, stageBuilt);
             playedEffectsByPlayer[player].push(...stage.effects);
             playerData.hand.splice(playerData.hand.indexOf(move.card), 1);
         } else {
@@ -166,67 +172,8 @@ function updateGameMoves(gamestate, movesByPlayer) {
     // Apply all immediate effects
     let discardPlays = [];
     for (let player in playedEffectsByPlayer) {
-        let playerData = gamestate.playerData[player];
         for (let effect of playedEffectsByPlayer[player]) {
-            if (effect.type === 'gold') {
-                playerData.gold += effect.gold;
-            } else if (effect.type === 'gold_for_cards') {
-                let [negPlayer, posPlayer] = utils.getNeighbors(gamestate, player);
-                let cards = utils.getCardsOfColor(gamestate, player, effect.color);
-                let negCards = utils.getCardsOfColor(gamestate, negPlayer, effect.color);
-                let posCards = utils.getCardsOfColor(gamestate, posPlayer, effect.color);
-                playerData.gold += effect.gold_per_card * (cards + negCards + posCards);
-            } else if (effect.type === 'gold_and_points_for_cards') {
-                let cards = utils.getCardsOfColor(gamestate, player, effect.color);
-                playerData.gold += effect.gold_per_card * cards;
-            } else if (effect.type === 'gold_and_points_for_stages') {
-                let stages = playerData.stagesBuilt.length;
-                playerData.gold += effect.gold_per_stage * stages;
-            } else if (effect.type === 'build_from_discard') {
-                discardPlays.push({ player: player, priority: effect.priority || 0 });
-            } else if (effect.type === 'gold_for_others') {
-                for (let other of gamestate.players) {
-                    if (other !== player) gamestate.playerData[other].gold += effect.gold;
-                }
-            } else if (effect.type === 'gold_for_neighbor') {
-                let [negPlayer, posPlayer] = utils.getNeighbors(gamestate, player);
-                if (effect.direction === 'neg') gamestate.playerData[negPlayer].gold += effect.gold;
-                if (effect.direction === 'pos') gamestate.playerData[posPlayer].gold += effect.gold;
-            } else if (effect.type === 'dove') {
-                playerData.diplomacyTokens++;
-            } else if (effect.type === 'gain_victory_token') {
-                playerData.militaryTokens.push(effect.token_value);
-            } else if (effect.type === 'debt_for_neighbor') {
-                let [negPlayer, posPlayer] = utils.getNeighbors(gamestate, player);
-                if (effect.direction === 'neg') gamestate.playerData[negPlayer].debtTokens++;
-                if (effect.direction === 'pos') gamestate.playerData[posPlayer].debtTokens++;
-            } else if (effect.type === 'gold_for_defeat_tokens') {
-                let tokens = playerData.militaryTokens.filter(value => value < 0).length;
-                playerData.gold += effect.gold_per_token * tokens;
-            } else if (effect.type === 'gold_and_points_for_victory_tokens') {
-                let tokens = playerData.militaryTokens.filter(value => value > 0).length;
-                playerData.gold += effect.gold_per_token * tokens;
-            } else if (effect.type === 'discard_defeat_tokens') {
-                playerData.militaryTokens = playerData.militaryTokens.filter(value => value >= 0);
-            } else if (effect.type === 'broken_gold') {
-                for (let other of gamestate.players) {
-                    if (other !== player) gamestate.playerData[other].goldToLose += effect.gold;
-                }
-            } else if (effect.type === 'broken_gold_for_stages') {
-                for (let other of gamestate.players) {
-                    if (other !== player) {
-                        let stages = gamestate.playerData[other].stagesBuilt.length;
-                        gamestate.playerData[other].goldToLose += effect.gold_per_stage * stages;
-                    }
-                }
-            } else if (effect.type === 'broken_gold_for_victory_tokens') {
-                for (let other of gamestate.players) {
-                    if (other !== player) {
-                        let tokens = gamestate.playerData[other].militaryTokens.filter(value => value > 0).length;
-                        gamestate.playerData[other].goldToLose += effect.gold_per_token * tokens;
-                    }
-                }
-            }
+            utils.applyImmediateEffect(gamestate, player, effect, discardPlays);
         }
     }
     

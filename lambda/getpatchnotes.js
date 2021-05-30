@@ -15,7 +15,7 @@ exports.getpatchnotes = async () => {
         <br/><br/>
         <p>Upcoming changes:</p>
         <p class="pnci">- Two more wonders</p>
-        <p class="pnci">- Alternative game modes?</p>
+        <p class="pnci">- Alternative game modes</p>
     `,
     `
         <p style="font-weight:bold">v1.0: 7WCE</p>

@@ -100,6 +100,8 @@ class PaymentDialog extends GameElement {
                     card: this.move.card,
                     index: this.move.index,
                     stage: this.move.stage,
+                    copyPlayer: this.move.copyPlayer,
+                    copyStage: this.move.copyStage,
                     payment: validPayments[i]
                 }
                 Main.submitMove(trueMove);

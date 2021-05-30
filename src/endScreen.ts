@@ -6,15 +6,16 @@ class EndScreen {
     create() {
         let players = Main.gamestate.players;
         players.sort((p1, p2) => {
+            let d = Main.gamestate.sevenBlundersEnabled ? -1 : 1;
             let points1 = Main.gamestate.playerData[p1].pointsDistribution.total;
             let points2 = Main.gamestate.playerData[p2].pointsDistribution.total;
 
-            if (points1 !== points2) return points2 - points1;
+            if (points1 !== points2) return d*(points2 - points1);
 
             let gold1 = Main.gamestate.playerData[p1].gold;
             let gold2 = Main.gamestate.playerData[p2].gold;
 
-            if (gold1 !== gold2) return gold2 - gold1;
+            if (gold1 !== gold2) return d*(gold2 - gold1);
 
             return 0;
         });

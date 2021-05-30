@@ -531,7 +531,7 @@ namespace GameStateDiffer {
         // Reflect current move.
         if (player === Main.player && !Main.isMoveImmune) {
             result.scripts.push(function*() {
-                if (!scene.isPaymentMenuActive) {
+                if (!scene.isMenuActive) {
                     scene.hand.reflectMove(newMove);
                 }
             });

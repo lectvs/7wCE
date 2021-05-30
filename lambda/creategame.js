@@ -42,6 +42,7 @@ exports.creategame = async (players, flags) => {
     }
     
     let citiesEnabled = flags.includes('cities');
+    let sevenBlundersEnabled = flags.includes('blunders');
     
     let initialHands = {
         '1': cardData.newHandsForPlayersAge(players.length, 1, citiesEnabled),
@@ -73,6 +74,7 @@ exports.creategame = async (players, flags) => {
     let gamestate = {
         state: "CHOOSE_WONDER_SIDE",
         citiesEnabled: citiesEnabled,
+        sevenBlundersEnabled: sevenBlundersEnabled,
         discardMoveQueue: [],
         players: utils.shuffled(players),  // Randomize player order
         host: players[0],
