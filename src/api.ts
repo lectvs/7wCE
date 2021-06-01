@@ -3,6 +3,7 @@ namespace API {
         state: 'CHOOSE_WONDER_SIDE' | 'NORMAL_MOVE' | 'LAST_CARD_MOVE' | 'DISCARD_MOVE' | 'CHOOSE_GOLD_TO_LOSE' | 'GAME_COMPLETE';
         citiesEnabled: boolean;
         sevenBlundersEnabled: boolean;
+        randomizerEnabled: boolean;
         discardMoveQueue: string[];
         lastCardPlayers: string[];
         chooseGoldToLosePlayers: string[];
@@ -354,10 +355,10 @@ namespace API {
 
     export function getvalidmoves(gameid: string, turn: number, player: string, password_hash: string, callback: (validMoves: Move[], error: string) => any) {
         httpRequest(`${LAMBDA_URL}?operation=getvalidmoves&gameid=${gameid}&turn=${turn}&player=${player}&password_hash=${password_hash}`, (responseJson: any, error: string) => {
-            if (!responseJson || !responseJson['validMoves']) {
-                callback(undefined, "No valid moves received");
-            } else if (error) {
+            if (error) {
                 callback(undefined, error);
+            } else if (!responseJson || !responseJson['validMoves']) {
+                callback(undefined, "No valid moves received");
             } else {
                 callback(responseJson['validMoves'], undefined);
             }
@@ -400,10 +401,10 @@ namespace API {
 
     export function getusers(usernames: string[], callback: (users: Dict<User>, error: string) => any) {
         httpRequest(`${LAMBDA_URL}?operation=getusers&usernames=${usernames.join(',')}`, (responseJson: any, error: string) => {
-            if (!responseJson || !responseJson['users']) {
-                callback(undefined, "No users received");
-            } else if (error) {
+            if (error) {
                 callback(undefined, error);
+            } else if (!responseJson || !responseJson['users']) {
+                callback(undefined, "No users received");
             } else {
                 callback(responseJson['users'], undefined);
             }
@@ -412,10 +413,10 @@ namespace API {
 
     export function getinvites(username: string, callback: (gameids: string[], error: string) => any) {
         httpRequest(`${LAMBDA_URL}?operation=getinvites&username=${username}`, (responseJson: any, error: string) => {
-            if (!responseJson || !responseJson['gameids']) {
-                callback(undefined, "No invites received");
-            } else if (error) {
+            if (error) {
                 callback(undefined, error);
+            } else if (!responseJson || !responseJson['gameids']) {
+                callback(undefined, "No invites received");
             } else {
                 callback(responseJson['gameids'], undefined);
             }
@@ -431,10 +432,10 @@ namespace API {
 
     export function creategame(options: CreateGameOptions, callback: (gameid: string, error: string) => any) {
         httpRequest(`${LAMBDA_URL}?operation=creategame&players=${options.players.join(',')}&flags=${options.flags.join(',')}`, (responseJson: any, error: string) => {
-            if (!responseJson || !responseJson['gameid']) {
-                callback(undefined, "No gameid received");
-            } else if (error) {
+            if (error) {
                 callback(undefined, error);
+            } else if (!responseJson || !responseJson['gameid']) {
+                callback(undefined, "No gameid received");
             } else {
                 callback(responseJson['gameid'], undefined);
             }
@@ -449,10 +450,10 @@ namespace API {
     
     export function getpatchnotes(callback: (patchnotes: string, error: string) => any) {
         httpRequest(`${LAMBDA_URL}?operation=getpatchnotes`, (responseJson: any, error: string) => {
-            if (!responseJson || !responseJson['patchNotes']) {
-                callback(undefined, "No patch notes received");
-            } else if (error) {
+            if (error) {
                 callback(undefined, error);
+            } else if (!responseJson || !responseJson['patchNotes']) {
+                callback(undefined, "No patch notes received");
             } else {
                 callback(responseJson['patchNotes'], undefined);
             }

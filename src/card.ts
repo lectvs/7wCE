@@ -78,8 +78,6 @@ class Card extends GameElement {
         this._height = bounds.bottom - bounds.top;
     }
 
-    private highlightAlpha: number;
-
     get bounds() {
         let left = lerp(this.fullClipRect.left, this.effectClipRect.left, this._effectT) - C.CARD_WIDTH/2;
         let right = lerp(this.fullClipRect.right, this.effectClipRect.right, this._effectT) - C.CARD_WIDTH/2;
@@ -112,7 +110,6 @@ class Card extends GameElement {
         this.points = points;
         this.handPosition = handPosition;
         this.activeWonder = activeWonder;
-        this.highlightAlpha = 0;
 
         this.targetPosition = new PIXI.Point();
 

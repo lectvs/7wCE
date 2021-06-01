@@ -90,7 +90,7 @@ class Wonder extends GameElement {
         this.playedCardEffectRolls.grey = this.playedCardEffectRolls.brown;
         
         for (let apiCardId of playerData.playedCards) {
-            let points = apiCardId in playerData.cardPoints ? playerData.cardPoints[apiCardId] : undefined;
+            let points = (apiCardId in playerData.cardPoints && !Main.gamestate.randomizerEnabled) ? playerData.cardPoints[apiCardId] : undefined;
             let card = new Card(this.scene, apiCardId, -1, points, undefined, this, []);
             this.addNewCardEffect(card);
             if (card.isMilitary() && playerData.diplomacyTokens > 0) {

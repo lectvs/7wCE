@@ -514,11 +514,11 @@ var API;
     API.getgamestate = getgamestate;
     function getvalidmoves(gameid, turn, player, password_hash, callback) {
         httpRequest(LAMBDA_URL + "?operation=getvalidmoves&gameid=" + gameid + "&turn=" + turn + "&player=" + player + "&password_hash=" + password_hash, function (responseJson, error) {
-            if (!responseJson || !responseJson['validMoves']) {
-                callback(undefined, "No valid moves received");
-            }
-            else if (error) {
+            if (error) {
                 callback(undefined, error);
+            }
+            else if (!responseJson || !responseJson['validMoves']) {
+                callback(undefined, "No valid moves received");
             }
             else {
                 callback(responseJson['validMoves'], undefined);
@@ -563,11 +563,11 @@ var API;
     API.updategame = updategame;
     function getusers(usernames, callback) {
         httpRequest(LAMBDA_URL + "?operation=getusers&usernames=" + usernames.join(','), function (responseJson, error) {
-            if (!responseJson || !responseJson['users']) {
-                callback(undefined, "No users received");
-            }
-            else if (error) {
+            if (error) {
                 callback(undefined, error);
+            }
+            else if (!responseJson || !responseJson['users']) {
+                callback(undefined, "No users received");
             }
             else {
                 callback(responseJson['users'], undefined);
@@ -577,11 +577,11 @@ var API;
     API.getusers = getusers;
     function getinvites(username, callback) {
         httpRequest(LAMBDA_URL + "?operation=getinvites&username=" + username, function (responseJson, error) {
-            if (!responseJson || !responseJson['gameids']) {
-                callback(undefined, "No invites received");
-            }
-            else if (error) {
+            if (error) {
                 callback(undefined, error);
+            }
+            else if (!responseJson || !responseJson['gameids']) {
+                callback(undefined, "No invites received");
             }
             else {
                 callback(responseJson['gameids'], undefined);
@@ -598,11 +598,11 @@ var API;
     API.setwonderpreferences = setwonderpreferences;
     function creategame(options, callback) {
         httpRequest(LAMBDA_URL + "?operation=creategame&players=" + options.players.join(',') + "&flags=" + options.flags.join(','), function (responseJson, error) {
-            if (!responseJson || !responseJson['gameid']) {
-                callback(undefined, "No gameid received");
-            }
-            else if (error) {
+            if (error) {
                 callback(undefined, error);
+            }
+            else if (!responseJson || !responseJson['gameid']) {
+                callback(undefined, "No gameid received");
             }
             else {
                 callback(responseJson['gameid'], undefined);
@@ -618,11 +618,11 @@ var API;
     API.login = login;
     function getpatchnotes(callback) {
         httpRequest(LAMBDA_URL + "?operation=getpatchnotes", function (responseJson, error) {
-            if (!responseJson || !responseJson['patchNotes']) {
-                callback(undefined, "No patch notes received");
-            }
-            else if (error) {
+            if (error) {
                 callback(undefined, error);
+            }
+            else if (!responseJson || !responseJson['patchNotes']) {
+                callback(undefined, "No patch notes received");
             }
             else {
                 callback(responseJson['patchNotes'], undefined);
@@ -919,6 +919,9 @@ var ArtCommon;
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
             finally { if (e_9) throw e_9.error; }
+        }
+        if (costArts.length === 0) {
+            return undefined;
         }
         return combineCostArt(costArts, 16);
     }
@@ -2150,7 +2153,6 @@ var Card = /** @class */ (function (_super) {
         _this.points = points;
         _this.handPosition = handPosition;
         _this.activeWonder = activeWonder;
-        _this.highlightAlpha = 0;
         _this.targetPosition = new PIXI.Point();
         _this.visualState = 'full';
         _this.state = { type: 'in_hand', visualState: 'full' };
@@ -3267,7 +3269,7 @@ var C = /** @class */ (function () {
     C.Z_INDEX_CGTL_DIALOG = 1001;
     C.Z_INDEX_CARD_POPUP = 1002;
     C.GAME_HEIGHT_PADDING_3P = 400;
-    C.GAME_HEIGHT_PADDING_4567P = 200;
+    C.GAME_HEIGHT_PADDING_4567P = 300;
     C.ANIMATION_TURN_REVEAL_TIME = 1;
     C.ANIMATION_TURN_PLAY_TIME = 1;
     C.ANIMATION_MILITARY_FADE_TIME = 0.5;
@@ -7082,7 +7084,7 @@ var Wonder = /** @class */ (function (_super) {
         try {
             for (var _c = __values(playerData.playedCards), _d = _c.next(); !_d.done; _d = _c.next()) {
                 var apiCardId = _d.value;
-                var points = apiCardId in playerData.cardPoints ? playerData.cardPoints[apiCardId] : undefined;
+                var points = (apiCardId in playerData.cardPoints && !Main.gamestate.randomizerEnabled) ? playerData.cardPoints[apiCardId] : undefined;
                 var card = new Card(this.scene, apiCardId, -1, points, undefined, this, []);
                 this.addNewCardEffect(card);
                 if (card.isMilitary() && playerData.diplomacyTokens > 0) {

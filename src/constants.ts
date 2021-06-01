@@ -18,7 +18,7 @@ class C {
     public static readonly Z_INDEX_CARD_POPUP = 1002;
 
     public static readonly GAME_HEIGHT_PADDING_3P = 400;
-    public static readonly GAME_HEIGHT_PADDING_4567P = 200;
+    public static readonly GAME_HEIGHT_PADDING_4567P = 300;
 
     public static readonly ANIMATION_TURN_REVEAL_TIME = 1;
     public static readonly ANIMATION_TURN_PLAY_TIME = 1;

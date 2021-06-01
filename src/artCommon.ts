@@ -188,6 +188,10 @@ namespace ArtCommon {
             costArts.push(resource(r));
         }
 
+        if (costArts.length === 0) {
+            return undefined;
+        }
+
         return combineCostArt(costArts, 16);
     }
 
