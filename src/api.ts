@@ -393,6 +393,8 @@ namespace API {
         httpRequest(`${LAMBDA_URL}?operation=updategame&gameid=${gameid}`, (responseJson: any, error: string) => {
             if (error) {
                 callback(undefined, error);
+            } else if (!responseJson || !responseJson['result']) {
+                callback(undefined, "No result received");
             } else {
                 callback(responseJson['result'] === "SUCCESS", undefined);
             }

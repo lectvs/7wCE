@@ -2,6 +2,7 @@ const AWS = require('aws-sdk');
 const utils = require('./utils');
 const cardData = require('./cardData');
 const wonderData = require('./wonderData');
+const randomizer = require('./randomizer');
 
 const dynamo = new AWS.DynamoDB.DocumentClient();
 
@@ -41,20 +42,51 @@ exports.creategame = async (players, flags) => {
         draftOrderPlayers = await getPlayerDraftOrder(players);
     }
     
-    let citiesEnabled = flags.includes('cities');
+    let randomizerEnabled = flags.includes('randomizer');
+    let citiesEnabled = flags.includes('cities') || randomizerEnabled;
     let sevenBlundersEnabled = flags.includes('blunders');
     
-    let initialHands = {
-        '1': cardData.newHandsForPlayersAge(players.length, 1, citiesEnabled),
-        '2': cardData.newHandsForPlayersAge(players.length, 2, citiesEnabled),
-        '3': cardData.newHandsForPlayersAge(players.length, 3, citiesEnabled),
-    };
+    console.log(JSON.stringify(randomizer.getRandomWonderChoices('Dartm')));
     
-    let deck = {
-        '1': convertCardListToCountMap(cardData.getCardsForPlayersAge(players.length, 1, citiesEnabled)),
-        '2': convertCardListToCountMap(cardData.getCardsForPlayersAge(players.length, 2, citiesEnabled)),
-        '3': convertCardListToCountMap(cardData.getCardsForPlayersAge(players.length, 3, citiesEnabled)),
-    };
+    let cards;
+    let initialHands;
+    let deck;
+    let wonderChoices;
+    if (randomizerEnabled) {
+        let deckForAge = {
+            '1': randomizer.generateDeckForPlayersAge(players.length, 1),
+            '2': randomizer.generateDeckForPlayersAge(players.length, 2),
+            '3': randomizer.generateDeckForPlayersAge(players.length, 3),
+        };
+        
+        cards = randomizer.cardsify(deckForAge);
+
+        initialHands = randomizer.getInitialHands(cards, players.length);
+
+        deck = randomizer.getDecks(cards);
+
+        wonderChoices = {};
+        players.forEach(player => {
+            wonderChoices[player] = randomizer.getRandomWonderChoices(player)
+        });
+    } else {
+        cards = cardData.getAllCards();
+        
+        initialHands = {
+            '1': cardData.newHandsForPlayersAge(players.length, 1, citiesEnabled),
+            '2': cardData.newHandsForPlayersAge(players.length, 2, citiesEnabled),
+            '3': cardData.newHandsForPlayersAge(players.length, 3, citiesEnabled),
+        };
+    
+        deck = {
+            '1': convertCardListToCountMap(cardData.getCardsForPlayersAge(players.length, 1, citiesEnabled)),
+            '2': convertCardListToCountMap(cardData.getCardsForPlayersAge(players.length, 2, citiesEnabled)),
+            '3': convertCardListToCountMap(cardData.getCardsForPlayersAge(players.length, 3, citiesEnabled)),
+        };
+        
+        wonderChoices = wonderData.getWonderChoicesForPlayers(draftOrderPlayers, wonderPreferences, isDebug);
+    }
+    
     
     let playerData = {};
     for (let i = 0; i < players.length; i++) {
@@ -75,6 +107,7 @@ exports.creategame = async (players, flags) => {
         state: "CHOOSE_WONDER_SIDE",
         citiesEnabled: citiesEnabled,
         sevenBlundersEnabled: sevenBlundersEnabled,
+        randomizerEnabled: randomizerEnabled,
         discardMoveQueue: [],
         players: utils.shuffled(players),  // Randomize player order
         host: players[0],
@@ -85,8 +118,8 @@ exports.creategame = async (players, flags) => {
         initialHands: initialHands,
         playerData: playerData,
         discardedCards: [],
-        cards: cardData.getAllCards(),
-        wonderChoices: wonderData.getWonderChoicesForPlayers(draftOrderPlayers, wonderPreferences, isDebug)
+        cards: cards,
+        wonderChoices: wonderChoices
     };
     
     // Make sure another game hasn't been created recently.

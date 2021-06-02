@@ -196,23 +196,23 @@ const wonders = {
         name: 'Byzantium',
         side: 'Day',
         outline_color: 0xFF70BA,
-        starting_effect_color: "brown",
-        starting_effects: [{ type: "resource", resource: "stone" }],
+        starting_effect_color: "grey",
+        starting_effects: [{ type: "resource", resource: "glass" }],
         stages: [
             { cost: { resources: ["ore", "clay"] }, effects: [{ type: 'points', points: 3 }] },
             { cost: { resources: ["wood", "wood", "press"] }, effects: [{ type: 'dove' }, { type: 'points', points: 4 }] },
-            { cost: { resources: ["clay", "clay", "glass", "loom"] }, effects: [{ type: 'points', points: 7 }] },
+            { cost: { resources: ["clay", "clay", "loom"] }, effects: [{ type: 'points', points: 7 }] },
         ]
     },
     '17': {
         name: 'Byzantium',
         side: 'Night',
         outline_color: 0xFF70BA,
-        starting_effect_color: "brown",
-        starting_effects: [{ type: "resource", resource: "stone" }],
+        starting_effect_color: "grey",
+        starting_effects: [{ type: "resource", resource: "glass" }],
         stages: [
             { cost: { resources: ["wood", "ore", "press"] }, effects: [{ type: 'dove' }, { type: 'points', points: 4 }] },
-            { cost: { resources: ["ore", "ore", "glass", "loom"] }, effects: [{ type: 'dove' }, { type: 'points', points: 6 }] },
+            { cost: { resources: ["ore", "ore", "loom"] }, effects: [{ type: 'dove' }, { type: 'points', points: 6 }] },
         ]
     },
     '18': {
@@ -342,6 +342,14 @@ const wonderGroups = {
         name: 'Petra',
         wonders: [18, 19]
     },
+    // '10': {
+    //     name: 'The Great Wall',
+    //     wonders: [20, 21]
+    // },
+    // '11': {
+    //     name: 'Manneken Pis',
+    //     wonders: [22, 23]
+    // },
 }
 
 exports.idsToWonderPreferences = (ids) => {

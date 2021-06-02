@@ -14,6 +14,12 @@ exports.batchArray = (array, batchSize) => {
     return result;
 }
 
+exports.clamp = (value, min, max) => {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+}
+
 exports.cloneArray = (array) => {
     return array ? array.map(e => e) : undefined;
 }
@@ -40,14 +46,35 @@ exports.equalsArray = (array1, array2) => {
     return true;
 }
 
-// Random integer from min to max, inclusive.
+// Random element from an array.
 exports.randElement = (array) => {
     return array[exports.randInt(0, array.length-1)];
+}
+
+// Random element from an array, weighted by relative weights.
+exports.randElementWeighted = (array, weights) => {
+    let sum = exports.sumArray(weights);
+    let r = exports.randFloat(0, sum);
+    for (let i = 0; i < weights.length; i++) {
+        if (r <= weights[i]) return array[i];
+        r -= weights[i];
+    }
+    return array[array.length-1];
 }
 
 // Random integer from min to max, inclusive.
 exports.randInt = (min, max) => {
     return min + Math.floor(Math.random() * (max+1 - min));
+}
+
+// Random float from min to max.
+exports.randFloat = (min, max) => {
+    return min + Math.random() * (max - min);
+}
+
+// Random boolean with true chance.
+exports.randBool = (chance) => {
+    return Math.random() < chance;
 }
 
 // Range list from min to max, inclusive.
@@ -64,6 +91,15 @@ exports.shuffled = (array) => {
     let result = [];
     while (pool.length > 0) {
         result.push(pool.splice(exports.randInt(0, pool.length-1), 1)[0]);
+    }
+    return result;
+}
+
+exports.sumArray = (array, key) => {
+    if (!key) key = (a => a);
+    let result = 0;
+    for (let a of array) {
+        result += key(a);
     }
     return result;
 }
@@ -136,6 +172,7 @@ exports.computePointsDistribution = (gamestate, player) => {
         guild: 0,
         science: 0,
         black: 0,
+        other: 0,
         total: 0
     };
     
@@ -165,13 +202,15 @@ exports.computePointsDistribution = (gamestate, player) => {
                 points.guild += pointValue;
             } else if (card.color === 'black') {
                 points.black += pointValue;
+            } else {
+                points.other += pointValue;
             }
         }
     }
     
     points.science += computeSciencePoints(gamestate, player);
     
-    points.total = points.conflict + points.finance + points.wonder + points.civilian + points.commerce + points.guild + points.science + points.black;
+    points.total = points.conflict + points.finance + points.wonder + points.civilian + points.commerce + points.guild + points.science + points.black + points.other;
     
     return points;
 }
@@ -386,10 +425,8 @@ exports.getMaskCopyableSymbols = (gamestate, player) => {
     let result = [];
     for (let cardId of gamestate.playerData[player].playedCards) {
         let card = gamestate.cards[cardId];
-        if (card.color === 'green') {
-            for (let effect of card.effects) {
-                if (effect.type === 'science') result.push(effect.symbol);
-            }
+        for (let effect of card.effects) {
+            if (effect.type === 'science') result.push(effect.symbol);
         }
     }
     return result;
@@ -566,7 +603,7 @@ exports.getValidMoves = (gamestate, player) => {
     let validMoves = [];
     for (let cardId of hand) {
         
-        if (!playedCardNames.includes(gamestate.cards[cardId].name)) {
+        if (!playedCardNames.includes(gamestate.cards[cardId].name) || gamestate.randomizerEnabled) {
             let playMove = { action: 'play', card: cardId };
             for (let paymentOption of exports.getPaymentOptions(gamestate, player, playMove)) {
                 validMoves.push({ action: 'play', card: cardId, payment: paymentOption });
@@ -828,8 +865,6 @@ function adjustNeighborResourcesForResourceCost(resourceCost, negPurchasableReso
             posPurchasableResources.splice(exports.indexOfArray(posPurchasableResources, [r]), 1);
         }
     }
-    
-    console.log(negPurchasableResources, posPurchasableResources)
 }
 
 function sumResources(resources) {
@@ -842,8 +877,10 @@ function sumResources(resources) {
         glass: 0,
         loom: 0
     };
-    for (let resource of resources) {
-        result[resource]++;
+    if (resources) {
+        for (let resource of resources) {
+            result[resource]++;
+        }
     }
     return result;
 }
@@ -858,12 +895,16 @@ function sumNeighborResources(resources, startingResources) {
         glass: 0,
         loom: 0
     };
-    for (let resource of resources) {
-        if (resource.length === 1) result[resource[0]]++;
+    if (resources) {
+        for (let resource of resources) {
+            if (resource.length === 1) result[resource[0]]++;
+        }
     }
-    for (let resource of startingResources) {
-        if (resource.length === 1) result[resource[0]]--;
-        if (result[resource[0]] < 0) result[resource[0]] = 0;
+    if (startingResources) {
+        for (let resource of startingResources) {
+            if (resource.length === 1) result[resource[0]]--;
+            if (result[resource[0]] < 0) result[resource[0]] = 0;
+        }
     }
     return result;
 }

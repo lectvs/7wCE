@@ -555,6 +555,9 @@ var API;
             if (error) {
                 callback(undefined, error);
             }
+            else if (!responseJson || !responseJson['result']) {
+                callback(undefined, "No result received");
+            }
             else {
                 callback(responseJson['result'] === "SUCCESS", undefined);
             }
