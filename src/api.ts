@@ -469,10 +469,11 @@ namespace API {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
                     let json = JSON.parse(xhr.responseText);
-                    if (!json.error) {
+                    if (!json.error && !json.message) {
                         callback(json, undefined);
                     } else {
-                        callback(undefined, json.error);
+                        let error = json.error ?? json.message;
+                        callback(undefined, error);
                     }
                 } else {
                     callback(undefined, xhr.statusText);

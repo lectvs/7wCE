@@ -2,6 +2,25 @@
 exports.getpatchnotes = async () => {
     
     let patchNotes = [`
+        <p style="font-weight:bold">v1.2: The Final* Update</p>
+        <br/>
+        <p>* finality not guaranteed</p>
+        <br/><br/><br/>
+        <p>Two new wonders:</p>
+        <p class="pnci">- Build your stages in any order with <span style="color: gold">The Great Wall</span>!</p>
+        <p class="pnci">- Copy your neighbors' stages with <span style="color: gold">Manneken Pis</span>!</p>
+        <br/>
+        <p>Two wacky alternative game modes:</p>
+        <p class="pnci">- Aim for the lowest score to win in <span style="color: gold">7 Blunders</span>!</p>
+        <p class="pnci">- Enjoy total chaos with randomly-generated wonders and cards in <span style="color: gold">Randomizer</span>!</p>
+        <br/><br/><br/>
+        <p>Planned changes:</p>
+        <p class="pnci">- None</p>
+        <p class="pnci">- I'm still open to suggestions though :)</p>
+        <br/><br/><br/>
+        <p style="color: gold">7WCE is open-source! <a class="userinfolink" href="https://github.com/lectvs/7wCE">Check it out</a>!</p>
+    `,
+    `
         <p style="font-weight:bold">v1.1: CITIES</p>
         <br/>
         <p>At long last, 7WCE is serving its original purpose - to bring the <a class="userinfolink" href="https://www.rprod.com/en/games/7-wonders/cities">Cities Expansion</a> to you!</p>

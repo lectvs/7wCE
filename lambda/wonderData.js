@@ -189,7 +189,7 @@ const wonders = {
         stages: [
             { cost: { resources: ["wood", "wood"] }, effects: [{ type: 'double_trading_post' }] },
             { cost: { resources: ["stone", "stone"] }, effects: [{ type: 'points', points: 5 }] },
-            { cost: { resources: ["loom", "ore", "ore"] }, effects: [{ type: 'copy_guild' }] },
+            { cost: { resources: ["ore", "ore", "loom"] }, effects: [{ type: 'copy_guild' }] },
         ]
     },
     '16': {
@@ -258,9 +258,9 @@ const wonders = {
         starting_effect_color: "grey",
         starting_effects: [{ type: "resource", resource: "loom" }, { type: "turret" }],
         stages: [
-            { cost: { resources: ["press", "wood"] }, effects: [{ type: "gold_for_neighbor", gold: 2, direction: "neg" }, { type: "gold", gold: 8 }, { type: "gold_for_neighbor", gold: 2, direction: "pos" }] },
+            { cost: { resources: ["wood", "press"] }, effects: [{ type: "gold_for_neighbor", gold: 2, direction: "neg" }, { type: "gold", gold: 8 }, { type: "gold_for_neighbor", gold: 2, direction: "pos" }] },
             { cost: { resources: ["ore", "clay", "clay"] }, effects: [{ type: "mask" }] },
-            { cost: { resources: ["press", "wood", "wood"] }, effects: [{ type: 'dove' }, { type: 'broken_gold', gold: 2 }] },
+            { cost: { resources: ["wood", "wood", "press"] }, effects: [{ type: 'dove' }, { type: 'broken_gold', gold: 2 }] },
             { cost: { resources: ["stone", "stone"] }, effects: [{ type: 'unproduced_resource' }] },
         ]
     },
@@ -283,7 +283,7 @@ const wonders = {
         starting_effect_color: "yellow",
         starting_effects: [{ type: "gold", gold: 4 }],
         stages: [
-            { cost: { resources: ["glass", "press", "loom", "ore", "clay", "stone", "wood"] }, effects: [{ type: 'gold', gold: 7 }, { type: 'points', points: 7 }, { type: 'shields', shields: 1 }] },
+            { cost: { resources: ["wood", "ore", "clay", "glass", "press", "loom", "stone"] }, effects: [{ type: 'gold', gold: 7 }, { type: 'points', points: 7 }, { type: 'shields', shields: 1 }] },
         ]
     },
     '100': {
@@ -342,14 +342,14 @@ const wonderGroups = {
         name: 'Petra',
         wonders: [18, 19]
     },
-    // '10': {
-    //     name: 'The Great Wall',
-    //     wonders: [20, 21]
-    // },
-    // '11': {
-    //     name: 'Manneken Pis',
-    //     wonders: [22, 23]
-    // },
+    '10': {
+        name: 'The Great Wall',
+        wonders: [20, 21]
+    },
+    '11': {
+        name: 'Manneken Pis',
+        wonders: [22, 23]
+    },
 }
 
 exports.idsToWonderPreferences = (ids) => {
@@ -389,9 +389,9 @@ exports.getWonderChoicesForPlayers = (players, wonderPreferences, isDebug) => {
     }
     
     if (isDebug) {
-        result['Dartm'] = [wonders['22']];
+        //result['Dartm'] = [wonders['22']];
         //result['BOT1'] = [wonders['22']];
-        result['BOT2'] = [wonders['20']];
+        //result['BOT2'] = [wonders['20']];
     }
     
     return result;

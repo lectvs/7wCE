@@ -637,14 +637,16 @@ var API;
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url, true);
         xhr.onload = function () {
+            var _a;
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
                     var json = JSON.parse(xhr.responseText);
-                    if (!json.error) {
+                    if (!json.error && !json.message) {
                         callback(json, undefined);
                     }
                     else {
-                        callback(undefined, json.error);
+                        var error = (_a = json.error) !== null && _a !== void 0 ? _a : json.message;
+                        callback(undefined, error);
                     }
                 }
                 else {
@@ -7492,6 +7494,7 @@ var WonderBoardForChoose = /** @class */ (function (_super) {
         if (this.player === Main.player) {
             this.selection = this.drawSelection();
             this.selection.style.visibility = 'hidden';
+            this.selection.style.pointerEvents = 'none';
             this.div.appendChild(this.selection);
             this.div.style.cursor = 'pointer';
             this.div.onclick = function (event) {

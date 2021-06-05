@@ -96,6 +96,7 @@ class WonderBoardForChoose extends GameElement {
         if (this.player === Main.player) {
             this.selection = this.drawSelection();
             this.selection.style.visibility = 'hidden';
+            this.selection.style.pointerEvents = 'none';
             this.div.appendChild(this.selection);
 
             this.div.style.cursor = 'pointer';

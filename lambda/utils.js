@@ -796,6 +796,8 @@ function getPaymentOptionsForResources(costResources, resources, negPurchasableR
             let r = resources.splice(i, 1)[0];
             paymentOptions.push(...getPaymentOptionsForResources(costResources, resources, negPurchasableResources, posPurchasableResources, negPurchasableStartingResources, posPurchasableStartingResources, hasNegTradingPost, hasPosTradingPost, hasMarketplace, smugglersCaches));
             resources.splice(i, 0, r);
+            // I think we can do this
+            if (r.length === 1) return paymentOptions;
         }
     }
     

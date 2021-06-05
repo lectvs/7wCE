@@ -102,7 +102,7 @@ const randomEffectByType = {
             if (age === 3 && utils.randBool(0.5)) syms += `/${ss.pop()}`;
             return { type: 'multi_science', symbols: syms };
         },
-        value: (effect, age) => 2*age*effect.symbols.split('/').length,
+        value: (effect, age) => 4*age,
         colors: ['green', 'black', 'purple'],
     },
     'play_last_card': {
@@ -141,12 +141,12 @@ const randomEffectByType = {
         colors: colors,
     },
     'gold_for_others': {
-        effect: (age) => ({ type: 'gold_for_others', gold: utils.randInt(1, 3) }),
+        effect: (age) => ({ type: 'gold_for_others', gold: utils.clamp(age + utils.randInt(-1, 1), 1, 3) }),
         value: (effect) => -Math.floor(effect.gold / 2),
         colors: colors,
     },
     'gold_for_neighbor': {
-        effect: (age) => ({ type: 'gold_for_neighbor', direction: utils.randElement(directions), gold: utils.randInt(1, 3) }),
+        effect: (age) => ({ type: 'gold_for_neighbor', direction: utils.randElement(directions), gold: utils.clamp(age + utils.randInt(-1, 1), 1, 3) }),
         value: (effect) => -Math.floor(effect.gold / 3),
         colors: colors,
     },
@@ -240,7 +240,7 @@ const randomEffectByType = {
 const effectCategories = {
     'resource': {
         effects: { 'resource': 8, 'multi_resource': 3, 'unproduced_resource': 0.6, 'duplicate_produced_resource': 0.6 },
-        distributions: { '1': 15, '2': 12, '3': 0 },
+        distributions: { '1': 10, '2': 8, '3': 0 },
     },
     'economy': {
         effects: { 'gold': 1, 'trading_post': 1, 'marketplace': 1, 'double_trading_post': 1, 'gold_for_cards': 1, 'wharf': 1, 'smugglers_cache': 1, 'gold_for_defeat_tokens': 1, 'broken_gold': 1,
@@ -316,6 +316,14 @@ function randomEffectForTargetValue(age, minValue, maxValue) {
     return { type: 'points', points: minValue };
 }
 
+function resolveEffects(effects) {
+    if (effects.length !== 2) return effects;
+    if (effects[0].type === 'points' && effects[1].type === 'points') {
+        return [{ type: 'points', points: effects[0].points + effects[1].points }];
+    }
+    return effects;
+}
+
 function randomCost(age) {
     let resourceCost = [];
     if (utils.randBool(0.3)) resourceCost.push(utils.randElement(resources));
@@ -351,7 +359,12 @@ exports.generateDeckForPlayersAge = (players, age) => {
             effects.push(randomEffectForTargetValue(age, valueDiff, -1));
         }
         
-        let card = { age: age, name: cardNames[cardNameIndex], color: color, cost: randomCost(age), effects: effects };
+        // Age 2 override to create double resources
+        if (age === 2 && effects[0].type === 'resource') {
+            effects = [effects[0], { type: 'resource', resource: utils.randElement(resources) }];
+        }
+        
+        let card = { age: age, name: cardNames[cardNameIndex], color: color, cost: randomCost(age), effects: resolveEffects(effects) };
         deck.push(card);
         
         cardNameIndex++;
@@ -461,8 +474,8 @@ exports.getRandomWonderChoices = (player) => {
     
     let name = player;
     let outline_color = utils.randInt(0x000000, 0xFFFFFF);
-    let starting_effect = randomEffectByType['resource'].effect(1);
-    let starting_effect_color = ['glass', 'press', 'loom'].includes(starting_effect.resource) ? 'grey' : 'brown';
+    let starting_effect = utils.randBool(0.1) ? { type: 'gold', gold: 4 } : randomEffectByType['resource'].effect(1);
+    let starting_effect_color = starting_effect.type === 'gold' ? 'yellow' : (['glass', 'press', 'loom'].includes(starting_effect.resource) ? 'grey' : 'brown');
     
     let stageSets = [];
     
@@ -492,7 +505,7 @@ exports.getRandomWonderChoices = (player) => {
             
             stages.push({
                 cost: { resources: resourceCosts[i] },
-                effects: effects,
+                effects: resolveEffects(effects),
             });
         }
         stageSets.push(stages);
