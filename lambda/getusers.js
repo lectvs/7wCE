@@ -14,7 +14,7 @@ exports.getusers = async (usernames) => {
         let wonderPreferenceIds = user.wonder_preferences ? user.wonder_preferences.split(',') : [];
         user.wonder_preferences = wonderData.idsToWonderPreferences(wonderPreferenceIds);
         
-        user.friends = user.friends.split(',');
+        user.friends = getFriends(user.username);
         
         delete user.password_hash;
         
@@ -22,4 +22,20 @@ exports.getusers = async (usernames) => {
     }
     
     return { users };
+}
+
+function getFriends(username) {
+    let friendPools = [
+        ['Dartm', 'jamesn', 'pittmang', 'djbfox1115', 'CuongManh', 'LaterGator', 'TonyWu-', 'bporter', 'nickgu'],
+        ['Dartm', 'Test'],
+    ];
+    
+    let friends = [];
+    for (let pool of friendPools) {
+        if (pool.includes(username)) {
+            friends.push(...pool.filter(friend => friend !== username));
+        }
+    }
+    
+    return friends;
 }

@@ -254,6 +254,10 @@ namespace API {
         return false;
     }
 
+    export function canReject(validMoves: Move[]) {
+        return validMoves.find(move => move.action === 'reject') !== undefined;
+    }
+
     export function getNeighbors(gamestate: GameState, player: string) {
         let neg_index = gamestate.players.indexOf(player)-1;
         if (neg_index < 0) neg_index += gamestate.players.length;

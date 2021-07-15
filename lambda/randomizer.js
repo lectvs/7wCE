@@ -23,7 +23,7 @@ const randomEffectByType = {
             if (age >= 2 && utils.randBool(0.5)) res += `/${rs.pop()}`;
             return { type: 'multi_resource', resources: res, purchasable: true };
         },
-        value: (effect) => 2*effect.resources.split('/').length,
+        value: (effect, age) => age === 1 ? 3 : 2*effect.resources.split('/').length,
         colors: ['brown', 'grey'],
     },
     'shields': {
@@ -157,7 +157,7 @@ const randomEffectByType = {
     },
     'mask': {
         effect: (age) => ({ type: 'mask' }),
-        value: (effect) => undefined,
+        value: (effect, age) => 4*age,
         colors: ['green', 'black', 'purple'],
     },
     'unproduced_resource': {
@@ -253,7 +253,7 @@ const effectCategories = {
     },
     'diplomacy': {
         effects: { 'dove': 1 },
-        distributions: { '1': 1, '2': 1, '3': 1 },
+        distributions: { '1': 0.5, '2': 0.5, '3': 0.5 },
     },
     'science': {
         effects: { 'science': 5, 'multi_science': 1, 'mask': 1 },
@@ -276,6 +276,12 @@ const effectCategories = {
     },
 }
 
+const bannedEffectsByAge = {
+    '1': ['multi_science', 'gold_for_defeat_tokens', 'points_for_victory_tokens', 'gold_and_points_for_victory_tokens', 'discard_defeat_tokens', 'broken_gold_for_stages', 'broken_gold_for_victory_tokens'],
+    '2': [],
+    '3': [],
+}
+
 const agePointGoal = {
     '1': 2,
     '2': 4,
@@ -286,7 +292,12 @@ function randomEffectType(age) {
     let categories = Object.keys(effectCategories);
     let category = utils.randElementWeighted(categories, categories.map(c => effectCategories[c].distributions[age]));
     let effectDistribution = effectCategories[category].effects;
-    return utils.randElementWeighted(Object.keys(effectDistribution), Object.keys(effectDistribution).map(k => effectDistribution[k]));
+    let effectType;
+    for (let i = 0; i < 1000; i++) {
+        effectType = utils.randElementWeighted(Object.keys(effectDistribution), Object.keys(effectDistribution).map(k => effectDistribution[k]));
+        if (!bannedEffectsByAge[age].includes(effectType)) return effectType;
+    }
+    return effectType;
 }
 
 function randomNegativeEffectType() {
@@ -346,31 +357,52 @@ exports.generateDeckForPlayersAge = (players, age) => {
     let cardNameIndex = 0;
     for (let i = 0; i < 8*players; i++) {
         let effectType = randomEffectType(age);
-        let effects = [randomEffectByType[effectType].effect(age)];
-        let color = utils.randElement(randomEffectByType[effectType].colors);
-        
-        // Adjust value if needed
-        let valueDiff = agePointGoal[age] - randomEffectByType[effectType].value(effects[0], age);
-        if (valueDiff && valueDiff > 0 && utils.randBool(0.8)) {
-            effects.push(randomEffectForTargetValue(age, Math.max(1, valueDiff-2), valueDiff+1));
-        }
-        
-        if (valueDiff && valueDiff < -1 && utils.randBool(0.5)) {
-            effects.push(randomEffectForTargetValue(age, valueDiff, -1));
-        }
-        
-        // Age 2 override to create double resources
-        if (age === 2 && effects[0].type === 'resource') {
-            effects = [effects[0], { type: 'resource', resource: utils.randElement(resources) }];
-        }
-        
-        let card = { age: age, name: cardNames[cardNameIndex], color: color, cost: randomCost(age), effects: resolveEffects(effects) };
-        deck.push(card);
-        
+        deck.push(getCardForAge(effectType, age, cardNames, cardNameIndex));
         cardNameIndex++;
         if (cardNameIndex >= cardNames.length) cardNameIndex = 0;
     }
+    
+    if (age === 1 || age === 2) {
+        let resourceCards = deck.filter(card => card.effects[0].type === 'resource' || card.effects[0].type === 'multi_resource');
+        let nonResourceCards = deck.filter(card => !resourceCards.includes(card));
+        if (resourceCards.length > 0 && resourceCards.length < 6) {
+            let resourcesToAdd = 6 - resourceCards.length + utils.randInt(0, 1);
+            for (let i = 0; i < resourcesToAdd; i++) {
+                let cardToReplace = utils.randElement(nonResourceCards);
+                nonResourceCards.splice(nonResourceCards.indexOf(cardToReplace), 1);
+                deck.splice(deck.indexOf(cardToReplace), 1);
+                
+                let effectType = utils.randElementWeighted(['resource', 'multi_resource'], [2, 1]);
+                deck.push(getCardForAge(effectType, age, cardNames, cardNameIndex));
+                cardNameIndex++;
+                if (cardNameIndex >= cardNames.length) cardNameIndex = 0;
+            }
+        }
+    }
+    
     return deck;
+}
+
+function getCardForAge(effectType, age, cardNames, cardNameIndex) {
+    let effects = [randomEffectByType[effectType].effect(age)];
+    let color = utils.randElement(randomEffectByType[effectType].colors);
+    
+    // Adjust value if needed
+    let valueDiff = agePointGoal[age] - randomEffectByType[effectType].value(effects[0], age);
+    if (valueDiff && valueDiff > 0 && utils.randBool(0.8)) {
+        effects.push(randomEffectForTargetValue(age, Math.max(1, valueDiff-2), valueDiff+1));
+    }
+    
+    if (valueDiff && valueDiff < -1 && utils.randBool(0.5)) {
+        effects.push(randomEffectForTargetValue(age, valueDiff, -1));
+    }
+    
+    // Age 2 override to create double resources
+    if (age === 2 && effects[0].type === 'resource') {
+        effects = [effects[0], { type: 'resource', resource: utils.randElement(resources) }];
+    }
+    
+    return { age: age, name: cardNames[cardNameIndex], color: color, cost: randomCost(age), effects: resolveEffects(effects) };
 }
 
 exports.cardsify = (deckForAge) => {
@@ -459,19 +491,6 @@ const targetValueByStageCount = {
 }
 
 exports.getRandomWonderChoices = (player) => {
-    let x = {
-        name: 'Giza',
-        side: 'Day',
-        outline_color: 0x9F441C,
-        starting_effect_color: "brown",
-        starting_effects: [{ type: "resource", resource: "stone" }],
-        stages: [
-            { cost: { resources: ["wood", "wood"] }, effects: [{ type: 'points', points: 3 }] },
-            { cost: { resources: ["clay", "clay", "loom"] }, effects: [{ type: 'points', points: 5 }] },
-            { cost: { resources: ["stone", "stone", "stone", "stone"] }, effects: [{ type: 'points', points: 7 }] },
-        ]
-    };
-    
     let name = player;
     let outline_color = utils.randInt(0x000000, 0xFFFFFF);
     let starting_effect = utils.randBool(0.1) ? { type: 'gold', gold: 4 } : randomEffectByType['resource'].effect(1);

@@ -564,7 +564,10 @@ exports.getValidMoves = (gamestate, player) => {
             }
         }
         
-        validMoves.push({ action: 'reject', card: -1, payment: {} });
+        if (!gamestate.sevenBlundersEnabled || validMoves.length === 0) {
+            // In 7 Blunders, rejecting the discard is only valid if there are no other moves.
+            validMoves.push({ action: 'reject', card: -1, payment: {} });
+        }
         return validMoves;
     }
     

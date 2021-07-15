@@ -170,24 +170,25 @@ var ActionButton = /** @class */ (function (_super) {
     __extends(ActionButton, _super);
     function ActionButton(scene) {
         var _this = _super.call(this) || this;
+        _this._buttonActive = true;
         _this.scene = scene;
-        var button = _this.div.appendChild(document.createElement('div'));
-        button.style.backgroundColor = 'white';
-        button.style.color = 'black';
-        button.style.width = C.ACTION_BUTTON_WIDTH + "px";
-        button.style.height = C.ACTION_BUTTON_HEIGHT + "px";
-        button.style.borderRadius = C.ACTION_BUTTON_CORNER_RADIUS + "px";
-        button.style.transform = 'translate(-50%, -50%)';
-        button.style.position = 'relative';
-        button.style.cursor = 'pointer';
-        _this.textElement = button.appendChild(document.createElement('p'));
+        _this.button = _this.div.appendChild(document.createElement('div'));
+        _this.button.style.backgroundColor = 'white';
+        _this.button.style.color = 'black';
+        _this.button.style.width = C.ACTION_BUTTON_WIDTH + "px";
+        _this.button.style.height = C.ACTION_BUTTON_HEIGHT + "px";
+        _this.button.style.borderRadius = C.ACTION_BUTTON_CORNER_RADIUS + "px";
+        _this.button.style.transform = 'translate(-50%, -50%)';
+        _this.button.style.position = 'relative';
+        _this.button.style.cursor = 'pointer';
+        _this.textElement = _this.button.appendChild(document.createElement('p'));
         _this.textElement.style.fontFamily = "'Courier New', Courier, monospace";
         _this.textElement.style.textAlign = 'center';
         _this.textElement.style.position = 'absolute';
         _this.textElement.style.left = '50%';
         _this.textElement.style.top = '50%';
         _this.textElement.style.transform = 'translate(-50%, -50%)';
-        button.onclick = function (event) {
+        _this.button.onclick = function (event) {
             if (_this.type === 'undo') {
                 Main.undoMove();
                 if (_this.scene.isPaymentMenuActive)
@@ -199,9 +200,24 @@ var ActionButton = /** @class */ (function (_super) {
         };
         return _this;
     }
+    Object.defineProperty(ActionButton.prototype, "buttonActive", {
+        get: function () { return this._buttonActive; },
+        set: function (value) {
+            if (value === this._buttonActive)
+                return;
+            this._buttonActive = value;
+            this.button.style.backgroundColor = this._buttonActive ? 'white' : 'gray';
+        },
+        enumerable: false,
+        configurable: true
+    });
     ActionButton.prototype.setType = function (type) {
         this.type = type;
         this.textElement.textContent = (type === 'undo') ? 'Undo' : 'No Thanks';
+        var buttonActive = true;
+        if (type === 'reject_discard' && !API.canReject(Main.gamestate.validMoves))
+            buttonActive = false;
+        this.buttonActive = buttonActive;
     };
     return ActionButton;
 }(GameElement));
@@ -358,6 +374,10 @@ var API;
         return false;
     }
     API.isZeusActive = isZeusActive;
+    function canReject(validMoves) {
+        return validMoves.find(function (move) { return move.action === 'reject'; }) !== undefined;
+    }
+    API.canReject = canReject;
     function getNeighbors(gamestate, player) {
         var neg_index = gamestate.players.indexOf(player) - 1;
         if (neg_index < 0)
