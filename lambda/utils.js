@@ -794,61 +794,67 @@ function getPaymentOptionsForResources(costResources, resources, negPurchasableR
     
     let paymentOptions = [];
     
+    let requiresTrading = true;
+    
     for (let i = 0; i < resources.length; i++) {
         if (resources[i].includes(costResource)) {
             let r = resources.splice(i, 1)[0];
             paymentOptions.push(...getPaymentOptionsForResources(costResources, resources, negPurchasableResources, posPurchasableResources, negPurchasableStartingResources, posPurchasableStartingResources, hasNegTradingPost, hasPosTradingPost, hasMarketplace, smugglersCaches));
             resources.splice(i, 0, r);
-            // I think we can do this
-            if (r.length === 1) return paymentOptions;
+            if (r.length === 1) {
+                requiresTrading = false;
+                break;
+            }
         }
     }
     
-    let negCost = (hasNegTradingPost && ['wood', 'ore', 'stone', 'clay'].includes(costResource)) || (hasMarketplace && ['glass', 'press', 'loom'].includes(costResource)) ? 1 : 2;
-    for (let i = 0; i < negPurchasableResources.length; i++) {
-        if (negPurchasableResources[i].includes(costResource)) {
-            let r = negPurchasableResources.splice(i, 1)[0];
-            for (let paymentOption of getPaymentOptionsForResources(costResources, resources, negPurchasableResources, posPurchasableResources, negPurchasableStartingResources, posPurchasableStartingResources, hasNegTradingPost, hasPosTradingPost, hasMarketplace, smugglersCaches)) {
-                paymentOption.neg = (paymentOption.neg || 0) + negCost;
-                paymentOptions.push(paymentOption);
+    if (requiresTrading) {
+        let negCost = (hasNegTradingPost && ['wood', 'ore', 'stone', 'clay'].includes(costResource)) || (hasMarketplace && ['glass', 'press', 'loom'].includes(costResource)) ? 1 : 2;
+        for (let i = 0; i < negPurchasableResources.length; i++) {
+            if (negPurchasableResources[i].includes(costResource)) {
+                let r = negPurchasableResources.splice(i, 1)[0];
+                for (let paymentOption of getPaymentOptionsForResources(costResources, resources, negPurchasableResources, posPurchasableResources, negPurchasableStartingResources, posPurchasableStartingResources, hasNegTradingPost, hasPosTradingPost, hasMarketplace, smugglersCaches)) {
+                    paymentOption.neg = (paymentOption.neg || 0) + negCost;
+                    paymentOptions.push(paymentOption);
+                }
+                negPurchasableResources.splice(i, 0, r);
             }
-            negPurchasableResources.splice(i, 0, r);
         }
-    }
-    
-    let negStartingCost = Math.max(negCost - smugglersCaches, 0);
-    for (let i = 0; i < negPurchasableStartingResources.length; i++) {
-        if (negPurchasableStartingResources[i].includes(costResource)) {
-            let r = negPurchasableStartingResources.splice(i, 1)[0];
-            for (let paymentOption of getPaymentOptionsForResources(costResources, resources, negPurchasableResources, posPurchasableResources, negPurchasableStartingResources, posPurchasableStartingResources, hasNegTradingPost, hasPosTradingPost, hasMarketplace, smugglersCaches)) {
-                paymentOption.neg = (paymentOption.neg || 0) + negStartingCost;
-                paymentOptions.push(paymentOption);
+        
+        let negStartingCost = Math.max(negCost - smugglersCaches, 0);
+        for (let i = 0; i < negPurchasableStartingResources.length; i++) {
+            if (negPurchasableStartingResources[i].includes(costResource)) {
+                let r = negPurchasableStartingResources.splice(i, 1)[0];
+                for (let paymentOption of getPaymentOptionsForResources(costResources, resources, negPurchasableResources, posPurchasableResources, negPurchasableStartingResources, posPurchasableStartingResources, hasNegTradingPost, hasPosTradingPost, hasMarketplace, smugglersCaches)) {
+                    paymentOption.neg = (paymentOption.neg || 0) + negStartingCost;
+                    paymentOptions.push(paymentOption);
+                }
+                negPurchasableStartingResources.splice(i, 0, r);
             }
-            negPurchasableStartingResources.splice(i, 0, r);
         }
-    }
-    
-    let posCost = ((hasPosTradingPost && ['wood', 'ore', 'stone', 'clay'].includes(costResource)) || (hasMarketplace && ['glass', 'press', 'loom'].includes(costResource))) ? 1 : 2;
-    for (let i = 0; i < posPurchasableResources.length; i++) {
-        if (posPurchasableResources[i].includes(costResource)) {
-            let r = posPurchasableResources.splice(i, 1)[0];
-            for (let paymentOption of getPaymentOptionsForResources(costResources, resources, negPurchasableResources, posPurchasableResources, negPurchasableStartingResources, posPurchasableStartingResources, hasNegTradingPost, hasPosTradingPost, hasMarketplace, smugglersCaches)) {
-                paymentOption.pos = (paymentOption.pos || 0) + posCost;
-                paymentOptions.push(paymentOption);
+        
+        let posCost = ((hasPosTradingPost && ['wood', 'ore', 'stone', 'clay'].includes(costResource)) || (hasMarketplace && ['glass', 'press', 'loom'].includes(costResource))) ? 1 : 2;
+        for (let i = 0; i < posPurchasableResources.length; i++) {
+            if (posPurchasableResources[i].includes(costResource)) {
+                let r = posPurchasableResources.splice(i, 1)[0];
+                for (let paymentOption of getPaymentOptionsForResources(costResources, resources, negPurchasableResources, posPurchasableResources, negPurchasableStartingResources, posPurchasableStartingResources, hasNegTradingPost, hasPosTradingPost, hasMarketplace, smugglersCaches)) {
+                    paymentOption.pos = (paymentOption.pos || 0) + posCost;
+                    paymentOptions.push(paymentOption);
+                }
+                posPurchasableResources.splice(i, 0, r);
             }
-            posPurchasableResources.splice(i, 0, r);
         }
-    }
-    
-    let posStartingCost = Math.max(posCost - smugglersCaches, 0);
-    for (let i = 0; i < posPurchasableStartingResources.length; i++) {
-        if (posPurchasableStartingResources[i].includes(costResource)) {
-            let r = posPurchasableStartingResources.splice(i, 1)[0];
-            for (let paymentOption of getPaymentOptionsForResources(costResources, resources, negPurchasableResources, posPurchasableResources, negPurchasableStartingResources, posPurchasableStartingResources, hasNegTradingPost, hasPosTradingPost, hasMarketplace, smugglersCaches)) {
-                paymentOption.pos = (paymentOption.pos || 0) + posStartingCost;
-                paymentOptions.push(paymentOption);
+        
+        let posStartingCost = Math.max(posCost - smugglersCaches, 0);
+        for (let i = 0; i < posPurchasableStartingResources.length; i++) {
+            if (posPurchasableStartingResources[i].includes(costResource)) {
+                let r = posPurchasableStartingResources.splice(i, 1)[0];
+                for (let paymentOption of getPaymentOptionsForResources(costResources, resources, negPurchasableResources, posPurchasableResources, negPurchasableStartingResources, posPurchasableStartingResources, hasNegTradingPost, hasPosTradingPost, hasMarketplace, smugglersCaches)) {
+                    paymentOption.pos = (paymentOption.pos || 0) + posStartingCost;
+                    paymentOptions.push(paymentOption);
+                }
+                posPurchasableStartingResources.splice(i, 0, r);
             }
-            posPurchasableStartingResources.splice(i, 0, r);
         }
     }
     

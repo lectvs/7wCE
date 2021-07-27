@@ -117,7 +117,7 @@ namespace API {
         name: string;
         side: string;
         outline_color: number;
-        starting_effect_color: string;
+        starting_effect_color: string | number;
         starting_effects: Effect[];
         stages: WonderStage[];
     }

@@ -242,11 +242,11 @@ const wonders = {
         name: 'The Great Wall',
         side: 'A',
         outline_color: 0xD89000,
-        starting_effect_color: "grey",
-        starting_effects: [{ type: "resource", resource: "loom" }, { type: "turret" }],
+        starting_effect_color: 0xD89000,
+        starting_effects: [{ type: "turret" }],
         stages: [
             { cost: { resources: ["wood", "wood"] }, effects: [{ type: 'gold', gold: 8 }] },
-            { cost: { resources: ["press", "glass", "clay"] }, effects: [{ type: "multi_science", symbols: "compass/tablet/gear" }] },
+            { cost: { resources: ["clay", "clay", "clay"] }, effects: [{ type: "multi_science", symbols: "compass/tablet/gear" }] },
             { cost: { resources: ["stone", "stone", "stone"] }, effects: [{ type: 'shields', shields: 2 }] },
             { cost: { resources: ["ore", "ore", "ore"] }, effects: [{ type: 'build_from_discard', priority: 75 }] },
         ]
@@ -255,12 +255,12 @@ const wonders = {
         name: 'The Great Wall',
         side: 'B',
         outline_color: 0xD89000,
-        starting_effect_color: "grey",
-        starting_effects: [{ type: "resource", resource: "loom" }, { type: "turret" }],
+        starting_effect_color: 0xD89000,
+        starting_effects: [{ type: "turret" }],
         stages: [
-            { cost: { resources: ["wood", "press"] }, effects: [{ type: "gold_for_neighbor", gold: 2, direction: "neg" }, { type: "gold", gold: 8 }, { type: "gold_for_neighbor", gold: 2, direction: "pos" }] },
-            { cost: { resources: ["ore", "clay", "clay"] }, effects: [{ type: "mask" }] },
-            { cost: { resources: ["wood", "wood", "press"] }, effects: [{ type: 'dove' }, { type: 'broken_gold', gold: 2 }] },
+            { cost: { resources: ["wood", "wood"] }, effects: [{ type: "gold", gold: 8 }, { type: "gold_for_others", gold: 2 }] },
+            { cost: { resources: ["press", "glass", "loom"] }, effects: [{ type: "mask" }] },
+            { cost: { resources: ["clay", "clay", "ore"] }, effects: [{ type: 'dove' }, { type: 'dove' }] },
             { cost: { resources: ["stone", "stone"] }, effects: [{ type: 'unproduced_resource' }] },
         ]
     },

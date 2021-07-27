@@ -192,7 +192,7 @@ class Loader {
             let startingEffectsPaddedBounds = new PIXI.Rectangle(startingEffectsBounds.left - C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.top - C.WONDER_STARTING_EFFECTS_PADDING,
                                                                  startingEffectsBounds.width + 2*C.WONDER_STARTING_EFFECTS_PADDING, startingEffectsBounds.height + 2*C.WONDER_STARTING_EFFECTS_PADDING);
             let startingEffectBanner = Shapes.filledRect(startingEffectsPaddedBounds.x, startingEffectsPaddedBounds.y, startingEffectsPaddedBounds.width, startingEffectsPaddedBounds.height,
-                                                         ArtCommon.cardBannerForColor(wonder.starting_effect_color));
+                                                        typeof(wonder.starting_effect_color) === 'number' ? wonder.starting_effect_color : ArtCommon.cardBannerForColor(wonder.starting_effect_color));
             startingEffectBanner.mask = boardBgMask;
             wonderBoard.addChild(startingEffectBanner);
             wonderBoard.addChild(startingEffectContainer);
