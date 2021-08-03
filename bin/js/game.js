@@ -3498,10 +3498,11 @@ var C = /** @class */ (function () {
     C.END_SCREEN_NAMES_Y = 80;
     C.END_SCREEN_ELOS_Y = 105;
     C.END_SCREEN_POINTS_Y = 145;
-    C.END_SCREEN_POINTS_DX = 110;
+    C.END_SCREEN_POINTS_DX = 120;
     C.END_SCREEN_POINTS_DY = 37.5;
     C.END_SCREEN_SYMBOL_SIZE = 24;
     C.END_SCREEN_TEXT_SIZE = 18;
+    C.END_SCREEN_NICE_TEXT_SIZE = 12;
     C.END_SCREEN_ELO_TEXT_SIZE = 12;
     C.END_SCREEN_TEXT_COLOR = '#FFFFFF';
     C.CARD_LIST_HEADER_TEXT_SIZE = 24;
@@ -3907,6 +3908,11 @@ var EndScreen = /** @class */ (function () {
                     placements[i] = placements[i - 1];
             }
         }
+        // for (let i = 0; i < players.length; i++) {
+        //     if (Main.gamestate.playerData[players[i]].pointsDistribution.total === 69) {
+        //         pointsTotals[i] += '<br/>nice';
+        //     }
+        // }
         var elos = players.map(function (player) {
             var elo = Main.gamestate.playerData[player].elo;
             if (!elo)
@@ -3914,8 +3920,14 @@ var EndScreen = /** @class */ (function () {
             var before = Math.round(elo.before);
             var after = Math.round(elo.after);
             var diff = after - before;
+            var sixtyNineBonus = '';
+            var sixtyNine = Main.gamestate.playerData[player].pointsDistribution.total === 69;
+            if (sixtyNine) {
+                diff -= 6.9;
+                sixtyNineBonus = "<span style=\"color:" + ArtCommon.eloDiffColor(6.9) + "\">+6.9</span>";
+            }
             var sign = (diff >= 0) ? '+' : '';
-            return after + " <span style=\"color:" + ArtCommon.eloDiffColor(diff) + "\">(" + sign + diff + ")</span>";
+            return after + " <span style=\"color:" + ArtCommon.eloDiffColor(diff) + "\">(" + sign + diff + sixtyNineBonus + ")</span>";
         });
         var endscreen = document.getElementById('endscreen');
         var c = Main.gamestate.citiesEnabled;
@@ -3961,6 +3973,7 @@ var EndScreen = /** @class */ (function () {
             if (c)
                 endscreen.appendChild(this.scoreText("" + pointsDistributions[i].black, C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 7 + "px"));
             endscreen.appendChild(this.scoreText("" + pointsTotals[i], C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * (c ? 8 : 7) + "px"));
+            endscreen.appendChild(this.scoreText("<span style=\"color:" + ArtCommon.eloDiffColor(6.9) + "\">" + (Main.gamestate.playerData[players[i]].pointsDistribution.total === 69 ? 'nice' : '') + "</span>", C.END_SCREEN_NICE_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * (c ? 8.5 : 7.5) + "px"));
         }
     };
     EndScreen.prototype.destroy = function () {

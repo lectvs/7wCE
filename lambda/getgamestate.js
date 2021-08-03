@@ -33,7 +33,6 @@ exports.getgamestate = async (gameid, player, password_hash) => {
         }
     }
 
-    let s2 = utils.currentTime();
     ddbresult = await dynamo.batchGet({
         RequestItems: {
             '7wCE_moves': {
@@ -43,7 +42,6 @@ exports.getgamestate = async (gameid, player, password_hash) => {
             }
         }
     }).promise();
-    console.log(utils.currentTime() - s2);
     
     // Set current and last moves
     for (let item of ddbresult.Responses['7wCE_moves']) {

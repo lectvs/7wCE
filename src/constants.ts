@@ -237,10 +237,11 @@ class C {
     public static readonly END_SCREEN_NAMES_Y = 80;
     public static readonly END_SCREEN_ELOS_Y = 105;
     public static readonly END_SCREEN_POINTS_Y = 145;
-    public static readonly END_SCREEN_POINTS_DX = 110;
+    public static readonly END_SCREEN_POINTS_DX = 120;
     public static readonly END_SCREEN_POINTS_DY = 37.5;
     public static readonly END_SCREEN_SYMBOL_SIZE = 24;
     public static readonly END_SCREEN_TEXT_SIZE = 18;
+    public static readonly END_SCREEN_NICE_TEXT_SIZE = 12;
     public static readonly END_SCREEN_ELO_TEXT_SIZE = 12;
     public static readonly END_SCREEN_TEXT_COLOR = '#FFFFFF';
 

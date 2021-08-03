@@ -288,14 +288,20 @@ const agePointGoal = {
     '3': 6,
 }
 
-function randomEffectType(age) {
+function randomEffectType(age, sevenBlundersEnabled) {
     let categories = Object.keys(effectCategories);
-    let category = utils.randElementWeighted(categories, categories.map(c => effectCategories[c].distributions[age]));
+    let category;
+    for (let i = 0; i < 1000; i++) {
+        category = utils.randElementWeighted(categories, categories.map(c => effectCategories[c].distributions[age]));
+        if (sevenBlundersEnabled && category === 'diplomacy') continue;
+        break;
+    }
     let effectDistribution = effectCategories[category].effects;
     let effectType;
     for (let i = 0; i < 1000; i++) {
         effectType = utils.randElementWeighted(Object.keys(effectDistribution), Object.keys(effectDistribution).map(k => effectDistribution[k]));
-        if (!bannedEffectsByAge[age].includes(effectType)) return effectType;
+        if (bannedEffectsByAge[age].includes(effectType)) continue;
+        break;
     }
     return effectType;
 }
@@ -305,7 +311,7 @@ function randomNegativeEffectType() {
     return utils.randElementWeighted(Object.keys(effectDistribution), Object.keys(effectDistribution).map(k => effectDistribution[k]));
 }
 
-function randomEffectForTargetValue(age, minValue, maxValue) {
+function randomEffectForTargetValue(age, minValue, maxValue, sevenBlundersEnabled) {
     if (minValue < -5 && maxValue < 0) {
         return { type: 'points', points: utils.randInt(minValue, maxValue) };
     }
@@ -317,7 +323,7 @@ function randomEffectForTargetValue(age, minValue, maxValue) {
     
     let iters = 100;
     while (iters > 0) {
-        let effectType = randomEffectType(age);
+        let effectType = randomEffectType(age, sevenBlundersEnabled);
         let effect = randomEffectByType[effectType].effect(age);
         let effectValue = randomEffectByType[effect.type].value(effect, age);
         if (effectValue >= minValue && effectValue <= maxValue) return effect;
@@ -340,8 +346,9 @@ function randomCost(age) {
     if (utils.randBool(0.3)) resourceCost.push(utils.randElement(resources));
     if (age >= 2 && utils.randBool(0.7)) resourceCost.push(utils.randElement(resources));
     if (age >= 2 && utils.randBool(0.7)) resourceCost.push(utils.randElement(resources));
+    if (age >= 3 && resourceCost.length > 0 && utils.randBool(0.7)) resourceCost.push(resourceCost[0]);
     if (age >= 3 && utils.randBool(0.7)) resourceCost.push(utils.randElement(resources));
-    if (age >= 3 && utils.randBool(0.7)) resourceCost.push(utils.randElement(resources));
+    if (age >= 3 && utils.randBool(0.3)) resourceCost.push(utils.randElement(resources));
     
     resourceCost.sort((r1, r2) => resources.indexOf(r1) - resources.indexOf(r2));
     
@@ -351,13 +358,13 @@ function randomCost(age) {
     };
 }
 
-exports.generateDeckForPlayersAge = (players, age) => {
+exports.generateDeckForPlayersAge = (players, age, sevenBlundersEnabled) => {
     let deck = [];
     let cardNames = utils.shuffled(cardList.filter(card => card.age === age).map(card => card.name));
     let cardNameIndex = 0;
     for (let i = 0; i < 8*players; i++) {
-        let effectType = randomEffectType(age);
-        deck.push(getCardForAge(effectType, age, cardNames, cardNameIndex));
+        let effectType = randomEffectType(age, sevenBlundersEnabled);
+        deck.push(getCardForAge(effectType, age, cardNames, cardNameIndex, sevenBlundersEnabled));
         cardNameIndex++;
         if (cardNameIndex >= cardNames.length) cardNameIndex = 0;
     }
@@ -373,7 +380,7 @@ exports.generateDeckForPlayersAge = (players, age) => {
                 deck.splice(deck.indexOf(cardToReplace), 1);
                 
                 let effectType = utils.randElementWeighted(['resource', 'multi_resource'], [2, 1]);
-                deck.push(getCardForAge(effectType, age, cardNames, cardNameIndex));
+                deck.push(getCardForAge(effectType, age, cardNames, cardNameIndex, sevenBlundersEnabled));
                 cardNameIndex++;
                 if (cardNameIndex >= cardNames.length) cardNameIndex = 0;
             }
@@ -383,18 +390,18 @@ exports.generateDeckForPlayersAge = (players, age) => {
     return deck;
 }
 
-function getCardForAge(effectType, age, cardNames, cardNameIndex) {
+function getCardForAge(effectType, age, cardNames, cardNameIndex, sevenBlundersEnabled) {
     let effects = [randomEffectByType[effectType].effect(age)];
     let color = utils.randElement(randomEffectByType[effectType].colors);
     
     // Adjust value if needed
     let valueDiff = agePointGoal[age] - randomEffectByType[effectType].value(effects[0], age);
     if (valueDiff && valueDiff > 0 && utils.randBool(0.8)) {
-        effects.push(randomEffectForTargetValue(age, Math.max(1, valueDiff-2), valueDiff+1));
+        effects.push(randomEffectForTargetValue(age, Math.max(1, valueDiff-2), valueDiff+1, sevenBlundersEnabled));
     }
     
     if (valueDiff && valueDiff < -1 && utils.randBool(0.5)) {
-        effects.push(randomEffectForTargetValue(age, valueDiff, -1));
+        effects.push(randomEffectForTargetValue(age, valueDiff, -1, sevenBlundersEnabled));
     }
     
     // Age 2 override to create double resources
@@ -490,7 +497,7 @@ const targetValueByStageCount = {
     '4': 15,
 }
 
-exports.getRandomWonderChoices = (player) => {
+exports.getRandomWonderChoices = (player, sevenBlundersEnabled) => {
     let name = player;
     let outline_color = utils.randInt(0x000000, 0xFFFFFF);
     let starting_effect = utils.randBool(0.1) ? { type: 'gold', gold: 4 } : randomEffectByType['resource'].effect(1);
@@ -509,17 +516,17 @@ exports.getRandomWonderChoices = (player) => {
                 '3': i+1,
                 '4': Math.min(i+1, 3),
             }[stageCount];
-            let effectType = randomEffectType(age);
+            let effectType = randomEffectType(age, sevenBlundersEnabled);
             let effects = [randomEffectByType[effectType].effect(age)];
             
             // Adjust value if needed
             let valueDiff = agePointWonderStageGoal[age] - randomEffectByType[effectType].value(effects[0], age);
             if (valueDiff && valueDiff > 0) {
-                effects.push(randomEffectForTargetValue(age, valueDiff, valueDiff));
+                effects.push(randomEffectForTargetValue(age, valueDiff, valueDiff, sevenBlundersEnabled));
             }
             
             if (valueDiff && valueDiff < 0) {
-                effects.push(randomEffectForTargetValue(age, valueDiff, valueDiff));
+                effects.push(randomEffectForTargetValue(age, valueDiff, valueDiff, sevenBlundersEnabled));
             }
             
             stages.push({

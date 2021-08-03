@@ -344,6 +344,9 @@ async function updateElos(gamestate) {
             elosByPlayer[p1].diff += utils.computeEloDiff(elo1, elo2, result);
         }
         elosByPlayer[p1].diff *= playersFactor;
+        if (utils.computePointsDistribution(gamestate, p1).total === 69) {  // Nice
+            elosByPlayer[p1].diff += 6.9;
+        }
         elosByPlayer[p1].after = elosByPlayer[p1].before + elosByPlayer[p1].diff;
 
         await dynamo.update({

@@ -54,9 +54,9 @@ exports.creategame = async (players, flags) => {
     let wonderChoices;
     if (randomizerEnabled) {
         let deckForAge = {
-            '1': randomizer.generateDeckForPlayersAge(players.length, 1),
-            '2': randomizer.generateDeckForPlayersAge(players.length, 2),
-            '3': randomizer.generateDeckForPlayersAge(players.length, 3),
+            '1': randomizer.generateDeckForPlayersAge(players.length, 1, sevenBlundersEnabled),
+            '2': randomizer.generateDeckForPlayersAge(players.length, 2, sevenBlundersEnabled),
+            '3': randomizer.generateDeckForPlayersAge(players.length, 3, sevenBlundersEnabled),
         };
         
         cards = randomizer.cardsify(deckForAge);
@@ -67,7 +67,7 @@ exports.creategame = async (players, flags) => {
 
         wonderChoices = {};
         players.forEach(player => {
-            wonderChoices[player] = randomizer.getRandomWonderChoices(player)
+            wonderChoices[player] = randomizer.getRandomWonderChoices(player, sevenBlundersEnabled)
         });
     } else {
         cards = cardData.getAllCards();
