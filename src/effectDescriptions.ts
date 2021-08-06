@@ -55,7 +55,7 @@ function getDescriptionForEffect(effect: API.Effect) {
     } else if (effect.type === 'waive_wonder_resource_costs') {
         return `You may ignore the resource costs of your wonder stages (gold costs are unaffected)`;
     } else if (effect.type === 'mask') {
-        return `Copy the symbol from a green card from either neighbor. Multiple masks cannot copy the same card`;
+        return `Copy a science symbol from a card from either neighbor. Masks cannot copy multi-symbols. Multiple masks cannot copy the same instance of a symbol`;
     } else if (effect.type === 'unproduced_resource') {
         return `Gives one of a resource you are not currently producing in your wonder per turn (untradable resources are ignored)`;
     } else if (effect.type === 'duplicate_produced_resource') {

@@ -43,7 +43,7 @@ const randomEffectByType = {
     'points': {
         effect: (age) => ({ type: 'points', points: utils.randInt(1, 2*age+2) }),
         value: (effect) => effect.points,
-        colors: ['blue', 'yellow', 'purple', 'black'],
+        colors: ['blue', 'black'],
     },
     'gold': {
         effect: (age) => ({ type: 'gold', gold: utils.randInt(3, 3*age+3) }),
@@ -253,17 +253,17 @@ const effectCategories = {
     },
     'diplomacy': {
         effects: { 'dove': 1 },
-        distributions: { '1': 0.5, '2': 0.5, '3': 0.5 },
+        distributions: { '1': 0.5, '2': 0.5, '3': 0.3 },
     },
     'science': {
-        effects: { 'science': 5, 'multi_science': 1, 'mask': 1 },
+        effects: { 'science': 10, 'multi_science': 1, 'mask': 1 },
         distributions: { '1': 5, '2': 5, '3': 7 },
     },
     'points': {
-        effects:  { 'points': 7, 'gold_and_points_for_cards': 2, 'gold_and_points_for_stages': 1, 'points_for_cards': 2, 'points_for_stages': 1, 'points_for_finished_wonder': 0.5,
+        effects:  { 'points': 6, 'gold_and_points_for_cards': 3, 'gold_and_points_for_stages': 1, 'points_for_cards': 2, 'points_for_stages': 1, 'points_for_finished_wonder': 0.5,
                     'points_for_self_cards': 2, 'gain_victory_token': 1, 'debt_for_neighbor': 1, 'points_for_victory_tokens': 0.5, 'gold_and_points_for_victory_tokens': 0.5,
                     'discard_defeat_tokens': 0.5 },
-        distributions: { '1': 5, '2': 5, '3': 21 },
+        distributions: { '1': 4, '2': 5, '3': 21 },
     },
     'utility': {
         effects: { 'play_last_card': 1, 'build_from_discard': 1, 'build_free_first_color': 1, 'build_free_first_card': 1, 'build_free_last_card': 1, 'build_free_once_per_age': 1,
