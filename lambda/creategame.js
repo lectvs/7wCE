@@ -45,8 +45,7 @@ exports.creategame = async (players, flags) => {
     let randomizerEnabled = flags.includes('randomizer');
     let citiesEnabled = flags.includes('cities') || randomizerEnabled;
     let sevenBlundersEnabled = flags.includes('blunders');
-    
-    console.log(JSON.stringify(randomizer.getRandomWonderChoices('Dartm')));
+    let vanillaWonders = flags.includes('vanilla_wonders');
     
     let cards;
     let initialHands;
@@ -84,7 +83,7 @@ exports.creategame = async (players, flags) => {
             '3': convertCardListToCountMap(cardData.getCardsForPlayersAge(players.length, 3, citiesEnabled)),
         };
         
-        wonderChoices = wonderData.getWonderChoicesForPlayers(draftOrderPlayers, wonderPreferences, isDebug);
+        wonderChoices = wonderData.getWonderChoicesForPlayers(draftOrderPlayers, wonderPreferences, isDebug, vanillaWonders);
     }
     
     

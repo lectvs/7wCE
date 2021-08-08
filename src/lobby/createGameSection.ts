@@ -22,12 +22,13 @@ class CreateGameSection {
         this.playersElement.appendChild(this.botbox(32, TOP_Y + 32*players.length));
 
         // Options
-        this.optionsElement.appendChild(this.checkbox('option', 'Cities expansion', 'cities', 32, TOP_Y, true));
-        this.optionsElement.appendChild(this.checkbox('option', 'Use wonder preferences', 'respect_preferences', 32, TOP_Y + 32, true));
-        this.optionsElement.appendChild(this.checkbox('option', 'Use elo for draft', 'draft_by_elo', 32, TOP_Y + 84, true));
+        this.optionsElement.appendChild(this.checkbox('option', 'Vanilla wonders', 'vanilla_wonders', 32, TOP_Y, false));
+        this.optionsElement.appendChild(this.checkbox('option', 'Cities expansion', 'cities', 32, TOP_Y + 32, true));
+        this.optionsElement.appendChild(this.checkbox('option', 'Use wonder preferences', 'respect_preferences', 32, TOP_Y + 64, true));
+        this.optionsElement.appendChild(this.checkbox('option', 'Use elo for draft', 'draft_by_elo', 32, TOP_Y + 116, true));
 
-        this.optionsElement.appendChild(this.checkbox('option', '7 Blunders', 'blunders', 32, TOP_Y + 200, false));
-        this.optionsElement.appendChild(this.checkbox('option', 'Randomizer', 'randomizer', 32, TOP_Y + 232, false));
+        this.optionsElement.appendChild(this.checkbox('option', '7 Blunders', 'blunders', 32, TOP_Y + 232, false));
+        this.optionsElement.appendChild(this.checkbox('option', 'Randomizer', 'randomizer', 32, TOP_Y + 264, false));
 
         if (window.location.href.includes('localhost')) {
             this.optionsElement.appendChild(this.checkbox('option', 'Test game', 'test', 32, TOP_Y + 310, true));

@@ -226,8 +226,8 @@ const randomEffectByType = {
         colors: ['yellow', 'black'],
     },
     'broken_gold_for_victory_tokens': {
-        effect: (age) => ({ type: 'broken_gold_for_victory_tokens', gold_per_token: utils.randInt(1, 2) }),
-        value: (effect) => effect.gold_per_token,
+        effect: (age) => ({ type: 'broken_gold_for_victory_tokens', gold_per_token: 1 }),
+        value: (effect) => 2*effect.gold_per_token,
         colors: ['yellow', 'black'],
     },
     'turret': {
@@ -244,7 +244,7 @@ const effectCategories = {
     },
     'economy': {
         effects: { 'gold': 1, 'trading_post': 1, 'marketplace': 1, 'double_trading_post': 1, 'gold_for_cards': 1, 'wharf': 1, 'smugglers_cache': 1, 'gold_for_defeat_tokens': 1, 'broken_gold': 1,
-                   'broken_gold_for_stages': 1, 'broken_gold_for_victory_tokens': 1 },
+                   'broken_gold_for_stages': 1, 'broken_gold_for_victory_tokens': 0.7 },
         distributions: { '1': 5, '2': 4, '3': 0 },
     },
     'military': {

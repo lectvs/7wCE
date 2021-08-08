@@ -362,10 +362,17 @@ exports.idsToWonderPreferences = (ids) => {
     return ids.map(id => ({ id, name: wonderGroups[id].name }));
 }
 
-exports.getWonderChoicesForPlayers = (players, wonderPreferences, isDebug) => {
+exports.getWonderChoicesForPlayers = (players, wonderPreferences, isDebug, vanillaWonders) => {
     // Select wonders to use
     let wonderGroupIds = Object.keys(wonderGroups);
     //wonderGroupIds.splice(wonderGroupIds.indexOf('10'), 1);  // Remove placeholders (uncomment when there are new placeholders)
+    if (vanillaWonders) {
+        wonderGroupIds.splice(wonderGroupIds.indexOf('7'), 1);
+        wonderGroupIds.splice(wonderGroupIds.indexOf('8'), 1);
+        wonderGroupIds.splice(wonderGroupIds.indexOf('9'), 1);
+        wonderGroupIds.splice(wonderGroupIds.indexOf('10'), 1);
+        wonderGroupIds.splice(wonderGroupIds.indexOf('11'), 1);
+    }
     wonderGroupIds = utils.shuffled(wonderGroupIds);
     wonderGroupIds.splice(0, wonderGroupIds.length - players.length - 1);  // Use {players+1} wonders in the pool
     

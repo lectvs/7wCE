@@ -26,7 +26,7 @@ exports.getusers = async (usernames) => {
 
 function getFriends(username) {
     let friendPools = [
-        ['Dartm', 'jamesn', 'pittmang', 'djbfox1115', 'CuongManh', 'LaterGator', 'TonyWu-', 'bporter', 'nickgu'],
+        ['Dartm', 'jamesn', 'pittmang', 'djbfox1115', 'CuongManh', 'LaterGator', 'bporter', 'nickgu'],
         ['Dartm', 'Test'],
     ];
     
