@@ -241,38 +241,61 @@ const effectCategories = {
     'resource': {
         effects: { 'resource': 8, 'multi_resource': 3, 'unproduced_resource': 0.6, 'duplicate_produced_resource': 0.6 },
         distributions: { '1': 10, '2': 8, '3': 0 },
+        wonderDistributions: { '1': 1, '2': 1, '3': 0 },
     },
     'economy': {
         effects: { 'gold': 1, 'trading_post': 1, 'marketplace': 1, 'double_trading_post': 1, 'gold_for_cards': 1, 'wharf': 1, 'smugglers_cache': 1, 'gold_for_defeat_tokens': 1, 'broken_gold': 1,
                    'broken_gold_for_stages': 1, 'broken_gold_for_victory_tokens': 0.7 },
         distributions: { '1': 5, '2': 4, '3': 0 },
+        wonderDistributions: { '1': 1, '2': 1, '3': 0 },
     },
     'military': {
         effects: { 'shields': 1 },
         distributions: { '1': 4, '2': 4, '3': 5 },
+        wonderDistributions: { '1': 0.2, '2': 0.3, '3': 0.1 },
     },
     'diplomacy': {
         effects: { 'dove': 1 },
         distributions: { '1': 0.5, '2': 0.5, '3': 0.3 },
+        wonderDistributions: { '1': 0.15, '2': 0.15, '3': 0.15 },
     },
     'science': {
-        effects: { 'science': 10, 'multi_science': 1, 'mask': 1 },
-        distributions: { '1': 5, '2': 5, '3': 7 },
+        effects: { 'science': 10 },
+        distributions: { '1': 4, '2': 4, '3': 5 },
+        wonderDistributions: { '1': 0.1, '2': 0.1, '3': 0.1 },
+    },
+    'multi_science': {
+        effects: { 'multi_science': 1, 'mask': 1 },
+        distributions: { '1': 1, '2': 1, '3': 1 },
+        wonderDistributions: { '1': 0, '2': 0.4, '3': 0.4 },
+    },
+    'raw_points': {
+        effects:  { 'points': 1 },
+        distributions: { '1': 1, '2': 1.5, '3': 7 },
+        wonderDistributions: { '1': 1, '2': 1, '3': 2 },
     },
     'points': {
-        effects:  { 'points': 6, 'gold_and_points_for_cards': 3, 'gold_and_points_for_stages': 1, 'points_for_cards': 2, 'points_for_stages': 1, 'points_for_finished_wonder': 0.5,
-                    'points_for_self_cards': 2, 'gain_victory_token': 1, 'debt_for_neighbor': 1, 'points_for_victory_tokens': 0.5, 'gold_and_points_for_victory_tokens': 0.5,
+        effects:  { 'gold_and_points_for_cards': 3, 'gold_and_points_for_stages': 1, 'points_for_cards': 2, 'points_for_stages': 1, 'points_for_finished_wonder': 0.5,
+                    'points_for_self_cards': 2, 'gain_victory_token': 1, 'debt_for_neighbor': 0.5, 'points_for_victory_tokens': 0.5, 'gold_and_points_for_victory_tokens': 0.5,
                     'discard_defeat_tokens': 0.5 },
-        distributions: { '1': 4, '2': 5, '3': 21 },
+        distributions: { '1': 3, '2': 3.5, '3': 14 },
+        wonderDistributions: { '1': 2, '2': 2, '3': 4 },
     },
     'utility': {
-        effects: { 'play_last_card': 1, 'build_from_discard': 1, 'build_free_first_color': 1, 'build_free_first_card': 1, 'build_free_last_card': 1, 'build_free_once_per_age': 1,
+        effects: { 'play_last_card': 1, 'build_free_first_color': 1, 'build_free_first_card': 1, 'build_free_last_card': 1, 'build_free_once_per_age': 1,
                    'waive_wonder_resource_costs': 1, 'turret': 1 },
         distributions: { '1': 1, '2': 1, '3': 0 },
+        wonderDistributions: { '1': 1, '2': 1, '3': 0 },
+    },
+    'discard': {
+        effects: { 'build_from_discard': 1 },
+        distributions: { '1': 0.2, '2': 0.2, '3': 0.2 },
+        wonderDistributions: { '1': 0.5, '2': 0.5, '3': 0.5 },
     },
     'negative': {
         effects: { 'gold_for_others': 1, 'gold_for_neighbor': 1 },
         distributions: { '1': 0, '2': 0, '3': 0 },
+        wonderDistributions: { '1': 0, '2': 0, '3': 0 },
     },
 }
 
@@ -288,11 +311,17 @@ const agePointGoal = {
     '3': 6,
 }
 
-function randomEffectType(age, sevenBlundersEnabled) {
+function randomEffectType(age, forWonder, theme, sevenBlundersEnabled) {
     let categories = Object.keys(effectCategories);
     let category;
     for (let i = 0; i < 1000; i++) {
-        category = utils.randElementWeighted(categories, categories.map(c => effectCategories[c].distributions[age]));
+        category = utils.randElementWeighted(categories, categories.map(c => {
+            let dist = forWonder ? effectCategories[c].wonderDistributions[age] : effectCategories[c].distributions[age];
+            if (c === theme && dist > 0) {
+                dist = Math.max(3, dist*3);
+            }
+            return dist;
+        }));
         if (sevenBlundersEnabled && category === 'diplomacy') continue;
         break;
     }
@@ -311,19 +340,19 @@ function randomNegativeEffectType() {
     return utils.randElementWeighted(Object.keys(effectDistribution), Object.keys(effectDistribution).map(k => effectDistribution[k]));
 }
 
-function randomEffectForTargetValue(age, minValue, maxValue, sevenBlundersEnabled) {
+function randomEffectForTargetValue(age, minValue, maxValue, forWonder, theme, sevenBlundersEnabled) {
     if (minValue < -5 && maxValue < 0) {
         return { type: 'points', points: utils.randInt(minValue, maxValue) };
     }
 
     if (minValue < 0) {
-        if (utils.randBool(0.2) && maxValue < 0) return { type: 'points', points: utils.randInt(minValue, maxValue) };
+        if (utils.randBool(0.4) && maxValue < 0) return { type: 'points', points: utils.randInt(minValue, maxValue) };
         return randomEffectByType[randomNegativeEffectType()].effect(age);
     }
     
     let iters = 100;
     while (iters > 0) {
-        let effectType = randomEffectType(age, sevenBlundersEnabled);
+        let effectType = randomEffectType(age, forWonder, theme, sevenBlundersEnabled);
         let effect = randomEffectByType[effectType].effect(age);
         let effectValue = randomEffectByType[effect.type].value(effect, age);
         if (effectValue >= minValue && effectValue <= maxValue) return effect;
@@ -363,7 +392,7 @@ exports.generateDeckForPlayersAge = (players, age, sevenBlundersEnabled) => {
     let cardNames = utils.shuffled(cardList.filter(card => card.age === age).map(card => card.name));
     let cardNameIndex = 0;
     for (let i = 0; i < 8*players; i++) {
-        let effectType = randomEffectType(age, sevenBlundersEnabled);
+        let effectType = randomEffectType(age, false, undefined, sevenBlundersEnabled);
         deck.push(getCardForAge(effectType, age, cardNames, cardNameIndex, sevenBlundersEnabled));
         cardNameIndex++;
         if (cardNameIndex >= cardNames.length) cardNameIndex = 0;
@@ -397,11 +426,11 @@ function getCardForAge(effectType, age, cardNames, cardNameIndex, sevenBlundersE
     // Adjust value if needed
     let valueDiff = agePointGoal[age] - randomEffectByType[effectType].value(effects[0], age);
     if (valueDiff && valueDiff > 0 && utils.randBool(0.8)) {
-        effects.push(randomEffectForTargetValue(age, Math.max(1, valueDiff-2), valueDiff+1, sevenBlundersEnabled));
+        effects.push(randomEffectForTargetValue(age, Math.max(1, valueDiff-2), valueDiff+1, false, undefined, sevenBlundersEnabled));
     }
     
     if (valueDiff && valueDiff < -1 && utils.randBool(0.5)) {
-        effects.push(randomEffectForTargetValue(age, valueDiff, -1, sevenBlundersEnabled));
+        effects.push(randomEffectForTargetValue(age, valueDiff, -1, false, undefined, sevenBlundersEnabled));
     }
     
     // Age 2 override to create double resources
@@ -497,6 +526,25 @@ const targetValueByStageCount = {
     '4': 15,
 }
 
+function getGoldCostByAge(age) {
+    if (age === 1) return 2;
+    if (age === 2) return utils.randInt(3, 4);
+    if (age === 3) return utils.randInt(6, 8);
+    return utils.randInt(2, 8);
+}
+
+const wonderThemes = [
+    'resource',
+    'economy',
+    'military',
+    'diplomacy',
+    'multi_science',
+    'raw_points',
+    'points',
+    'utility',
+    'discard'
+];
+
 exports.getRandomWonderChoices = (player, sevenBlundersEnabled) => {
     let name = player;
     let outline_color = utils.randInt(0x000000, 0xFFFFFF);
@@ -504,6 +552,8 @@ exports.getRandomWonderChoices = (player, sevenBlundersEnabled) => {
     let starting_effect_color = starting_effect.type === 'gold' ? 'yellow' : (['glass', 'press', 'loom'].includes(starting_effect.resource) ? 'grey' : 'brown');
     
     let stageSets = [];
+    
+    let theme = utils.randElement(wonderThemes);
     
     for (let j = 0; j < 2; j++) {
         let resourceCosts = randomResourceCostsForWonder();
@@ -516,21 +566,23 @@ exports.getRandomWonderChoices = (player, sevenBlundersEnabled) => {
                 '3': i+1,
                 '4': Math.min(i+1, 3),
             }[stageCount];
-            let effectType = randomEffectType(age, sevenBlundersEnabled);
+            let effectType = randomEffectType(age, true, theme, sevenBlundersEnabled);
             let effects = [randomEffectByType[effectType].effect(age)];
             
             // Adjust value if needed
             let valueDiff = agePointWonderStageGoal[age] - randomEffectByType[effectType].value(effects[0], age);
             if (valueDiff && valueDiff > 0) {
-                effects.push(randomEffectForTargetValue(age, valueDiff, valueDiff, sevenBlundersEnabled));
+                effects.push(randomEffectForTargetValue(age, Math.max(0, valueDiff-2), valueDiff, true, theme, sevenBlundersEnabled));
             }
             
             if (valueDiff && valueDiff < 0) {
-                effects.push(randomEffectForTargetValue(age, valueDiff, valueDiff, sevenBlundersEnabled));
+                effects.push(randomEffectForTargetValue(age, valueDiff, 0, true, theme, sevenBlundersEnabled));
             }
             
+            let useGoldCost = utils.randBool(0.05);
+            
             stages.push({
-                cost: { resources: resourceCosts[i] },
+                cost: useGoldCost ? { gold: getGoldCostByAge(age) } : { resources: resourceCosts[i] },
                 effects: resolveEffects(effects),
             });
         }
@@ -540,7 +592,7 @@ exports.getRandomWonderChoices = (player, sevenBlundersEnabled) => {
     let totalValue0 = utils.sumArray(stageSets[0], stage => utils.sumArray(stage.effects, effect => randomEffectByType[effect.type].value(effect, 2)));
     let totalValue1 = utils.sumArray(stageSets[1], stage => utils.sumArray(stage.effects, effect => randomEffectByType[effect.type].value(effect, 2)));
     
-    if (totalValue0 < targetValueByStageCount[stageSets[0].length] && totalValue1 < targetValueByStageCount[stageSets[1].length]) {
+    if (totalValue0 < targetValueByStageCount[stageSets[0].length] || totalValue1 < targetValueByStageCount[stageSets[1].length]) {
         starting_effect = randomEffectByType['multi_resource'].effect(1);
     }
     
