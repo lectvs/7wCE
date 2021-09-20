@@ -46,6 +46,8 @@ function getDescriptionForEffect(effect: API.Effect) {
         return `Pay 1 gold instead of 2 for brown resources traded from either neighbor`
     } else if (effect.type === 'copy_guild') {
         return `Copy the effect of a guild from either neighbor`;
+    } else if (effect.type === 'points_for_negative_tokens') {
+        return `${effect.points_per_token} VP for each military defeat token your neighbors have`;
     } else if (effect.type === 'build_free_once_per_age') {
         return `You may ignore the cost of a single card of your choice per age`;
     } else if (effect.type === 'gold_for_others') {
@@ -55,7 +57,7 @@ function getDescriptionForEffect(effect: API.Effect) {
     } else if (effect.type === 'waive_wonder_resource_costs') {
         return `You may ignore the resource costs of your wonder stages (gold costs are unaffected)`;
     } else if (effect.type === 'mask') {
-        return `Copy a science symbol from a card from either neighbor. Masks cannot copy multi-symbols. Multiple masks cannot copy the same instance of a symbol`;
+        return `Copy a science symbol from either neighbor, except astrolabes or multi-symbols. Multiple masks cannot copy the same instance of a symbol`;
     } else if (effect.type === 'unproduced_resource') {
         return `Gives one of a resource you are not currently producing in your wonder per turn (untradable resources are ignored)`;
     } else if (effect.type === 'duplicate_produced_resource') {
@@ -66,8 +68,8 @@ function getDescriptionForEffect(effect: API.Effect) {
         return `Pay 1 gold less when buying the starting resource from either neighbor`;
     } else if (effect.type === 'dove') {
         return `Gain 1 diplomacy token`;
-    } else if (effect.type === 'gain_victory_token') {
-        return `Gain a military victory token worth ${effect.token_value} VP`;
+    } else if (effect.type === 'gain_military_token') {
+        return `Gain a military ${effect.token_value < 0 ? 'defeat' : 'victory'} token worth ${effect.token_value} VP`;
     } else if (effect.type === 'debt_for_neighbor') {
         return `Gives a debt token to your ${effect.direction === 'neg' ? 'left' : 'right'} neighbor`;
     } else if (effect.type === 'gold_for_defeat_tokens') {
@@ -86,6 +88,22 @@ function getDescriptionForEffect(effect: API.Effect) {
         return `All players except you lose ${effect.gold_per_token} gold per military victory token they have`;
     } else if (effect.type === 'turret') {
         return `You may build your wonder stages in any order`;
+    } else if (effect.type === 'shields_for_defeat_tokens') {
+        return `Your military defeat tokens count as extra military shields`;
+    } else if (effect.type === 'points_for_shields') {
+        return `${effect.points_per_shield} VP for each military shield you have`;
+    } else if (effect.type === 'points_for_pairs') {
+        return `${effect.points_per_pair} VP for each pair of same-color cards you have`;
+    } else if (effect.type === 'points_for_triplets') {
+        return `${effect.points_per_triplet} VP for each triplet of same-color cards you have`;
+    } else if (effect.type === 'points_for_chains') {
+        return `${effect.points_per_chain} VP for each pair of chained cards you have`;
+    } else if (effect.type === 'build_free_without_chain') {
+        return `You may build for free a chained card even if you do not have the prerequisite card (limited to ${effect.usages} uses during the game)`;
+    } else if (effect.type === 'eye') {
+        return `You may look at your starting hand from the next age`;
+    } else if (effect.type === 'see_future') {
+        return `You may look at all of the purple and black cards in the deck`;
     }
     console.error('Effect type not found:', effect.type);
     return "Description not found";

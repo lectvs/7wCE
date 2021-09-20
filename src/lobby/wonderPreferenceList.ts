@@ -31,6 +31,6 @@ class WonderPreferenceList {
     }
 
     private getPreferenceElementPos(i: number) {
-        return new PIXI.Point(0, 32*i);
+        return new PIXI.Point(0, 26*i);
     }
 }

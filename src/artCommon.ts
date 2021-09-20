@@ -132,8 +132,8 @@ namespace ArtCommon {
                 return smugglersCache();
             } else if (effect.type === 'dove') {
                 return dove();
-            } else if (effect.type === 'gain_victory_token') {
-                return gainVictoryToken(effect.token_value);
+            } else if (effect.type === 'gain_military_token') {
+                return gainMilitaryToken(effect.token_value);
             } else if (effect.type === 'debt_for_neighbor') {
                 return debtForNeighbor(effect.direction);
             } else if (effect.type === 'gold_for_defeat_tokens') {
@@ -152,6 +152,22 @@ namespace ArtCommon {
                 return brokenGoldForVictoryTokens(effect.gold_per_token);
             } else if (effect.type === 'turret') {
                 return turret();
+            } else if (effect.type === 'shields_for_defeat_tokens') {
+                return shieldsForDefeatTokens();
+            } else if (effect.type === 'points_for_shields') {
+                return pointsForShields(effect.points_per_shield);
+            } else if (effect.type === 'points_for_pairs') {
+                return pointsForPairs(effect.points_per_pair);
+            } else if (effect.type === 'points_for_triplets') {
+                return pointsForTriplets(effect.points_per_triplet);
+            } else if (effect.type === 'points_for_chains') {
+                return pointsForChains(effect.points_per_chain);
+            } else if (effect.type === 'build_free_without_chain') {
+                return buildFreeWithoutChain(effect.usages);
+            } else if (effect.type === 'eye') {
+                return eye();
+            } else if (effect.type === 'see_future') {
+                return seeFuture();
             }
             console.error('Effect type not found:', effect.type);
             return effectNotFound();
@@ -163,8 +179,7 @@ namespace ArtCommon {
     export function getShadowForArt(artFactory: () => PIXI.DisplayObject, type: 'light' | 'dark', dx: number = 5, dy: number = 5) {
         let container = new PIXI.Container();
         let shadow = artFactory();
-        let silhouetteFilter = new PIXI.filters.ColorMatrixFilter();
-        silhouetteFilter.brightness(type === 'dark' ? 0 : 10, false);
+        let silhouetteFilter = new SilhouetteFilter(type);
         shadow.filters = [silhouetteFilter, new PIXI.filters.BlurFilter(16 * resolution, 100)];
         shadow.position.set(dx, dy);
         container.addChild(shadow);
@@ -290,6 +305,7 @@ namespace ArtCommon {
         if (symbol === 'gear') return gear();
         if (symbol === 'tablet') return tablet();
         if (symbol === 'compass') return compass();
+        if (symbol === 'astrolabe') return astrolabe();
         console.error('Science symbol not found:', symbol);
         return effectNotFound();
     }
@@ -552,11 +568,7 @@ namespace ArtCommon {
 
     export function buildFreeFirstColor() {
         let container = new PIXI.Container();
-        container.addChild(cardForEffect(0x686B6A));
-        let colors = ['brown', 'grey', 'blue', 'yellow', 'red', 'green', 'purple'];
-        for (let i = 0; i < colors.length; i++) {
-            container.addChild(Shapes.filledRect(-31 + 62/7*i, -46, 62/7, 92, ArtCommon.cardBannerForColor(colors[i])));
-        }
+        container.addChild(rainbowCard());
         let cross = X(0xFF0000);
         cross.scale.set(0.3);
         cross.position.set(-30, -20);
@@ -775,8 +787,8 @@ namespace ArtCommon {
         return sprite;
     }
 
-    export function gainVictoryToken(value: number) {
-        return militaryTokenPositive(value);
+    export function gainMilitaryToken(value: number) {
+        return militaryToken(value);
     }
 
     export function debtForNeighbor(direction: string) {
@@ -908,6 +920,136 @@ namespace ArtCommon {
         return combineEffectArt(range(1, shields).map(i => shield()), 8);
     }
 
+    export function shieldsForDefeatTokens() {
+        let container = new PIXI.Container();
+        let token = militaryTokenNegative(1);
+        token.scale.set(0.9);
+        token.position.set(0, -5);
+        container.addChild(token);
+        let shieldArt = shield();
+        shieldArt.scale.set(0.4);
+        shieldArt.position.set(0, 30);
+        container.addChild(shieldArt);
+        return container;
+    }
+
+    export function pointsForShields(pointsPerShield: number) {
+        let container = new PIXI.Container();
+        let shieldArt = shield();
+        shieldArt.scale.set(0.7);
+        shieldArt.position.set(0, -5);
+        container.addChild(shieldArt);
+        let pointsWreath = victoryPoints(pointsPerShield);
+        pointsWreath.scale.set(0.6);
+        pointsWreath.position.set(45, 30);
+        container.addChild(pointsWreath);
+        return container;
+    }
+
+    export function pointsForPairs(pointsPerPair: number) {
+        let container = new PIXI.Container();
+        let cardContainer = new PIXI.Container();
+        let o = 5;
+        cardContainer.addChild(Shapes.filledRoundedRect(-85, -60, 170, 120, 10, 0xFFFFFF));
+        cardContainer.addChild(Shapes.filledRoundedRect(-85+o, -60+o, 170-2*o, 120-2*o, 10-o, 0x000000));
+        let card1 = rainbowCard();
+        card1.scale.set(0.9, 1);
+        card1.position.set(-40, 0);
+        let card2 = rainbowCard();
+        card2.scale.set(0.9, 1);
+        card2.position.set(40, 0);
+        cardContainer.addChild(card1);
+        cardContainer.addChild(card2);
+        cardContainer.position.set(0, -5);
+        container.addChild(cardContainer);
+        let pointsWreath = victoryPoints(pointsPerPair);
+        pointsWreath.scale.set(0.7);
+        pointsWreath.position.set(0, 40);
+        container.addChild(pointsWreath);
+        return container;
+    }
+
+    export function pointsForTriplets(pointsPerTriplet: number) {
+        let container = new PIXI.Container();
+        let cardContainer = new PIXI.Container();
+        let o = 5;
+        cardContainer.addChild(Shapes.filledRoundedRect(-125, -60, 250, 120, 10, 0xFFFFFF));
+        cardContainer.addChild(Shapes.filledRoundedRect(-125+o, -60+o, 250-2*o, 120-2*o, 10-o, 0x000000));
+        let card1 = rainbowCard();
+        card1.scale.set(0.9, 1);
+        card1.position.set(-80, 0);
+        let card2 = rainbowCard();
+        card2.scale.set(0.9, 1);
+        let card3 = rainbowCard();
+        card3.scale.set(0.9, 1);
+        card3.position.set(80, 0);
+        cardContainer.addChild(card1);
+        cardContainer.addChild(card2);
+        cardContainer.addChild(card3);
+        cardContainer.position.set(0, -5);
+        container.addChild(cardContainer);
+        let pointsWreath = victoryPoints(pointsPerTriplet);
+        pointsWreath.scale.set(0.7);
+        pointsWreath.position.set(0, 40);
+        container.addChild(pointsWreath);
+        return container;
+    }
+
+    export function pointsForChains(pointsPerChain: number) {
+        let container = new PIXI.Container();
+        container.addChild(chainedCards());
+        let pointsWreath = victoryPoints(pointsPerChain);
+        pointsWreath.scale.set(0.6);
+        pointsWreath.position.set(0, 40);
+        container.addChild(pointsWreath);
+        return container;
+    }
+
+    export function buildFreeWithoutChain(usages: number) {
+        let container = new PIXI.Container();
+        container.addChild(chainedCards());
+        let arrow = arrowRight();
+        arrow.scale.set(0.65);
+        arrow.position.set(0, 30);
+        container.addChild(arrow);
+        container.addChild(Shapes.centeredText(-5, 30, `${usages}x`, 0.25, 0x000000));
+        let cross1 = X(0xFF0000);
+        cross1.scale.set(0.8);
+        cross1.position.set(-80, 0);
+        container.addChild(cross1);
+        let cross2 = X(0xFF0000);
+        cross2.scale.set(0.3);
+        cross2.position.set(57, -23);
+        container.addChild(cross2);
+        return container;
+    }
+
+    export function eye() {
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('eye'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.7);
+        return sprite;
+    }
+
+    export function seeFuture() {
+        let container = new PIXI.Container();
+        let background = Shapes.filledRect(-52.5, -50, 105, 100, 0x000000);
+        background.alpha = 0.01;
+        container.addChild(background);
+        let card1 = cardForEffect(cardBannerForColor('purple'));
+        card1.scale.set(0.9);
+        card1.position.set(-10, -10);
+        let card2 = cardForEffect(cardBannerForColor('black'));
+        card2.scale.set(0.9);
+        card2.position.set(10, 10);
+        container.addChild(card1);
+        container.addChild(card2);
+        let eyeArt = eye();
+        eyeArt.scale.set(0.6);
+        eyeArt.position.set(0, 0);
+        container.addChild(eyeArt);
+        return container;
+    }
 
     /* COMPONENTS */
 
@@ -1015,6 +1157,15 @@ namespace ArtCommon {
         return container;
     }
 
+    export function astrolabe() {
+        let container = new PIXI.Container();
+        let sprite = new PIXI.Sprite(PIXI.Texture.from('astrolabe'));
+        sprite.anchor.set(0.5, 0.5);
+        sprite.scale.set(0.65);
+        container.addChild(sprite);
+        return container;
+    }
+
     export function cardGoldPoints(color: string, goldAmount: number, pointsAmount: number) {
         let container = new PIXI.Container();
         container.addChild(cardForEffect(ArtCommon.cardBannerForColor(color)));
@@ -1037,6 +1188,36 @@ namespace ArtCommon {
         let container = new PIXI.Container();
         container.addChild(Shapes.filledRoundedRect(-35, -50, 70, 100, 8, 0xFFFFFF));
         container.addChild(Shapes.filledRoundedRect(-31, -46, 62, 92, 4, color));
+        return container;
+    }
+
+    export function rainbowCard() {
+        let container = new PIXI.Container();
+        container.addChild(cardForEffect(0x686B6A));
+        let colors = ['brown', 'grey', 'blue', 'yellow', 'red', 'green', 'purple'];
+        for (let i = 0; i < colors.length; i++) {
+            container.addChild(Shapes.filledRect(-31 + 62/7*i, -46, 62/7, 92, ArtCommon.cardBannerForColor(colors[i])));
+        }
+        return container;
+    }
+
+    export function chainedCards() {
+        let container = new PIXI.Container();
+
+        let card1 = cardForEffect(0x686B6A);
+        card1.position.set(-80, 0);
+        card1.addChild(Shapes.filledRect(15, -46, 16, 46, 0x343630));
+        let card2 = cardForEffect(0x686B6A);
+        card2.position.set(80, 0);
+        card2.addChild(Shapes.filledRect(-31, -46, 16, 46, 0x343630));
+        container.addChild(card1);
+        container.addChild(card2);
+
+        let chain = chainlink();
+        chain.scale.set(0.55);
+        chain.position.set(0, -20);
+        container.addChild(chain);
+
         return container;
     }
 
@@ -1179,6 +1360,13 @@ namespace ArtCommon {
 
     export function turret() {
         let turret = new PIXI.Sprite(PIXI.Texture.from('turret'));
+        turret.anchor.set(0.5, 0.5);
+        turret.scale.set(0.7);
+        return turret;
+    }
+
+    export function chainlink() {
+        let turret = new PIXI.Sprite(PIXI.Texture.from('chainlink'));
         turret.anchor.set(0.5, 0.5);
         turret.scale.set(0.7);
         return turret;

@@ -1,4 +1,4 @@
-type HandData = { type: 'normal', cardIds: number[], activeWonder: Wonder, validMoves: API.Move[] }
+type HandData = { type: 'normal', cardIds: number[], activeWonder: Wonder, validMoves: API.Move[], future: boolean }
               | { type: 'back', player: string, age: number, flankDirection: number }
               | { type: 'discard', count: number, lastCardAge: number };
 
@@ -58,7 +58,7 @@ class Hand {
                     this.cards[i].scale = this.scale;
                 }
 
-                this.cards[i].checkMarkVisible = (Main.gamestate.state !== 'CHOOSE_GOLD_TO_LOSE' && this.state.moved && i === this.cards.length-1);
+                this.cards[i].checkMarkVisible = (Main.gamestate.state !== 'CHOOSE_GOLD_TO_LOSE' && Main.gamestate.state !== 'SEE_FUTURE' && this.state.moved && i === this.cards.length-1);
             }
             this.cards[i].update();
         }
@@ -82,6 +82,10 @@ class Hand {
             let card = handData.type === 'normal'
                         ? new Card(this.scene, this.cardIds[i], i, undefined, handPosition, this.activeWonder, handData.validMoves)
                         : Card.flippedCardForAge(this.scene, handData.type === 'back' ? handData.age : handData.lastCardAge, false);
+            if (handData.type === 'normal' && handData.future) {
+                card.destroy();
+                card.create(card.apiCardId, false);
+            }
             card.x = handPosition.x;
             card.y = handPosition.y;
             card.addToGame();
@@ -145,6 +149,12 @@ class Hand {
     setZIndex(zIndex: number) {
         for (let card of this.cards) {
             card.zIndex = zIndex;
+        }
+    }
+
+    setAlpha(alpha: number) {
+        for (let card of this.cards) {
+            card.alpha = alpha;
         }
     }
 

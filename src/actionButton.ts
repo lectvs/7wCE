@@ -5,7 +5,7 @@ class ActionButton extends GameElement {
     private scene: GameScene;
     private button: HTMLDivElement;
     private textElement: HTMLParagraphElement;
-    private type: 'undo' | 'reject_discard';
+    private type: 'undo' | 'reject_discard' | 'accept_future';
 
     private _buttonActive: boolean = true;
     private get buttonActive() { return this._buttonActive; }
@@ -44,13 +44,19 @@ class ActionButton extends GameElement {
                 if (this.scene.isPaymentMenuActive) this.scene.paymentDialog.removeFromGame();
             } else if (this.type === 'reject_discard') {
                 Main.submitMove({ action: 'reject', card: -1, payment: {} });
+            } else if (this.type === 'accept_future') {
+                Main.submitMove({ action: 'accept', card: -1, payment: {} });
             }
         };
     }
 
-    setType(type: 'undo' | 'reject_discard') {
+    setType(type: 'undo' | 'reject_discard' | 'accept_future') {
         this.type = type;
-        this.textElement.textContent = (type === 'undo') ? 'Undo' : 'No Thanks';
+        this.textElement.textContent = {
+            'undo': 'Undo',
+            'reject_discard': 'No Thanks',
+            'accept_future': 'Done',
+        }[type];
 
         let buttonActive = true;
         if (type === 'reject_discard' && !API.canReject(Main.gamestate.validMoves)) buttonActive = false;

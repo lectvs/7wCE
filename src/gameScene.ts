@@ -6,6 +6,7 @@ class GameScene extends Scene {
     hands: Hand[];
     discardPile: DiscardPile;
     discardHand: Hand;
+    seeFutureHand: Hand;
     paymentDialog: PaymentDialog;
     chooseGoldToLoseDialog: ChooseGoldToLoseDialog;
     copyStageDialog: CopyStageDialog;
@@ -32,7 +33,13 @@ class GameScene extends Scene {
             hand.update();
         }
 
-        this.actionButton.setType(this.isMyTurnToBuildFromDiscard() ? 'reject_discard' : 'undo');
+        if (this.isMyTurnToSeeFuture()) {
+            this.actionButton.setType('accept_future');
+        } else if (this.isMyTurnToBuildFromDiscard()) {
+            this.actionButton.setType('reject_discard');
+        } else {
+            this.actionButton.setType('undo');
+        }
 
         for (let i = 0; i < this.wonders.length; i++) {
             this.wonders[i].adjustPlaceholdersFor(this.hands[i].playedCard || this.hands[i].selectedCard);
@@ -41,6 +48,10 @@ class GameScene extends Scene {
         
         if (this.discardHand) {
             this.discardHand.update();
+        }
+
+        if (this.seeFutureHand) {
+            this.seeFutureHand.update();
         }
 
         if (this.paymentDialog) {
@@ -60,7 +71,14 @@ class GameScene extends Scene {
         let gamestate = Main.gamestate;
         let players = Main.gamestate.players;
 
-        let cardsInHand = this.isMyTurnToBuildFromDiscard() ? gamestate.discardedCards : gamestate.hand;
+        let cardsInHand: number[];
+        if (this.isMyTurnToSeeFuture()) {
+            cardsInHand = gamestate.seeFutureCards;
+        } else if (this.isMyTurnToBuildFromDiscard()) {
+            cardsInHand = gamestate.discardedCards;
+        } else {
+            cardsInHand = gamestate.hand;
+        }
 
         this.wonders = players.map(player => undefined);
         this.hands = players.map(player => undefined);
@@ -74,7 +92,7 @@ class GameScene extends Scene {
         this.wonders[p] = new Wonder(this, gamestate.wonders[players[p]], players[p]);
         this.wonders[p].setPosition(this.getWonderPosition(p));
         this.wonders[p].addToGame();
-        this.hands[p] = new Hand(this, this.getHandPosition(p), { type: 'normal', cardIds: cardsInHand, activeWonder: this.wonders[p], validMoves: Main.gamestate.validMoves });
+        this.hands[p] = new Hand(this, this.getHandPosition(p), { type: 'normal', cardIds: cardsInHand, activeWonder: this.wonders[p], validMoves: Main.gamestate.validMoves, future: this.isMyTurnToSeeFuture() });
         this.hands[p].snap();
         finalY = this.wonders[p].y;
 
@@ -132,7 +150,7 @@ class GameScene extends Scene {
         this.actionButton.y = C.ACTION_BUTTON_Y;
         this.actionButton.addToGame();
 
-        if (gamestate.state !== 'CHOOSE_GOLD_TO_LOSE') {
+        if (gamestate.state !== 'CHOOSE_GOLD_TO_LOSE' && gamestate.state !== 'SEE_FUTURE') {
             this.hand.reflectMove(gamestate.playerData[Main.player].currentMove);
         }
 
@@ -238,5 +256,9 @@ class GameScene extends Scene {
 
     private isMyTurnToBuildFromDiscard() {
         return Main.gamestate.state === 'DISCARD_MOVE' && Main.gamestate.discardMoveQueue[0] === Main.player;
+    }
+
+    private isMyTurnToSeeFuture() {
+        return Main.gamestate.state === 'SEE_FUTURE' && contains(Main.gamestate.seeFuturePlayers, Main.player);
     }
 }

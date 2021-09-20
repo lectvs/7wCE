@@ -83,6 +83,20 @@ class PaymentDialog extends GameElement {
                 paymentTextZeus2.style.top = '50%';
                 paymentTextZeus2.style.transform = 'translate(0, -50%)';
             }
+            if (payment.free_with_delphoi) {
+                let paymentTextDelphoi1 = leftDiv.appendChild(this.drawText(`Free with`, C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
+                paymentTextDelphoi1.style.width = '100%';
+                paymentTextDelphoi1.style.textAlign = 'right';
+                paymentTextDelphoi1.style.position = 'absolute';
+                paymentTextDelphoi1.style.top = '50%';
+                paymentTextDelphoi1.style.transform = 'translate(0, -50%)';
+                let paymentTextDelphoi2 = rightDiv.appendChild(this.drawText(`Delphoi :)`, C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
+                paymentTextDelphoi2.style.width = '100%';
+                paymentTextDelphoi2.style.textAlign = 'left';
+                paymentTextDelphoi2.style.position = 'absolute';
+                paymentTextDelphoi2.style.top = '50%';
+                paymentTextDelphoi2.style.transform = 'translate(0, -50%)';
+            }
 
             let payButton = middleDiv.appendChild(document.createElement('div'));
             payButton.style.backgroundColor = C.PAYMENT_DIALOG_PAY_BUTTON_COLOR;
@@ -110,6 +124,15 @@ class PaymentDialog extends GameElement {
 
             if (payment.bank) {
                 let payButtonText = payButton.appendChild(this.drawText(`${payment.bank} to bank`, C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
+                payButtonText.style.width = '100%';
+                payButtonText.style.position = 'absolute';
+                payButtonText.style.left = '50%';
+                payButtonText.style.top = '50%';
+                payButtonText.style.transform = 'translate(-50%, -50%)';
+            }
+
+            if (payment.free_with_delphoi) {
+                let payButtonText = payButton.appendChild(this.drawText(`${Main.gamestate.playerData[Main.player].buildFreeWithoutChainUsages} left`, C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
                 payButtonText.style.width = '100%';
                 payButtonText.style.position = 'absolute';
                 payButtonText.style.left = '50%';

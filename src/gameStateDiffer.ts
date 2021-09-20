@@ -29,7 +29,7 @@ namespace GameStateDiffer {
             diffDiplomacyPreConflict(gamestate, player, result);
             diffMilitaryTokensPreConflict(gamestate, player, result);
             diffDebtTokens(gamestate, player, result);
-            if (midturn && Main.gamestate.state !== 'CHOOSE_GOLD_TO_LOSE') diffCurrentMove(gamestate, player, result);
+            if (midturn && Main.gamestate.state !== 'CHOOSE_GOLD_TO_LOSE' && Main.gamestate.state !== 'SEE_FUTURE') diffCurrentMove(gamestate, player, result);
         }
 
         return result;
@@ -65,6 +65,9 @@ namespace GameStateDiffer {
                     }
                 });
                 moveScripts.push(S.call(() => scene.chooseGoldToLoseDialog?.removeFromGame()));
+            } else if (Main.gamestate.state === 'SEE_FUTURE') {
+                // Nothing
+                moveScripts = [];
             } else {
                 moveScripts = gamestate.players.map(player => {
                     return function*() {
@@ -201,11 +204,11 @@ namespace GameStateDiffer {
 
             yield* S.simul(...moveScripts)();
 
-            // Return discard if it was in your hand
             if (Main.gamestate.state === 'DISCARD_MOVE' && Main.gamestate.discardMoveQueue[0] === Main.player) {
+                // Return discard if it was in your hand
                 scene.discardHand = scene.hand;
                 scene.hands[Main.gamestate.players.indexOf(Main.player)] = new Hand(scene, scene.getHandOffScreenPoint(),
-                                        { type: 'normal', cardIds: Main.gamestate.hand, activeWonder: scene.topWonder, validMoves: Main.gamestate.validMoves });
+                                        { type: 'normal', cardIds: Main.gamestate.hand, activeWonder: scene.topWonder, validMoves: Main.gamestate.validMoves, future: false });
                 scene.hand.snap();
 
                 let handPosition = scene.hand.getPosition();
@@ -224,6 +227,28 @@ namespace GameStateDiffer {
 
                     scene.discardHand.x = lerpTime(discardHandPosition.x, targetDiscardHandPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
                     scene.discardHand.y = lerpTime(discardHandPosition.y, targetDiscardHandPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
+                })();
+
+                yield* S.wait(0.2)();
+            } else if (Main.gamestate.state === 'SEE_FUTURE' && contains(Main.gamestate.seeFuturePlayers, Main.player)) {
+                // Return see-future cards if they were in your hand
+                scene.seeFutureHand = scene.hand;
+                scene.hands[Main.gamestate.players.indexOf(Main.player)] = new Hand(scene, scene.getHandOffScreenPoint(),
+                                        { type: 'normal', cardIds: Main.gamestate.hand, activeWonder: scene.topWonder, validMoves: Main.gamestate.validMoves, future: false });
+                scene.hand.snap();
+
+                let handPosition = scene.hand.getPosition();
+                let targetHandPosition = scene.seeFutureHand.getPosition();
+
+                yield* S.doOverTime(1, t => {
+                    scene.seeFutureHand.setAlpha(1-t);
+                })();
+
+                let lerpt = 0;
+                yield* S.doOverTime(0.3, t => {
+                    lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI/2*t**2), Main.delta);
+                    scene.hand.x = lerpTime(handPosition.x, targetHandPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                    scene.hand.y = lerpTime(handPosition.y, targetHandPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
                 })();
 
                 yield* S.wait(0.2)();
@@ -261,7 +286,9 @@ namespace GameStateDiffer {
                 yield* S.wait(0.5)();
             }
 
-            if (gamestate.state === 'CHOOSE_GOLD_TO_LOSE') {
+            if (Main.gamestate.state === 'SEE_FUTURE' && Main.gamestate.turn === 1) {
+                // Do nothing if we are coming from a turn-1 (start of game) see-future.
+            } else if (gamestate.state === 'CHOOSE_GOLD_TO_LOSE') {
                 if (contains(gamestate.chooseGoldToLosePlayers, Main.player)) {
                     let topWonder = scene.topWonder;
                     let goldLossEffect = new GoldLossEffect(gamestate.playerData[Main.player].goldToLose);
@@ -279,6 +306,28 @@ namespace GameStateDiffer {
                         goldLossEffect.update();
                     })();
                     goldLossEffect.removeFromGame();
+                }
+            } else if (gamestate.state === 'SEE_FUTURE') {
+                if (contains(gamestate.seeFuturePlayers, Main.player)) {
+                    let p = gamestate.players.indexOf(Main.player);
+
+                    let handPosition = scene.hand.getPosition();
+                    let targetHandPosition = scene.getHandOffScreenPoint();
+
+                    let lerpt = 0;
+                    yield* S.doOverTime(0.3, t => {
+                        lerpt = lerpTime(lerpt, 1, Math.tan(Math.PI/2*t**2), Main.delta);
+                        scene.hand.x = lerpTime(handPosition.x, targetHandPosition.x, Math.tan(Math.PI/2*lerpt), Main.delta);
+                        scene.hand.y = lerpTime(handPosition.y, targetHandPosition.y, Math.tan(Math.PI/2*lerpt), Main.delta);
+                    })();
+
+                    scene.seeFutureHand = new Hand(scene, scene.getHandPosition(p), { type: 'normal', cardIds: gamestate.seeFutureCards, activeWonder: scene.wonders[p], validMoves: [], future: true });
+                    scene.seeFutureHand.setAlpha(0);
+                    scene.seeFutureHand.snap();
+
+                    yield* S.doOverTime(1, t => {
+                        scene.seeFutureHand.setAlpha(t);
+                    })();
                 }
             } else if (gamestate.state === 'LAST_CARD_MOVE') {
                 // Nothing
@@ -304,7 +353,7 @@ namespace GameStateDiffer {
                     yield* S.wait(0.2)();
 
                     scene.discardHand.destroy();
-                    scene.discardHand.createWithData({ type: 'normal', cardIds: gamestate.discardedCards, activeWonder: scene.topWonder, validMoves: gamestate.validMoves });
+                    scene.discardHand.createWithData({ type: 'normal', cardIds: gamestate.discardedCards, activeWonder: scene.topWonder, validMoves: gamestate.validMoves, future: false });
                     scene.discardHand.snap();
                     scene.discardHand.state = { type: 'normal' };
                     
@@ -382,7 +431,7 @@ namespace GameStateDiffer {
                     let hands: Hand[] = gamestate.players.map(player => undefined);
                     let entryPoint = scene.getHandOffScreenPoint();
 
-                    hands[p] = new Hand(scene, entryPoint, { type: 'normal', cardIds: gamestate.hand, activeWonder: scene.topWonder, validMoves: gamestate.validMoves });
+                    hands[p] = new Hand(scene, entryPoint, { type: 'normal', cardIds: gamestate.hand, activeWonder: scene.topWonder, validMoves: gamestate.validMoves, future: false });
                     hands[p].state = { type: 'back', moved: false };
                     hands[p].snap();
 
@@ -433,7 +482,7 @@ namespace GameStateDiffer {
                     yield* S.wait(0.4)();
                     hands[p].snap();
                 }
-            } else {  
+            } else {
                 // Rotate all cards  
                 let currentHandPositions = scene.hands.map(hand => hand.getPosition());
                 let targetHandPositions = [...currentHandPositions];
@@ -469,7 +518,7 @@ namespace GameStateDiffer {
                 yield* S.wait(0.2)();
 
                 scene.hands[newHandi].destroy();
-                scene.hands[newHandi].createWithData({ type: 'normal', cardIds: gamestate.hand, activeWonder: scene.hand.activeWonder, validMoves: gamestate.validMoves });
+                scene.hands[newHandi].createWithData({ type: 'normal', cardIds: gamestate.hand, activeWonder: scene.hand.activeWonder, validMoves: gamestate.validMoves, future: false });
                 scene.hands[newHandi].snap();
                 scene.hands[newHandi].state = { type: 'normal' };
 
@@ -763,7 +812,7 @@ namespace GameStateDiffer {
 
     function getMilitaryShowings(gamestate: API.GameState): MilitaryShowing[][] {
         if (gamestate.fightingPlayers.length < 2) {
-            return [gamestate.players.map(player => contains(gamestate.diplomacyPlayers, player) ? { type: 'diplomacy' } : { type: 'tie', shields: gamestate.playerData[player].totalShields })];
+            return [gamestate.players.map(player => contains(gamestate.diplomacyPlayers, player) ? { type: 'diplomacy' } : { type: 'tie', shields: gamestate.playerData[player].totalShields - gamestate.playerData[player].shieldsFromGainedDefeatTokens })];
         }
 
         if (contains(gamestate.diplomacyPlayers, Main.player)) {
@@ -806,8 +855,8 @@ namespace GameStateDiffer {
         let lplayer = gamestate.players[l];
         let rplayer = gamestate.players[r];
 
-        let lshields = gamestate.playerData[lplayer].totalShields;
-        let rshields = gamestate.playerData[rplayer].totalShields;
+        let lshields = gamestate.playerData[lplayer].totalShields - gamestate.playerData[lplayer].shieldsFromGainedDefeatTokens;
+        let rshields = gamestate.playerData[rplayer].totalShields - gamestate.playerData[rplayer].shieldsFromGainedDefeatTokens;
 
         if (lshields > rshields) {
             showings[l] = { type: 'victory', shields: lshields };

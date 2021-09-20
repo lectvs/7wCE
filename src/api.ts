@@ -1,12 +1,14 @@
 namespace API {
     export type GameState = {
-        state: 'CHOOSE_WONDER_SIDE' | 'NORMAL_MOVE' | 'LAST_CARD_MOVE' | 'DISCARD_MOVE' | 'CHOOSE_GOLD_TO_LOSE' | 'GAME_COMPLETE';
+        state: 'CHOOSE_WONDER_SIDE' | 'NORMAL_MOVE' | 'LAST_CARD_MOVE' | 'DISCARD_MOVE' | 'CHOOSE_GOLD_TO_LOSE' | 'SEE_FUTURE' | 'GAME_COMPLETE';
         citiesEnabled: boolean;
         sevenBlundersEnabled: boolean;
         randomizerEnabled: boolean;
         discardMoveQueue: string[];
         lastCardPlayers: string[];
         chooseGoldToLosePlayers: string[];
+        seeFuturePlayers: string[];
+        seeFutureCards: number[];
         turretPlayers: string[];
         fightingPlayers?: string[];
         diplomacyPlayers?: string[];
@@ -38,11 +40,13 @@ namespace API {
         diplomacyTokens: number;
         handCount: number;
         zeusUsed: boolean;
+        buildFreeWithoutChainUsages: boolean;
         lastMove?: Move;
         currentMove?: Move;
         pointsDistribution: PointsDistribution;
         elo?: EloData;
         totalShields: number;
+        shieldsFromGainedDefeatTokens: number;
         cardPoints: Dict<number>;
     }
 
@@ -109,6 +113,11 @@ namespace API {
         points_per_card?: number;
         points_per_stage?: number;
         points_per_token?: number;
+        points_per_shield?: number;
+        points_per_pair?: number;
+        points_per_triplet?: number;
+        points_per_chain?: number;
+        usages?: number;
         token_value?: number;
         priority?: number;
     }
@@ -116,7 +125,7 @@ namespace API {
     export type Wonder = {
         name: string;
         side: string;
-        outline_color: number;
+        outline_color: string | number;
         starting_effect_color: string | number;
         starting_effects: Effect[];
         stages: WonderStage[];
@@ -134,7 +143,7 @@ namespace API {
     }
 
     export type Move = {
-        action: 'play' | 'wonder' | 'throw' | 'reject';
+        action: 'play' | 'wonder' | 'throw' | 'reject' | 'accept';
         card: number;
         index?: number;
         stage?: number;
@@ -150,6 +159,7 @@ namespace API {
         neg?: number;
         bank?: number;
         free_with_zeus?: boolean;
+        free_with_delphoi?: boolean;
     }
 
     export type User = {
@@ -187,6 +197,8 @@ namespace API {
         if ((payment1.pos || 0) !== (payment2.pos || 0)) return false;
         if ((payment1.neg || 0) !== (payment2.neg || 0)) return false;
         if ((payment1.bank || 0) !== (payment2.bank || 0)) return false;
+        if ((payment1.free_with_zeus || false) !== (payment2.free_with_zeus || false)) return false;
+        if ((payment1.free_with_delphoi || false) !== (payment2.free_with_delphoi || false)) return false;
         return true;
     }
 
@@ -209,7 +221,7 @@ namespace API {
             if (validMove.copyPlayer !== move.copyPlayer) continue;
             if (validMove.copyStage !== move.copyStage) continue;
             let bankPayment = validMove.payment?.bank || 0;
-            if (!validMove.payment?.free_with_zeus && bankPayment < result) result = bankPayment;
+            if (!validMove.payment?.free_with_zeus && !validMove.payment?.free_with_delphoi && bankPayment < result) result = bankPayment;
         }
         return result;
     }
@@ -219,13 +231,13 @@ namespace API {
 
         // If the move is already free...
         for (let validMove of matchingMoves) {
-            if (totalPaymentAmount(validMove.payment) === 0 && !validMove.payment?.free_with_zeus) {
+            if (totalPaymentAmount(validMove.payment) === 0 && !validMove.payment?.free_with_zeus && !validMove.payment?.free_with_delphoi) {
                 return false;
             }
         }
 
-        // If move is not free and Olympia power is active...
-        if (isZeusActive(matchingMoves)) {
+        // If move is not free and Olympia or Delphoi power is active...
+        if (isZeusActive(matchingMoves) || isDelphoiActive(matchingMoves)) {
             return true;
         }
 
@@ -250,6 +262,13 @@ namespace API {
     export function isZeusActive(moves: Move[]) {
         for (let move of moves) {
             if (move.payment?.free_with_zeus) return true;
+        }
+        return false;
+    }
+
+    export function isDelphoiActive(moves: Move[]) {
+        for (let move of moves) {
+            if (move.payment?.free_with_delphoi) return true;
         }
         return false;
     }
@@ -289,7 +308,9 @@ namespace API {
                 let neg_j = options[j].neg || 0;
                 let zeus_i = options[i].free_with_zeus;
                 let zeus_j = options[j].free_with_zeus;
-                if (pos_i <= pos_j && neg_i <= neg_j && zeus_i === zeus_j) {
+                let delphoi_i = options[i].free_with_delphoi;
+                let delphoi_j = options[j].free_with_delphoi;
+                if (pos_i <= pos_j && neg_i <= neg_j && zeus_i === zeus_j && delphoi_i === delphoi_j) {
                     options.splice(j, 1);
                     j--;
                 }

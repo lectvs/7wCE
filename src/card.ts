@@ -46,6 +46,7 @@ class Card extends GameElement {
     private allowThrow: boolean;
     private minPlayCost: number;
     private zeusActiveForPlay: boolean;
+    private delphoiActiveForPlay: boolean;
 
     private dragging: DraggingData;
 
@@ -118,30 +119,6 @@ class Card extends GameElement {
         this.configureValidMoves(validMoves);
 
         this.create(cardId, true);
-
-        // Dragging
-        this.frontDiv.onmousedown = (event: MouseEvent) => {
-            if (!this.interactable) return;
-            if (event.button !== 0) return;
-            this.dragging = {
-                offsetx: this.x - Main.mouseX,
-                offsety: this.y - Main.mouseY
-            };
-        };
-
-        // Popup
-        this.frontDiv.onmousemove = () => {
-            if (this.visualState === 'flipped' || this.state.type.startsWith('dragging')) {
-                this.scene.stopPopup(this);
-                return;
-            }
-            let bounds = this.bounds;
-            this.scene.updatePopup(this, this.x + bounds.left, this.y + bounds.bottom);
-        };
-
-        this.frontDiv.onmouseleave = () => {
-            this.scene.stopPopup(this);
-        };
     }
 
     create(cardId: number, drawPayment: boolean) {
@@ -187,6 +164,30 @@ class Card extends GameElement {
 
         this.effectT++; this.effectT--;
         this.flippedT++; this.flippedT--;
+
+        // Dragging
+        this.frontDiv.onmousedown = (event: MouseEvent) => {
+            if (!this.interactable) return;
+            if (event.button !== 0) return;
+            this.dragging = {
+                offsetx: this.x - Main.mouseX,
+                offsety: this.y - Main.mouseY
+            };
+        };
+
+        // Popup
+        this.frontDiv.onmousemove = () => {
+            if (this.visualState === 'flipped' || this.state.type.startsWith('dragging')) {
+                this.scene.stopPopup(this);
+                return;
+            }
+            let bounds = this.bounds;
+            this.scene.updatePopup(this, this.x + bounds.left, this.y + bounds.bottom);
+        };
+
+        this.frontDiv.onmouseleave = () => {
+            this.scene.stopPopup(this);
+        };
     }
     
     destroy() {
@@ -415,13 +416,15 @@ class Card extends GameElement {
         this.allowThrow = false;
         this.minPlayCost = Infinity;
         this.zeusActiveForPlay = false;
+        this.delphoiActiveForPlay = false;
         for (let move of validMoves) {
             if (move.card !== this.apiCardId) continue;
             if (move.action === 'play') {
                 this.allowPlay = true;
                 let cost = API.totalPaymentAmount(move.payment);
-                if (!move.payment?.free_with_zeus && cost < this.minPlayCost) this.minPlayCost = cost;
+                if (!move.payment?.free_with_zeus && !move.payment?.free_with_delphoi && cost < this.minPlayCost) this.minPlayCost = cost;
                 if (move.payment?.free_with_zeus) this.zeusActiveForPlay = true;
+                if (move.payment?.free_with_delphoi) this.delphoiActiveForPlay = true;
             } else if (move.action === 'wonder') {
                 if (!contains(this.allowBuildStages, move.stage)) this.allowBuildStages.push(move.stage);
             } else if (move.action === 'throw') {
@@ -434,6 +437,7 @@ class Card extends GameElement {
         if (this.scene.isMenuActive) return false;
         if (Main.diffing) return false;
         if (Main.gamestate.state === 'CHOOSE_GOLD_TO_LOSE') return false;
+        if (Main.gamestate.state === 'SEE_FUTURE') return false;
         //if (!this.allowPlay && this.allowBuildStages.length === 0 && !this.allowThrow) return false;
         return true;
     }
@@ -461,7 +465,7 @@ class Card extends GameElement {
     }
 
     private drawPayment() {
-        let payment = ArtCommon.payment(this.allowPlay ? this.minPlayCost : Infinity, this.zeusActiveForPlay);
+        let payment = ArtCommon.payment(this.allowPlay ? this.minPlayCost : Infinity, this.zeusActiveForPlay || this.delphoiActiveForPlay);
         payment.scale.set(C.CARD_PAYMENT_SCALE);
         payment.position.set(C.CARD_WIDTH + C.CARD_PAYMENT_OFFSET_X, C.CARD_PAYMENT_HEIGHT/2);
 

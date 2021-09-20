@@ -102,6 +102,7 @@ class Main {
                 PIXI.Loader.shared.add('compass', 'assets/compass.svg');
                 PIXI.Loader.shared.add('tablet', 'assets/tablet.svg');
                 PIXI.Loader.shared.add('gear', 'assets/gear.svg');
+                PIXI.Loader.shared.add('astrolabe', 'assets/astrolabe.svg');
                 PIXI.Loader.shared.add('pyramid_full', 'assets/pyramid_full.svg');
                 PIXI.Loader.shared.add('pyramid_stages', 'assets/pyramid_stages.svg');
                 PIXI.Loader.shared.add('falcon', 'assets/falcon.svg');
@@ -110,6 +111,8 @@ class Main {
                 PIXI.Loader.shared.add('dove', 'assets/dove.svg');
                 PIXI.Loader.shared.add('crack', 'assets/crack.svg');
                 PIXI.Loader.shared.add('turret', 'assets/turret.svg');
+                PIXI.Loader.shared.add('chainlink', 'assets/chainlink.svg');
+                PIXI.Loader.shared.add('eye', 'assets/eye.svg');
                 PIXI.Loader.shared.add('copy_stage_first', 'assets/copy_stage_first.svg');
                 PIXI.Loader.shared.add('copy_stage_second', 'assets/copy_stage_second.svg');
                 PIXI.Loader.shared.add('copy_stage_last', 'assets/copy_stage_last.svg');
@@ -321,6 +324,17 @@ class Main {
             } else {
                 statusText.innerHTML = "<span class='statustextactive'>You must handle your gold loss</span>";
             }
+        } else if (gamestate.state === 'SEE_FUTURE') {
+            if (playerData.currentMove || !contains(gamestate.seeFuturePlayers, this.player)) {
+                let playersLeft = gamestate.seeFuturePlayers.filter(player => !gamestate.playerData[player].currentMove);
+                if (playersLeft.length === 1) {
+                    statusText.innerHTML = `Waiting for ${playersLeft[0]} to see the future`;
+                } else {
+                    statusText.innerHTML = "Waiting for others to see the future";
+                }
+            } else {
+                statusText.innerHTML = "<span class='statustextactive'>You are seeing the future</span>";
+            }
         } else if (gamestate.state === 'NORMAL_MOVE') {
             if (playerData.currentMove) {
                 statusText.innerHTML = "Waiting for others to move";
@@ -365,7 +379,7 @@ class Main {
                             this.error(error);
                             return;
                         }
-                        console.log('Successfully chose bot wonder side:', side);
+                        console.log(botPlayer, 'successfully chose wonder side:', side);
                     });
                 } else if (this.gamestate.state === 'CHOOSE_GOLD_TO_LOSE') {
                     if (this.gamestate.playerData[botPlayer].goldToLose > 0) {
@@ -375,7 +389,17 @@ class Main {
                                 this.error(error);
                                 return;
                             }
-                            console.log('Successfully chose bot gold to lose:', gold_to_lose);
+                            console.log(botPlayer, 'successfully chose gold to lose:', gold_to_lose);
+                        });
+                    }
+                } else if (this.gamestate.state === 'SEE_FUTURE') {
+                    if (contains(this.gamestate.seeFuturePlayers, botPlayer)) {
+                        API.submitmove(this.gameid, this.gamestate.turn, botPlayer, undefined, { action: 'accept', card: -1, payment: {} }, (error: string) => {
+                            if (error) {
+                                this.error(error);
+                                return;
+                            }
+                            console.log(botPlayer, 'successfully saw the future');
                         });
                     }
                 } else {
@@ -394,7 +418,7 @@ class Main {
                                 this.error(error);
                                 return;
                             }
-                            console.log('Successfully submitted bot move:', move);
+                            console.log(botPlayer, 'successfully submitted move:', move);
                         })
                     });
                 }

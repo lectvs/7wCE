@@ -166,9 +166,13 @@ class Loader {
 
         resource.load = () => {
             let wonderBoard = new PIXI.Container();
+
+            let wonderOutlineColorNumber = typeof(wonder.outline_color) === 'string' ? 0xFFFFFF : wonder.outline_color;
+            let isRainbow = wonder.outline_color === 'rainbow';
     
             // Board
-            let boardBase = Shapes.filledRoundedRect(0, 0, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT, C.WONDER_BOARD_CORNER_RADIUS, wonder.outline_color);
+            let boardBase = Shapes.filledRoundedRect(0, 0, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT, C.WONDER_BOARD_CORNER_RADIUS, wonderOutlineColorNumber);
+            if (isRainbow) boardBase.filters = [new RainbowFilter()];
             wonderBoard.addChild(boardBase);
     
             let boardBg = Shapes.filledRoundedRect(C.WONDER_BOARD_BORDER, C.WONDER_BOARD_BORDER,
@@ -206,9 +210,10 @@ class Loader {
                 stageXs.push(stagesMiddle + stageDX * (i - (wonder.stages.length - 1)/2));
     
                 let stageBase = Shapes.filledRoundedRect(-C.WONDER_STAGE_WIDTH/2, C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT,
-                                                         C.WONDER_STAGE_WIDTH, C.WONDER_STAGE_HEIGHT*2, C.WONDER_STAGE_CORNER_RADIUS, wonder.outline_color);
+                                                         C.WONDER_STAGE_WIDTH, C.WONDER_STAGE_HEIGHT*2, C.WONDER_STAGE_CORNER_RADIUS, wonderOutlineColorNumber);
                 stageBase.mask = boardBgMask;
                 stageBase.x = stageXs[i];
+                if (isRainbow) stageBase.filters = [new RainbowFilter()];
                 wonderBoard.addChild(stageBase);
     
                 let stageBg = Shapes.filledRoundedRect(-C.WONDER_STAGE_WIDTH/2 + C.WONDER_BOARD_BORDER, C.WONDER_BOARD_HEIGHT - C.WONDER_STAGE_HEIGHT + C.WONDER_BOARD_BORDER,
@@ -238,8 +243,9 @@ class Loader {
     
                     let costBanner = Shapes.filledRoundedRect(-stageCost.width/2 - C.WONDER_STAGE_COST_PADDING, -C.WONDER_STAGE_COST_PADDING,
                                                               stageCost.width + 2*C.WONDER_STAGE_COST_PADDING, stageCost.height + 2*C.WONDER_STAGE_COST_PADDING,
-                                                              C.WONDER_STAGE_COST_PADDING, wonder.outline_color);
+                                                              C.WONDER_STAGE_COST_PADDING, wonderOutlineColorNumber);
                     costBanner.position.set(stageCost.x, stageCost.y);
+                    if (isRainbow) costBanner.filters = [new RainbowFilter()];
     
                     let costBannerBg = Shapes.filledRoundedRect(-stageCost.width/2 - (C.WONDER_STAGE_COST_PADDING - C.WONDER_STAGE_COST_BORDER), -(C.WONDER_STAGE_COST_PADDING - C.WONDER_STAGE_COST_BORDER),
                                                                 stageCost.width + 2*(C.WONDER_STAGE_COST_PADDING - C.WONDER_STAGE_COST_BORDER), stageCost.height + 2*(C.WONDER_STAGE_COST_PADDING - C.WONDER_STAGE_COST_BORDER),
