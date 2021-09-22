@@ -79,12 +79,23 @@ exports.getgamestate = async (gameid, player, password_hash) => {
         // Helper: list all gold-loss-players
         gamestate.chooseGoldToLosePlayers = (gamestate.state === 'CHOOSE_GOLD_TO_LOSE') ? gamestate.players.filter(player => gamestate.playerData[player].goldToLose > 0) : [];
         
+        // Helper: list all see-future-players
+        gamestate.seeFuturePlayers = (gamestate.state === 'SEE_FUTURE') ? gamestate.players.filter(player => gamestate.playerData[player].seeFutureCards) : [];
+        
         // Helper: list all turret players
         gamestate.turretPlayers = gamestate.players.filter(player => utils.hasEffect(utils.getAllEffects(gamestate, player), 'turret'));
         
         // Helper: list all players' shield counts
         for (let p in gamestate.playerData) {
-            gamestate.playerData[p].totalShields = utils.getShields(utils.getAllEffects(gamestate, p));
+            gamestate.playerData[p].totalShields = utils.getShields(gamestate, p);
+            gamestate.playerData[p].shieldsFromGainedDefeatTokens = 0;
+            if (utils.hasEffect(utils.getAllEffects(gamestate, p), 'shields_for_defeat_tokens')) {
+                for (let token of gamestate.playerData[p].gainedMilitaryTokensFromConflict) {
+                    if (token < 0) {
+                        gamestate.playerData[p].shieldsFromGainedDefeatTokens++;
+                    }
+                }
+            }
         }
         
         // Helper: determine points counts for certain cards (guilds)
@@ -102,13 +113,21 @@ exports.getgamestate = async (gameid, player, password_hash) => {
     // Hide initial hands
     delete gamestate.initialHands;
     
-    // Hide discarded cards unless it is player is building from the discard
+    // Hide discarded cards unless it is player who is building from the discard
     gamestate.discardedCardCount = gamestate.discardedCards.length;
     if (gamestate.discardedCardCount > 0) {
         gamestate.lastDiscardedCardAge = gamestate.cards[gamestate.discardedCards[gamestate.discardedCards.length-1]].age;
     }
     if (gamestate.state !== 'DISCARD_MOVE' || gamestate.discardMoveQueue[0] !== player) {
         delete gamestate.discardedCards;
+    }
+    
+    // Hide see-future cards unless it is player who is seeing the future
+    if (gamestate.state === 'SEE_FUTURE' && gamestate.seeFuturePlayers.includes(player)) {
+        gamestate.seeFutureCards = gamestate.playerData[player].seeFutureCards;
+    }
+    for (let p in gamestate.playerData) {
+        delete gamestate.playerData[p].seeFutureCards;
     }
 
     return gamestate;

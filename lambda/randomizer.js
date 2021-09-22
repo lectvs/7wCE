@@ -36,7 +36,7 @@ const randomEffectByType = {
         colors: ['red'],
     },
     'science': {
-        effect: (age) => ({ type: 'science', symbol: utils.randElement(scienceSymbols) }),
+        effect: (age) => ({ type: 'science', symbol: utils.randBool(0.05) ? 'astrolabe' : utils.randElement(scienceSymbols) }),
         value: (effect, age) => 2*age,
         colors: ['green'],
     },
@@ -130,6 +130,11 @@ const randomEffectByType = {
         value: (effect) => 2,
         colors: colors,
     },
+    'points_for_negative_tokens': {
+        effect: (age) => ({ type: 'points_for_negative_tokens', points_per_token: 1 }),
+        value: (effect) => 7 * effect.points_per_stage,
+        colors: ['blue', 'yellow', 'purple', 'black'],
+    },
     'double_trading_post': {
         effect: (age) => ({ type: 'double_trading_post' }),
         value: (effect) => 4,
@@ -185,8 +190,8 @@ const randomEffectByType = {
         value: (effect) => 2,
         colors: ['red', 'black', 'purple'],
     },
-    'gain_victory_token': {
-        effect: (age) => ({ type: 'gain_victory_token', token_value: utils.randInt(1, 5) }),
+    'gain_military_token': {
+        effect: (age) => ({ type: 'gain_military_token', token_value: utils.randBool(0.2) ? utils.randInt(-2, -1) : utils.randInt(1, 5) }),
         value: (effect) => effect.token_value,
         colors: ['blue', 'purple', 'black'],
     },
@@ -235,6 +240,31 @@ const randomEffectByType = {
         value: (effect) => 3,
         colors: colors,
     },
+    'eye': {
+        effect: (age) => ({ type: 'eye' }),
+        value: (effect) => 2,
+        colors: colors,
+    },
+    'shields_for_defeat_tokens': {
+        effect: (age) => ({ type: 'shields_for_defeat_tokens' }),
+        value: (effect) => 6,
+        colors: colors,
+    },
+    'points_for_shields': {
+        effect: (age) => ({ type: 'points_for_shields', points_per_shield: 1 }),
+        value: (effect) => 7,
+        colors: colors,
+    },
+    'points_for_pairs': {
+        effect: (age) => ({ type: 'points_for_pairs', points_per_pair: utils.randInt(1, 2) }),
+        value: (effect) => effect.points_per_pair * 5,
+        colors: colors,
+    },
+    'points_for_triplets': {
+        effect: (age) => ({ type: 'points_for_triplets', points_per_triplet: utils.randInt(2, 3) }),
+        value: (effect) => effect.points_per_triplet * 3,
+        colors: colors,
+    },
 }
 
 const effectCategories = {
@@ -276,14 +306,14 @@ const effectCategories = {
     },
     'points': {
         effects:  { 'gold_and_points_for_cards': 3, 'gold_and_points_for_stages': 1, 'points_for_cards': 2, 'points_for_stages': 1, 'points_for_finished_wonder': 0.5,
-                    'points_for_self_cards': 2, 'gain_victory_token': 1, 'debt_for_neighbor': 0.5, 'points_for_victory_tokens': 0.5, 'gold_and_points_for_victory_tokens': 0.5,
-                    'discard_defeat_tokens': 0.5 },
+                    'points_for_self_cards': 2, 'points_for_negative_tokens': 1, 'gain_military_token': 1, 'debt_for_neighbor': 0.5, 'points_for_victory_tokens': 0.5, 'gold_and_points_for_victory_tokens': 0.5,
+                    'discard_defeat_tokens': 0.5, 'points_for_shields': 0.5, 'points_for_pairs': 0.5, 'points_for_triplets': 0.5 },
         distributions: { '1': 3, '2': 3.5, '3': 14 },
         wonderDistributions: { '1': 2, '2': 2, '3': 4 },
     },
     'utility': {
         effects: { 'play_last_card': 1, 'build_free_first_color': 1, 'build_free_first_card': 1, 'build_free_last_card': 1, 'build_free_once_per_age': 1,
-                   'waive_wonder_resource_costs': 1, 'turret': 1 },
+                   'waive_wonder_resource_costs': 1, 'turret': 1, 'shields_for_defeat_tokens': 1, 'eye': 1 },
         distributions: { '1': 1, '2': 1, '3': 0 },
         wonderDistributions: { '1': 1, '2': 1, '3': 0 },
     },
@@ -302,7 +332,7 @@ const effectCategories = {
 const bannedEffectsByAge = {
     '1': ['multi_science', 'gold_for_defeat_tokens', 'points_for_victory_tokens', 'gold_and_points_for_victory_tokens', 'discard_defeat_tokens', 'broken_gold_for_stages', 'broken_gold_for_victory_tokens'],
     '2': [],
-    '3': [],
+    '3': ['eye'],
 }
 
 const agePointGoal = {
@@ -318,7 +348,11 @@ function randomEffectType(age, forWonder, theme, sevenBlundersEnabled) {
         category = utils.randElementWeighted(categories, categories.map(c => {
             let dist = forWonder ? effectCategories[c].wonderDistributions[age] : effectCategories[c].distributions[age];
             if (c === theme && dist > 0) {
-                dist = Math.max(3, dist*3);
+                if (c === 'diplomacy') {
+                    dist = 1.5;
+                } else {
+                    dist = Math.max(3, dist*3);
+                }
             }
             return dist;
         }));

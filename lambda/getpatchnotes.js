@@ -2,6 +2,27 @@
 exports.getpatchnotes = async () => {
     
     let patchNotes = [`
+        <p style="font-weight:bold">v1.3: Modern Wonders</p>
+        <br/>
+        <p>Based on the <a class="userinfolink" href="https://www.youtube.com/watch?v=QAuruCMfhMg">Modern Wonders</a> custom wonders pack, there are some exciting new wonders in play :)</p>
+        <br/><br/>
+        <p><span style="color: gold">Five</span> new wonders:</p>
+        <p class="pnci">- Bring back James' patented blue strat with <span style="color: gold">New York</span>!</p>
+        <p class="pnci">- Form sets of same-color cards with <span style="color: gold">Paris</span>!</p>
+        <p class="pnci">- Flip your military defeats and come back stronger with <span style="color: gold">Moscow</span>!</p>
+        <p class="pnci">- Study a new kind of science with <span style="color: gold">Oxford</span>!</p>
+        <p class="pnci">- See the future with <span style="color: gold">Delphoi</span>!</p>
+        <br/><br/>
+        <p>Wonder Balances:</p>
+        <p class="pnci">- Byzantium Day/Night: Changed starting resource glass -> press</p>
+        <p class="pnci">- Byzantium Day: Diplomacy has been moved to the last stage; extra gold on middle stage</p>
+        <p class="pnci">- Alexandria Night: Second stage cost has been reduced</p>
+        <p class="pnci">- Giza Day: Last stage cost has been reduced</p>
+        <p class="pnci">- Halikarnassos Night: Removed points from stages</p>
+        <p class="pnci">- Great Wall A: Second stage has been changed from a science guild to an astrolabe</p>
+        <br/><br/>
+        <p style="color: gold">7WCE is open-source! <a class="userinfolink" href="https://github.com/lectvs/7wCE">Check it out</a>!</p>
+    `,`
         <p style="font-weight:bold">v1.2: The Final* Update</p>
         <br/>
         <p>* finality not guaranteed</p>

@@ -98,6 +98,7 @@ exports.creategame = async (players, flags) => {
             diplomacyTokens: 0,
             goldToLose: 0,
             zeusUsed: false,
+            buildFreeWithoutChainUsages: 0,
             hand: []
         };
     }

@@ -269,6 +269,45 @@ function computePointsForEffect(gamestate, player, effect) {
     } else if (effect.type === 'gold_and_points_for_victory_tokens') {
         let tokens = gamestate.playerData[player].militaryTokens.filter(value => value > 0).length;
         return effect.points_per_token * tokens;
+    } else if (effect.type === 'points_for_shields') {
+        let shields = exports.getShields(gamestate, player);
+        return effect.points_per_shield * shields;
+    } else if (effect.type === 'points_for_pairs') {
+        let colorCounts = {};
+        for (let cardId of gamestate.playerData[player].playedCards) {
+            let card = gamestate.cards[cardId];
+            if (!(card.color in colorCounts)) colorCounts[card.color] = 0;
+            colorCounts[card.color]++;
+        }
+        
+        let pairs = 0;
+        for (let color in colorCounts) {
+            let count = colorCounts[color];
+            pairs += Math.floor(count / 2);
+        }
+        
+        return effect.points_per_pair * pairs;
+    } else if (effect.type === 'points_for_triplets') {
+        let colorCounts = {};
+        for (let cardId of gamestate.playerData[player].playedCards) {
+            let card = gamestate.cards[cardId];
+            if (!(card.color in colorCounts)) colorCounts[card.color] = 0;
+            colorCounts[card.color]++;
+        }
+        
+        let triplets = 0;
+        for (let color in colorCounts) {
+            let count = colorCounts[color];
+            triplets += Math.floor(count / 3);
+        }
+        
+        return effect.points_per_triplet * triplets;
+    } else if (effect.type === 'points_for_chains') {
+        let chains = gamestate.playerData[player].playedCards
+            .map(cardId => gamestate.cards[cardId])
+            .filter(card => card.cost && card.cost.chain && exports.hasChain(gamestate, player, card.cost.chain))
+            .length;
+        return effect.points_per_chain * chains;
     }
     return 0;
 }
@@ -280,7 +319,7 @@ function computeSciencePoints(gamestate, player) {
     let [negPlayer, posPlayer] = exports.getNeighbors(gamestate, player);
     scienceAdditions.maskSymbols = [...exports.getMaskCopyableSymbols(gamestate, negPlayer), ...exports.getMaskCopyableSymbols(gamestate, posPlayer)];
     
-    let symbolCounts = { gear: 0, compass: 0, tablet: 0 };
+    let symbolCounts = { gear: 0, compass: 0, tablet: 0, astrolabe: 0 };
     
     for (let effect of effects) {
         if (effect.type === 'science') {
@@ -300,7 +339,8 @@ function computeSciencePointsFor(scienceAdditions, symbolCounts) {
         points += symbolCounts.gear ** 2;
         points += symbolCounts.compass ** 2;
         points += symbolCounts.tablet ** 2;
-        points += 7 * Math.min(symbolCounts.gear, symbolCounts.compass, symbolCounts.tablet);
+        points += symbolCounts.astrolabe ** 2;
+        points += 7 * computeNumberOfScienceSets(symbolCounts);
         return points;
     }
     
@@ -328,6 +368,42 @@ function computeSciencePointsFor(scienceAdditions, symbolCounts) {
     }
     
     return maxPoints;
+}
+
+function computeNumberOfScienceSets(symbolCounts) {
+    // THIS ALGORITHM ASSUMES ONLY FOUR DIFFERENT SYMBOLS!
+    let uniqueSymbols = ['gear', 'compass', 'tablet', 'astrolabe'].filter(symbol => symbolCounts[symbol] > 0);
+    if (uniqueSymbols.length < 3) {
+        return 0;
+    }
+    if (uniqueSymbols.length === 3) {
+        return Math.min(...uniqueSymbols.map(symbol => symbolCounts[symbol]));
+    }
+    
+    // Otherwise, all symbols present...
+    
+    let minSymbol = 'gear';
+    let maxSymbol = 'gear';
+    for (let symbol in symbolCounts) {
+        if (symbolCounts[symbol] < symbolCounts[minSymbol]) minSymbol = symbol;
+        if (symbolCounts[symbol] > symbolCounts[maxSymbol]) maxSymbol = symbol;
+    }
+    
+    // Consume one set, but convert the excess symbol to an extra `minSymbol`.
+    symbolCounts[minSymbol]++;
+    for (let symbol in symbolCounts) {
+        symbolCounts[symbol]--;
+    }
+    
+    let numScienceSets = 1 + computeNumberOfScienceSets(symbolCounts);
+    
+    // Undo what we did so we leave `symbolCounts` as we found it.
+    symbolCounts[minSymbol]--;
+    for (let symbol in symbolCounts) {
+        symbolCounts[symbol]++;
+    }
+    
+    return numScienceSets;
 }
 
 exports.resolveStage = (gamestate, player, stageBuilt) => {
@@ -426,7 +502,9 @@ exports.getMaskCopyableSymbols = (gamestate, player) => {
     for (let cardId of gamestate.playerData[player].playedCards) {
         let card = gamestate.cards[cardId];
         for (let effect of card.effects) {
-            if (effect.type === 'science') result.push(effect.symbol);
+            if (effect.type === 'science' && ['tablet', 'compass', 'gear'].includes(effect.symbol)) {
+                result.push(effect.symbol);
+            }
         }
     }
     return result;
@@ -467,11 +545,19 @@ exports.getPurchasableResources = (effects) => {
     return purchasableResources;
 }
 
-exports.getShields = (effects) => {
+exports.getShields = (gamestate, player) => {
+    let effects = exports.getAllEffects(gamestate, player);
     let shields = 0;
     for (let effect of effects) {
         if (effect.type === 'shields') {
             shields += effect.shields;
+        }
+    }
+    if (exports.hasEffect(effects, 'shields_for_defeat_tokens')) {
+        for (let token of gamestate.playerData[player].militaryTokens) {
+            if (token < 0) {
+                shields += 1;
+            }
         }
     }
     return shields;
@@ -508,7 +594,7 @@ exports.applyImmediateEffect = (gamestate, player, effect, discardPlays) => {
         if (effect.direction === 'pos') gamestate.playerData[posPlayer].gold += effect.gold;
     } else if (effect.type === 'dove') {
         playerData.diplomacyTokens++;
-    } else if (effect.type === 'gain_victory_token') {
+    } else if (effect.type === 'gain_military_token') {
         playerData.militaryTokens.push(effect.token_value);
     } else if (effect.type === 'debt_for_neighbor') {
         let [negPlayer, posPlayer] = exports.getNeighbors(gamestate, player);
@@ -540,6 +626,28 @@ exports.applyImmediateEffect = (gamestate, player, effect, discardPlays) => {
                 gamestate.playerData[other].goldToLose += effect.gold_per_token * tokens;
             }
         }
+    } else if (effect.type === 'build_free_without_chain') {
+        playerData.buildFreeWithoutChainUsages += effect.usages;
+    } else if (effect.type === 'eye') {
+        if (gamestate.age < 3) {
+            let player_i = gamestate.players.indexOf(player);
+            playerData.seeFutureCards = gamestate.initialHands[gamestate.age + 1][player_i];
+        }
+    } else if (effect.type === 'see_future') {
+        playerData.seeFutureCards = [];
+        for (let age in gamestate.initialHands) {
+            for (let agePlayerCards of gamestate.initialHands[age]) {
+                playerData.seeFutureCards.push(...agePlayerCards.filter(cardId => ['purple', 'black'].includes(gamestate.cards[cardId].color)));
+            }
+        }
+        playerData.seeFutureCards = exports.shuffled(playerData.seeFutureCards);
+        playerData.seeFutureCards.sort((cardId1, cardId2) => {
+            let card1 = gamestate.cards[cardId1];
+            let card2 = gamestate.cards[cardId2];
+            if (card1.color === 'black' && card2.color === 'purple') return -1;
+            if (card1.color === 'purple' && card2.color === 'black') return 1;
+            return card1.age - card2.age;
+        });
     }
 }
 
@@ -548,6 +656,11 @@ exports.getValidMoves = (gamestate, player) => {
         
     if (gamestate.state === 'LAST_CARD_MOVE' && !exports.hasEffect(exports.getAllEffects(gamestate, player), 'play_last_card')) {
         return [];
+    }
+    
+    if (gamestate.state === 'SEE_FUTURE') {
+        if (!gamestate.playerData[player].seeFutureCards) return [];
+        return [{ action: 'accept', card: -1, payment: {} }];
     }
     
     if (gamestate.state === 'DISCARD_MOVE') {
@@ -559,7 +672,7 @@ exports.getValidMoves = (gamestate, player) => {
         
         let validMoves = [];
         for (let cardId of gamestate.discardedCards) {
-            if (!playedCardNames.includes(gamestate.cards[cardId].name)) {
+            if (!playedCardNames.includes(gamestate.cards[cardId].name) || gamestate.randomizerEnabled) {
                 validMoves.push({ action: 'play', card: cardId, payment: {} });
             }
         }
@@ -605,7 +718,6 @@ exports.getValidMoves = (gamestate, player) => {
     
     let validMoves = [];
     for (let cardId of hand) {
-        
         if (!playedCardNames.includes(gamestate.cards[cardId].name) || gamestate.randomizerEnabled) {
             let playMove = { action: 'play', card: cardId };
             for (let paymentOption of exports.getPaymentOptions(gamestate, player, playMove)) {
@@ -689,6 +801,9 @@ exports.performPayment = (gamestate, player, move) => {
     }
     if (move.payment.free_with_zeus) {
         gamestate.playerData[player].zeusUsed = true;
+    }
+    if (move.payment.free_with_delphoi) {
+        gamestate.playerData[player].buildFreeWithoutChainUsages--;
     }
 }
 
@@ -779,6 +894,10 @@ exports.getPaymentOptions = (gamestate, player, move) => {
     
     if (move.action === 'play' && exports.hasEffect(effects, 'build_free_once_per_age') && !gamestate.playerData[player].zeusUsed) {
         paymentOptions.push({ free_with_zeus: true });
+    }
+    
+    if (move.action === 'play' && gamestate.playerData[player].buildFreeWithoutChainUsages > 0 && gamestate.cards[move.card].cost && gamestate.cards[move.card].cost.chain) {
+        paymentOptions.push({ free_with_delphoi: true });
     }
     
     return paymentOptions;

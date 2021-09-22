@@ -10,7 +10,7 @@ const wonders = {
         stages: [
             { cost: { resources: ["wood", "wood"] }, effects: [{ type: 'points', points: 3 }] },
             { cost: { resources: ["clay", "clay", "loom"] }, effects: [{ type: 'points', points: 5 }] },
-            { cost: { resources: ["stone", "stone", "stone", "stone"] }, effects: [{ type: 'points', points: 7 }] },
+            { cost: { resources: ["stone", "stone", "stone"] }, effects: [{ type: 'points', points: 7 }] },
         ]
     },
     '1': {
@@ -93,7 +93,7 @@ const wonders = {
         starting_effects: [{ type: "resource", resource: "glass" }],
         stages: [
             { cost: { resources: ["clay", "clay"] }, effects: [{ type: "multi_resource", resources: "wood/stone/ore/clay", purchasable: false }] },
-            { cost: { resources: ["ore", "ore", "ore"] }, effects: [{ type: "multi_resource", resources: "glass/press/loom", purchasable: false }] },
+            { cost: { resources: ["ore", "ore"] }, effects: [{ type: "multi_resource", resources: "glass/press/loom", purchasable: false }] },
             { cost: { resources: ["wood", "wood", "wood", "wood"] }, effects: [{ type: 'points', points: 7 }] },
         ]
     },
@@ -163,8 +163,8 @@ const wonders = {
         starting_effect_color: "grey",
         starting_effects: [{ type: "resource", resource: "loom" }],
         stages: [
-            { cost: { resources: ["ore", "ore"] }, effects: [{ type: 'build_from_discard', priority: 100 }, { type: 'points', points: 2 }] },
-            { cost: { resources: ["clay", "clay", "clay"] }, effects: [{ type: 'build_from_discard', priority: 100 }, { type: 'points', points: 1 }] },
+            { cost: { resources: ["ore", "ore"] }, effects: [{ type: 'build_from_discard', priority: 100 }] },
+            { cost: { resources: ["clay", "clay", "clay"] }, effects: [{ type: 'build_from_discard', priority: 100 }] },
             { cost: { resources: ["glass", "press"] }, effects: [{ type: 'build_from_discard', priority: 100 }] },
         ]
     },
@@ -197,11 +197,11 @@ const wonders = {
         side: 'Day',
         outline_color: 0xFF70BA,
         starting_effect_color: "grey",
-        starting_effects: [{ type: "resource", resource: "glass" }],
+        starting_effects: [{ type: "resource", resource: "press" }],
         stages: [
             { cost: { resources: ["ore", "clay"] }, effects: [{ type: 'points', points: 3 }] },
-            { cost: { resources: ["wood", "wood", "press"] }, effects: [{ type: 'dove' }, { type: 'points', points: 4 }] },
-            { cost: { resources: ["clay", "clay", "loom"] }, effects: [{ type: 'points', points: 7 }] },
+            { cost: { resources: ["wood", "wood", "glass"] }, effects: [{ type: 'points', points: 4 }, { type: 'gold', gold: 3 }] },
+            { cost: { resources: ["clay", "clay", "loom"] }, effects: [{ type: 'dove' }, { type: 'points', points: 6 }] },
         ]
     },
     '17': {
@@ -209,9 +209,9 @@ const wonders = {
         side: 'Night',
         outline_color: 0xFF70BA,
         starting_effect_color: "grey",
-        starting_effects: [{ type: "resource", resource: "glass" }],
+        starting_effects: [{ type: "resource", resource: "press" }],
         stages: [
-            { cost: { resources: ["wood", "ore", "press"] }, effects: [{ type: 'dove' }, { type: 'points', points: 4 }] },
+            { cost: { resources: ["wood", "ore", "glass"] }, effects: [{ type: 'dove' }, { type: 'points', points: 4 }] },
             { cost: { resources: ["ore", "ore", "loom"] }, effects: [{ type: 'dove' }, { type: 'points', points: 6 }] },
         ]
     },
@@ -246,7 +246,7 @@ const wonders = {
         starting_effects: [{ type: "turret" }],
         stages: [
             { cost: { resources: ["wood", "wood"] }, effects: [{ type: 'gold', gold: 8 }] },
-            { cost: { resources: ["clay", "clay", "clay"] }, effects: [{ type: "multi_science", symbols: "compass/tablet/gear" }] },
+            { cost: { resources: ["clay", "clay", "clay"] }, effects: [{ type: 'science', symbol: 'astrolabe' }] },
             { cost: { resources: ["stone", "stone", "stone"] }, effects: [{ type: 'shields', shields: 2 }] },
             { cost: { resources: ["ore", "ore", "ore"] }, effects: [{ type: 'build_from_discard', priority: 75 }] },
         ]
@@ -284,6 +284,124 @@ const wonders = {
         starting_effects: [{ type: "gold", gold: 4 }],
         stages: [
             { cost: { resources: ["wood", "ore", "clay", "glass", "press", "loom", "stone"] }, effects: [{ type: 'gold', gold: 7 }, { type: 'points', points: 7 }, { type: 'shields', shields: 1 }] },
+        ]
+    },
+    '24': {
+        name: 'New York',
+        side: 'Day',
+        outline_color: 0x6DDBDB,
+        starting_effect_color: "grey",
+        starting_effects: [{ type: "resource", resource: "glass" }],
+        stages: [
+            { cost: { resources: ["ore", "ore"] }, effects: [{ type: 'points', points: 3 }] },
+            { cost: { resources: ["clay", "clay", "loom"] }, effects: [{ type: 'points', points: 5 }] },
+            { cost: { resources: ["stone", "stone", "stone"] }, effects: [{ type: "gold_and_points_for_cards", color: "blue", gold_per_card: 1, points_per_card: 1 }] },
+        ]
+    },
+    '25': {
+        name: 'New York',
+        side: 'Night',
+        outline_color: 0x6DDBDB,
+        starting_effect_color: "grey",
+        starting_effects: [{ type: "resource", resource: "glass" }],
+        stages: [
+            { cost: { resources: ["stone", "stone"] }, effects: [{ type: "duplicate_produced_resource" }] },
+            { cost: { resources: ["wood", "ore"] }, effects: [{ type: "gold_for_cards", color: "blue", gold_per_card: 1 }] },
+            { cost: { resources: ["clay", "clay", "clay", "press"] }, effects: [{ type: 'points', points: 6 }] },
+        ]
+    },
+    '26': {
+        name: 'Oxford',
+        side: 'Day',
+        outline_color: 0x775137,
+        starting_effect_color: "brown",
+        starting_effects: [{ type: "resource", resource: "ore" }],
+        stages: [
+            { cost: { resources: ["stone", "stone"] }, effects: [{ type: 'points', points: 3 }] },
+            { cost: { resources: ["loom", "press"] }, effects: [{ type: 'gold', gold: 3 }, { type: 'science', symbol: 'astrolabe' }] },
+            { cost: { resources: ["wood", "wood", "wood"] }, effects: [{ type: 'points', points: 7 }] },
+        ]
+    },
+    '27': {
+        name: 'Oxford',
+        side: 'Night',
+        outline_color: 0x775137,
+        starting_effect_color: "brown",
+        starting_effects: [{ type: "resource", resource: "ore" }],
+        stages: [
+            { cost: { resources: ["stone", "stone", "glass"] }, effects: [{ type: 'points', points: 6 }] },
+            { cost: { resources: ["clay", "clay", "wood", "wood"] }, effects: [{ type: 'points', points: -6 }, { type: 'science', symbol: 'astrolabe' }, { type: 'science', symbol: 'astrolabe' }] },
+        ]
+    },
+    '28': {
+        name: 'Moscow',
+        side: 'Day',
+        outline_color: 0xD51939,
+        starting_effect_color: "brown",
+        starting_effects: [{ type: "resource", resource: "stone" }],
+        stages: [
+            { cost: { resources: ["clay", "clay"] }, effects: [{ type: 'points', points: 4 }, { type: 'gain_military_token', token_value: -1 }] },
+            { cost: { resources: ["wood", "wood"] }, effects: [{ type: 'points', points: 6 }, { type: 'gain_military_token', token_value: -1 }] },
+            { cost: { resources: ["ore", "ore", "press"] }, effects: [{ type: 'shields_for_defeat_tokens' }] },
+        ]
+    },
+    '29': {
+        name: 'Moscow',
+        side: 'Night',
+        outline_color: 0xD51939,
+        starting_effect_color: "brown",
+        starting_effects: [{ type: "resource", resource: "stone" }],
+        stages: [
+            { cost: { resources: ["wood", "wood"] }, effects: [{ type: 'shields', shields: 1 }, { type: 'points', points: 1 }, { type: 'gold', gold: 1 }] },
+            { cost: { resources: ["stone", "stone", "stone"] }, effects: [{ type: 'points', points: 5 }] },
+            { cost: { resources: ["ore", "ore", "loom"] }, effects: [{ type: "dove" }, { type: "dove" }, { type: 'points_for_shields', points_per_shield: 2 }] },
+        ]
+    },
+    '30': {
+        name: 'Paris',
+        side: 'Day',
+        outline_color: 'rainbow',
+        starting_effect_color: "grey",
+        starting_effects: [{ type: "resource", resource: "loom" }],
+        stages: [
+            { cost: { resources: ["wood", "wood"] }, effects: [{ type: 'points', points: 3 }] },
+            { cost: { resources: ["clay", "clay"] }, effects: [{ type: 'points', points: 5 }] },
+            { cost: { resources: ["stone", "stone", "stone", "glass"] }, effects: [{ type: 'points_for_pairs', points_per_pair: 1 }] },
+        ]
+    },
+    '31': {
+        name: 'Paris',
+        side: 'Night',
+        outline_color: 'rainbow',
+        starting_effect_color: "grey",
+        starting_effects: [{ type: "resource", resource: "loom" }],
+        stages: [
+            { cost: { resources: ["wood", "wood"] }, effects: [{ type: 'points', points: 3 }] },
+            { cost: { resources: ["stone", "stone"] }, effects: [{ type: 'gold', gold: 7 }] },
+            { cost: { resources: ["clay", "clay", "press"] }, effects: [{ type: 'points_for_triplets', points_per_triplet: 2 }] },
+        ]
+    },
+    '32': {
+        name: 'Delphoi',
+        side: 'Day',
+        outline_color: 0xA95FCC,
+        starting_effect_color: 0xA95FCC,
+        starting_effects: [{ type: "gold", gold: 4 }],
+        stages: [
+            { cost: { gold: 2 }, effects: [{ type: 'points', points: 2 }, { type: 'eye' }] },
+            { cost: { resources: ["wood", "wood"], gold: 2 }, effects: [{ type: 'points', points: 4 }, { type: 'eye' }] },
+            { cost: { resources: ["clay", "clay", "press"] }, effects: [{ type: 'points_for_chains', points_per_chain: 2 }] },
+        ]
+    },
+    '33': {
+        name: 'Delphoi',
+        side: 'Night',
+        outline_color: 0xA95FCC,
+        starting_effect_color: 0xA95FCC,
+        starting_effects: [{ type: "see_future" }],
+        stages: [
+            { cost: { resources: ["stone", "stone"] }, effects: [{ type: 'build_free_without_chain', usages: 3 }] },
+            { cost: { resources: ["ore", "ore", "wood", "wood"] }, effects: [{ type: 'points', points: 6 }] },
         ]
     },
     '100': {
@@ -350,6 +468,26 @@ const wonderGroups = {
         name: 'Manneken Pis',
         wonders: [22, 23]
     },
+    '12': {
+        name: '<span style="color:gold">New York</span>',
+        wonders: [24, 25]
+    },
+    '13': {
+        name: '<span style="color:gold">Oxford</span>',
+        wonders: [26, 27]
+    },
+    '14': {
+        name: '<span style="color:gold">Moscow</span>',
+        wonders: [28, 29]
+    },
+    '15': {
+        name: '<span style="color:gold">Paris</span>',
+        wonders: [30, 31]
+    },
+    '16': {
+        name: '<span style="color:gold">Delphoi</span>',
+        wonders: [32, 33]
+    },
 }
 
 exports.idsToWonderPreferences = (ids) => {
@@ -365,16 +503,26 @@ exports.idsToWonderPreferences = (ids) => {
 exports.getWonderChoicesForPlayers = (players, wonderPreferences, isDebug, vanillaWonders) => {
     // Select wonders to use
     let wonderGroupIds = Object.keys(wonderGroups);
-    //wonderGroupIds.splice(wonderGroupIds.indexOf('10'), 1);  // Remove placeholders (uncomment when there are new placeholders)
+    let extraWondersToChooseFrom = 2;  // Use {players+2} wonders in the pool
+    //wonderGroupIds.splice(wonderGroupIds.indexOf('16'), 1);  // Remove placeholders (uncomment when there are new placeholders)
     if (vanillaWonders) {
-        wonderGroupIds.splice(wonderGroupIds.indexOf('7'), 1);
-        wonderGroupIds.splice(wonderGroupIds.indexOf('8'), 1);
-        wonderGroupIds.splice(wonderGroupIds.indexOf('9'), 1);
-        wonderGroupIds.splice(wonderGroupIds.indexOf('10'), 1);
-        wonderGroupIds.splice(wonderGroupIds.indexOf('11'), 1);
+        wonderGroupIds = ['0', '1', '2', '3', '4', '5', '6'];
+        extraWondersToChooseFrom = 0;
+    } else {
+        // v REMOVE THIS AFTER A BIT v
+        wonderGroupIds = utils.shuffled(wonderGroupIds);
+        while (wonderGroupIds.length > 10) {
+            for (let i = 0; i < wonderGroupIds.length; i++) {
+                if (wonderGroupIds[i] < 12) {
+                    wonderGroupIds.splice(i, 1);
+                    break;
+                }
+            }
+        }
+        // ^ REMOVE THIS AFTER A BIT ^ 
     }
     wonderGroupIds = utils.shuffled(wonderGroupIds);
-    wonderGroupIds.splice(0, wonderGroupIds.length - players.length - 1);  // Use {players+1} wonders in the pool
+    wonderGroupIds.splice(0, wonderGroupIds.length - players.length - extraWondersToChooseFrom);
     
     // Assign wonders to players in the order they are passed in
     let result = {};
@@ -396,10 +544,16 @@ exports.getWonderChoicesForPlayers = (players, wonderPreferences, isDebug, vanil
     }
     
     if (isDebug) {
-        //result['Dartm'] = [wonders['22']];
-        //result['BOT1'] = [wonders['22']];
+        //result['Dartm'] = [wonders['27']];
+        //result['BOT1'] = [wonders['27']];
         //result['BOT2'] = [wonders['20']];
     }
+    
+    // result['BOT1'] = wonderGroups['12'].wonders.map(w => wonders[w]);
+    // result['BOT2'] = wonderGroups['13'].wonders.map(w => wonders[w]);
+    // result['BOT3'] = wonderGroups['14'].wonders.map(w => wonders[w]);
+    // result['BOT4'] = wonderGroups['15'].wonders.map(w => wonders[w]);
+    // result['BOT5'] = wonderGroups['16'].wonders.map(w => wonders[w]);
     
     return result;
 }

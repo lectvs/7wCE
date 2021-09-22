@@ -51,6 +51,11 @@ exports.updategame = async (gameid) => {
             if (gamestate.playerData[player].goldToLose <= 0) continue;
             if (!movesByPlayer[player]) allPlayersMoved = false;
         }
+    } else if (gamestate.state === 'SEE_FUTURE') {
+        for (let player of gamestate.players) {
+            if (!gamestate.playerData[player].seeFutureCards) continue;
+            if (!movesByPlayer[player]) allPlayersMoved = false;
+        }
     } else if (gamestate.state === 'NORMAL_MOVE') {
         for (let player of gamestate.players) {
             if (!movesByPlayer[player]) allPlayersMoved = false;
@@ -80,6 +85,9 @@ exports.updategame = async (gameid) => {
         updateChooseSide(gamestate, movesByPlayer);
     } else if (gamestate.state === 'CHOOSE_GOLD_TO_LOSE') {
         updateChooseGoldToLoseMoves(gamestate, movesByPlayer);
+        updatePostMove(gamestate);
+    } else if (gamestate.state === 'SEE_FUTURE') {
+        updateSeeFutureMoves(gamestate, movesByPlayer);
         updatePostMove(gamestate);
     } else {
         updateGameMoves(gamestate, movesByPlayer);
@@ -124,6 +132,12 @@ function updateChooseSide(gamestate, movesByPlayer) {
     for (let i = 0; i < gamestate.players.length; i++) {
         let player = gamestate.players[i];
         gamestate.playerData[player].hand = hands[i];
+    }
+    
+    for (let player of gamestate.players) {
+        if (gamestate.playerData[player].seeFutureCards) {
+            gamestate.state = 'SEE_FUTURE';
+        }
     }
 }
 
@@ -192,6 +206,14 @@ function updateChooseGoldToLoseMoves(gamestate, movesByPlayer) {
     }
 }
 
+function updateSeeFutureMoves(gamestate, movesByPlayer) {
+    for (let player in movesByPlayer) {
+        let move = movesByPlayer[player];
+        let playerData = gamestate.playerData[player];
+        playerData.seeFutureCards = undefined;
+    }
+}
+
 function updatePostMove(gamestate) {
     // Perform end of turn stuff
     let endOfAge = true;
@@ -213,6 +235,11 @@ function updatePostMove(gamestate) {
         if (gamestate.playerData[player].goldToLose > 0) needChooseGoldToLose = true;
     }
     
+    let needSeeFuture = false;
+    for (let player of gamestate.players) {
+        if (gamestate.playerData[player].seeFutureCards) needSeeFuture = true;
+    }
+    
     let needLastPlay = false;
     for (let player of gamestate.players) {
         if (gamestate.playerData[player].hand.length === 1) needLastPlay = true;
@@ -220,8 +247,13 @@ function updatePostMove(gamestate) {
     
     let needDiscardPlay = gamestate.discardMoveQueue.length > 0;
     
-    if (needChooseGoldToLose) {
+    if (gamestate.state === 'SEE_FUTURE' && gamestate.turn === 1) {
+        // Do nothing if we are coming from a turn-1 (start of game) see-future.
+        gamestate.state = 'NORMAL_MOVE';
+    } else if (needChooseGoldToLose) {
         gamestate.state = 'CHOOSE_GOLD_TO_LOSE';
+    } else if (needSeeFuture) {
+        gamestate.state = 'SEE_FUTURE';
     } else if (needLastPlay) {
         gamestate.state = 'LAST_CARD_MOVE';
     } else if (needDiscardPlay) {
@@ -248,8 +280,8 @@ function updatePostMove(gamestate) {
         } else if (fightingPlayers.length === 2) {
             let player1 = fightingPlayers[0];
             let player2 = fightingPlayers[1];
-            let shields1 = utils.getShields(utils.getAllEffects(gamestate, player1));
-            let shields2 = utils.getShields(utils.getAllEffects(gamestate, player2));
+            let shields1 = utils.getShields(gamestate, player1);
+            let shields2 = utils.getShields(gamestate, player2);
             if (shields1 > shields2) {
                 gamestate.playerData[player1].gainedMilitaryTokensFromConflict.push(ageToVictoryTokenPoints[gamestate.age]);
                 gamestate.playerData[player2].gainedMilitaryTokensFromConflict.push(-1);
@@ -261,8 +293,8 @@ function updatePostMove(gamestate) {
             for (let i = 0; i < fightingPlayers.length; i++) {
                 let player = fightingPlayers[i];
                 let negPlayer = i === 0 ? fightingPlayers[fightingPlayers.length-1] : fightingPlayers[i-1];
-                let shields = utils.getShields(utils.getAllEffects(gamestate, player));
-                let negShields = utils.getShields(utils.getAllEffects(gamestate, negPlayer));
+                let shields = utils.getShields(gamestate, player);
+                let negShields = utils.getShields(gamestate, negPlayer);
                 if (shields > negShields) {
                     gamestate.playerData[player].gainedMilitaryTokensFromConflict.push(ageToVictoryTokenPoints[gamestate.age]);
                     gamestate.playerData[negPlayer].gainedMilitaryTokensFromConflict.push(-1);

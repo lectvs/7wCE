@@ -7,7 +7,9 @@ function getFullPayment(move) {
     return {
         pos: move.payment.pos || 0,
         neg: move.payment.neg || 0,
-        bank: move.payment.bank || 0
+        bank: move.payment.bank || 0,
+        free_with_zeus: move.payment.free_with_zeus || false,
+        free_with_delphoi: move.payment.free_with_delphoi || false,
     };
 }
 
@@ -51,6 +53,8 @@ exports.submitmove = async (gameid, turn, player, password_hash, move) => {
         if (payment.pos !== validPayment.pos) continue;
         if (payment.neg !== validPayment.neg) continue;
         if (payment.bank !== validPayment.bank) continue;
+        if (payment.free_with_zeus !== validPayment.free_with_zeus) continue;
+        if (payment.free_with_delphoi !== validPayment.free_with_delphoi) continue;
         
         isMoveValid = true;
     }
