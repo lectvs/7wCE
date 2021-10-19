@@ -11,10 +11,8 @@ exports.getgamestate = async (gameid, player, password_hash) => {
         throw new Error('Invalid login');
     }
     
-    let s1 = utils.currentTime();
     let ddbresult = await dynamo.get({ TableName: '7wCE_games', Key: { gameid } }).promise();
     let gamestate = JSON.parse(ddbresult.Item.gamestate);
-    console.log(utils.currentTime() - s1);
     
     if (!gamestate.players.includes(player)) {
         throw new Error('Player not in game');

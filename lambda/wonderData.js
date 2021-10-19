@@ -508,18 +508,6 @@ exports.getWonderChoicesForPlayers = (players, wonderPreferences, isDebug, vanil
     if (vanillaWonders) {
         wonderGroupIds = ['0', '1', '2', '3', '4', '5', '6'];
         extraWondersToChooseFrom = 0;
-    } else {
-        // v REMOVE THIS AFTER A BIT v
-        wonderGroupIds = utils.shuffled(wonderGroupIds);
-        while (wonderGroupIds.length > 10) {
-            for (let i = 0; i < wonderGroupIds.length; i++) {
-                if (wonderGroupIds[i] < 12) {
-                    wonderGroupIds.splice(i, 1);
-                    break;
-                }
-            }
-        }
-        // ^ REMOVE THIS AFTER A BIT ^ 
     }
     wonderGroupIds = utils.shuffled(wonderGroupIds);
     wonderGroupIds.splice(0, wonderGroupIds.length - players.length - extraWondersToChooseFrom);
