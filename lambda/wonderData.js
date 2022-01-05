@@ -283,7 +283,9 @@ const wonders = {
         starting_effect_color: "yellow",
         starting_effects: [{ type: "gold", gold: 4 }],
         stages: [
-            { cost: { resources: ["wood", "ore", "clay", "glass", "press", "loom", "stone"] }, effects: [{ type: 'gold', gold: 7 }, { type: 'points', points: 7 }, { type: 'shields', shields: 1 }] },
+            { effects: [], copy_stage: { stage: 'first', dir: 'pos' } },
+            { effects: [], copy_stage: { stage: 'second', dir: 'neg' } },
+            { effects: [], copy_stage: { stage: 'last', dir: 'pos' } },
         ]
     },
     '24': {
@@ -469,25 +471,29 @@ const wonderGroups = {
         wonders: [22, 23]
     },
     '12': {
-        name: '<span style="color:gold">New York</span>',
+        name: 'New York',
         wonders: [24, 25]
     },
     '13': {
-        name: '<span style="color:gold">Oxford</span>',
+        name: 'Oxford',
         wonders: [26, 27]
     },
     '14': {
-        name: '<span style="color:gold">Moscow</span>',
+        name: 'Moscow',
         wonders: [28, 29]
     },
     '15': {
-        name: '<span style="color:gold">Paris</span>',
+        name: 'Paris',
         wonders: [30, 31]
     },
     '16': {
-        name: '<span style="color:gold">Delphoi</span>',
+        name: 'Delphoi',
         wonders: [32, 33]
     },
+    // '16': {
+    //     name: '<span style="color:gold">New Wonder</span>',
+    //     wonders: [32, 33]
+    // },
 }
 
 exports.idsToWonderPreferences = (ids) => {

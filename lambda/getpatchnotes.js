@@ -20,6 +20,7 @@ exports.getpatchnotes = async () => {
         <p class="pnci">- Giza Day: Last stage cost has been reduced</p>
         <p class="pnci">- Halikarnassos Night: Removed points from stages</p>
         <p class="pnci">- Great Wall A: Second stage has been changed from a science guild to an astrolabe</p>
+        <p class="pnci">- Manneken Pis B: Second stage has been changed to a flipped version of side A</p>
         <br/><br/>
         <p style="color: gold">7WCE is open-source! <a class="userinfolink" href="https://github.com/lectvs/7wCE">Check it out</a>!</p>
     `,`
