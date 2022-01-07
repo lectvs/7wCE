@@ -283,11 +283,11 @@ function updatePostMove(gamestate) {
             let shields1 = utils.getShields(gamestate, player1);
             let shields2 = utils.getShields(gamestate, player2);
             if (shields1 > shields2) {
-                gamestate.playerData[player1].gainedMilitaryTokensFromConflict.push(ageToVictoryTokenPoints[gamestate.age]);
-                gamestate.playerData[player2].gainedMilitaryTokensFromConflict.push(-1);
+                gamestate.playerData[player1].gainedMilitaryTokensFromConflict.push(ageToVictoryTokenPoints[gamestate.age], ageToVictoryTokenPoints[gamestate.age]);
+                gamestate.playerData[player2].gainedMilitaryTokensFromConflict.push(-1, -1);
             } else if (shields1 < shields2) {
-                gamestate.playerData[player1].gainedMilitaryTokensFromConflict.push(-1);
-                gamestate.playerData[player2].gainedMilitaryTokensFromConflict.push(ageToVictoryTokenPoints[gamestate.age]);
+                gamestate.playerData[player1].gainedMilitaryTokensFromConflict.push(-1, -1);
+                gamestate.playerData[player2].gainedMilitaryTokensFromConflict.push(ageToVictoryTokenPoints[gamestate.age], ageToVictoryTokenPoints[gamestate.age]);
             }
         } else {
             for (let i = 0; i < fightingPlayers.length; i++) {
