@@ -332,7 +332,7 @@ const wonders = {
         starting_effects: [{ type: "resource", resource: "ore" }],
         stages: [
             { cost: { resources: ["stone", "stone", "glass"] }, effects: [{ type: 'points', points: 6 }] },
-            { cost: { resources: ["clay", "clay", "wood", "wood"] }, effects: [{ type: 'points', points: -6 }, { type: 'science', symbol: 'astrolabe' }, { type: 'science', symbol: 'astrolabe' }] },
+            { cost: { resources: ["clay", "clay", "wood", "wood"] }, effects: [{ type: 'points', points: -4 }, { type: 'science', symbol: 'astrolabe' }, { type: 'science', symbol: 'astrolabe' }] },
         ]
     },
     '28': {
@@ -424,75 +424,93 @@ const wonders = {
 const wonderGroups = {
     '0': {
         name: 'Giza',
-        wonders: [0, 1]
+        wonders: [0, 1],
+        weight: 1,
     },
     '1': {
         name: 'Ephesos',
-        wonders: [2, 3]
+        wonders: [2, 3],
+        weight: 1,
     },
     '2': {
         name: 'Rhodos',
-        wonders: [4, 5]
+        wonders: [4, 5],
+        weight: 1,
     },
     '3': {
         name: 'Alexandria',
-        wonders: [6, 7]
+        wonders: [6, 7],
+        weight: 1,
     },
     '4': {
         name: 'Olympia',
-        wonders: [8, 9]
+        wonders: [8, 9],
+        weight: 1,
     },
     '5': {
         name: 'Babylon',
-        wonders: [10, 11]
+        wonders: [10, 11],
+        weight: 1,
     },
     '6': {
         name: 'Halikarnassos',
-        wonders: [12, 13]
+        wonders: [12, 13],
+        weight: 0.6,
     },
     '7': {
         name: 'Olympia (Old Ed.)',
-        wonders: [14, 15]
+        wonders: [14, 15],
+        weight: 1,
     },
     '8': {
         name: 'Byzantium',
-        wonders: [16, 17]
+        wonders: [16, 17],
+        weight: 0.7,
     },
     '9': {
         name: 'Petra',
-        wonders: [18, 19]
+        wonders: [18, 19],
+        weight: 0.6,
     },
     '10': {
         name: 'The Great Wall',
-        wonders: [20, 21]
+        wonders: [20, 21],
+        weight: 0.7,
     },
     '11': {
         name: 'Manneken Pis',
-        wonders: [22, 23]
+        wonders: [22, 23],
+        weight: 0.7,
     },
     '12': {
         name: 'New York',
-        wonders: [24, 25]
+        wonders: [24, 25],
+        weight: 0.7,
     },
     '13': {
         name: 'Oxford',
-        wonders: [26, 27]
+        wonders: [26, 27],
+        weight: 0.7,
     },
     '14': {
         name: 'Moscow',
-        wonders: [28, 29]
+        wonders: [28, 29],
+        weight: 0.6,
     },
     '15': {
         name: 'Paris',
-        wonders: [30, 31]
+        wonders: [30, 31],
+        weight: 0.7,
     },
     '16': {
         name: 'Delphoi',
-        wonders: [32, 33]
+        wonders: [32, 33],
+        weight: 0.7,
     },
     // '16': {
     //     name: '<span style="color:gold">New Wonder</span>',
-    //     wonders: [32, 33]
+    //     wonders: [32, 33],
+    //     weight: 1,
     // },
 }
 
@@ -509,14 +527,26 @@ exports.idsToWonderPreferences = (ids) => {
 exports.getWonderChoicesForPlayers = (players, wonderPreferences, isDebug, vanillaWonders) => {
     // Select wonders to use
     let wonderGroupIds = Object.keys(wonderGroups);
-    let extraWondersToChooseFrom = 2;  // Use {players+2} wonders in the pool
+    let extraWondersToChooseFrom = 1;  // Use {players+1} wonders in the pool
     //wonderGroupIds.splice(wonderGroupIds.indexOf('16'), 1);  // Remove placeholders (uncomment when there are new placeholders)
     if (vanillaWonders) {
         wonderGroupIds = ['0', '1', '2', '3', '4', '5', '6'];
         extraWondersToChooseFrom = 0;
     }
-    wonderGroupIds = utils.shuffled(wonderGroupIds);
-    wonderGroupIds.splice(0, wonderGroupIds.length - players.length - extraWondersToChooseFrom);
+
+    let wonderGroupWeights = wonderGroupIds.map(id => wonderGroups[id].weight);
+    let pickedWonderGroupIds = [];
+    for (let i = 0; i < players.length + extraWondersToChooseFrom; i++) {
+        let pickedWonderGroupId = utils.randElementWeighted(wonderGroupIds, wonderGroupWeights);
+        let pickedWonderGroupIndex = wonderGroupIds.indexOf(pickedWonderGroupId);
+        pickedWonderGroupIds.push(pickedWonderGroupId);
+        wonderGroupIds.splice(pickedWonderGroupIndex, 1);
+        wonderGroupWeights.splice(pickedWonderGroupIndex, 1);
+    }
+    
+    wonderGroupIds = utils.shuffled(pickedWonderGroupIds);
+    
+    console.log('Wonder groups to pick from:', wonderGroupIds);
     
     // Assign wonders to players in the order they are passed in
     let result = {};
@@ -535,6 +565,7 @@ exports.getWonderChoicesForPlayers = (players, wonderPreferences, isDebug, vanil
         let preferredWonderId = wonderGroupIds.splice(preferredWonderIndex, 1)[0];
         let wonderGroup = wonderGroups[preferredWonderId];
         result[player] = wonderGroup.wonders.map(id => wonders[id]);
+        console.log('Wonder groups to pick from:', wonderGroupIds);
     }
     
     if (isDebug) {
