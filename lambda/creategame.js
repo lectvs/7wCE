@@ -109,7 +109,7 @@ exports.creategame = async (players, flags) => {
         sevenBlundersEnabled: sevenBlundersEnabled,
         randomizerEnabled: randomizerEnabled,
         discardMoveQueue: [],
-        players: utils.shuffled(players),  // Randomize player order
+        players: orderPlayers(players),  // Randomize player order and balance bots
         host: players[0],
         age: 1,
         turn: 1,
@@ -242,4 +242,27 @@ async function verifyGameNotCreated(players) {
             throw new Error('Game already created');
         }
     }
+}
+
+function orderPlayers(players) {
+    let realPlayers = utils.shuffled(players.filter(player => !player.startsWith('BOT')));
+    let botPlayers = utils.shuffled(players.filter(player => player.startsWith('BOT')));
+    
+    let smallerPlayers = realPlayers.length > botPlayers.length ? botPlayers : realPlayers;
+    let biggerPlayers = realPlayers.length > botPlayers.length ? realPlayers : botPlayers;
+    
+    let biggerPlayersForSmallerPlayers = smallerPlayers.map(p => []);
+    for (let i = 0; i < biggerPlayers.length; i++) {
+        biggerPlayersForSmallerPlayers[i % smallerPlayers.length].push(biggerPlayers[i]);
+    }
+    
+    biggerPlayersForSmallerPlayers = utils.shuffled(biggerPlayersForSmallerPlayers);
+    
+    let result = [];
+    for (let i = 0; i < smallerPlayers.length; i++) {
+        result.push(smallerPlayers[i]);
+        result.push(...biggerPlayersForSmallerPlayers[i]);
+    }
+    
+    return result;
 }
