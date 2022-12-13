@@ -3673,7 +3673,7 @@ var C = /** @class */ (function () {
     C.DISCARD_PILE_AREA_BORDER = 3;
     C.DISCARD_PILE_TITLE_Y = 20;
     C.DISCARD_PILE_TITLE_SCALE = 0.2;
-    C.DISCARD_PILE_TITLE_TEXT = "Discard";
+    C.DISCARD_PILE_TITLE_TEXT = "Graveyard";
     C.PAYMENT_DIALOG_OFFSET_X = -512;
     C.PAYMENT_DIALOG_OFFSET_Y = -330;
     C.PAYMENT_DIALOG_WIDTH = 375;
@@ -4033,7 +4033,7 @@ function getDescriptionForEffect(effect) {
         return "You may play your last card instead of discarding it at the end of each age";
     }
     else if (effect.type === 'build_from_discard') {
-        return "Play one card from the discard pile for free. Conflicts resolve in this order: Halikarnassos -> The Great Wall -> Manneken Pis -> Forging Agency";
+        return "Play one card from the graveyard for free. Conflicts resolve in this order: Halikarnassos -> The Great Wall -> Manneken Pis -> Forging Agency";
     }
     else if (effect.type === 'build_free_first_color') {
         return "You may ignore the cost of any card, provided you have not already played one of the same color";

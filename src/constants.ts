@@ -174,7 +174,7 @@ class C {
     public static readonly DISCARD_PILE_AREA_BORDER = 3;
     public static readonly DISCARD_PILE_TITLE_Y = 20;
     public static readonly DISCARD_PILE_TITLE_SCALE = 0.2;
-    public static readonly DISCARD_PILE_TITLE_TEXT = "Discard";
+    public static readonly DISCARD_PILE_TITLE_TEXT = "Graveyard";
 
     public static readonly PAYMENT_DIALOG_OFFSET_X = -512;
     public static readonly PAYMENT_DIALOG_OFFSET_Y = -330;
