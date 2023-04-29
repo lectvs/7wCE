@@ -377,7 +377,11 @@ async function updateElos(gamestate) {
         }
         elosByPlayer[p1].diff *= playersFactor;
         if (utils.computePointsDistribution(gamestate, p1).total === 69) {  // Nice
-            elosByPlayer[p1].diff += 6.9;
+            if (gamestate.playerData[p1].gold === 69) {
+                elosByPlayer[p1].diff += 69;
+            } else {
+                elosByPlayer[p1].diff += 6.9;
+            }
         }
         elosByPlayer[p1].after = elosByPlayer[p1].before + elosByPlayer[p1].diff;
 

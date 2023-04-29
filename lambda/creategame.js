@@ -248,6 +248,10 @@ function orderPlayers(players) {
     let realPlayers = utils.shuffled(players.filter(player => !player.startsWith('BOT')));
     let botPlayers = utils.shuffled(players.filter(player => player.startsWith('BOT')));
     
+    if (botPlayers.length === 0) {
+        return realPlayers;
+    }
+    
     let smallerPlayers = realPlayers.length > botPlayers.length ? botPlayers : realPlayers;
     let biggerPlayers = realPlayers.length > botPlayers.length ? realPlayers : botPlayers;
     

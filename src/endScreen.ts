@@ -49,9 +49,11 @@ class EndScreen {
             let sixtyNineBonus = '';
 
             let sixtyNine = Main.gamestate.playerData[player].pointsDistribution.total === 69;
+            let sixtyNineSixtyNine = sixtyNine && Main.gamestate.playerData[player].gold === 69;
             if (sixtyNine) {
-                diff -= 6.9;
-                sixtyNineBonus = `<span style="color:${ArtCommon.eloDiffColor(6.9)}">+6.9</span>`;
+                let d = sixtyNineSixtyNine ? 69 : 6.9;
+                diff -= d;
+                sixtyNineBonus = `<span style="color:${ArtCommon.eloDiffColor(d)}">+${d}</span>`;
             }
 
             let sign = (diff >= 0) ? '+' : '';

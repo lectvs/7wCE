@@ -4183,9 +4183,11 @@ var EndScreen = /** @class */ (function () {
             var diff = after - before;
             var sixtyNineBonus = '';
             var sixtyNine = Main.gamestate.playerData[player].pointsDistribution.total === 69;
+            var sixtyNineSixtyNine = sixtyNine && Main.gamestate.playerData[player].gold === 69;
             if (sixtyNine) {
-                diff -= 6.9;
-                sixtyNineBonus = "<span style=\"color:" + ArtCommon.eloDiffColor(6.9) + "\">+6.9</span>";
+                var d = sixtyNineSixtyNine ? 69 : 6.9;
+                diff -= d;
+                sixtyNineBonus = "<span style=\"color:" + ArtCommon.eloDiffColor(d) + "\">+" + d + "</span>";
             }
             var sign = (diff >= 0) ? '+' : '';
             return after + " <span style=\"color:" + ArtCommon.eloDiffColor(diff) + "\">(" + sign + diff + sixtyNineBonus + ")</span>";
