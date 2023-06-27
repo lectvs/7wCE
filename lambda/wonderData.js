@@ -223,7 +223,7 @@ const wonders = {
         starting_effects: [{ type: "resource", resource: "clay" }],
         stages: [
             { cost: { resources: ["wood", "stone"] }, effects: [{ type: 'points', points: 3 }] },
-            { cost: { gold: 5 }, effects: [{ type: 'points', points: 7 }] },
+            { cost: { gold: 4 }, effects: [{ type: 'points', points: 7 }] },
             { cost: { resources: ["stone", "stone", "wood", "press"] }, effects: [{ type: 'points', points: 7 }] },
         ]
     },
