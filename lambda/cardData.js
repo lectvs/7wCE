@@ -99,9 +99,9 @@ const cards = {
     89: { age: 1, name: 'Pigeonhole',  color: "black", cost: { resources: ["ore"], gold: 1 }, effects: [{ type: "mask" }] },
     90: { age: 1, name: 'Dive',        color: "black", effects: [{ type: "gold_for_neighbor", gold: 1, direction: "neg" }, { type: "gold", gold: 6 }, { type: "gold_for_neighbor", gold: 1, direction: "pos" }] },
     91: { age: 1, name: 'Secret Warehouse', color: "black", cost: { gold: 2 }, effects: [{ type: "duplicate_produced_resource" }] },
-    92: { age: 1, name: "Smuggler's Cache", color: "black", effects: [{ type: "smugglers_cache" }] },
-    93: { age: 1, name: 'W Clandestine Wharf', color: "black", cost: { gold: 1 }, effects: [{ type: "wharf", direction: "neg" }] },
-    94: { age: 1, name: 'E Clandestine Wharf', color: "black", cost: { gold: 1 }, effects: [{ type: "wharf", direction: "pos" }] },
+    92: { age: 1, name: "Smuggler's Cache", color: "black", effects: [{ type: "smugglers_cache" }, { type: "gold", gold: 1 }] },
+    93: { age: 1, name: 'W Clandestine Wharf', color: "black", effects: [{ type: "wharf", direction: "neg" }] },
+    94: { age: 1, name: 'E Clandestine Wharf', color: "black", effects: [{ type: "wharf", direction: "pos" }] },
     /* Age 2 */
     95: { age: 2, name: 'Opium Den',  color: "black", cost: { resources: ["press"] }, effects: [{ type: "gold", gold: 4 }, { type: "broken_gold", gold: 3 }] },
     96: { age: 2, name: 'Lair',       color: "black", cost: { resources: ["wood", "glass"] }, effects: [{ type: "broken_gold", gold: 2 }, { type: "points", points: 3 }] },

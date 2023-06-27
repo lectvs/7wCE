@@ -390,8 +390,8 @@ const wonders = {
         starting_effect_color: 0xA95FCC,
         starting_effects: [{ type: "gold", gold: 4 }],
         stages: [
-            { cost: { gold: 2 }, effects: [{ type: 'points', points: 2 }, { type: 'eye' }] },
-            { cost: { resources: ["wood", "wood"], gold: 2 }, effects: [{ type: 'points', points: 4 }, { type: 'eye' }] },
+            { cost: { gold: 1 }, effects: [{ type: 'points', points: 2 }, { type: 'eye' }] },
+            { cost: { resources: ["wood", "wood"] }, effects: [{ type: 'points', points: 4 }, { type: 'eye' }] },
             { cost: { resources: ["clay", "clay", "press"] }, effects: [{ type: 'points_for_chains', points_per_chain: 2 }] },
         ]
     },
@@ -400,7 +400,7 @@ const wonders = {
         side: 'Night',
         outline_color: 0xA95FCC,
         starting_effect_color: 0xA95FCC,
-        starting_effects: [{ type: "see_future" }],
+        starting_effects: [{ type: "see_future" }, { type: "gold", gold: 2 }],
         stages: [
             { cost: { resources: ["stone", "stone"] }, effects: [{ type: 'build_free_without_chain', usages: 3 }] },
             { cost: { resources: ["ore", "ore", "wood", "wood"] }, effects: [{ type: 'points', points: 6 }] },
