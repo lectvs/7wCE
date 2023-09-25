@@ -373,7 +373,7 @@ async function updateElos(gamestate) {
             let elo1 = elosByPlayer[p1].before;
             let elo2 = elosByPlayer[p2].before;
             let result = utils.getScoreResultForElo(gamestate, p1, p2);
-            elosByPlayer[p1].diff += utils.computeEloDiff(elo1, elo2, result);
+            elosByPlayer[p1].diff += utils.computeEloDiff(gamestate, elo1, elo2, result);
         }
         elosByPlayer[p1].diff *= playersFactor;
         if (utils.computePointsDistribution(gamestate, p1).total === 69) {  // Nice

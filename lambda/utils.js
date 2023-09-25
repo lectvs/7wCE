@@ -156,9 +156,11 @@ exports.getScoreResultForElo = (gamestate, player1, player2) => {
     return 0.5;
 }
 
-exports.computeEloDiff = (elo1, elo2, result) => {
+exports.computeEloDiff = (gamestate, elo1, elo2, result) => {
     let r1 = 1 / (1 + Math.pow(10, ((elo2 - elo1)/391)));
-    return 20*(result - r1);
+    let factor = 20;
+    if (gamestate.sevenBlundersEnabled) factor *= 2;
+    return factor*(result - r1);
 }
 
 /* WONDER */
