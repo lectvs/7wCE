@@ -127,6 +127,13 @@ exports.getgamestate = async (gameid, player, password_hash) => {
     for (let p in gamestate.playerData) {
         delete gamestate.playerData[p].seeFutureCards;
     }
+    
+    // Hide deck if flag was enabled
+    if (gamestate.hideDeck) {
+        for (let age in gamestate.deck) {
+            gamestate.deck[age] = [];
+        }
+    }
 
     return gamestate;
 }

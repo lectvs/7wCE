@@ -47,7 +47,8 @@ exports.handler = async (event, context) => {
         if (operation === 'creategame') {
             let players = validateExists(event.queryStringParameters.players, 'players').split(',');
             let flags = parseFlagList(event.queryStringParameters.flags);
-            result = await creategame(players, flags);
+            let extraCards = parseInt(validateExists(event.queryStringParameters.extracards, 'extracards'));
+            result = await creategame(players, flags, extraCards);
         } else if (operation === 'getgamestate') {
             let gameid = validateExists(event.queryStringParameters.gameid, 'gameid');
             let player = validateExists(event.queryStringParameters.player, 'player');

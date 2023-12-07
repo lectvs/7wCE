@@ -376,11 +376,12 @@ async function updateElos(gamestate) {
             elosByPlayer[p1].diff += utils.computeEloDiff(gamestate, elo1, elo2, result);
         }
         elosByPlayer[p1].diff *= playersFactor;
+        let eloMultiplier = utils.getEloMultiplier(gamestate);
         if (utils.computePointsDistribution(gamestate, p1).total === 69) {  // Nice
             if (gamestate.playerData[p1].gold === 69) {
-                elosByPlayer[p1].diff += 69;
+                elosByPlayer[p1].diff += 69 * eloMultiplier;
             } else {
-                elosByPlayer[p1].diff += 6.9;
+                elosByPlayer[p1].diff += 6.9 * eloMultiplier;
             }
         }
         elosByPlayer[p1].after = elosByPlayer[p1].before + elosByPlayer[p1].diff;

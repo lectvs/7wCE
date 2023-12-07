@@ -354,9 +354,9 @@ class Main {
             }
         } else if (gamestate.state === 'DISCARD_MOVE') {
             if (gamestate.discardMoveQueue[0] === this.player) {
-                statusText.innerHTML = "<span class='statustextactive'>You may build a card from the discard pile</span>";
+                statusText.innerHTML = "<span class='statustextactive'>You may build a card from the graveyard</span>";
             } else {
-                statusText.innerHTML = `Waiting for ${gamestate.discardMoveQueue[0]} to build a card from the discard pile`;
+                statusText.innerHTML = `Waiting for ${gamestate.discardMoveQueue[0]} to build a card from the graveyard`;
             }
         } else if (gamestate.state === 'GAME_COMPLETE') {
             statusText.innerHTML = "Game complete";

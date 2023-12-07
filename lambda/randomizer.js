@@ -3,7 +3,7 @@ const cardData = require('./cardData');
 
 const resources = ['wood', 'ore', 'clay', 'stone', 'glass', 'press', 'loom'];
 const scienceSymbols = ['tablet', 'gear', 'compass'];
-const colors = ['brown', 'grey', 'blue', 'yellow', 'red', 'green', 'purple', 'black'];
+const colors = utils.colors;
 const directions = ['neg', 'pos'];
 
 const cards = cardData.getAllCards();
@@ -421,15 +421,14 @@ function randomCost(age) {
     };
 }
 
-exports.generateDeckForPlayersAge = (players, age, sevenBlundersEnabled) => {
+exports.generateDeckForPlayersAge = (players, age, sevenBlundersEnabled, cardsPerHand) => {
+    let cardNameParts = cardData.getCardNameParts();
+    let usedNames = new Set();
+    
     let deck = [];
-    let cardNames = utils.shuffled(cardList.filter(card => card.age === age).map(card => card.name));
-    let cardNameIndex = 0;
-    for (let i = 0; i < 8*players; i++) {
+    for (let i = 0; i < cardsPerHand * players; i++) {
         let effectType = randomEffectType(age, false, undefined, sevenBlundersEnabled);
-        deck.push(getCardForAge(effectType, age, cardNames, cardNameIndex, sevenBlundersEnabled));
-        cardNameIndex++;
-        if (cardNameIndex >= cardNames.length) cardNameIndex = 0;
+        deck.push(getCardForAge(effectType, age, getCardName(cardNameParts, usedNames), sevenBlundersEnabled));
     }
     
     if (age === 1 || age === 2) {
@@ -443,9 +442,7 @@ exports.generateDeckForPlayersAge = (players, age, sevenBlundersEnabled) => {
                 deck.splice(deck.indexOf(cardToReplace), 1);
                 
                 let effectType = utils.randElementWeighted(['resource', 'multi_resource'], [2, 1]);
-                deck.push(getCardForAge(effectType, age, cardNames, cardNameIndex, sevenBlundersEnabled));
-                cardNameIndex++;
-                if (cardNameIndex >= cardNames.length) cardNameIndex = 0;
+                deck.push(getCardForAge(effectType, age, getCardName(cardNameParts, usedNames), sevenBlundersEnabled));
             }
         }
     }
@@ -453,7 +450,26 @@ exports.generateDeckForPlayersAge = (players, age, sevenBlundersEnabled) => {
     return deck;
 }
 
-function getCardForAge(effectType, age, cardNames, cardNameIndex, sevenBlundersEnabled) {
+function getCardName(parts, usedCardNames) {
+    for (let i = 0; i < 1000; i++) {
+        let name;
+        if (utils.randBool(0.4)) {
+            name = `${utils.randElement(parts.adjectives)} ${utils.randElement(parts.nouns)}`;
+        } else if (utils.randBool(0.666)) {
+            name = utils.randElement(parts.nouns);
+        } else {
+            name = `${utils.randElement(parts.nouns)} of ${utils.randElement(parts.ofs)}`;
+        }
+        
+        if (!usedCardNames.has(name) && name.length <= 19) {
+            usedCardNames.add(name);
+            return name;
+        }
+    }
+    return 'I AM ERROR';
+}
+
+function getCardForAge(effectType, age, cardName, sevenBlundersEnabled) {
     let effects = [randomEffectByType[effectType].effect(age)];
     let color = utils.randElement(randomEffectByType[effectType].colors);
     
@@ -472,7 +488,7 @@ function getCardForAge(effectType, age, cardNames, cardNameIndex, sevenBlundersE
         effects = [effects[0], { type: 'resource', resource: utils.randElement(resources) }];
     }
     
-    return { age: age, name: cardNames[cardNameIndex], color: color, cost: randomCost(age), effects: resolveEffects(effects) };
+    return { age: age, name: cardName, color: color, cost: randomCost(age), effects: resolveEffects(effects) };
 }
 
 exports.cardsify = (deckForAge) => {
@@ -487,20 +503,20 @@ exports.cardsify = (deckForAge) => {
     return result;
 }
 
-exports.getInitialHands = (cards, players) => {
+exports.getInitialHands = (cards, players, cardsPerHand) => {
     let numCards = Object.keys(cards).length;
-    if (numCards !== 8*3*players) {
+    if (numCards !== cardsPerHand*3*players) {
         throw new Error(`Invalid number of cards for ${players} players: ${numCards}`);
     }
     
     let result = {};
     
     for (let age = 1; age <= 3; age++) {
-        let cardIds = utils.shuffled(utils.range(8*players*(age-1), 8*players*age-1));
+        let cardIds = utils.shuffled(utils.range(cardsPerHand*players*(age-1), cardsPerHand*players*age-1));
         let hands = [];
         for (let i = 0; i < players; i++) {
             let hand = [];
-            for (let j = 0; j < 8; j++) {
+            for (let j = 0; j < cardsPerHand; j++) {
                 hand.push(cardIds.pop());
             }
             hand.sort((c1, c2) => colors.indexOf(cards[c1].color) - colors.indexOf(cards[c2].color));

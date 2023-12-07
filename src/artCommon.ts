@@ -866,7 +866,7 @@ namespace ArtCommon {
     export function brokenGold(gold: number) {
         let container = new PIXI.Container();
         container.addChild(brokenGoldBlank());
-        container.addChild(Shapes.centeredText(0, 0, `${gold}`, 1, 0xFF0044));
+        container.addChild(Shapes.centeredText(0, 4, `${gold}`, 1, 0xFF0044));
         return container;
     }
 

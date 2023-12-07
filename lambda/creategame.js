@@ -6,7 +6,18 @@ const randomizer = require('./randomizer');
 
 const dynamo = new AWS.DynamoDB.DocumentClient();
 
-exports.creategame = async (players, flags) => {
+exports.creategame = async (players, flags, extraCards) => {
+    
+    let randomizerEnabled = flags.includes('randomizer');
+    let citiesEnabled = flags.includes('cities') || randomizerEnabled;
+    let sevenBlundersEnabled = flags.includes('blunders');
+    let vanillaWonders = flags.includes('vanilla_wonders');
+    let hideDeck = flags.includes('hide_deck');
+    
+    let baseCards = randomizerEnabled || citiesEnabled ? 8 : 7;
+    if (baseCards + extraCards < 2 || baseCards + extraCards > 16) {
+        throw new Error(`Invalid extracards: ${extraCards}`);
+    }
     
     let isTestGame = flags.includes('test');
     
@@ -42,25 +53,20 @@ exports.creategame = async (players, flags) => {
         draftOrderPlayers = await getPlayerDraftOrder(players);
     }
     
-    let randomizerEnabled = flags.includes('randomizer');
-    let citiesEnabled = flags.includes('cities') || randomizerEnabled;
-    let sevenBlundersEnabled = flags.includes('blunders');
-    let vanillaWonders = flags.includes('vanilla_wonders');
-    
     let cards;
     let initialHands;
     let deck;
     let wonderChoices;
     if (randomizerEnabled) {
         let deckForAge = {
-            '1': randomizer.generateDeckForPlayersAge(players.length, 1, sevenBlundersEnabled),
-            '2': randomizer.generateDeckForPlayersAge(players.length, 2, sevenBlundersEnabled),
-            '3': randomizer.generateDeckForPlayersAge(players.length, 3, sevenBlundersEnabled),
+            '1': randomizer.generateDeckForPlayersAge(players.length, 1, sevenBlundersEnabled, baseCards + extraCards),
+            '2': randomizer.generateDeckForPlayersAge(players.length, 2, sevenBlundersEnabled, baseCards + extraCards),
+            '3': randomizer.generateDeckForPlayersAge(players.length, 3, sevenBlundersEnabled, baseCards + extraCards),
         };
         
         cards = randomizer.cardsify(deckForAge);
 
-        initialHands = randomizer.getInitialHands(cards, players.length);
+        initialHands = randomizer.getInitialHands(cards, players.length, baseCards + extraCards);
 
         deck = randomizer.getDecks(cards);
 
@@ -71,16 +77,44 @@ exports.creategame = async (players, flags) => {
     } else {
         cards = cardData.getAllCards();
         
+        let bonus1 = cardData.getBonusCardsForPlayersAge(players.length, 1, citiesEnabled);
+        let bonus2 = cardData.getBonusCardsForPlayersAge(players.length, 2, citiesEnabled);
+        let bonus3 = cardData.getBonusCardsForPlayersAge(players.length, 3, citiesEnabled);
+        
+        let extraBonusCards1 = extraCards > 0 ? (citiesEnabled ? Math.floor(extraCards/2) : 0) : (citiesEnabled ? -Math.min(Math.floor(-extraCards/2), 1) : 0);
+        let extraBonusCards2 = extraCards > 0 ? (citiesEnabled ? Math.floor(extraCards/2) : 0) : (citiesEnabled ? -Math.min(Math.floor(-extraCards/2), 1) : 0);
+        let extraBonusCards3 = extraCards > 0 ? (Math.floor(extraCards/2)) : -Math.min(Math.floor(-extraCards/2), 1);
+        
+        let extraCoreCards1 = extraCards - extraBonusCards1;
+        let extraCoreCards2 = extraCards - extraBonusCards2;
+        let extraCoreCards3 = extraCards - extraBonusCards3;
+        
+        let core1 = cardData.getCoreCardsForPlayersAge(players.length, 1, citiesEnabled, 7 + extraCoreCards1);
+        let core2 = cardData.getCoreCardsForPlayersAge(players.length, 2, citiesEnabled, 7 + extraCoreCards2);
+        let core3 = cardData.getCoreCardsForPlayersAge(players.length, 3, citiesEnabled, 7 + extraCoreCards3);
+        
+        let trimmedBonus1 = cardData.trimBonusCardsForPlayersAge(bonus1, players.length, 1, citiesEnabled, extraBonusCards1);
+        let trimmedBonus2 = cardData.trimBonusCardsForPlayersAge(bonus2, players.length, 2, citiesEnabled, extraBonusCards2);
+        let trimmedBonus3 = cardData.trimBonusCardsForPlayersAge(bonus3, players.length, 3, citiesEnabled, extraBonusCards3);
+
+        console.log('extra bonus cards:', extraBonusCards1, extraBonusCards2, extraBonusCards3, 'extra core cards:', extraCoreCards1, extraCoreCards2, extraCoreCards3);
+
         initialHands = {
-            '1': cardData.newHandsForPlayersAge(players.length, 1, citiesEnabled),
-            '2': cardData.newHandsForPlayersAge(players.length, 2, citiesEnabled),
-            '3': cardData.newHandsForPlayersAge(players.length, 3, citiesEnabled),
+            '1': cardData.newHandsForPlayersAge(core1, trimmedBonus1, players.length, 1, citiesEnabled),
+            '2': cardData.newHandsForPlayersAge(core2, trimmedBonus2, players.length, 2, citiesEnabled),
+            '3': cardData.newHandsForPlayersAge(core3, trimmedBonus3, players.length, 3, citiesEnabled),
         };
-    
+        
+        let deckIdsForAge = {
+            '1': cardData.getCoreCardsForPlayersAge(players.length, 1, citiesEnabled),
+            '2': cardData.getCoreCardsForPlayersAge(players.length, 2, citiesEnabled),
+            '3': cardData.getCoreCardsForPlayersAge(players.length, 3, citiesEnabled),
+        };
+
         deck = {
-            '1': convertCardListToCountMap(cardData.getCardsForPlayersAge(players.length, 1, citiesEnabled)),
-            '2': convertCardListToCountMap(cardData.getCardsForPlayersAge(players.length, 2, citiesEnabled)),
-            '3': convertCardListToCountMap(cardData.getCardsForPlayersAge(players.length, 3, citiesEnabled)),
+            '1': convertCardListToCountMap(cardData.buildDeckForPlayersAge(core1, bonus1, players, 1, citiesEnabled)),
+            '2': convertCardListToCountMap(cardData.buildDeckForPlayersAge(core2, bonus2, players, 2, citiesEnabled)),
+            '3': convertCardListToCountMap(cardData.buildDeckForPlayersAge(core3, bonus3, players, 3, citiesEnabled)),
         };
         
         wonderChoices = wonderData.getWonderChoicesForPlayers(draftOrderPlayers, wonderPreferences, isDebug, vanillaWonders);
@@ -108,6 +142,7 @@ exports.creategame = async (players, flags) => {
         citiesEnabled: citiesEnabled,
         sevenBlundersEnabled: sevenBlundersEnabled,
         randomizerEnabled: randomizerEnabled,
+        hideDeck: hideDeck,
         discardMoveQueue: [],
         players: orderPlayers(players),  // Randomize player order and balance bots
         host: players[0],

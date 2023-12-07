@@ -4,6 +4,7 @@ namespace API {
         citiesEnabled: boolean;
         sevenBlundersEnabled: boolean;
         randomizerEnabled: boolean;
+        hideDeck: boolean;
         discardMoveQueue: string[];
         lastCardPlayers: string[];
         chooseGoldToLosePlayers: string[];
@@ -177,6 +178,7 @@ namespace API {
     export type CreateGameOptions = {
         players: string[];
         flags: string[];
+        extraCards: number;
     }
 
     export function eqMove(move1: Move, move2: Move) {
@@ -458,7 +460,7 @@ namespace API {
     }
 
     export function creategame(options: CreateGameOptions, callback: (gameid: string, error: string) => any) {
-        httpRequest(`${LAMBDA_URL}?operation=creategame&players=${options.players.join(',')}&flags=${options.flags.join(',')}`, (responseJson: any, error: string) => {
+        httpRequest(`${LAMBDA_URL}?operation=creategame&players=${options.players.join(',')}&flags=${options.flags.join(',')}&extracards=${options.extraCards}`, (responseJson: any, error: string) => {
             if (error) {
                 callback(undefined, error);
             } else if (!responseJson || !responseJson['gameid']) {

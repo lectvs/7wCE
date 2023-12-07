@@ -33,12 +33,6 @@ class EndScreen {
             }
         }
 
-        // for (let i = 0; i < players.length; i++) {
-        //     if (Main.gamestate.playerData[players[i]].pointsDistribution.total === 69) {
-        //         pointsTotals[i] += '<br/>nice';
-        //     }
-        // }
-
         let elos = players.map(player => {
             let elo = Main.gamestate.playerData[player].elo;
             if (!elo) return '--';
@@ -50,10 +44,12 @@ class EndScreen {
 
             let sixtyNine = Main.gamestate.playerData[player].pointsDistribution.total === 69;
             let sixtyNineSixtyNine = sixtyNine && Main.gamestate.playerData[player].gold === 69;
+            let eloMultiplier = this.getEloMultiplier(Main.gamestate);
             if (sixtyNine) {
                 let d = sixtyNineSixtyNine ? 69 : 6.9;
-                diff -= d;
-                sixtyNineBonus = `<span style="color:${ArtCommon.eloDiffColor(d)}">+${d}</span>`;
+                diff -= d * eloMultiplier;
+                let eloMultText = eloMultiplier === 1 ? '' : `x${eloMultiplier}`;
+                sixtyNineBonus = `<span style="color:${ArtCommon.eloDiffColor(d)}">+${d}${eloMultText}</span>`;
             }
 
             let sign = (diff >= 0) ? '+' : '';
@@ -135,5 +131,12 @@ class EndScreen {
         p.style.left = xs;
         p.style.top = ys;
         return p;
+    }
+
+    private getEloMultiplier(gamestate: API.GameState) {
+        let mult = 1;
+        if (gamestate.randomizerEnabled) mult++;
+        if (gamestate.sevenBlundersEnabled) mult++;
+        return mult;
     }
 }

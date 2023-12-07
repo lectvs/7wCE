@@ -20,6 +20,10 @@ class CardListScene {
 
         Main.cardList.style.height = `${height + C.CARD_LIST_PADDING + C.CARD_LIST_OFFSET_Y}px`;
 
+        if (Main.gamestate.hideDeck) {
+            return;
+        }
+
         let deck = Main.gamestate.deck;
 
         for (let age = 1; age <= 3; age++) {

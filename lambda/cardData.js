@@ -138,30 +138,63 @@ exports.getAllCards = () => {
     return cards;
 }
 
-exports.getCardsForPlayersAge = (players, age, citiesEnabled) => {
+exports.getCoreCardsForPlayersAge = (players, age, citiesEnabled, coreCardsPerHand) => {
+    let coreCardsInDeck = coreCardsPerHand * players;
+    if (age === 3) {
+        coreCardsInDeck -= players+2;
+    }
+
+    let cardIdsForPlayerCount = [[], [], []];
+    if (age === 1) {
+        cardIdsForPlayerCount.push([0, 1, 2, 3, 6, 7, 10, 11, 12, 13, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26]);
+        cardIdsForPlayerCount.push([2, 3, 5, 14, 20, 23, 25]);
+        cardIdsForPlayerCount.push([0, 1, 8, 15, 20, 21, 24]);
+        cardIdsForPlayerCount.push([4, 9, 10, 11, 12, 13, 19]);
+        cardIdsForPlayerCount.push([14, 16, 17, 18, 20, 22, 26]);
+    }
+    if (age === 2) {
+        cardIdsForPlayerCount.push([27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 40, 41, 42, 43, 44, 46, 47, 48, 49]);
+        cardIdsForPlayerCount.push([27, 28, 29, 30, 39, 45, 48]);
+        cardIdsForPlayerCount.push([31, 32, 33, 34, 41, 42, 46]);
+        cardIdsForPlayerCount.push([36, 38, 40, 41, 44, 45, 49]);
+        cardIdsForPlayerCount.push([35, 37, 39, 40, 43, 45, 47]);
+    }
+    if (age === 3) {
+        cardIdsForPlayerCount.push([60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 73, 75, 76, 77, 78, 79]);
+        cardIdsForPlayerCount.push([61, 66, 67, 70, 74, 77]);
+        cardIdsForPlayerCount.push([64, 65, 69, 71, 73, 79]);
+        cardIdsForPlayerCount.push([62, 63, 66, 68, 70, 78]);
+        cardIdsForPlayerCount.push([60, 69, 72, 74, 75, 76]);
+    }
+    
+    let result = [];
+    let currentPlayerCount = 3;
+    while (coreCardsInDeck > 0 && currentPlayerCount <= 7) {
+        let currentCards = utils.shuffled(cardIdsForPlayerCount[currentPlayerCount]);
+        if (currentCards.length > coreCardsInDeck) currentCards.length = coreCardsInDeck;
+        result.push(...currentCards);
+        coreCardsInDeck -= currentCards.length;
+        currentPlayerCount++;
+    }
+    
+    while (coreCardsInDeck > 0) {
+        result.push(utils.randElement(cardIdsForPlayerCount[utils.randInt(3, cardIdsForPlayerCount.length-1)]));
+        coreCardsInDeck--;
+    }
+    
+    return result;
+}
+
+exports.getBonusCardsForPlayersAge = (players, age, citiesEnabled) => {
     let result = [];
     if (age === 1) {
-        if (players >= 3) result.push(0, 1, 2, 3, 6, 7, 10, 11, 12, 13, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26);
-        if (players >= 4) result.push(2, 3, 5, 14, 20, 23, 25);
-        if (players >= 5) result.push(0, 1, 8, 15, 20, 21, 24);
-        if (players >= 6) result.push(4, 9, 10, 11, 12, 13, 19);
-        if (players >= 7) result.push(14, 16, 17, 18, 20, 22, 26);
         if (citiesEnabled) result.push(81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94);
     }
     if (age === 2) {
-        if (players >= 3) result.push(27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 40, 41, 42, 43, 44, 46, 47, 48, 49);
-        if (players >= 4) result.push(27, 28, 29, 30, 39, 45, 48);
-        if (players >= 5) result.push(31, 32, 33, 34, 41, 42, 46);
-        if (players >= 6) result.push(36, 38, 40, 41, 44, 45, 49);
-        if (players >= 7) result.push(35, 37, 39, 40, 43, 45, 47);
         if (citiesEnabled) result.push(95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108);
     }
     if (age === 3) {
-        if (players >= 3) result.push(50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 80, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 73, 75, 76, 77, 78, 79);
-        if (players >= 4) result.push(61, 66, 67, 70, 74, 77);
-        if (players >= 5) result.push(64, 65, 69, 71, 73, 79);
-        if (players >= 6) result.push(62, 63, 66, 68, 70, 78);
-        if (players >= 7) result.push(60, 69, 72, 74, 75, 76);
+        if (players >= 3) result.push(50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 80);
         if (citiesEnabled) result.push(109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122);
         
         // Remove Strategists Guild only in 4P
@@ -170,28 +203,84 @@ exports.getCardsForPlayersAge = (players, age, citiesEnabled) => {
     return result;
 }
 
-exports.newHandsForPlayersAge = (players, age, citiesEnabled) => {
-    let deck = exports.getCardsForPlayersAge(players, age, citiesEnabled);
+exports.getUnusedCardsForPlayerAge = (players, age, citiesEnabled) => {
+    let result = [];
+    if (age === 1) {
+        if (players < 4) result.push(2, 3, 5, 14, 20, 23, 25);
+        if (players < 5) result.push(0, 1, 8, 15, 20, 21, 24);
+        if (players < 6) result.push(4, 9, 10, 11, 12, 13, 19);
+        if (players < 7) result.push(14, 16, 17, 18, 20, 22, 26);
+    }
+    if (age === 2) {
+        if (players < 4) result.push(27, 28, 29, 30, 39, 45, 48);
+        if (players < 5) result.push(31, 32, 33, 34, 41, 42, 46);
+        if (players < 6) result.push(36, 38, 40, 41, 44, 45, 49);
+        if (players < 7) result.push(35, 37, 39, 40, 43, 45, 47);
+    }
     if (age === 3) {
-        let guilds = [];
-        for (let i = deck.length-1; i >= 0; i--) {
-            if (cards[deck[i]].color === 'purple') {
-                guilds.push(deck.splice(i, 1)[0]);
-            }
-        }
+        if (players < 4) result.push(61, 66, 67, 70, 74, 77);
+        if (players < 5) result.push(64, 65, 69, 71, 73, 79);
+        if (players < 6) result.push(62, 63, 66, 68, 70, 78);
+        if (players < 7) result.push(60, 69, 72, 74, 75, 76);
+    }
+    return result;
+}
+
+exports.trimBonusCardsForPlayersAge = (bonusDeck, players, age, citiesEnabled, extraBonusCardsPerHand) => {
+    let cardLossPerHand = extraBonusCardsPerHand < 0 ? -extraBonusCardsPerHand : 0;
+    let result = [];
+    if (age === 3) {
+        let allGuilds = bonusDeck.filter(id => cards[id].color === 'purple');
+        let guilds = utils.cloneArray(allGuilds);
         for (let i = 0; i < players + 2; i++) {
+            result.push(guilds.splice(utils.randInt(0, guilds.length-1), 1)[0]);
+        }
+        let extraGuildsPerHand = citiesEnabled ? Math.floor(extraBonusCardsPerHand/2) : extraBonusCardsPerHand;
+        for (let i = 0; i < extraGuildsPerHand * players; i++) {
+            result.push(allGuilds[utils.randInt(0, allGuilds.length-1)]);
+        }
+        extraBonusCardsPerHand -= extraGuildsPerHand;
+    }
+    
+    if (citiesEnabled) {
+        let allBlackCards = bonusDeck.filter(id => cards[id].color === 'black');
+        let blackCards = utils.cloneArray(allBlackCards);
+        for (let i = 0; i < players; i++) {
+            result.push(blackCards.splice(utils.randInt(0, blackCards.length-1), 1)[0]);
+        }
+        for (let i = 0; i < extraBonusCardsPerHand * players; i++) {
+            result.push(allBlackCards[utils.randInt(0, allBlackCards.length-1)]);
+        }
+    }
+    
+    if (cardLossPerHand > 0) {
+        result = utils.shuffled(result);
+        result.length = Math.max(result.length - cardLossPerHand * players, 0);
+    }
+    
+    return result;
+}
+
+exports.buildDeckForPlayersAge = (coreDeck, bonusDeck, players, age, citiesEnabled) => {
+    return [
+        ...coreDeck,
+        ...bonusDeck,
+    ];
+}
+
+exports.newHandsForPlayersAge = (coreDeck, trimmedBonusDeck, players, age, citiesEnabled) => {
+    let deck = utils.cloneArray(coreDeck);
+    
+    if (age === 3) {
+        let guilds = trimmedBonusDeck.filter(id => cards[id].color === 'purple');
+        while (guilds.length > 0) {
             deck.push(guilds.splice(utils.randInt(0, guilds.length-1), 1)[0]);
         }
     }
     
     if (citiesEnabled) {
-        let blackCards = [];
-        for (let i = deck.length-1; i >= 0; i--) {
-            if (cards[deck[i]].color === 'black') {
-                blackCards.push(deck.splice(i, 1)[0]);
-            }
-        }
-        for (let i = 0; i < players; i++) {
+        let blackCards = trimmedBonusDeck.filter(id => cards[id].color === 'black');
+        while (blackCards.length > 0) {
             deck.push(blackCards.splice(utils.randInt(0, blackCards.length-1), 1)[0]);
         }
     }
@@ -214,4 +303,64 @@ exports.newHandsForPlayersAge = (players, age, citiesEnabled) => {
     }
     
     return result;
+}
+
+exports.getCardNameParts = () => {
+    let adjectives = [];
+    let nouns = [];
+    let ofs = [];
+    for (let cardId in cards) {
+        let name = cards[cardId].name;
+        let parts = name.split(' ');
+        
+        if (parts.length === 1) {
+            nouns.push(parts[0]);
+            continue;
+        }
+        
+        if (parts.length === 2) {
+            if (parts[1] === 'Guild') {
+                ofs.push(parts[0]);
+            } else {
+                adjectives.push(parts[0]);
+            }
+            nouns.push(parts[1]);
+            continue;
+        }
+        
+        if (name === 'East Trading Post') {
+            adjectives.push('East');
+            nouns.push('Trading Post');
+            continue;
+        }
+        
+        if (name === 'West Trading Post') {
+            adjectives.push('East');
+            nouns.push('Trading Post');
+            continue;
+        }
+        
+        if (name.includes('Clandestine Wharf')) {
+            adjectives.push('Clandestine');
+            nouns.push('Wharf');
+            continue;
+        }
+        
+        if (parts.length === 3) {
+            if (parts[1] === 'of') {
+                nouns.push(parts[0]);
+                ofs.push(parts[2]);
+            }
+        }
+    }
+    
+    ofs.push(
+        'Stone', 'Clay', 'Ore', 'Lumber', 'Timber', 'Trading', 'Stables', 'Press', 'Loom', 'Archery', 'Training', 'Gardens', 'Fortifications',
+        'Siege', 'Study', 'Opium', 'Customs', 'Gates', 'Cells', 'Secrets', 'Trade', 'Mercenaries', 'Gambling', 'Forging', 'Brotherhood', 'Memorial');
+        
+    return {
+        adjectives: Array.from(new Set(adjectives)),
+        nouns: Array.from(new Set(nouns)),
+        ofs: Array.from(new Set(ofs)),
+    };
 }

@@ -125,6 +125,8 @@ exports.validatePasswordHash = async (dynamo, username, password_hash) => {
 }
 
 /* GAME */
+exports.colors = ['brown', 'grey', 'blue', 'yellow', 'red', 'green', 'purple', 'black'];
+
 exports.getNeighbors = (gamestate, player) => {
     let neg_index = gamestate.players.indexOf(player)-1;
     if (neg_index < 0) neg_index += gamestate.players.length;
@@ -156,11 +158,17 @@ exports.getScoreResultForElo = (gamestate, player1, player2) => {
     return 0.5;
 }
 
+exports.getEloMultiplier = (gamestate) => {
+    let gameModeMultiplier = 1;
+    if (gamestate.randomizerEnabled) gameModeMultiplier++;
+    if (gamestate.sevenBlundersEnabled) gameModeMultiplier++;
+    return gameModeMultiplier;
+}
+
 exports.computeEloDiff = (gamestate, elo1, elo2, result) => {
     let r1 = 1 / (1 + Math.pow(10, ((elo2 - elo1)/391)));
     let factor = 20;
-    if (gamestate.sevenBlundersEnabled) factor *= 2;
-    return factor*(result - r1);
+    return (result - r1) * factor * exports.getEloMultiplier(gamestate);
 }
 
 /* WONDER */
@@ -720,7 +728,7 @@ exports.getValidMoves = (gamestate, player) => {
     
     let validMoves = [];
     for (let cardId of hand) {
-        if (!playedCardNames.includes(gamestate.cards[cardId].name) || gamestate.randomizerEnabled) {
+        if (gamestate.randomizerEnabled || !playedCardNames.includes(gamestate.cards[cardId].name)) {
             let playMove = { action: 'play', card: cardId };
             for (let paymentOption of exports.getPaymentOptions(gamestate, player, playMove)) {
                 validMoves.push({ action: 'play', card: cardId, payment: paymentOption });

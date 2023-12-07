@@ -106,6 +106,55 @@ class LobbyMain {
         });
     }
 
+    static randomize() {
+        let gameMode = randElement([
+            'vanilla',
+            'vanilla',
+            'vanilla',
+            'blunders',
+            'rando',
+            'rando',
+            'rando',
+            'randoblunders',
+            'randoblunders',
+            'randoblunders',
+        ]);
+
+        let extraCards = randElement([
+            -2,
+            -1, -1,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            1, 1,
+        ]);
+
+        if (gameMode.includes('rando')) {
+            extraCards = randElement([
+                -3,
+                -2,
+                -1, -1, -1,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            ]);
+        }
+
+        let bots = randElement([
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            3,
+        ]);
+
+        (document.getElementById('bots') as HTMLInputElement).value = `${bots}`;
+
+        if (gameMode === 'vanilla' || gameMode === 'blunders') {
+            (document.getElementById('option_Vanilla wonders') as HTMLInputElement).checked = Math.random() < 0.3;
+            (document.getElementById('option_Cities expansion') as HTMLInputElement).checked = Math.random() < 0.8;
+            (document.getElementById('option_Use wonder preferences') as HTMLInputElement).checked = Math.random() < 0.8;
+        }
+        (document.getElementById('option_Hide deck') as HTMLInputElement).checked = Math.random() < 0.2;
+        (document.getElementById('extra_cards') as HTMLInputElement).value = `${extraCards}`;
+
+        (document.getElementById('option_7 Blunders') as HTMLInputElement).checked = gameMode.includes('blunders');
+        (document.getElementById('option_Randomizer') as HTMLInputElement).checked = gameMode.includes('rando');
+    }
+
     static update() {
         this.scriptManager.update();
         if (this.wonderPreferenceList) this.wonderPreferenceList.update();

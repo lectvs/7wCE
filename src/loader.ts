@@ -291,64 +291,78 @@ class Loader {
 
             let maxY = 0;
 
-            for (let age = 1; age <= 3; age++) {
-                let x = age * C.CARD_LIST_CARD_DX;
-                let y = 0;
-
-                for (let cardInfo of gamestate.deck[age]) {
-                    let card = gamestate.cards[cardInfo.id];
-
-                    let cardForList = new PIXI.Container();
-                    cardForList.addChild(Shapes.filledRect(-C.CARD_LIST_CARD_WIDTH/2, -C.CARD_LIST_CARD_HEIGHT/2, C.CARD_LIST_CARD_WIDTH, C.CARD_LIST_CARD_HEIGHT, ArtCommon.cardBannerForColor(card.color)));
-                    let effectContainer = new PIXI.Container();
-                    effectContainer.addChild(ArtCommon.getShadowForEffects(card.effects, 'dark'));
-                    effectContainer.addChild(ArtCommon.getArtForEffects(card.effects));
-                    effectContainer.scale.set(C.CARD_LIST_EFFECT_SCALE);
-                    if (effectContainer.width > C.CARD_LIST_EFFECT_MAX_WIDTH) {
-                        effectContainer.scale.set(C.CARD_LIST_EFFECT_SCALE * C.CARD_LIST_EFFECT_MAX_WIDTH / effectContainer.width);
-                    }
-                    cardForList.addChild(effectContainer);
-
-                    if (cardInfo.count > 1) {
-                        let text = Shapes.centeredText(-60, 0, `${cardInfo.count} ×`, 0.15, 0xFFFFFF);
-                        text.anchor.set(1, 0.5);
-                        cardForList.addChild(text);
-                    }
-            
-                    let resourceCost = card.cost?.resources || [];
-                    let goldCost = card.cost?.gold || 0;
-            
-                    if (card.cost) {
-                        let currentX = 70;
-                        if (goldCost > 0) {
-                            let gold = ArtCommon.gold(goldCost);
-                            gold.scale.set(0.2);
-                            gold.position.set(currentX, 0);
-                            cardForList.addChild(gold);
-                            currentX += 22;
-                        }
-
-                        for (let i = 0; i < resourceCost.length; i++) {
-                            let resource = ArtCommon.resource(resourceCost[i]);
-                            resource.scale.set(0.2);
-                            resource.position.set(currentX, 0);
-                            cardForList.addChild(resource);
-                            currentX += 22;
-                        }
-                    }
-
-                    cardForList.x = x;
-                    cardForList.y = y;
-                    cardList.addChild(cardForList);
-
-                    y += C.CARD_LIST_CARD_DY;
+            if (gamestate.hideDeck) {
+                for (let age = 1; age <= 3; age++) {
+                    let hidden = new PIXI.Container();
+                    hidden.addChild(ArtCommon.eye()).scale.set(1.3);
+                    hidden.addChild(ArtCommon.X(0xFF0000));
+                    hidden.x = age * C.CARD_LIST_CARD_DX + 30;
+                    hidden.y = 10;
+                    hidden.scale.set(0.3);
+                    cardList.addChild(hidden);
                 }
-                maxY = Math.max(maxY, y);
+                maxY = 10 + C.CARD_LIST_CARD_DY;
+
+            } else {
+                for (let age = 1; age <= 3; age++) {
+                    let x = age * C.CARD_LIST_CARD_DX;
+                    let y = 0;
+
+                    for (let cardInfo of gamestate.deck[age]) {
+                        let card = gamestate.cards[cardInfo.id];
+
+                        let cardForList = new PIXI.Container();
+                        cardForList.addChild(Shapes.filledRect(-C.CARD_LIST_CARD_WIDTH/2, -C.CARD_LIST_CARD_HEIGHT/2, C.CARD_LIST_CARD_WIDTH, C.CARD_LIST_CARD_HEIGHT, ArtCommon.cardBannerForColor(card.color)));
+                        let effectContainer = new PIXI.Container();
+                        effectContainer.addChild(ArtCommon.getShadowForEffects(card.effects, 'dark'));
+                        effectContainer.addChild(ArtCommon.getArtForEffects(card.effects));
+                        effectContainer.scale.set(C.CARD_LIST_EFFECT_SCALE);
+                        if (effectContainer.width > C.CARD_LIST_EFFECT_MAX_WIDTH) {
+                            effectContainer.scale.set(C.CARD_LIST_EFFECT_SCALE * C.CARD_LIST_EFFECT_MAX_WIDTH / effectContainer.width);
+                        }
+                        cardForList.addChild(effectContainer);
+
+                        if (cardInfo.count > 1) {
+                            let text = Shapes.centeredText(-60, 0, `${cardInfo.count} ×`, 0.15, 0xFFFFFF);
+                            text.anchor.set(1, 0.5);
+                            cardForList.addChild(text);
+                        }
+                
+                        let resourceCost = card.cost?.resources || [];
+                        let goldCost = card.cost?.gold || 0;
+                
+                        if (card.cost) {
+                            let currentX = 70;
+                            if (goldCost > 0) {
+                                let gold = ArtCommon.gold(goldCost);
+                                gold.scale.set(0.2);
+                                gold.position.set(currentX, 0);
+                                cardForList.addChild(gold);
+                                currentX += 22;
+                            }
+
+                            for (let i = 0; i < resourceCost.length; i++) {
+                                let resource = ArtCommon.resource(resourceCost[i]);
+                                resource.scale.set(0.2);
+                                resource.position.set(currentX, 0);
+                                cardForList.addChild(resource);
+                                currentX += 22;
+                            }
+                        }
+
+                        cardForList.x = x;
+                        cardForList.y = y;
+                        cardList.addChild(cardForList);
+
+                        y += C.CARD_LIST_CARD_DY;
+                    }
+                    maxY = Math.max(maxY, y);
+                }
             }
             
             cardList.y += C.CARD_LIST_CARD_HEIGHT/2;
 
-            Resources.CARD_LIST = render(cardList, C.CARD_LIST_WIDTH, maxY);
+            Resources.CARD_LIST = render(cardList, C.CARD_LIST_WIDTH, maxY+1);
             resource.loaded = true;
         };
     }

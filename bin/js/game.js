@@ -2,10 +2,12 @@ var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
         return extendStatics(d, b);
     };
     return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -28,7 +30,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -65,9 +67,14 @@ var __read = (this && this.__read) || function (o, n) {
     }
     return ar;
 };
-var __spread = (this && this.__spread) || function () {
-    for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]));
-    return ar;
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
 };
 var GameElement = /** @class */ (function () {
     function GameElement(useTransform) {
@@ -117,7 +124,7 @@ var GameElement = /** @class */ (function () {
         get: function () { return this._zIndex; },
         set: function (value) {
             this._zIndex = value;
-            this.div.style.zIndex = "" + value;
+            this.div.style.zIndex = "".concat(value);
         },
         enumerable: false,
         configurable: true
@@ -135,7 +142,7 @@ var GameElement = /** @class */ (function () {
         get: function () { return this._alpha; },
         set: function (value) {
             this._alpha = value;
-            this.div.style.opacity = "" + this._alpha;
+            this.div.style.opacity = "".concat(this._alpha);
         },
         enumerable: false,
         configurable: true
@@ -155,12 +162,12 @@ var GameElement = /** @class */ (function () {
     };
     GameElement.prototype.setTransform = function () {
         if (this.useTransform) {
-            this.div.style.transform = "translate(" + this._x + "px, " + this._y + "px) translateZ(0) scale(" + this._scale + ")";
+            this.div.style.transform = "translate(".concat(this._x, "px, ").concat(this._y, "px) translateZ(0) scale(").concat(this._scale, ")");
         }
         else {
-            this.div.style.left = this._x + "px";
-            this.div.style.top = this._y + "px";
-            this.div.style.transform = "scale(" + this._scale + ")";
+            this.div.style.left = "".concat(this._x, "px");
+            this.div.style.top = "".concat(this._y, "px");
+            this.div.style.transform = "scale(".concat(this._scale, ")");
         }
     };
     return GameElement;
@@ -175,9 +182,9 @@ var ActionButton = /** @class */ (function (_super) {
         _this.button = _this.div.appendChild(document.createElement('div'));
         _this.button.style.backgroundColor = 'white';
         _this.button.style.color = 'black';
-        _this.button.style.width = C.ACTION_BUTTON_WIDTH + "px";
-        _this.button.style.height = C.ACTION_BUTTON_HEIGHT + "px";
-        _this.button.style.borderRadius = C.ACTION_BUTTON_CORNER_RADIUS + "px";
+        _this.button.style.width = "".concat(C.ACTION_BUTTON_WIDTH, "px");
+        _this.button.style.height = "".concat(C.ACTION_BUTTON_HEIGHT, "px");
+        _this.button.style.borderRadius = "".concat(C.ACTION_BUTTON_CORNER_RADIUS, "px");
         _this.button.style.transform = 'translate(-50%, -50%)';
         _this.button.style.position = 'relative';
         _this.button.style.cursor = 'pointer';
@@ -552,7 +559,7 @@ var API;
     API.getCardsConsumingChain = getCardsConsumingChain;
     /* API METHODS */
     function getgamestate(gameid, player, password_hash, callback) {
-        httpRequest(LAMBDA_URL + "?operation=getgamestate&gameid=" + gameid + "&player=" + player + "&password_hash=" + password_hash, function (responseJson, error) {
+        httpRequest("".concat(LAMBDA_URL, "?operation=getgamestate&gameid=").concat(gameid, "&player=").concat(player, "&password_hash=").concat(password_hash), function (responseJson, error) {
             if (!responseJson) {
                 callback(undefined, "No gamestate received");
             }
@@ -566,7 +573,7 @@ var API;
     }
     API.getgamestate = getgamestate;
     function getvalidmoves(gameid, turn, player, password_hash, callback) {
-        httpRequest(LAMBDA_URL + "?operation=getvalidmoves&gameid=" + gameid + "&turn=" + turn + "&player=" + player + "&password_hash=" + password_hash, function (responseJson, error) {
+        httpRequest("".concat(LAMBDA_URL, "?operation=getvalidmoves&gameid=").concat(gameid, "&turn=").concat(turn, "&player=").concat(player, "&password_hash=").concat(password_hash), function (responseJson, error) {
             if (error) {
                 callback(undefined, error);
             }
@@ -580,31 +587,31 @@ var API;
     }
     API.getvalidmoves = getvalidmoves;
     function submitmove(gameid, turn, player, password_hash, move, callback) {
-        httpRequest(LAMBDA_URL + "?operation=submitmove&gameid=" + gameid + "&turn=" + turn + "&player=" + player + "&password_hash=" + password_hash + "&move=" + JSON.stringify(move), function (responseJson, error) {
+        httpRequest("".concat(LAMBDA_URL, "?operation=submitmove&gameid=").concat(gameid, "&turn=").concat(turn, "&player=").concat(player, "&password_hash=").concat(password_hash, "&move=").concat(JSON.stringify(move)), function (responseJson, error) {
             callback(error);
         });
     }
     API.submitmove = submitmove;
     function undomove(gameid, turn, player, password_hash, callback) {
-        httpRequest(LAMBDA_URL + "?operation=undomove&gameid=" + gameid + "&turn=" + turn + "&player=" + player + "&password_hash=" + password_hash, function (responseJson, error) {
+        httpRequest("".concat(LAMBDA_URL, "?operation=undomove&gameid=").concat(gameid, "&turn=").concat(turn, "&player=").concat(player, "&password_hash=").concat(password_hash), function (responseJson, error) {
             callback(error);
         });
     }
     API.undomove = undomove;
     function chooseside(gameid, player, password_hash, side, callback) {
-        httpRequest(LAMBDA_URL + "?operation=chooseside&gameid=" + gameid + "&player=" + player + "&password_hash=" + password_hash + "&side=" + side, function (responseJson, error) {
+        httpRequest("".concat(LAMBDA_URL, "?operation=chooseside&gameid=").concat(gameid, "&player=").concat(player, "&password_hash=").concat(password_hash, "&side=").concat(side), function (responseJson, error) {
             callback(error);
         });
     }
     API.chooseside = chooseside;
     function choosegoldtolose(gameid, turn, player, password_hash, gold_to_lose, callback) {
-        httpRequest(LAMBDA_URL + "?operation=choosegoldtolose&gameid=" + gameid + "&turn=" + turn + "&player=" + player + "&password_hash=" + password_hash + "&gold_to_lose=" + gold_to_lose, function (responseJson, error) {
+        httpRequest("".concat(LAMBDA_URL, "?operation=choosegoldtolose&gameid=").concat(gameid, "&turn=").concat(turn, "&player=").concat(player, "&password_hash=").concat(password_hash, "&gold_to_lose=").concat(gold_to_lose), function (responseJson, error) {
             callback(error);
         });
     }
     API.choosegoldtolose = choosegoldtolose;
     function updategame(gameid, callback) {
-        httpRequest(LAMBDA_URL + "?operation=updategame&gameid=" + gameid, function (responseJson, error) {
+        httpRequest("".concat(LAMBDA_URL, "?operation=updategame&gameid=").concat(gameid), function (responseJson, error) {
             if (error) {
                 callback(undefined, error);
             }
@@ -618,7 +625,7 @@ var API;
     }
     API.updategame = updategame;
     function getusers(usernames, callback) {
-        httpRequest(LAMBDA_URL + "?operation=getusers&usernames=" + usernames.join(','), function (responseJson, error) {
+        httpRequest("".concat(LAMBDA_URL, "?operation=getusers&usernames=").concat(usernames.join(',')), function (responseJson, error) {
             if (error) {
                 callback(undefined, error);
             }
@@ -632,7 +639,7 @@ var API;
     }
     API.getusers = getusers;
     function getinvites(username, callback) {
-        httpRequest(LAMBDA_URL + "?operation=getinvites&username=" + username, function (responseJson, error) {
+        httpRequest("".concat(LAMBDA_URL, "?operation=getinvites&username=").concat(username), function (responseJson, error) {
             if (error) {
                 callback(undefined, error);
             }
@@ -647,13 +654,13 @@ var API;
     API.getinvites = getinvites;
     function setwonderpreferences(username, password_hash, preferences, callback) {
         var preferencesString = preferences.map(function (pref) { return pref.id; }).join(',');
-        httpRequest(LAMBDA_URL + "?operation=setwonderpreferences&username=" + username + "&password_hash=" + password_hash + "&preferences=" + preferencesString, function (responseJson, error) {
+        httpRequest("".concat(LAMBDA_URL, "?operation=setwonderpreferences&username=").concat(username, "&password_hash=").concat(password_hash, "&preferences=").concat(preferencesString), function (responseJson, error) {
             callback(error);
         });
     }
     API.setwonderpreferences = setwonderpreferences;
     function creategame(options, callback) {
-        httpRequest(LAMBDA_URL + "?operation=creategame&players=" + options.players.join(',') + "&flags=" + options.flags.join(','), function (responseJson, error) {
+        httpRequest("".concat(LAMBDA_URL, "?operation=creategame&players=").concat(options.players.join(','), "&flags=").concat(options.flags.join(','), "&extracards=").concat(options.extraCards), function (responseJson, error) {
             if (error) {
                 callback(undefined, error);
             }
@@ -667,13 +674,13 @@ var API;
     }
     API.creategame = creategame;
     function login(username, password_hash, callback) {
-        httpRequest(LAMBDA_URL + "?operation=login&username=" + username + "&password_hash=" + password_hash, function (responseJson, error) {
+        httpRequest("".concat(LAMBDA_URL, "?operation=login&username=").concat(username, "&password_hash=").concat(password_hash), function (responseJson, error) {
             callback(error);
         });
     }
     API.login = login;
     function getpatchnotes(callback) {
-        httpRequest(LAMBDA_URL + "?operation=getpatchnotes", function (responseJson, error) {
+        httpRequest("".concat(LAMBDA_URL, "?operation=getpatchnotes"), function (responseJson, error) {
             if (error) {
                 callback(undefined, error);
             }
@@ -1161,8 +1168,8 @@ var ArtCommon;
     function victoryPoints(points) {
         var container = new PIXI.Container();
         container.addChild(pointsWreath());
-        var text = Shapes.centeredText(0, 0, "" + points, 0.8, 0x000000);
-        if (("" + points).length > 1) {
+        var text = Shapes.centeredText(0, 0, "".concat(points), 0.8, 0x000000);
+        if ("".concat(points).length > 1) {
             text.scale.set(0.65);
         }
         container.addChild(text);
@@ -1172,8 +1179,8 @@ var ArtCommon;
     function gold(gold) {
         var container = new PIXI.Container();
         container.addChild(goldCoin());
-        var text = Shapes.centeredText(0, 0, "" + gold, 0.8, 0x000000);
-        if (("" + gold).length > 1) {
+        var text = Shapes.centeredText(0, 0, "".concat(gold), 0.8, 0x000000);
+        if ("".concat(gold).length > 1) {
             text.scale.set(0.65);
         }
         container.addChild(text);
@@ -1696,7 +1703,7 @@ var ArtCommon;
     function brokenGold(gold) {
         var container = new PIXI.Container();
         container.addChild(brokenGoldBlank());
-        container.addChild(Shapes.centeredText(0, 0, "" + gold, 1, 0xFF0044));
+        container.addChild(Shapes.centeredText(0, 4, "".concat(gold), 1, 0xFF0044));
         return container;
     }
     ArtCommon.brokenGold = brokenGold;
@@ -1842,7 +1849,7 @@ var ArtCommon;
         arrow.scale.set(0.65);
         arrow.position.set(0, 30);
         container.addChild(arrow);
-        container.addChild(Shapes.centeredText(-5, 30, usages + "x", 0.25, 0x000000));
+        container.addChild(Shapes.centeredText(-5, 30, "".concat(usages, "x"), 0.25, 0x000000));
         var cross1 = X(0xFF0000);
         cross1.scale.set(0.8);
         cross1.position.set(-80, 0);
@@ -2124,7 +2131,7 @@ var ArtCommon;
         wreath.scale.set(0.465);
         wreath.position.set(0, 15.5);
         container.addChild(wreath);
-        container.addChild(Shapes.centeredText(0, 15.5, "" + amount, 0.3875, 0x000000));
+        container.addChild(Shapes.centeredText(0, 15.5, "".concat(amount), 0.3875, 0x000000));
         return container;
     }
     ArtCommon.militaryTokenPositive = militaryTokenPositive;
@@ -2149,7 +2156,7 @@ var ArtCommon;
         wreath.scale.set(0.7);
         container.addChild(wreath);
         container.addChild(Shapes.filledRect(-26, 0, 12, 6, 0xCC1D17));
-        container.addChild(Shapes.centeredText(2, 0, "" + amount, 0.6, 0xCC1D17));
+        container.addChild(Shapes.centeredText(2, 0, "".concat(amount), 0.6, 0xCC1D17));
         return container;
     }
     ArtCommon.militaryTokenNegative = militaryTokenNegative;
@@ -2209,7 +2216,7 @@ var ArtCommon;
         }
         var cost = new PIXI.Container();
         cost.addChild(Shapes.filledCircle(0, 0, 50, costColor));
-        var goldText = Shapes.centeredText(-70, 0, "" + amount, 1, costColor);
+        var goldText = Shapes.centeredText(-70, 0, "".concat(amount), 1, costColor);
         goldText.anchor.set(1, 0.5);
         cost.addChild(goldText);
         return cost;
@@ -2433,12 +2440,12 @@ var Card = /** @class */ (function (_super) {
         set: function (value) {
             this._flippedT = value;
             if (this._flippedT <= 0.5) {
-                this.frontDiv.style.transform = "scaleX(" + (1 - 2 * this._flippedT) + ")";
+                this.frontDiv.style.transform = "scaleX(".concat(1 - 2 * this._flippedT, ")");
                 this.backDiv.style.transform = "scaleX(0)";
             }
             else {
                 this.frontDiv.style.transform = "scaleX(0)";
-                this.backDiv.style.transform = "scaleX(" + (2 * this._flippedT - 1) + ")";
+                this.backDiv.style.transform = "scaleX(".concat(2 * this._flippedT - 1, ")");
             }
         },
         enumerable: false,
@@ -2449,7 +2456,7 @@ var Card = /** @class */ (function (_super) {
         set: function (value) {
             this._effectT = value;
             var bounds = this.bounds;
-            this.frontDiv.style.clipPath = "polygon(" + bounds.left + "px " + bounds.top + "px, " + bounds.right + "px " + bounds.top + "px, " + bounds.right + "px " + bounds.bottom + "px, " + bounds.left + "px " + bounds.bottom + "px)";
+            this.frontDiv.style.clipPath = "polygon(".concat(bounds.left, "px ").concat(bounds.top, "px, ").concat(bounds.right, "px ").concat(bounds.top, "px, ").concat(bounds.right, "px ").concat(bounds.bottom, "px, ").concat(bounds.left, "px ").concat(bounds.bottom, "px)");
             this._width = bounds.right - bounds.left;
             this._height = bounds.bottom - bounds.top;
         },
@@ -2500,26 +2507,26 @@ var Card = /** @class */ (function (_super) {
         this.frontProxy.style.transition = 'filter 1s';
         this.setGrayedOut(false);
         var front = this.frontProxy.appendChild(this.cardResource.front);
-        front.style.transform = "translate(-50%, -" + (C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2) + "px)";
+        front.style.transform = "translate(-50%, -".concat(C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2, "px)");
         this.highlightEffect = this.frontDiv.appendChild(this.drawHighlightEffect());
         if (this.points !== undefined) {
-            var n = ("" + this.points).length;
+            var n = "".concat(this.points).length;
             this.pointsSummary = this.frontDiv.appendChild(this.drawPointsSummary());
-            this.pointsSummary.style.left = this.effectClipRect.width / 2 - C.CARD_POINTS_SUMMARY_WIDTH(n) / 2 + "px";
-            this.pointsSummary.style.top = -this.effectClipRect.height / 2 + C.CARD_POINTS_SUMMARY_HEIGHT / 2 + "px";
+            this.pointsSummary.style.left = "".concat(this.effectClipRect.width / 2 - C.CARD_POINTS_SUMMARY_WIDTH(n) / 2, "px");
+            this.pointsSummary.style.top = "".concat(-this.effectClipRect.height / 2 + C.CARD_POINTS_SUMMARY_HEIGHT / 2, "px");
         }
         this.paymentCanvas = this.frontDiv.appendChild(this.drawPayment());
-        this.paymentCanvas.style.transform = "translate(-50%, -" + (C.CARD_TITLE_HEIGHT + C.CARD_PAYMENT_HEIGHT + C.CARD_BANNER_HEIGHT / 2) + "px)";
+        this.paymentCanvas.style.transform = "translate(-50%, -".concat(C.CARD_TITLE_HEIGHT + C.CARD_PAYMENT_HEIGHT + C.CARD_BANNER_HEIGHT / 2, "px)");
         this.paymentCanvas.style.visibility = drawPayment ? 'visible' : 'hidden';
         this.backDiv = this.div.appendChild(document.createElement('div'));
         this.backDiv.style.transformOrigin = 'left center';
         this.highlightFlipped = this.backDiv.appendChild(this.drawHighlightFlipped());
         var back = this.backDiv.appendChild(this.cardResource.back);
-        back.style.transform = "translate(-50%, -" + (C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2) + "px)";
+        back.style.transform = "translate(-50%, -".concat(C.CARD_TITLE_HEIGHT + C.CARD_BANNER_HEIGHT / 2, "px)");
         this.checkMark = this.backDiv.appendChild(document.createElement('div'));
         this.checkMark.style.position = 'absolute';
         this.checkMark.style.left = '0%';
-        this.checkMark.style.top = C.CARD_HEIGHT / 2 - C.CARD_TITLE_HEIGHT - C.CARD_BANNER_HEIGHT / 2 + "px";
+        this.checkMark.style.top = "".concat(C.CARD_HEIGHT / 2 - C.CARD_TITLE_HEIGHT - C.CARD_BANNER_HEIGHT / 2, "px");
         this.checkMark.appendChild(ArtCommon.domElementForArt(ArtCommon.checkMark(), 0.8));
         this.checkMarkVisible = false;
         this.effectT++;
@@ -2747,9 +2754,9 @@ var Card = /** @class */ (function (_super) {
             alpha = 0;
         }
         if (alpha > 0) {
-            this.highlightEffect.style.boxShadow = "inset 0px 0px 0px " + C.CARD_HIGHLIGHT + "px rgba(255, 0, 0, " + alpha + ")";
+            this.highlightEffect.style.boxShadow = "inset 0px 0px 0px ".concat(C.CARD_HIGHLIGHT, "px rgba(255, 0, 0, ").concat(alpha, ")");
             this.highlightEffect.style.visibility = this.visualState === 'effect' ? 'visible' : 'hidden';
-            this.highlightFlipped.style.backgroundColor = "rgba(255, 0, 0, " + alpha + ")";
+            this.highlightFlipped.style.backgroundColor = "rgba(255, 0, 0, ".concat(alpha, ")");
             this.highlightFlipped.style.visibility = this.visualState === 'flipped' ? 'visible' : 'hidden';
         }
         else {
@@ -2845,11 +2852,11 @@ var Card = /** @class */ (function (_super) {
         var discardCountDiv = this.div.appendChild(document.createElement('div'));
         discardCountDiv.style.position = 'absolute';
         discardCountDiv.style.left = '0%';
-        discardCountDiv.style.top = C.CARD_HEIGHT / 2 - C.CARD_TITLE_HEIGHT - C.CARD_BANNER_HEIGHT / 2 + "px";
+        discardCountDiv.style.top = "".concat(C.CARD_HEIGHT / 2 - C.CARD_TITLE_HEIGHT - C.CARD_BANNER_HEIGHT / 2, "px");
         var discardCount = discardCountDiv.appendChild(document.createElement('p'));
-        discardCount.textContent = "" + Main.gamestate.discardedCardCount;
+        discardCount.textContent = "".concat(Main.gamestate.discardedCardCount);
         discardCount.style.fontFamily = "'Courier New', Courier, monospace";
-        discardCount.style.fontSize = C.CARD_DISCARD_COUNT_TEXT_SIZE + "px";
+        discardCount.style.fontSize = "".concat(C.CARD_DISCARD_COUNT_TEXT_SIZE, "px");
         discardCount.style.color = ArtCommon.ageBacksHtml[Main.gamestate.lastDiscardedCardAge];
         discardCount.style.position = 'absolute';
         discardCount.style.transform = 'translate(-50%, -50%)';
@@ -2868,8 +2875,8 @@ var Card = /** @class */ (function (_super) {
     };
     Card.prototype.drawHighlightEffect = function () {
         var highlight = document.createElement('div');
-        highlight.style.width = this.cardResource.effectClipRect.width + "px";
-        highlight.style.height = this.cardResource.effectClipRect.height + "px";
+        highlight.style.width = "".concat(this.cardResource.effectClipRect.width, "px");
+        highlight.style.height = "".concat(this.cardResource.effectClipRect.height, "px");
         highlight.style.transform = 'translate(-50%, -50%)';
         highlight.style.position = 'absolute';
         highlight.style.pointerEvents = 'none';
@@ -2877,10 +2884,10 @@ var Card = /** @class */ (function (_super) {
     };
     Card.prototype.drawHighlightFlipped = function () {
         var highlight = document.createElement('div');
-        highlight.style.width = C.CARD_WIDTH + 2 * C.CARD_HIGHLIGHT + "px";
-        highlight.style.height = C.CARD_HEIGHT + 2 * C.CARD_HIGHLIGHT + "px";
-        highlight.style.borderRadius = C.CARD_CORNER_RADIUS + "px";
-        highlight.style.transform = "translate(-50%, " + (-C.CARD_BANNER_HEIGHT / 2 - C.CARD_TITLE_HEIGHT - C.CARD_HIGHLIGHT) + "px)";
+        highlight.style.width = "".concat(C.CARD_WIDTH + 2 * C.CARD_HIGHLIGHT, "px");
+        highlight.style.height = "".concat(C.CARD_HEIGHT + 2 * C.CARD_HIGHLIGHT, "px");
+        highlight.style.borderRadius = "".concat(C.CARD_CORNER_RADIUS, "px");
+        highlight.style.transform = "translate(-50%, ".concat(-C.CARD_BANNER_HEIGHT / 2 - C.CARD_TITLE_HEIGHT - C.CARD_HIGHLIGHT, "px)");
         highlight.style.position = 'absolute';
         highlight.style.pointerEvents = 'none';
         return highlight;
@@ -2889,9 +2896,9 @@ var Card = /** @class */ (function (_super) {
         var summary = document.createElement('div');
         summary.style.position = 'absolute';
         var container = new PIXI.Container();
-        var n = ("" + this.points).length;
+        var n = "".concat(this.points).length;
         container.addChild(Shapes.filledRect(-C.CARD_POINTS_SUMMARY_WIDTH(n) / 2, -C.CARD_POINTS_SUMMARY_HEIGHT / 2, C.CARD_POINTS_SUMMARY_WIDTH(n), C.CARD_POINTS_SUMMARY_HEIGHT, C.CARD_POINTS_SUMMARY_BACKGROUND_COLOR));
-        container.addChild(Shapes.centeredText(0, 0, "" + this.points, 0.1, C.CARD_POINTS_SUMMARY_TEXT_COLOR)).y -= 0.5;
+        container.addChild(Shapes.centeredText(0, 0, "".concat(this.points), 0.1, C.CARD_POINTS_SUMMARY_TEXT_COLOR)).y -= 0.5;
         var pointsElement = summary.appendChild(ArtCommon.domElementForArt(container));
         pointsElement.style.position = 'absolute';
         return summary;
@@ -2910,8 +2917,8 @@ var CardForList = /** @class */ (function (_super) {
         var _this = _super.call(this) || this;
         _this.scene = scene;
         _this.apiCard = Main.gamestate.cards[cardId];
-        _this.div.style.width = C.CARD_LIST_CARD_WIDTH + "px";
-        _this.div.style.height = C.CARD_LIST_CARD_HEIGHT + "px";
+        _this.div.style.width = "".concat(C.CARD_LIST_CARD_WIDTH, "px");
+        _this.div.style.height = "".concat(C.CARD_LIST_CARD_HEIGHT, "px");
         // Popup
         _this.div.onmousemove = function () {
             if (Main.scene.isCurrentlyDragging()) {
@@ -2967,7 +2974,7 @@ var Popup = /** @class */ (function (_super) {
         var p = document.createElement('p');
         p.innerHTML = text;
         p.style.fontFamily = "'Courier New', Courier, monospace";
-        p.style.fontSize = C.CARD_INFO_TEXT_SIZE + "px";
+        p.style.fontSize = "".concat(C.CARD_INFO_TEXT_SIZE, "px");
         p.style.color = C.CARD_INFO_TEXT_COLOR;
         p.style.transform = 'translate(0%, -50%)';
         p.style.position = 'absolute';
@@ -2976,7 +2983,7 @@ var Popup = /** @class */ (function (_super) {
         return p;
     };
     Popup.prototype.cardName = function (card) {
-        return "<span style=\"color:" + ArtCommon.cardBannerForColorHtml(card.color) + "; font-weight:bold\">" + card.name + "</span>";
+        return "<span style=\"color:".concat(ArtCommon.cardBannerForColorHtml(card.color), "; font-weight:bold\">").concat(card.name, "</span>");
     };
     return Popup;
 }(GameElement));
@@ -3001,13 +3008,13 @@ var CardInfoPopup = /** @class */ (function (_super) {
         box.style.position = 'absolute';
         var currentY = 16;
         // Name
-        box.appendChild(this.infoText(this.cardName(this.card.apiCard), '10px', currentY + "px"));
+        box.appendChild(this.infoText(this.cardName(this.card.apiCard), '10px', "".concat(currentY, "px")));
         currentY += 24;
         // Cost
         var resourceCost = ((_c = this.card.apiCard.cost) === null || _c === void 0 ? void 0 : _c.resources) || [];
         var goldCost = ((_d = this.card.apiCard.cost) === null || _d === void 0 ? void 0 : _d.gold) || 0;
         var isFree = resourceCost.length === 0 && goldCost === 0;
-        box.appendChild(this.infoText("Cost:" + (isFree ? ' None' : ''), '10px', currentY + "px"));
+        box.appendChild(this.infoText("Cost:".concat(isFree ? ' None' : ''), '10px', "".concat(currentY, "px")));
         if (this.card.apiCard.cost) {
             var currentX = 60;
             if (goldCost > 0) {
@@ -3018,8 +3025,8 @@ var CardInfoPopup = /** @class */ (function (_super) {
                 gold.appendChild(ArtCommon.domElementForArt(goldArt, 1, 10));
                 gold.style.transform = 'scale(0.2)';
                 gold.style.position = 'absolute';
-                gold.style.left = currentX + "px";
-                gold.style.top = currentY + "px";
+                gold.style.left = "".concat(currentX, "px");
+                gold.style.top = "".concat(currentY, "px");
                 currentX += 22;
             }
             var _loop_1 = function (i) {
@@ -3030,8 +3037,8 @@ var CardInfoPopup = /** @class */ (function (_super) {
                 resource.appendChild(ArtCommon.domElementForArt(resourceArt, 1, 10));
                 resource.style.transform = 'scale(0.2)';
                 resource.style.position = 'absolute';
-                resource.style.left = currentX + "px";
-                resource.style.top = currentY + "px";
+                resource.style.left = "".concat(currentX, "px");
+                resource.style.top = "".concat(currentY, "px");
                 currentX += 22;
             };
             for (var i = 0; i < resourceCost.length; i++) {
@@ -3041,14 +3048,14 @@ var CardInfoPopup = /** @class */ (function (_super) {
             if (chain) {
                 var cardsProducingChain = API.getCardsProducingChain(Main.gamestate, chain);
                 var cardNames = cardsProducingChain.map(function (card) { return _this.cardName(card); }).join(', ');
-                var chainText = this.infoText("(or free chain from " + cardNames + ")", currentX - 4 + "px", currentY + "px");
+                var chainText = this.infoText("(or free chain from ".concat(cardNames, ")"), "".concat(currentX - 4, "px"), "".concat(currentY, "px"));
                 chainText.style.fontSize = '10px';
                 box.appendChild(chainText);
             }
         }
         currentY += 24;
         // Effects
-        box.appendChild(this.infoText('Effects:', '10px', currentY + "px"));
+        box.appendChild(this.infoText('Effects:', '10px', "".concat(currentY, "px")));
         currentY += 24;
         var effects = this.card.apiCard.effects;
         for (var i = 0; i < effects.length; i++) {
@@ -3059,10 +3066,10 @@ var CardInfoPopup = /** @class */ (function (_super) {
             effect.appendChild(ArtCommon.domElementForArt(effectArt, 1, 10));
             effect.style.transform = 'scale(0.2)';
             effect.style.position = 'absolute';
-            effect.style.left = 10 + effectArt.width / 10 + "px";
-            effect.style.top = currentY + "px";
-            var description = this.infoText(getDescriptionForEffect(effects[i]), 20 + effectArt.width / 5 + "px", currentY + "px");
-            description.style.fontSize = C.CARD_INFO_EFFECT_DESCRIPTION_SIZE + "px";
+            effect.style.left = "".concat(10 + effectArt.width / 10, "px");
+            effect.style.top = "".concat(currentY, "px");
+            var description = this.infoText(getDescriptionForEffect(effects[i]), "".concat(20 + effectArt.width / 5, "px"), "".concat(currentY, "px"));
+            description.style.fontSize = "".concat(C.CARD_INFO_EFFECT_DESCRIPTION_SIZE, "px");
             description.style.marginRight = '10px';
             box.appendChild(description);
             currentY += 24;
@@ -3071,7 +3078,7 @@ var CardInfoPopup = /** @class */ (function (_super) {
         var chains = this.card.apiCard.chains;
         if (chains && chains.length > 0) {
             currentY += 16;
-            box.appendChild(this.infoText('Future chains:', '10px', currentY + "px"));
+            box.appendChild(this.infoText('Future chains:', '10px', "".concat(currentY, "px")));
             currentY += 16;
             try {
                 for (var chains_1 = __values(chains), chains_1_1 = chains_1.next(); !chains_1_1.done; chains_1_1 = chains_1.next()) {
@@ -3080,7 +3087,7 @@ var CardInfoPopup = /** @class */ (function (_super) {
                     try {
                         for (var cardsConsumingChain_1 = (e_19 = void 0, __values(cardsConsumingChain)), cardsConsumingChain_1_1 = cardsConsumingChain_1.next(); !cardsConsumingChain_1_1.done; cardsConsumingChain_1_1 = cardsConsumingChain_1.next()) {
                             var card = cardsConsumingChain_1_1.value;
-                            box.appendChild(this.infoText("- " + this.cardName(card), '18px', currentY + "px"));
+                            box.appendChild(this.infoText("- ".concat(this.cardName(card)), '18px', "".concat(currentY, "px")));
                             currentY += 16;
                         }
                     }
@@ -3101,8 +3108,8 @@ var CardInfoPopup = /** @class */ (function (_super) {
                 finally { if (e_18) throw e_18.error; }
             }
         }
-        box.style.width = this.width + "px";
-        box.style.height = currentY + "px";
+        box.style.width = "".concat(this.width, "px");
+        box.style.height = "".concat(currentY, "px");
         return box;
     };
     return CardInfoPopup;
@@ -3131,8 +3138,11 @@ var CardListScene = /** @class */ (function () {
         var e_21, _a;
         var cardList = Main.cardList.appendChild(Resources.CARD_LIST);
         var height = cardList.height / resolution;
-        cardList.style.top = height / 2 + C.CARD_LIST_OFFSET_Y + "px";
-        Main.cardList.style.height = height + C.CARD_LIST_PADDING + C.CARD_LIST_OFFSET_Y + "px";
+        cardList.style.top = "".concat(height / 2 + C.CARD_LIST_OFFSET_Y, "px");
+        Main.cardList.style.height = "".concat(height + C.CARD_LIST_PADDING + C.CARD_LIST_OFFSET_Y, "px");
+        if (Main.gamestate.hideDeck) {
+            return;
+        }
         var deck = Main.gamestate.deck;
         for (var age = 1; age <= 3; age++) {
             var x = (age - 2) * C.CARD_LIST_CARD_DX;
@@ -3181,7 +3191,7 @@ var CardListScene = /** @class */ (function () {
         var p = document.createElement('p');
         p.innerHTML = text;
         p.style.fontFamily = "'Courier New', Courier, monospace";
-        p.style.fontSize = C.CARD_LIST_HEADER_TEXT_SIZE + "px";
+        p.style.fontSize = "".concat(C.CARD_LIST_HEADER_TEXT_SIZE, "px");
         p.style.color = C.CARD_LIST_HEADER_TEXT_COLOR;
         p.style.transform = 'translate(0%, -50%)';
         p.style.position = 'absolute';
@@ -3210,34 +3220,34 @@ var ChooseGoldToLoseDialog = /** @class */ (function (_super) {
         var _this = this;
         var maxGoldToLose = Math.min(this.gold, this.goldToLose);
         var dialogDiv = document.createElement('div');
-        dialogDiv.style.width = C.CGTL_DIALOG_WIDTH + "px";
-        dialogDiv.style.height = (maxGoldToLose + 1) * C.CGTL_DIALOG_PAYMENTS_DY + C.CGTL_DIALOG_EXTRA_HEIGHT + "px";
+        dialogDiv.style.width = "".concat(C.CGTL_DIALOG_WIDTH, "px");
+        dialogDiv.style.height = "".concat((maxGoldToLose + 1) * C.CGTL_DIALOG_PAYMENTS_DY + C.CGTL_DIALOG_EXTRA_HEIGHT, "px");
         dialogDiv.style.backgroundColor = C.CGTL_DIALOG_COLOR;
-        dialogDiv.style.borderRadius = C.CGTL_DIALOG_CORNER_RADIUS + "px";
+        dialogDiv.style.borderRadius = "".concat(C.CGTL_DIALOG_CORNER_RADIUS, "px");
         dialogDiv.style.position = 'relative';
         dialogDiv.style.transform = "translate(-50%, -50%)";
-        var dialogTitle = dialogDiv.appendChild(this.drawText("You've lost " + this.goldToLose + " gold!<br/>You may choose to take debt tokens instead", C.CGTL_DIALOG_TITLE_SIZE));
-        dialogTitle.style.padding = C.CGTL_DIALOG_TITLE_PADDING + "px";
+        var dialogTitle = dialogDiv.appendChild(this.drawText("You've lost ".concat(this.goldToLose, " gold!<br/>You may choose to take debt tokens instead"), C.CGTL_DIALOG_TITLE_SIZE));
+        dialogTitle.style.padding = "".concat(C.CGTL_DIALOG_TITLE_PADDING, "px");
         this.buttons = [];
         var _loop_2 = function (i) {
             var leftDiv = dialogDiv.appendChild(document.createElement('div'));
-            leftDiv.style.width = 50 - C.CGTL_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 2 + "%";
-            leftDiv.style.height = C.CGTL_DIALOG_PAYMENTS_DY + "px";
+            leftDiv.style.width = "".concat(50 - C.CGTL_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 2, "%");
+            leftDiv.style.height = "".concat(C.CGTL_DIALOG_PAYMENTS_DY, "px");
             leftDiv.style.float = 'left';
             leftDiv.style.position = 'relative';
             var middleDiv = dialogDiv.appendChild(document.createElement('div'));
-            middleDiv.style.width = C.CGTL_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT + "%";
-            middleDiv.style.height = C.CGTL_DIALOG_PAYMENTS_DY + "px";
+            middleDiv.style.width = "".concat(C.CGTL_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT, "%");
+            middleDiv.style.height = "".concat(C.CGTL_DIALOG_PAYMENTS_DY, "px");
             middleDiv.style.float = 'left';
             middleDiv.style.position = 'relative';
             var rightDiv = dialogDiv.appendChild(document.createElement('div'));
-            rightDiv.style.width = 50 - C.CGTL_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 2 + "%";
-            rightDiv.style.height = C.CGTL_DIALOG_PAYMENTS_DY + "px";
+            rightDiv.style.width = "".concat(50 - C.CGTL_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 2, "%");
+            rightDiv.style.height = "".concat(C.CGTL_DIALOG_PAYMENTS_DY, "px");
             rightDiv.style.float = 'left';
             rightDiv.style.position = 'relative';
             var goldToLose = maxGoldToLose - i;
             if (goldToLose > 0) {
-                var goldToLoseText = rightDiv.appendChild(this_1.drawText("Lose " + goldToLose + " gold", C.CGTL_DIALOG_PAYMENTS_TEXT_SIZE));
+                var goldToLoseText = rightDiv.appendChild(this_1.drawText("Lose ".concat(goldToLose, " gold"), C.CGTL_DIALOG_PAYMENTS_TEXT_SIZE));
                 goldToLoseText.style.width = '100%';
                 goldToLoseText.style.textAlign = 'left';
                 goldToLoseText.style.position = 'absolute';
@@ -3247,7 +3257,7 @@ var ChooseGoldToLoseDialog = /** @class */ (function (_super) {
             if (goldToLose < this_1.goldToLose) {
                 var debtTokens = this_1.goldToLose - goldToLose;
                 var s = debtTokens === 1 ? '' : 's';
-                var debtTokensToGainText = leftDiv.appendChild(this_1.drawText("+ " + debtTokens + " debt token" + s, C.CGTL_DIALOG_PAYMENTS_TEXT_SIZE));
+                var debtTokensToGainText = leftDiv.appendChild(this_1.drawText("+ ".concat(debtTokens, " debt token").concat(s), C.CGTL_DIALOG_PAYMENTS_TEXT_SIZE));
                 debtTokensToGainText.style.width = '100%';
                 debtTokensToGainText.style.textAlign = 'right';
                 debtTokensToGainText.style.position = 'absolute';
@@ -3256,8 +3266,8 @@ var ChooseGoldToLoseDialog = /** @class */ (function (_super) {
             }
             var payButton = middleDiv.appendChild(document.createElement('div'));
             payButton.style.backgroundColor = C.CGTL_DIALOG_PAY_BUTTON_COLOR;
-            payButton.style.width = C.CGTL_DIALOG_PAY_BUTTON_WIDTH + "px";
-            payButton.style.height = C.CGTL_DIALOG_PAY_BUTTON_HEIGHT + "px";
+            payButton.style.width = "".concat(C.CGTL_DIALOG_PAY_BUTTON_WIDTH, "px");
+            payButton.style.height = "".concat(C.CGTL_DIALOG_PAY_BUTTON_HEIGHT, "px");
             payButton.style.position = 'absolute';
             payButton.style.left = '50%';
             payButton.style.top = '50%';
@@ -3290,7 +3300,7 @@ var ChooseGoldToLoseDialog = /** @class */ (function (_super) {
         p.innerHTML = text;
         p.style.textAlign = 'center';
         p.style.fontFamily = "'Courier New', Courier, monospace";
-        p.style.fontSize = fontSize + "px";
+        p.style.fontSize = "".concat(fontSize, "px");
         return p;
     };
     ChooseGoldToLoseDialog.prototype.removeFromGame = function () {
@@ -3358,7 +3368,7 @@ var Scene = /** @class */ (function () {
             if (index === l)
                 return new PIXI.Point(0, y + additionalY);
         }
-        console.log("Wonder position index " + index + " is out of bounds");
+        console.log("Wonder position index ".concat(index, " is out of bounds"));
         return undefined;
     };
     Scene.prototype.isCurrentlyDragging = function () {
@@ -3427,7 +3437,7 @@ var ChooseWonderScene = /** @class */ (function (_super) {
             additionalY += C.WONDER_SIDE_CHOICE_DY * (wonderChoices[players[l]].length - 1) + C.WONDER_SIDE_CHOICE_GROUP_ADJUST_DY;
         }
         var padding = gamestate.players.length === 3 ? C.GAME_HEIGHT_PADDING_3P : C.GAME_HEIGHT_PADDING_4567P;
-        Main.game.style.height = finalY + C.WONDER_BOARD_HEIGHT / 2 + padding + "px";
+        Main.game.style.height = "".concat(finalY + C.WONDER_BOARD_HEIGHT / 2 + padding, "px");
         try {
             for (var _b = __values(gamestate.players), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var player = _c.value;
@@ -3795,29 +3805,29 @@ var CopyStageDialog = /** @class */ (function (_super) {
         var _this = this;
         var copyStageOptions = API.copyStageOptions(this.move.stage, Main.gamestate.validMoves);
         var dialogDiv = document.createElement('div');
-        dialogDiv.style.width = C.COPY_STAGE_DIALOG_WIDTH + "px";
-        dialogDiv.style.height = copyStageOptions.length * C.COPY_STAGE_DIALOG_PAYMENTS_DY + C.COPY_STAGE_DIALOG_EXTRA_HEIGHT + "px";
+        dialogDiv.style.width = "".concat(C.COPY_STAGE_DIALOG_WIDTH, "px");
+        dialogDiv.style.height = "".concat(copyStageOptions.length * C.COPY_STAGE_DIALOG_PAYMENTS_DY + C.COPY_STAGE_DIALOG_EXTRA_HEIGHT, "px");
         dialogDiv.style.backgroundColor = C.COPY_STAGE_DIALOG_COLOR;
-        dialogDiv.style.borderRadius = C.COPY_STAGE_DIALOG_CORNER_RADIUS + "px";
+        dialogDiv.style.borderRadius = "".concat(C.COPY_STAGE_DIALOG_CORNER_RADIUS, "px");
         dialogDiv.style.position = 'relative';
         dialogDiv.style.transform = "translate(-50%, -50%)";
         var dialogTitle = dialogDiv.appendChild(this.drawText(C.COPY_STAGE_DIALOG_TITLE, C.COPY_STAGE_DIALOG_TITLE_SIZE));
-        dialogTitle.style.padding = C.COPY_STAGE_DIALOG_TITLE_PADDING + "px";
+        dialogTitle.style.padding = "".concat(C.COPY_STAGE_DIALOG_TITLE_PADDING, "px");
         var _loop_3 = function (i) {
             var e_26, _a;
             var leftDiv = dialogDiv.appendChild(document.createElement('div'));
-            leftDiv.style.width = 33 - C.COPY_STAGE_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 3 + "%";
-            leftDiv.style.height = C.COPY_STAGE_DIALOG_PAYMENTS_DY + "px";
+            leftDiv.style.width = "".concat(33 - C.COPY_STAGE_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 3, "%");
+            leftDiv.style.height = "".concat(C.COPY_STAGE_DIALOG_PAYMENTS_DY, "px");
             leftDiv.style.float = 'left';
             leftDiv.style.position = 'relative';
             var middleDiv = dialogDiv.appendChild(document.createElement('div'));
-            middleDiv.style.width = C.COPY_STAGE_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT + "%";
-            middleDiv.style.height = C.COPY_STAGE_DIALOG_PAYMENTS_DY + "px";
+            middleDiv.style.width = "".concat(C.COPY_STAGE_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT, "%");
+            middleDiv.style.height = "".concat(C.COPY_STAGE_DIALOG_PAYMENTS_DY, "px");
             middleDiv.style.float = 'left';
             middleDiv.style.position = 'relative';
             var rightDiv = dialogDiv.appendChild(document.createElement('div'));
-            rightDiv.style.width = 67 - 2 * C.COPY_STAGE_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 3 + "%";
-            rightDiv.style.height = C.COPY_STAGE_DIALOG_PAYMENTS_DY + "px";
+            rightDiv.style.width = "".concat(67 - 2 * C.COPY_STAGE_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 3, "%");
+            rightDiv.style.height = "".concat(C.COPY_STAGE_DIALOG_PAYMENTS_DY, "px");
             rightDiv.style.float = 'left';
             rightDiv.style.position = 'relative';
             var option = copyStageOptions[i];
@@ -3828,13 +3838,13 @@ var CopyStageDialog = /** @class */ (function (_super) {
             var effectDiv = ArtCommon.domElementForArt(effectContainer, 0.25, 20);
             effectDiv.style.transform = 'translate(0%, -50%)';
             effectDiv.style.position = 'absolute';
-            effectDiv.style.left = -20 + "px";
+            effectDiv.style.left = "".concat(-20, "px");
             effectDiv.style.top = '50%';
             rightDiv.appendChild(effectDiv);
             var payButton = middleDiv.appendChild(document.createElement('div'));
             payButton.style.backgroundColor = C.COPY_STAGE_DIALOG_PAY_BUTTON_COLOR;
-            payButton.style.width = C.COPY_STAGE_DIALOG_PAY_BUTTON_WIDTH + "px";
-            payButton.style.height = C.COPY_STAGE_DIALOG_PAY_BUTTON_HEIGHT + "px";
+            payButton.style.width = "".concat(C.COPY_STAGE_DIALOG_PAY_BUTTON_WIDTH, "px");
+            payButton.style.height = "".concat(C.COPY_STAGE_DIALOG_PAY_BUTTON_HEIGHT, "px");
             payButton.style.position = 'absolute';
             payButton.style.left = '50%';
             payButton.style.top = '50%';
@@ -3897,8 +3907,8 @@ var CopyStageDialog = /** @class */ (function (_super) {
         }
         var closeButton = dialogDiv.appendChild(this.drawCloseButton());
         closeButton.style.position = 'absolute';
-        closeButton.style.left = "calc(100% - " + C.COPY_STAGE_DIALOG_CLOSE_BUTTON_OFFSET_X + "px)";
-        closeButton.style.top = C.COPY_STAGE_DIALOG_CLOSE_BUTTON_OFFSET_Y + "px";
+        closeButton.style.left = "calc(100% - ".concat(C.COPY_STAGE_DIALOG_CLOSE_BUTTON_OFFSET_X, "px)");
+        closeButton.style.top = "".concat(C.COPY_STAGE_DIALOG_CLOSE_BUTTON_OFFSET_Y, "px");
         closeButton.style.cursor = 'pointer';
         closeButton.onclick = function (event) {
             _this.removeFromGame();
@@ -3910,7 +3920,7 @@ var CopyStageDialog = /** @class */ (function (_super) {
         p.textContent = text;
         p.style.textAlign = 'center';
         p.style.fontFamily = "'Courier New', Courier, monospace";
-        p.style.fontSize = fontSize + "px";
+        p.style.fontSize = "".concat(fontSize, "px");
         return p;
     };
     CopyStageDialog.prototype.drawPayment = function (minPlayCost) {
@@ -3981,50 +3991,50 @@ var DiscardPile = /** @class */ (function (_super) {
 }(GameElement));
 function getDescriptionForEffect(effect) {
     if (effect.type === 'resource') {
-        return "Gives " + effect.resource + " each turn";
+        return "Gives ".concat(effect.resource, " each turn");
     }
     else if (effect.type === 'multi_resource') {
-        return "Gives one of " + effect.resources + " each turn";
+        return "Gives one of ".concat(effect.resources, " each turn");
     }
     else if (effect.type === 'shields') {
         var s = effect.shields === 1 ? '' : 's';
-        return effect.shields + " military shield" + s;
+        return "".concat(effect.shields, " military shield").concat(s);
     }
     else if (effect.type === 'science') {
         return "Science symbol";
     }
     else if (effect.type === 'points') {
-        return effect.points + " VP";
+        return "".concat(effect.points, " VP");
     }
     else if (effect.type === 'gold') {
-        return "Gain " + effect.gold + " gold";
+        return "Gain ".concat(effect.gold, " gold");
     }
     else if (effect.type === 'trading_post') {
-        return "Pay 1 gold instead of 2 for brown resources traded from your " + (effect.direction === 'neg' ? 'left' : 'right') + " neighbor";
+        return "Pay 1 gold instead of 2 for brown resources traded from your ".concat(effect.direction === 'neg' ? 'left' : 'right', " neighbor");
     }
     else if (effect.type === 'marketplace') {
         return "Pay 1 gold instead of 2 for grey resources traded from either neighbor";
     }
     else if (effect.type === 'gold_for_cards') {
-        return "Gain " + effect.gold_per_card + " gold for each " + effect.color + " card played by you or your neighbors";
+        return "Gain ".concat(effect.gold_per_card, " gold for each ").concat(effect.color, " card played by you or your neighbors");
     }
     else if (effect.type === 'gold_and_points_for_cards') {
-        return "Gain " + effect.gold_per_card + " gold and " + effect.points_per_card + " VP for each " + effect.color + " card you have played";
+        return "Gain ".concat(effect.gold_per_card, " gold and ").concat(effect.points_per_card, " VP for each ").concat(effect.color, " card you have played");
     }
     else if (effect.type === 'gold_and_points_for_stages') {
-        return "Gain " + effect.gold_per_stage + " gold and " + effect.points_per_stage + " VP for each wonder stage you have built";
+        return "Gain ".concat(effect.gold_per_stage, " gold and ").concat(effect.points_per_stage, " VP for each wonder stage you have built");
     }
     else if (effect.type === 'points_for_cards') {
-        return effect.points_per_card + " VP for each " + effect.color + " card played by your neighbors";
+        return "".concat(effect.points_per_card, " VP for each ").concat(effect.color, " card played by your neighbors");
     }
     else if (effect.type === 'points_for_stages') {
-        return effect.points_per_stage + " VP for each wonder stage you or your neighbors have built";
+        return "".concat(effect.points_per_stage, " VP for each wonder stage you or your neighbors have built");
     }
     else if (effect.type === 'points_for_finished_wonder') {
-        return effect.points + " VP if you build all of your wonder stages";
+        return "".concat(effect.points, " VP if you build all of your wonder stages");
     }
     else if (effect.type === 'points_for_self_cards') {
-        return effect.points_per_card + " VP for each " + effect.color + " card you have played";
+        return "".concat(effect.points_per_card, " VP for each ").concat(effect.color, " card you have played");
     }
     else if (effect.type === 'multi_science') {
         return "Any science symbol";
@@ -4051,16 +4061,16 @@ function getDescriptionForEffect(effect) {
         return "Copy the effect of a guild from either neighbor";
     }
     else if (effect.type === 'points_for_negative_tokens') {
-        return effect.points_per_token + " VP for each military defeat token your neighbors have";
+        return "".concat(effect.points_per_token, " VP for each military defeat token your neighbors have");
     }
     else if (effect.type === 'build_free_once_per_age') {
         return "You may ignore the cost of a single card of your choice per age";
     }
     else if (effect.type === 'gold_for_others') {
-        return "All players except you receive " + effect.gold + " gold from the bank";
+        return "All players except you receive ".concat(effect.gold, " gold from the bank");
     }
     else if (effect.type === 'gold_for_neighbor') {
-        return "Your " + (effect.direction === 'neg' ? 'left' : 'right') + " neighbor receives " + effect.gold + " gold from the bank";
+        return "Your ".concat(effect.direction === 'neg' ? 'left' : 'right', " neighbor receives ").concat(effect.gold, " gold from the bank");
     }
     else if (effect.type === 'waive_wonder_resource_costs') {
         return "You may ignore the resource costs of your wonder stages (gold costs are unaffected)";
@@ -4075,7 +4085,7 @@ function getDescriptionForEffect(effect) {
         return "Gives one extra of a resource you are currently producing in your wonder per turn (untradable resources are ignored)";
     }
     else if (effect.type === 'wharf') {
-        return "Pay 1 gold less for a single resource per turn traded from your " + (effect.direction === 'neg' ? 'left' : 'right') + " neighbor";
+        return "Pay 1 gold less for a single resource per turn traded from your ".concat(effect.direction === 'neg' ? 'left' : 'right', " neighbor");
     }
     else if (effect.type === 'smugglers_cache') {
         return "Pay 1 gold less when buying the starting resource from either neighbor";
@@ -4084,31 +4094,31 @@ function getDescriptionForEffect(effect) {
         return "Gain 1 diplomacy token";
     }
     else if (effect.type === 'gain_military_token') {
-        return "Gain a military " + (effect.token_value < 0 ? 'defeat' : 'victory') + " token worth " + effect.token_value + " VP";
+        return "Gain a military ".concat(effect.token_value < 0 ? 'defeat' : 'victory', " token worth ").concat(effect.token_value, " VP");
     }
     else if (effect.type === 'debt_for_neighbor') {
-        return "Gives a debt token to your " + (effect.direction === 'neg' ? 'left' : 'right') + " neighbor";
+        return "Gives a debt token to your ".concat(effect.direction === 'neg' ? 'left' : 'right', " neighbor");
     }
     else if (effect.type === 'gold_for_defeat_tokens') {
-        return "Gain " + effect.gold_per_token + " gold for each military defeat token you have";
+        return "Gain ".concat(effect.gold_per_token, " gold for each military defeat token you have");
     }
     else if (effect.type === 'points_for_victory_tokens') {
-        return effect.points_per_token + " VP for each " + effect.token_value + "-VP military victory token you have";
+        return "".concat(effect.points_per_token, " VP for each ").concat(effect.token_value, "-VP military victory token you have");
     }
     else if (effect.type === 'gold_and_points_for_victory_tokens') {
-        return effect.gold_per_token + " gold and " + effect.points_per_token + " VP for each military victory token you have";
+        return "".concat(effect.gold_per_token, " gold and ").concat(effect.points_per_token, " VP for each military victory token you have");
     }
     else if (effect.type === 'discard_defeat_tokens') {
         return "Discard all of your current military defeat tokens";
     }
     else if (effect.type === 'broken_gold') {
-        return "All players except you lose " + effect.gold + " gold";
+        return "All players except you lose ".concat(effect.gold, " gold");
     }
     else if (effect.type === 'broken_gold_for_stages') {
-        return "All players except you lose " + effect.gold_per_stage + " gold per wonder stage they have built";
+        return "All players except you lose ".concat(effect.gold_per_stage, " gold per wonder stage they have built");
     }
     else if (effect.type === 'broken_gold_for_victory_tokens') {
-        return "All players except you lose " + effect.gold_per_token + " gold per military victory token they have";
+        return "All players except you lose ".concat(effect.gold_per_token, " gold per military victory token they have");
     }
     else if (effect.type === 'turret') {
         return "You may build your wonder stages in any order";
@@ -4117,19 +4127,19 @@ function getDescriptionForEffect(effect) {
         return "Your military defeat tokens count as extra military shields";
     }
     else if (effect.type === 'points_for_shields') {
-        return effect.points_per_shield + " VP for each military shield you have";
+        return "".concat(effect.points_per_shield, " VP for each military shield you have");
     }
     else if (effect.type === 'points_for_pairs') {
-        return effect.points_per_pair + " VP for each pair of same-color cards you have";
+        return "".concat(effect.points_per_pair, " VP for each pair of same-color cards you have");
     }
     else if (effect.type === 'points_for_triplets') {
-        return effect.points_per_triplet + " VP for each triplet of same-color cards you have";
+        return "".concat(effect.points_per_triplet, " VP for each triplet of same-color cards you have");
     }
     else if (effect.type === 'points_for_chains') {
-        return effect.points_per_chain + " VP for each pair of chained cards you have";
+        return "".concat(effect.points_per_chain, " VP for each pair of chained cards you have");
     }
     else if (effect.type === 'build_free_without_chain') {
-        return "You may build for free a chained card even if you do not have the prerequisite card (limited to " + effect.usages + " uses during the game)";
+        return "You may build for free a chained card even if you do not have the prerequisite card (limited to ".concat(effect.usages, " uses during the game)");
     }
     else if (effect.type === 'eye') {
         return "You may look at your starting hand from the next age";
@@ -4144,6 +4154,7 @@ var EndScreen = /** @class */ (function () {
     function EndScreen() {
     }
     EndScreen.prototype.create = function () {
+        var _this = this;
         var players = Main.gamestate.players;
         players.sort(function (p1, p2) {
             var d = Main.gamestate.sevenBlundersEnabled ? -1 : 1;
@@ -4158,22 +4169,17 @@ var EndScreen = /** @class */ (function () {
             return 0;
         });
         var pointsDistributions = players.map(function (player) { return Main.gamestate.playerData[player].pointsDistribution; });
-        var pointsTotals = pointsDistributions.map(function (pd) { return "" + pd.total; });
+        var pointsTotals = pointsDistributions.map(function (pd) { return "".concat(pd.total); });
         var golds = players.map(function (player) { return Main.gamestate.playerData[player].gold; });
         var placements = range(1, players.length);
         for (var i = 1; i < players.length; i++) {
             if (pointsDistributions[i].total === pointsDistributions[i - 1].total) {
-                pointsTotals[i - 1] += " <span style=\"color:" + ArtCommon.goldColorHtml + "\">(" + golds[i - 1] + ")</span>";
-                pointsTotals[i] += " <span style=\"color:" + ArtCommon.goldColorHtml + "\">(" + golds[i] + ")</span>";
+                pointsTotals[i - 1] += " <span style=\"color:".concat(ArtCommon.goldColorHtml, "\">(").concat(golds[i - 1], ")</span>");
+                pointsTotals[i] += " <span style=\"color:".concat(ArtCommon.goldColorHtml, "\">(").concat(golds[i], ")</span>");
                 if (golds[i] === golds[i - 1])
                     placements[i] = placements[i - 1];
             }
         }
-        // for (let i = 0; i < players.length; i++) {
-        //     if (Main.gamestate.playerData[players[i]].pointsDistribution.total === 69) {
-        //         pointsTotals[i] += '<br/>nice';
-        //     }
-        // }
         var elos = players.map(function (player) {
             var elo = Main.gamestate.playerData[player].elo;
             if (!elo)
@@ -4184,13 +4190,15 @@ var EndScreen = /** @class */ (function () {
             var sixtyNineBonus = '';
             var sixtyNine = Main.gamestate.playerData[player].pointsDistribution.total === 69;
             var sixtyNineSixtyNine = sixtyNine && Main.gamestate.playerData[player].gold === 69;
+            var eloMultiplier = _this.getEloMultiplier(Main.gamestate);
             if (sixtyNine) {
                 var d = sixtyNineSixtyNine ? 69 : 6.9;
-                diff -= d;
-                sixtyNineBonus = "<span style=\"color:" + ArtCommon.eloDiffColor(d) + "\">+" + d + "</span>";
+                diff -= d * eloMultiplier;
+                var eloMultText = eloMultiplier === 1 ? '' : "x".concat(eloMultiplier);
+                sixtyNineBonus = "<span style=\"color:".concat(ArtCommon.eloDiffColor(d), "\">+").concat(d).concat(eloMultText, "</span>");
             }
             var sign = (diff >= 0) ? '+' : '';
-            return after + " <span style=\"color:" + ArtCommon.eloDiffColor(diff) + "\">(" + sign + diff + sixtyNineBonus + ")</span>";
+            return "".concat(after, " <span style=\"color:").concat(ArtCommon.eloDiffColor(diff), "\">(").concat(sign).concat(diff).concat(sixtyNineBonus, ")</span>");
         });
         var endscreen = document.getElementById('endscreen');
         var c = Main.gamestate.citiesEnabled;
@@ -4211,32 +4219,32 @@ var EndScreen = /** @class */ (function () {
         var blackCard = ArtCommon.cardForEffect(ArtCommon.cardBannerForColor('black'));
         blackCard.scale.set(0.25);
         var x = (-1 - (players.length - 1) / 2) * C.END_SCREEN_POINTS_DX;
-        endscreen.appendChild(this.scoreArt(shield, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 0 + "px"));
-        endscreen.appendChild(this.scoreArt(endScreenFinanceMarker, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 1 + "px"));
-        endscreen.appendChild(this.scoreArt(pyramid, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 2 + "px"));
-        endscreen.appendChild(this.scoreArt(blueCard, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 3 + "px"));
-        endscreen.appendChild(this.scoreArt(greenCard, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 4 + "px"));
-        endscreen.appendChild(this.scoreArt(yellowCard, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 5 + "px"));
-        endscreen.appendChild(this.scoreArt(purpleCard, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 6 + "px"));
+        endscreen.appendChild(this.scoreArt(shield, "calc(50% + ".concat(x, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 0, "px")));
+        endscreen.appendChild(this.scoreArt(endScreenFinanceMarker, "calc(50% + ".concat(x, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 1, "px")));
+        endscreen.appendChild(this.scoreArt(pyramid, "calc(50% + ".concat(x, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 2, "px")));
+        endscreen.appendChild(this.scoreArt(blueCard, "calc(50% + ".concat(x, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 3, "px")));
+        endscreen.appendChild(this.scoreArt(greenCard, "calc(50% + ".concat(x, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 4, "px")));
+        endscreen.appendChild(this.scoreArt(yellowCard, "calc(50% + ".concat(x, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 5, "px")));
+        endscreen.appendChild(this.scoreArt(purpleCard, "calc(50% + ".concat(x, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 6, "px")));
         if (c)
-            endscreen.appendChild(this.scoreArt(blackCard, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 7 + "px"));
-        endscreen.appendChild(this.scoreText('Total', C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * (c ? 8 : 7) + "px"));
+            endscreen.appendChild(this.scoreArt(blackCard, "calc(50% + ".concat(x, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 7, "px")));
+        endscreen.appendChild(this.scoreText('Total', C.END_SCREEN_TEXT_SIZE, "calc(50% + ".concat(x, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * (c ? 8 : 7), "px")));
         for (var i = 0; i < players.length; i++) {
             var x_1 = (i - (players.length - 1) / 2) * C.END_SCREEN_POINTS_DX;
-            endscreen.appendChild(this.scoreText("#" + placements[i], C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_PLACEMENTS_Y + "px"));
-            endscreen.appendChild(this.scoreText(players[i], C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_NAMES_Y + "px"));
-            endscreen.appendChild(this.scoreText("" + elos[i], C.END_SCREEN_ELO_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_ELOS_Y + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].conflict, C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 0 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].finance, C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 1 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].wonder, C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 2 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].civilian, C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 3 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].science, C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 4 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].commerce, C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 5 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsDistributions[i].guild, C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 6 + "px"));
+            endscreen.appendChild(this.scoreText("#".concat(placements[i]), C.END_SCREEN_TEXT_SIZE, "calc(50% + ".concat(x_1, "px)"), "".concat(C.END_SCREEN_PLACEMENTS_Y, "px")));
+            endscreen.appendChild(this.scoreText(players[i], C.END_SCREEN_TEXT_SIZE, "calc(50% + ".concat(x_1, "px)"), "".concat(C.END_SCREEN_NAMES_Y, "px")));
+            endscreen.appendChild(this.scoreText("".concat(elos[i]), C.END_SCREEN_ELO_TEXT_SIZE, "calc(50% + ".concat(x_1, "px)"), "".concat(C.END_SCREEN_ELOS_Y, "px")));
+            endscreen.appendChild(this.scoreText("".concat(pointsDistributions[i].conflict), C.END_SCREEN_TEXT_SIZE, "calc(50% + ".concat(x_1, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 0, "px")));
+            endscreen.appendChild(this.scoreText("".concat(pointsDistributions[i].finance), C.END_SCREEN_TEXT_SIZE, "calc(50% + ".concat(x_1, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 1, "px")));
+            endscreen.appendChild(this.scoreText("".concat(pointsDistributions[i].wonder), C.END_SCREEN_TEXT_SIZE, "calc(50% + ".concat(x_1, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 2, "px")));
+            endscreen.appendChild(this.scoreText("".concat(pointsDistributions[i].civilian), C.END_SCREEN_TEXT_SIZE, "calc(50% + ".concat(x_1, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 3, "px")));
+            endscreen.appendChild(this.scoreText("".concat(pointsDistributions[i].science), C.END_SCREEN_TEXT_SIZE, "calc(50% + ".concat(x_1, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 4, "px")));
+            endscreen.appendChild(this.scoreText("".concat(pointsDistributions[i].commerce), C.END_SCREEN_TEXT_SIZE, "calc(50% + ".concat(x_1, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 5, "px")));
+            endscreen.appendChild(this.scoreText("".concat(pointsDistributions[i].guild), C.END_SCREEN_TEXT_SIZE, "calc(50% + ".concat(x_1, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 6, "px")));
             if (c)
-                endscreen.appendChild(this.scoreText("" + pointsDistributions[i].black, C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 7 + "px"));
-            endscreen.appendChild(this.scoreText("" + pointsTotals[i], C.END_SCREEN_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * (c ? 8 : 7) + "px"));
-            endscreen.appendChild(this.scoreText("<span style=\"color:" + ArtCommon.eloDiffColor(6.9) + "\">" + (Main.gamestate.playerData[players[i]].pointsDistribution.total === 69 ? 'nice' : '') + "</span>", C.END_SCREEN_NICE_TEXT_SIZE, "calc(50% + " + x_1 + "px)", C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * (c ? 8.5 : 7.5) + "px"));
+                endscreen.appendChild(this.scoreText("".concat(pointsDistributions[i].black), C.END_SCREEN_TEXT_SIZE, "calc(50% + ".concat(x_1, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * 7, "px")));
+            endscreen.appendChild(this.scoreText("".concat(pointsTotals[i]), C.END_SCREEN_TEXT_SIZE, "calc(50% + ".concat(x_1, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * (c ? 8 : 7), "px")));
+            endscreen.appendChild(this.scoreText("<span style=\"color:".concat(ArtCommon.eloDiffColor(6.9), "\">").concat(Main.gamestate.playerData[players[i]].pointsDistribution.total === 69 ? 'nice' : '', "</span>"), C.END_SCREEN_NICE_TEXT_SIZE, "calc(50% + ".concat(x_1, "px)"), "".concat(C.END_SCREEN_POINTS_Y + C.END_SCREEN_POINTS_DY * (c ? 8.5 : 7.5), "px")));
         }
     };
     EndScreen.prototype.destroy = function () {
@@ -4255,13 +4263,21 @@ var EndScreen = /** @class */ (function () {
         var p = document.createElement('p');
         p.innerHTML = text;
         p.style.fontFamily = "'Courier New', Courier, monospace";
-        p.style.fontSize = size + "px";
+        p.style.fontSize = "".concat(size, "px");
         p.style.color = C.END_SCREEN_TEXT_COLOR;
         p.style.transform = 'translate(-50%, -50%)';
         p.style.position = 'absolute';
         p.style.left = xs;
         p.style.top = ys;
         return p;
+    };
+    EndScreen.prototype.getEloMultiplier = function (gamestate) {
+        var mult = 1;
+        if (gamestate.randomizerEnabled)
+            mult++;
+        if (gamestate.sevenBlundersEnabled)
+            mult++;
+        return mult;
     };
     return EndScreen;
 }());
@@ -4408,7 +4424,7 @@ var GameScene = /** @class */ (function (_super) {
             finalY = this.wonders[l].y;
         }
         var padding = gamestate.players.length === 3 ? C.GAME_HEIGHT_PADDING_3P : C.GAME_HEIGHT_PADDING_4567P;
-        Main.game.style.height = finalY + C.WONDER_BOARD_HEIGHT / 2 + padding + "px";
+        Main.game.style.height = "".concat(finalY + C.WONDER_BOARD_HEIGHT / 2 + padding, "px");
         this.militaryOverlays = players.map(function (player) { return undefined; });
         for (var i_1 = 0; i_1 < this.wonders.length; i_1++) {
             this.militaryOverlays[i_1] = new MilitaryOverlay();
@@ -4676,7 +4692,7 @@ var GameStateDiffer;
                                                     if (lastMove.payment.bank) {
                                                         paymentScripts.push(animateGoldMovement(scene.wonders[i].getGoldCoinWorldPosition(), scene.getSourceSinkPosition(), lastMove.payment.bank));
                                                     }
-                                                    Main.scriptManager.runScript(S.simul.apply(S, __spread(paymentScripts)));
+                                                    Main.scriptManager.runScript(S.simul.apply(S, __spreadArray([], __read(paymentScripts), false)));
                                                 }
                                                 goldGain = API.goldGain(Main.gamestate.playerData[player].gold, gamestate.playerData[player].gold, gamestate.playerData[player].lastMove.payment, (_a = gamestate.playerData[gamestate.players[neg]].lastMove) === null || _a === void 0 ? void 0 : _a.payment, (_b = gamestate.playerData[gamestate.players[pos]].lastMove) === null || _b === void 0 ? void 0 : _b.payment);
                                                 if (goldGain > 0) {
@@ -4767,7 +4783,7 @@ var GameStateDiffer;
                                 };
                             });
                         }
-                        return [5 /*yield**/, __values(S.simul.apply(S, __spread(moveScripts))())];
+                        return [5 /*yield**/, __values(S.simul.apply(S, __spreadArray([], __read(moveScripts), false))())];
                     case 1:
                         _b.sent();
                         if (!(Main.gamestate.state === 'DISCARD_MOVE' && Main.gamestate.discardMoveQueue[0] === Main.player)) return [3 /*break*/, 5];
@@ -4847,7 +4863,7 @@ var GameStateDiffer;
                                                     })())];
                                             case 1:
                                                 _b.sent();
-                                                (_a = scene.discardHand.cards).push.apply(_a, __spread(scene.hands[i].cards.splice(0)));
+                                                (_a = scene.discardHand.cards).push.apply(_a, __spreadArray([], __read(scene.hands[i].cards.splice(0)), false));
                                                 return [2 /*return*/];
                                         }
                                     });
@@ -4857,7 +4873,7 @@ var GameStateDiffer;
                         for (i = 0; i < scene.hands.length; i++) {
                             _loop_4(i);
                         }
-                        return [5 /*yield**/, __values(S.simul.apply(S, __spread(discardScripts))())];
+                        return [5 /*yield**/, __values(S.simul.apply(S, __spreadArray([], __read(discardScripts), false))())];
                     case 10:
                         _b.sent();
                         return [5 /*yield**/, __values(S.wait(0.5)())];
@@ -4961,8 +4977,8 @@ var GameStateDiffer;
                         militaryShowings = getMilitaryShowings(gamestate);
                         _loop_5 = function (showings) {
                             var showingsAnimations;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
+                            return __generator(this, function (_c) {
+                                switch (_c.label) {
                                     case 0:
                                         showingsAnimations = range(0, showings.length - 1).map(function (i) { return showings[i] ? S.chain(S.call(function () {
                                             var showing = showings[i];
@@ -4975,9 +4991,9 @@ var GameStateDiffer;
                                         }), S.wait(C.ANIMATION_MILITARY_WAIT_TIME), S.doOverTime(C.ANIMATION_MILITARY_FADE_TIME, function (t) {
                                             scene.militaryOverlays[i].alpha = 1 - t;
                                         })) : undefined; }).filter(function (s) { return s; });
-                                        return [5 /*yield**/, __values(S.simul.apply(S, __spread(showingsAnimations))())];
+                                        return [5 /*yield**/, __values(S.simul.apply(S, __spreadArray([], __read(showingsAnimations), false))())];
                                     case 1:
-                                        _a.sent();
+                                        _c.sent();
                                         return [2 /*return*/];
                                 }
                             });
@@ -5015,17 +5031,17 @@ var GameStateDiffer;
                             for (var i = scene.wonders[pi].militaryTokenRack.getTokenCount(); i < gamestate.playerData[player].militaryTokens.length; i++) {
                                 newTokenIndices.push(i);
                             }
-                            return S.chain.apply(S, __spread(newTokenIndices.map(function (i) { return animateGiveMilitaryToken(scene, gamestate, player, gamestate.playerData[player].militaryTokens[i]); })));
+                            return S.chain.apply(S, __spreadArray([], __read(newTokenIndices.map(function (i) { return animateGiveMilitaryToken(scene, gamestate, player, gamestate.playerData[player].militaryTokens[i]); })), false));
                         });
-                        return [5 /*yield**/, __values(S.simul.apply(S, __spread(militaryTokenDistributionScripts))())];
+                        return [5 /*yield**/, __values(S.simul.apply(S, __spreadArray([], __read(militaryTokenDistributionScripts), false))())];
                     case 37:
                         _b.sent();
                         pointChangeScripts = gamestate.players.map(function (player) { return animatePointsChange(scene, player, gamestate.playerData[player].pointsDistribution.total); });
-                        return [5 /*yield**/, __values(S.simul.apply(S, __spread(pointChangeScripts))())];
+                        return [5 /*yield**/, __values(S.simul.apply(S, __spreadArray([], __read(pointChangeScripts), false))())];
                     case 38:
                         _b.sent();
                         // Remove diplomacies if applicable
-                        return [5 /*yield**/, __values(S.simul.apply(S, __spread(gamestate.diplomacyPlayers.map(function (player) { return function () {
+                        return [5 /*yield**/, __values(S.simul.apply(S, __spreadArray([], __read(gamestate.diplomacyPlayers.map(function (player) { return function () {
                                 var tokens, wonder, token, tokenPos, targetPosition, lerpt;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
@@ -5053,7 +5069,7 @@ var GameStateDiffer;
                                             return [2 /*return*/];
                                     }
                                 });
-                            }; })))())];
+                            }; })), false))())];
                     case 39:
                         // Remove diplomacies if applicable
                         _b.sent();
@@ -5101,8 +5117,8 @@ var GameStateDiffer;
                         i_3 = l;
                         _loop_6 = function (count) {
                             var startPosition_2, endPosition_2, lerpt_7;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
+                            return __generator(this, function (_d) {
+                                switch (_d.label) {
                                     case 0:
                                         startPosition_2 = hands_1[i_3].getPosition();
                                         endPosition_2 = scene.getHandPosition(i_3);
@@ -5115,7 +5131,7 @@ var GameStateDiffer;
                                                 hands_1[i_3].update();
                                             })())];
                                     case 1:
-                                        _a.sent();
+                                        _d.sent();
                                         hands_1[i_3].snap();
                                         i_3 = mod(i_3 - 1, gamestate.players.length);
                                         return [2 /*return*/];
@@ -5144,7 +5160,7 @@ var GameStateDiffer;
                     case 47: return [3 /*break*/, 53];
                     case 48:
                         currentHandPositions_2 = scene.hands.map(function (hand) { return hand.getPosition(); });
-                        targetHandPositions_1 = __spread(currentHandPositions_2);
+                        targetHandPositions_1 = __spreadArray([], __read(currentHandPositions_2), false);
                         if (Main.gamestate.age % 2 === 0) {
                             targetHandPositions_1.unshift(targetHandPositions_1.pop());
                             newHandi_1 = mod(Main.gamestate.players.indexOf(Main.player) + 1, Main.gamestate.players.length);
@@ -5223,7 +5239,7 @@ var GameStateDiffer;
                         goldText = scene.wonders[playeri].goldText;
                         goldText.style.color = '#FF0000';
                         return [5 /*yield**/, __values(S.doOverTime(1, function (t) {
-                                goldText.textContent = "" + Math.round(lerp(oldGold, newGold, t));
+                                goldText.textContent = "".concat(Math.round(lerp(oldGold, newGold, t)));
                             })())];
                     case 1:
                         _a.sent();
@@ -5322,7 +5338,7 @@ var GameStateDiffer;
         }
         result.scripts.push(S.chain(S.call(function () {
             scene.wonders[gamestate.players.indexOf(player)].adjustToDiplomacy(hasDiplomacyTokenAtStartOfTurn(scene, gamestate, player));
-        }), S.wait(0.5), S.simul.apply(S, __spread(newTokenIndices.map(function (i) { return function () {
+        }), S.wait(0.5), S.simul.apply(S, __spreadArray([], __read(newTokenIndices.map(function (i) { return function () {
             var sourceSink, token, targetPosition, lerpt;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -5346,7 +5362,7 @@ var GameStateDiffer;
                         return [2 /*return*/];
                 }
             });
-        }; }))), S.wait(0.5)));
+        }; })), false)), S.wait(0.5)));
     }
     function diffMilitaryTokensPreConflict(gamestate, player, result) {
         if (!(Main.scene instanceof GameScene))
@@ -5373,12 +5389,12 @@ var GameStateDiffer;
             i++;
         }
         if (j >= newTokens.length) {
-            removedIndices.push.apply(removedIndices, __spread(range(i, oldTokens.length - 1)));
+            removedIndices.push.apply(removedIndices, __spreadArray([], __read(range(i, oldTokens.length - 1)), false));
         }
         if (i >= oldTokens.length) {
-            addedIndices.push.apply(addedIndices, __spread(range(j, newTokens.length - 1)));
+            addedIndices.push.apply(addedIndices, __spreadArray([], __read(range(j, newTokens.length - 1)), false));
         }
-        result.scripts.push(S.chain.apply(S, __spread(removedIndices.sort(function (a, b) { return b - a; }).map(function (i) { return animateRemoveMilitaryToken(scene, gamestate, player, i, oldTokens[i]); }), addedIndices.map(function (j) { return animateGiveMilitaryToken(scene, gamestate, player, newTokens[j]); }))));
+        result.scripts.push(S.chain.apply(S, __spreadArray(__spreadArray([], __read(removedIndices.sort(function (a, b) { return b - a; }).map(function (i) { return animateRemoveMilitaryToken(scene, gamestate, player, i, oldTokens[i]); })), false), __read(addedIndices.map(function (j) { return animateGiveMilitaryToken(scene, gamestate, player, newTokens[j]); })), false)));
     }
     function diffDebtTokens(gamestate, player, result) {
         if (!(Main.scene instanceof GameScene))
@@ -5388,7 +5404,7 @@ var GameStateDiffer;
         var newTokens = gamestate.playerData[player].debtTokens;
         if (oldTokens >= newTokens)
             return;
-        result.scripts.push(S.chain.apply(S, __spread(range(1, newTokens - oldTokens).map(function (j) { return animateGiveDebtToken(scene, gamestate, player); }))));
+        result.scripts.push(S.chain.apply(S, __spreadArray([], __read(range(1, newTokens - oldTokens).map(function (j) { return animateGiveDebtToken(scene, gamestate, player); })), false)));
     }
     function animatePointsChange(scene, player, newPoints) {
         return function () {
@@ -5400,7 +5416,7 @@ var GameStateDiffer;
                         oldPoints = parseInt(pointsText.textContent);
                         pointsText.style.color = '#FF0000';
                         return [5 /*yield**/, __values(S.doOverTime(1, function (t) {
-                                pointsText.textContent = "" + Math.round(lerp(oldPoints, newPoints, t));
+                                pointsText.textContent = "".concat(Math.round(lerp(oldPoints, newPoints, t)));
                             })())];
                     case 1:
                         _a.sent();
@@ -5411,7 +5427,7 @@ var GameStateDiffer;
         };
     }
     function animateGoldMovement(fromPos, toPos, gold) {
-        return S.simul.apply(S, __spread(range(0, gold - 1).map(function (i) { return S.chain(S.wait(0.2 * i), function () {
+        return S.simul.apply(S, __spreadArray([], __read(range(0, gold - 1).map(function (i) { return S.chain(S.wait(0.2 * i), function () {
             var goldCoin, lerpt;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -5434,7 +5450,7 @@ var GameStateDiffer;
                         return [2 /*return*/];
                 }
             });
-        }); })));
+        }); })), false));
     }
     function animateGiveMilitaryToken(scene, gamestate, player, value) {
         return function () {
@@ -5613,8 +5629,8 @@ var GoldLossEffect = /** @class */ (function (_super) {
         return _this;
     }
     GoldLossEffect.prototype.update = function () {
-        this.brokenGold.style.left = randInt(-this.amplitude, this.amplitude) + "px";
-        this.brokenGold.style.top = randInt(-this.amplitude, this.amplitude) + "px";
+        this.brokenGold.style.left = "".concat(randInt(-this.amplitude, this.amplitude), "px");
+        this.brokenGold.style.top = "".concat(randInt(-this.amplitude, this.amplitude), "px");
     };
     GoldLossEffect.prototype.draw = function (goldToLose) {
         var brokenGold = ArtCommon.domElementForArt(ArtCommon.brokenGold(goldToLose), 1.5);
@@ -6103,7 +6119,7 @@ var Loader = /** @class */ (function () {
                     wonderBoard.addChild(stageCost);
                 }
             }
-            Resources.WONDER_CACHE[wonder.name + "/" + wonder.side] = [{
+            Resources.WONDER_CACHE["".concat(wonder.name, "/").concat(wonder.side)] = [{
                     board: render(wonderBoard, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT),
                     startingEffectsRect: startingEffectsPaddedBounds,
                     stageXs: stageXs,
@@ -6129,64 +6145,78 @@ var Loader = /** @class */ (function () {
             var _b, _c;
             var cardList = new PIXI.Container();
             var maxY = 0;
-            for (var age = 1; age <= 3; age++) {
-                var x = age * C.CARD_LIST_CARD_DX;
-                var y = 0;
-                try {
-                    for (var _d = (e_45 = void 0, __values(gamestate.deck[age])), _e = _d.next(); !_e.done; _e = _d.next()) {
-                        var cardInfo = _e.value;
-                        var card = gamestate.cards[cardInfo.id];
-                        var cardForList = new PIXI.Container();
-                        cardForList.addChild(Shapes.filledRect(-C.CARD_LIST_CARD_WIDTH / 2, -C.CARD_LIST_CARD_HEIGHT / 2, C.CARD_LIST_CARD_WIDTH, C.CARD_LIST_CARD_HEIGHT, ArtCommon.cardBannerForColor(card.color)));
-                        var effectContainer = new PIXI.Container();
-                        effectContainer.addChild(ArtCommon.getShadowForEffects(card.effects, 'dark'));
-                        effectContainer.addChild(ArtCommon.getArtForEffects(card.effects));
-                        effectContainer.scale.set(C.CARD_LIST_EFFECT_SCALE);
-                        if (effectContainer.width > C.CARD_LIST_EFFECT_MAX_WIDTH) {
-                            effectContainer.scale.set(C.CARD_LIST_EFFECT_SCALE * C.CARD_LIST_EFFECT_MAX_WIDTH / effectContainer.width);
-                        }
-                        cardForList.addChild(effectContainer);
-                        if (cardInfo.count > 1) {
-                            var text = Shapes.centeredText(-60, 0, cardInfo.count + " \u00D7", 0.15, 0xFFFFFF);
-                            text.anchor.set(1, 0.5);
-                            cardForList.addChild(text);
-                        }
-                        var resourceCost = ((_b = card.cost) === null || _b === void 0 ? void 0 : _b.resources) || [];
-                        var goldCost = ((_c = card.cost) === null || _c === void 0 ? void 0 : _c.gold) || 0;
-                        if (card.cost) {
-                            var currentX = 70;
-                            if (goldCost > 0) {
-                                var gold = ArtCommon.gold(goldCost);
-                                gold.scale.set(0.2);
-                                gold.position.set(currentX, 0);
-                                cardForList.addChild(gold);
-                                currentX += 22;
-                            }
-                            for (var i = 0; i < resourceCost.length; i++) {
-                                var resource_1 = ArtCommon.resource(resourceCost[i]);
-                                resource_1.scale.set(0.2);
-                                resource_1.position.set(currentX, 0);
-                                cardForList.addChild(resource_1);
-                                currentX += 22;
-                            }
-                        }
-                        cardForList.x = x;
-                        cardForList.y = y;
-                        cardList.addChild(cardForList);
-                        y += C.CARD_LIST_CARD_DY;
-                    }
+            if (gamestate.hideDeck) {
+                for (var age = 1; age <= 3; age++) {
+                    var hidden = new PIXI.Container();
+                    hidden.addChild(ArtCommon.eye()).scale.set(1.3);
+                    hidden.addChild(ArtCommon.X(0xFF0000));
+                    hidden.x = age * C.CARD_LIST_CARD_DX + 30;
+                    hidden.y = 10;
+                    hidden.scale.set(0.3);
+                    cardList.addChild(hidden);
                 }
-                catch (e_45_1) { e_45 = { error: e_45_1 }; }
-                finally {
+                maxY = 10 + C.CARD_LIST_CARD_DY;
+            }
+            else {
+                for (var age = 1; age <= 3; age++) {
+                    var x = age * C.CARD_LIST_CARD_DX;
+                    var y = 0;
                     try {
-                        if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
+                        for (var _d = (e_45 = void 0, __values(gamestate.deck[age])), _e = _d.next(); !_e.done; _e = _d.next()) {
+                            var cardInfo = _e.value;
+                            var card = gamestate.cards[cardInfo.id];
+                            var cardForList = new PIXI.Container();
+                            cardForList.addChild(Shapes.filledRect(-C.CARD_LIST_CARD_WIDTH / 2, -C.CARD_LIST_CARD_HEIGHT / 2, C.CARD_LIST_CARD_WIDTH, C.CARD_LIST_CARD_HEIGHT, ArtCommon.cardBannerForColor(card.color)));
+                            var effectContainer = new PIXI.Container();
+                            effectContainer.addChild(ArtCommon.getShadowForEffects(card.effects, 'dark'));
+                            effectContainer.addChild(ArtCommon.getArtForEffects(card.effects));
+                            effectContainer.scale.set(C.CARD_LIST_EFFECT_SCALE);
+                            if (effectContainer.width > C.CARD_LIST_EFFECT_MAX_WIDTH) {
+                                effectContainer.scale.set(C.CARD_LIST_EFFECT_SCALE * C.CARD_LIST_EFFECT_MAX_WIDTH / effectContainer.width);
+                            }
+                            cardForList.addChild(effectContainer);
+                            if (cardInfo.count > 1) {
+                                var text = Shapes.centeredText(-60, 0, "".concat(cardInfo.count, " \u00D7"), 0.15, 0xFFFFFF);
+                                text.anchor.set(1, 0.5);
+                                cardForList.addChild(text);
+                            }
+                            var resourceCost = ((_b = card.cost) === null || _b === void 0 ? void 0 : _b.resources) || [];
+                            var goldCost = ((_c = card.cost) === null || _c === void 0 ? void 0 : _c.gold) || 0;
+                            if (card.cost) {
+                                var currentX = 70;
+                                if (goldCost > 0) {
+                                    var gold = ArtCommon.gold(goldCost);
+                                    gold.scale.set(0.2);
+                                    gold.position.set(currentX, 0);
+                                    cardForList.addChild(gold);
+                                    currentX += 22;
+                                }
+                                for (var i = 0; i < resourceCost.length; i++) {
+                                    var resource_1 = ArtCommon.resource(resourceCost[i]);
+                                    resource_1.scale.set(0.2);
+                                    resource_1.position.set(currentX, 0);
+                                    cardForList.addChild(resource_1);
+                                    currentX += 22;
+                                }
+                            }
+                            cardForList.x = x;
+                            cardForList.y = y;
+                            cardList.addChild(cardForList);
+                            y += C.CARD_LIST_CARD_DY;
+                        }
                     }
-                    finally { if (e_45) throw e_45.error; }
+                    catch (e_45_1) { e_45 = { error: e_45_1 }; }
+                    finally {
+                        try {
+                            if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
+                        }
+                        finally { if (e_45) throw e_45.error; }
+                    }
+                    maxY = Math.max(maxY, y);
                 }
-                maxY = Math.max(maxY, y);
             }
             cardList.y += C.CARD_LIST_CARD_HEIGHT / 2;
-            Resources.CARD_LIST = render(cardList, C.CARD_LIST_WIDTH, maxY);
+            Resources.CARD_LIST = render(cardList, C.CARD_LIST_WIDTH, maxY + 1);
             resource.loaded = true;
         };
     };
@@ -6345,7 +6375,7 @@ var Main = /** @class */ (function () {
                 return;
             }
             if (gamestate.turn < Main.gamestate.turn) {
-                Main.error("Error: local turn (" + Main.gamestate.turn + ") is greater than the game's (" + gamestate.turn + ")?");
+                Main.error("Error: local turn (".concat(Main.gamestate.turn, ") is greater than the game's (").concat(gamestate.turn, ")?"));
                 _this.diffing = false;
                 _this.gamestate = gamestate;
                 _this.scene.destroy();
@@ -6355,7 +6385,7 @@ var Main = /** @class */ (function () {
             else if (Main.gamestate.state === 'CHOOSE_WONDER_SIDE') {
                 if (gamestate.state === 'CHOOSE_WONDER_SIDE') {
                     var diffResult = GameStateDiffer.diffChooseSide(gamestate);
-                    _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {
+                    _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spreadArray([], __read(diffResult.scripts), false)), S.call(function () {
                         _this.gamestate = gamestate;
                         _this.sendUpdate();
                     })));
@@ -6370,7 +6400,7 @@ var Main = /** @class */ (function () {
             }
             else if (gamestate.turn === Main.gamestate.turn) {
                 var diffResult = GameStateDiffer.diffNonTurn(gamestate, true);
-                _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {
+                _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spreadArray([], __read(diffResult.scripts), false)), S.call(function () {
                     _this.gamestate = gamestate;
                     _this.sendUpdate();
                 })));
@@ -6378,7 +6408,7 @@ var Main = /** @class */ (function () {
             else {
                 var diffResult = GameStateDiffer.diffTurn(gamestate);
                 _this.diffing = true;
-                _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spread(diffResult.scripts)), S.call(function () {
+                _this.scriptManager.runScript(S.chain(S.simul.apply(S, __spreadArray([], __read(diffResult.scripts), false)), S.call(function () {
                     _this.diffing = false;
                     _this.gamestate = gamestate;
                     _this.scene.destroy();
@@ -6462,7 +6492,7 @@ var Main = /** @class */ (function () {
             status.style.color = C.OK_TEXT_COLOR;
         }
         if (!this.loader.isLoaded) {
-            statusText.innerHTML = "Loading... " + this.loader.loadPercentage + "%";
+            statusText.innerHTML = "Loading... ".concat(this.loader.loadPercentage, "%");
             return;
         }
         var gamestate = this.gamestate;
@@ -6479,7 +6509,7 @@ var Main = /** @class */ (function () {
             if (playerData.currentMove || gamestate.playerData[this.player].goldToLose <= 0) {
                 var playersLeft = gamestate.chooseGoldToLosePlayers.filter(function (player) { return !gamestate.playerData[player].currentMove; });
                 if (playersLeft.length === 1) {
-                    statusText.innerHTML = "Waiting for " + playersLeft[0] + " to handle gold loss";
+                    statusText.innerHTML = "Waiting for ".concat(playersLeft[0], " to handle gold loss");
                 }
                 else {
                     statusText.innerHTML = "Waiting for others to handle gold loss";
@@ -6493,7 +6523,7 @@ var Main = /** @class */ (function () {
             if (playerData.currentMove || !contains(gamestate.seeFuturePlayers, this.player)) {
                 var playersLeft = gamestate.seeFuturePlayers.filter(function (player) { return !gamestate.playerData[player].currentMove; });
                 if (playersLeft.length === 1) {
-                    statusText.innerHTML = "Waiting for " + playersLeft[0] + " to see the future";
+                    statusText.innerHTML = "Waiting for ".concat(playersLeft[0], " to see the future");
                 }
                 else {
                     statusText.innerHTML = "Waiting for others to see the future";
@@ -6515,7 +6545,7 @@ var Main = /** @class */ (function () {
             if (playerData.currentMove || gamestate.validMoves.length === 0) {
                 var playersLeft = gamestate.lastCardPlayers.filter(function (player) { return !gamestate.playerData[player].currentMove; });
                 if (playersLeft.length === 1) {
-                    statusText.innerHTML = "Waiting for " + playersLeft[0] + " to play their last card";
+                    statusText.innerHTML = "Waiting for ".concat(playersLeft[0], " to play their last card");
                 }
                 else {
                     statusText.innerHTML = "Waiting for others to play their last cards";
@@ -6527,10 +6557,10 @@ var Main = /** @class */ (function () {
         }
         else if (gamestate.state === 'DISCARD_MOVE') {
             if (gamestate.discardMoveQueue[0] === this.player) {
-                statusText.innerHTML = "<span class='statustextactive'>You may build a card from the discard pile</span>";
+                statusText.innerHTML = "<span class='statustextactive'>You may build a card from the graveyard</span>";
             }
             else {
-                statusText.innerHTML = "Waiting for " + gamestate.discardMoveQueue[0] + " to build a card from the discard pile";
+                statusText.innerHTML = "Waiting for ".concat(gamestate.discardMoveQueue[0], " to build a card from the graveyard");
             }
         }
         else if (gamestate.state === 'GAME_COMPLETE') {
@@ -6668,7 +6698,7 @@ var MilitaryOverlay = /** @class */ (function (_super) {
         this.dove.style.visibility = type === 'diplomacy' ? 'visible' : 'hidden';
     };
     MilitaryOverlay.prototype.setShields = function (shields) {
-        this.shieldsText.textContent = "" + shields;
+        this.shieldsText.textContent = "".concat(shields);
     };
     MilitaryOverlay.prototype.draw = function () {
         var div = document.createElement('div');
@@ -6683,7 +6713,7 @@ var MilitaryOverlay = /** @class */ (function (_super) {
         this.overlayDefeat = div.appendChild(render(pixiOverlayDefeat, C.WONDER_BOARD_WIDTH, C.WONDER_BOARD_HEIGHT));
         this.shield = div.appendChild(ArtCommon.domElementForArt(ArtCommon.shield(), C.WONDER_OVERLAY_SHIELD_SCALE));
         this.shield.style.position = 'absolute';
-        this.shield.style.left = C.WONDER_OVERLAY_SHIELD_X + "px";
+        this.shield.style.left = "".concat(C.WONDER_OVERLAY_SHIELD_X, "px");
         this.shield.style.top = '0px';
         var textDiv = div.appendChild(document.createElement('div'));
         textDiv.style.width = '50%';
@@ -6692,7 +6722,7 @@ var MilitaryOverlay = /** @class */ (function (_super) {
         this.shieldsText = textDiv.appendChild(document.createElement('p'));
         this.shieldsText.textContent = '0';
         this.shieldsText.style.fontFamily = "'Courier New', Courier, monospace";
-        this.shieldsText.style.fontSize = C.WONDER_OVERLAY_TEXT_SIZE + "px";
+        this.shieldsText.style.fontSize = "".concat(C.WONDER_OVERLAY_TEXT_SIZE, "px");
         this.shieldsText.style.color = C.WONDER_OVERLAY_TEXT_COLOR;
         this.shieldsText.style.width = '100%';
         this.shieldsText.style.textAlign = 'right';
@@ -6738,34 +6768,34 @@ var PaymentDialog = /** @class */ (function (_super) {
         var _this = this;
         var validPayments = API.minimalPaymentOptions(this.move, Main.gamestate.validMoves);
         var dialogDiv = document.createElement('div');
-        dialogDiv.style.width = C.PAYMENT_DIALOG_WIDTH + "px";
-        dialogDiv.style.height = validPayments.length * C.PAYMENT_DIALOG_PAYMENTS_DY + C.PAYMENT_DIALOG_EXTRA_HEIGHT + "px";
+        dialogDiv.style.width = "".concat(C.PAYMENT_DIALOG_WIDTH, "px");
+        dialogDiv.style.height = "".concat(validPayments.length * C.PAYMENT_DIALOG_PAYMENTS_DY + C.PAYMENT_DIALOG_EXTRA_HEIGHT, "px");
         dialogDiv.style.backgroundColor = C.PAYMENT_DIALOG_COLOR;
-        dialogDiv.style.borderRadius = C.PAYMENT_DIALOG_CORNER_RADIUS + "px";
+        dialogDiv.style.borderRadius = "".concat(C.PAYMENT_DIALOG_CORNER_RADIUS, "px");
         dialogDiv.style.position = 'relative';
         dialogDiv.style.transform = "translate(-50%, -50%)";
         var dialogTitle = dialogDiv.appendChild(this.drawText(C.PAYMENT_DIALOG_TITLE, C.PAYMENT_DIALOG_TITLE_SIZE));
-        dialogTitle.style.padding = C.PAYMENT_DIALOG_TITLE_PADDING + "px";
+        dialogTitle.style.padding = "".concat(C.PAYMENT_DIALOG_TITLE_PADDING, "px");
         var _a = __read(API.getNeighbors(Main.gamestate, Main.player), 2), negPlayer = _a[0], posPlayer = _a[1];
         var _loop_9 = function (i) {
             var leftDiv = dialogDiv.appendChild(document.createElement('div'));
-            leftDiv.style.width = 50 - C.PAYMENT_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 2 + "%";
-            leftDiv.style.height = C.PAYMENT_DIALOG_PAYMENTS_DY + "px";
+            leftDiv.style.width = "".concat(50 - C.PAYMENT_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 2, "%");
+            leftDiv.style.height = "".concat(C.PAYMENT_DIALOG_PAYMENTS_DY, "px");
             leftDiv.style.float = 'left';
             leftDiv.style.position = 'relative';
             var middleDiv = dialogDiv.appendChild(document.createElement('div'));
-            middleDiv.style.width = C.PAYMENT_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT + "%";
-            middleDiv.style.height = C.PAYMENT_DIALOG_PAYMENTS_DY + "px";
+            middleDiv.style.width = "".concat(C.PAYMENT_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT, "%");
+            middleDiv.style.height = "".concat(C.PAYMENT_DIALOG_PAYMENTS_DY, "px");
             middleDiv.style.float = 'left';
             middleDiv.style.position = 'relative';
             var rightDiv = dialogDiv.appendChild(document.createElement('div'));
-            rightDiv.style.width = 50 - C.PAYMENT_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 2 + "%";
-            rightDiv.style.height = C.PAYMENT_DIALOG_PAYMENTS_DY + "px";
+            rightDiv.style.width = "".concat(50 - C.PAYMENT_DIALOG_PAYMENTS_MID_DIV_WIDTH_PERCENT / 2, "%");
+            rightDiv.style.height = "".concat(C.PAYMENT_DIALOG_PAYMENTS_DY, "px");
             rightDiv.style.float = 'left';
             rightDiv.style.position = 'relative';
             var payment = validPayments[i];
             if (payment.neg) {
-                var paymentTextNegP = leftDiv.appendChild(this_4.drawText("<-- " + payment.neg + " to " + negPlayer, C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
+                var paymentTextNegP = leftDiv.appendChild(this_4.drawText("<-- ".concat(payment.neg, " to ").concat(negPlayer), C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
                 paymentTextNegP.style.width = '100%';
                 paymentTextNegP.style.textAlign = 'right';
                 paymentTextNegP.style.position = 'absolute';
@@ -6773,7 +6803,7 @@ var PaymentDialog = /** @class */ (function (_super) {
                 paymentTextNegP.style.transform = 'translate(0, -50%)';
             }
             if (payment.pos) {
-                var paymentTextPosP = rightDiv.appendChild(this_4.drawText("to " + posPlayer + " " + payment.pos + " -->", C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
+                var paymentTextPosP = rightDiv.appendChild(this_4.drawText("to ".concat(posPlayer, " ").concat(payment.pos, " -->"), C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
                 paymentTextPosP.style.width = '100%';
                 paymentTextPosP.style.textAlign = 'left';
                 paymentTextPosP.style.position = 'absolute';
@@ -6810,8 +6840,8 @@ var PaymentDialog = /** @class */ (function (_super) {
             }
             var payButton = middleDiv.appendChild(document.createElement('div'));
             payButton.style.backgroundColor = C.PAYMENT_DIALOG_PAY_BUTTON_COLOR;
-            payButton.style.width = C.PAYMENT_DIALOG_PAY_BUTTON_WIDTH + "px";
-            payButton.style.height = C.PAYMENT_DIALOG_PAY_BUTTON_HEIGHT + "px";
+            payButton.style.width = "".concat(C.PAYMENT_DIALOG_PAY_BUTTON_WIDTH, "px");
+            payButton.style.height = "".concat(C.PAYMENT_DIALOG_PAY_BUTTON_HEIGHT, "px");
             payButton.style.position = 'absolute';
             payButton.style.left = '50%';
             payButton.style.top = '50%';
@@ -6832,7 +6862,7 @@ var PaymentDialog = /** @class */ (function (_super) {
                 _this.removeFromGame(true);
             };
             if (payment.bank) {
-                var payButtonText = payButton.appendChild(this_4.drawText(payment.bank + " to bank", C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
+                var payButtonText = payButton.appendChild(this_4.drawText("".concat(payment.bank, " to bank"), C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
                 payButtonText.style.width = '100%';
                 payButtonText.style.position = 'absolute';
                 payButtonText.style.left = '50%';
@@ -6840,7 +6870,7 @@ var PaymentDialog = /** @class */ (function (_super) {
                 payButtonText.style.transform = 'translate(-50%, -50%)';
             }
             if (payment.free_with_delphoi) {
-                var payButtonText = payButton.appendChild(this_4.drawText(Main.gamestate.playerData[Main.player].buildFreeWithoutChainUsages + " left", C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
+                var payButtonText = payButton.appendChild(this_4.drawText("".concat(Main.gamestate.playerData[Main.player].buildFreeWithoutChainUsages, " left"), C.PAYMENT_DIALOG_PAYMENTS_TEXT_SIZE));
                 payButtonText.style.width = '100%';
                 payButtonText.style.position = 'absolute';
                 payButtonText.style.left = '50%';
@@ -6854,8 +6884,8 @@ var PaymentDialog = /** @class */ (function (_super) {
         }
         var closeButton = dialogDiv.appendChild(this.drawCloseButton());
         closeButton.style.position = 'absolute';
-        closeButton.style.left = "calc(100% - " + C.PAYMENT_DIALOG_CLOSE_BUTTON_OFFSET_X + "px)";
-        closeButton.style.top = C.PAYMENT_DIALOG_CLOSE_BUTTON_OFFSET_Y + "px";
+        closeButton.style.left = "calc(100% - ".concat(C.PAYMENT_DIALOG_CLOSE_BUTTON_OFFSET_X, "px)");
+        closeButton.style.top = "".concat(C.PAYMENT_DIALOG_CLOSE_BUTTON_OFFSET_Y, "px");
         closeButton.style.cursor = 'pointer';
         closeButton.onclick = function (event) {
             _this.removeFromGame();
@@ -6867,7 +6897,7 @@ var PaymentDialog = /** @class */ (function (_super) {
         p.textContent = text;
         p.style.textAlign = 'center';
         p.style.fontFamily = "'Courier New', Courier, monospace";
-        p.style.fontSize = fontSize + "px";
+        p.style.fontSize = "".concat(fontSize, "px");
         return p;
     };
     PaymentDialog.prototype.drawCloseButton = function () {
@@ -6999,7 +7029,7 @@ function render(object, width, height) {
     object.scale.x /= resolution;
     object.scale.y /= resolution;
     var canvas = cloneCanvas(renderer.view);
-    canvas.style.width = width + "px";
+    canvas.style.width = "".concat(width, "px");
     return canvas;
 }
 var Resources = /** @class */ (function () {
@@ -7007,7 +7037,7 @@ var Resources = /** @class */ (function () {
     }
     Resources.getCard = function (cardId) {
         if (!this.CARD_CACHE[cardId] || this.CARD_CACHE[cardId].length === 0) {
-            console.error("Card id " + cardId + " not found in card cache", this.CARD_CACHE);
+            console.error("Card id ".concat(cardId, " not found in card cache"), this.CARD_CACHE);
             return undefined;
         }
         var cache = this.CARD_CACHE[cardId];
@@ -7023,7 +7053,7 @@ var Resources = /** @class */ (function () {
     };
     Resources.returnCard = function (cardId, cardResource) {
         if (!this.CARD_CACHE[cardId]) {
-            console.error("Card id " + cardId + " not found in card cache", this.CARD_CACHE);
+            console.error("Card id ".concat(cardId, " not found in card cache"), this.CARD_CACHE);
             return undefined;
         }
         if (!cardResource)
@@ -7031,9 +7061,9 @@ var Resources = /** @class */ (function () {
         this.CARD_CACHE[cardId].push(cardResource);
     };
     Resources.getWonder = function (name, side) {
-        var key = name + "/" + side;
+        var key = "".concat(name, "/").concat(side);
         if (!this.WONDER_CACHE[key] || this.WONDER_CACHE[key].length === 0) {
-            console.error("Wonder " + key + " not found in wonder cache", this.WONDER_CACHE);
+            console.error("Wonder ".concat(key, " not found in wonder cache"), this.WONDER_CACHE);
             return undefined;
         }
         var cache = this.WONDER_CACHE[key];
@@ -7047,9 +7077,9 @@ var Resources = /** @class */ (function () {
         return cache.pop();
     };
     Resources.returnWonder = function (name, side, wonderResource) {
-        var key = name + "/" + side;
+        var key = "".concat(name, "/").concat(side);
         if (!this.WONDER_CACHE[key] || this.WONDER_CACHE[key].length === 0) {
-            console.error("Wonder " + key + " not found in wonder cache", this.WONDER_CACHE);
+            console.error("Wonder ".concat(key, " not found in wonder cache"), this.WONDER_CACHE);
             return undefined;
         }
         if (!wonderResource)
@@ -7122,7 +7152,7 @@ var SilhouetteFilter = /** @class */ (function (_super) {
 var VERTEX_FILTER = "\n    attribute vec2 aVertexPosition;\n\n    uniform mat3 projectionMatrix;\n\n    varying vec2 vTextureCoord;\n\n    uniform vec4 inputSize;\n    uniform vec4 outputFrame;\n\n    vec4 filterVertexPosition(void) {\n        vec2 position = aVertexPosition * max(outputFrame.zw, vec2(0.)) + outputFrame.xy;\n\n        return vec4((projectionMatrix * vec3(position, 1.0)).xy, 0.0, 1.0);\n    }\n\n    vec2 filterTextureCoord(void) {\n        return aVertexPosition * (outputFrame.zw * inputSize.zw);\n    }\n\n    void main(void) {\n        gl_Position = filterVertexPosition();\n        vTextureCoord = filterTextureCoord();\n    }\n";
 function FRAG_SHADER_SILHOUETTE(type) {
     var value = type === 'dark' ? 0.0 : 1.0;
-    return "\n        varying vec2 vTextureCoord;\n\n        uniform sampler2D uSampler;\n\n        void main(void) {\n            gl_FragColor = texture2D(uSampler, vTextureCoord);\n            if (gl_FragColor.a > 0.0) {\n                gl_FragColor.rgb = vec3(" + value + ", " + value + ", " + value + ");\n            }\n        }\n    ";
+    return "\n        varying vec2 vTextureCoord;\n\n        uniform sampler2D uSampler;\n\n        void main(void) {\n            gl_FragColor = texture2D(uSampler, vTextureCoord);\n            if (gl_FragColor.a > 0.0) {\n                gl_FragColor.rgb = vec3(".concat(value, ", ").concat(value, ", ").concat(value, ");\n            }\n        }\n    ");
 }
 /// <reference path="./popup.ts" />
 var StageInfoPopup = /** @class */ (function (_super) {
@@ -7146,13 +7176,13 @@ var StageInfoPopup = /** @class */ (function (_super) {
         box.style.position = 'absolute';
         var currentY = 16;
         // Name
-        box.appendChild(this.infoText('<span style="font-weight:bold">Wonder Stage</span>', '10px', currentY + "px"));
+        box.appendChild(this.infoText('<span style="font-weight:bold">Wonder Stage</span>', '10px', "".concat(currentY, "px")));
         currentY += 24;
         // Cost
         var resourceCost = ((_a = this.source.stage.cost) === null || _a === void 0 ? void 0 : _a.resources) || [];
         var goldCost = ((_b = this.source.stage.cost) === null || _b === void 0 ? void 0 : _b.gold) || 0;
         var isFree = resourceCost.length === 0 && goldCost === 0;
-        box.appendChild(this.infoText("Cost:" + (isFree ? ' None' : ''), '10px', currentY + "px"));
+        box.appendChild(this.infoText("Cost:".concat(isFree ? ' None' : ''), '10px', "".concat(currentY, "px")));
         if (this.source.stage.cost) {
             var currentX = 60;
             if (goldCost > 0) {
@@ -7163,8 +7193,8 @@ var StageInfoPopup = /** @class */ (function (_super) {
                 gold.appendChild(ArtCommon.domElementForArt(goldArt, 1, 10));
                 gold.style.transform = 'scale(0.2)';
                 gold.style.position = 'absolute';
-                gold.style.left = currentX + "px";
-                gold.style.top = currentY + "px";
+                gold.style.left = "".concat(currentX, "px");
+                gold.style.top = "".concat(currentY, "px");
                 currentX += 22;
             }
             var _loop_10 = function (i) {
@@ -7175,8 +7205,8 @@ var StageInfoPopup = /** @class */ (function (_super) {
                 resource.appendChild(ArtCommon.domElementForArt(resourceArt, 1, 10));
                 resource.style.transform = 'scale(0.2)';
                 resource.style.position = 'absolute';
-                resource.style.left = currentX + "px";
-                resource.style.top = currentY + "px";
+                resource.style.left = "".concat(currentX, "px");
+                resource.style.top = "".concat(currentY, "px");
                 currentX += 22;
             };
             for (var i = 0; i < resourceCost.length; i++) {
@@ -7185,7 +7215,7 @@ var StageInfoPopup = /** @class */ (function (_super) {
         }
         currentY += 24;
         // Effects
-        box.appendChild(this.infoText('Effects:', '10px', currentY + "px"));
+        box.appendChild(this.infoText('Effects:', '10px', "".concat(currentY, "px")));
         currentY += 20;
         var effects = this.source.stage.effects;
         for (var i = 0; i < effects.length; i++) {
@@ -7196,18 +7226,18 @@ var StageInfoPopup = /** @class */ (function (_super) {
             effect.appendChild(ArtCommon.domElementForArt(effectArt, 1, 10));
             effect.style.transform = 'scale(0.2)';
             effect.style.position = 'absolute';
-            effect.style.left = 10 + effectArt.width / 10 + "px";
-            effect.style.top = currentY + "px";
-            var description = this.infoText(getDescriptionForEffect(effects[i]), 20 + effectArt.width / 5 + "px", currentY + "px");
-            description.style.fontSize = C.CARD_INFO_EFFECT_DESCRIPTION_SIZE + "px";
+            effect.style.left = "".concat(10 + effectArt.width / 10, "px");
+            effect.style.top = "".concat(currentY, "px");
+            var description = this.infoText(getDescriptionForEffect(effects[i]), "".concat(20 + effectArt.width / 5, "px"), "".concat(currentY, "px"));
+            description.style.fontSize = "".concat(C.CARD_INFO_EFFECT_DESCRIPTION_SIZE, "px");
             description.style.marginRight = '10px';
             box.appendChild(description);
             currentY += 24;
         }
         var padding = 10;
-        box.style.width = this.width - padding + "px";
-        box.style.height = currentY + "px";
-        box.style.paddingRight = padding + "px";
+        box.style.width = "".concat(this.width - padding, "px");
+        box.style.height = "".concat(currentY, "px");
+        box.style.paddingRight = "".concat(padding, "px");
         return box;
     };
     StageInfoPopup.prototype.drawCopyStage = function () {
@@ -7216,7 +7246,7 @@ var StageInfoPopup = /** @class */ (function (_super) {
         box.style.position = 'absolute';
         var currentY = 16;
         // Name
-        box.appendChild(this.infoText('<span style="font-weight:bold">Wonder Stage</span>', '10px', currentY + "px"));
+        box.appendChild(this.infoText('<span style="font-weight:bold">Wonder Stage</span>', '10px', "".concat(currentY, "px")));
         currentY += 24;
         var effect = box.appendChild(document.createElement('div'));
         var copyArt = new PIXI.Container();
@@ -7225,17 +7255,17 @@ var StageInfoPopup = /** @class */ (function (_super) {
         effect.appendChild(ArtCommon.domElementForArt(copyArt, 1, 10));
         effect.style.transform = 'scale(0.2)';
         effect.style.position = 'absolute';
-        effect.style.left = 10 + copyArt.width / 10 + "px";
-        effect.style.top = currentY + "px";
-        var description = this.infoText("Copy the " + this.source.stage.copy_stage.stage + " wonder stage of your " + (this.source.stage.copy_stage.dir === 'neg' ? 'left' : 'right') + " neighbor", 20 + copyArt.width / 5 + "px", currentY + "px");
-        description.style.fontSize = C.CARD_INFO_EFFECT_DESCRIPTION_SIZE + "px";
+        effect.style.left = "".concat(10 + copyArt.width / 10, "px");
+        effect.style.top = "".concat(currentY, "px");
+        var description = this.infoText("Copy the ".concat(this.source.stage.copy_stage.stage, " wonder stage of your ").concat(this.source.stage.copy_stage.dir === 'neg' ? 'left' : 'right', " neighbor"), "".concat(20 + copyArt.width / 5, "px"), "".concat(currentY, "px"));
+        description.style.fontSize = "".concat(C.CARD_INFO_EFFECT_DESCRIPTION_SIZE, "px");
         description.style.marginRight = '10px';
         box.appendChild(description);
         currentY += 24;
         // Stage copy
         var stageBuilt = this.getStageBuilt();
         if (stageBuilt) {
-            box.appendChild(this.infoText('Copied Effects:', '10px', currentY + "px"));
+            box.appendChild(this.infoText('Copied Effects:', '10px', "".concat(currentY, "px")));
             currentY += 20;
             var effects = (stageBuilt.copyPlayer === undefined || stageBuilt.copyStage === undefined)
                 ? []
@@ -7248,19 +7278,19 @@ var StageInfoPopup = /** @class */ (function (_super) {
                 effect_1.appendChild(ArtCommon.domElementForArt(effectArt, 1, 10));
                 effect_1.style.transform = 'scale(0.2)';
                 effect_1.style.position = 'absolute';
-                effect_1.style.left = 10 + effectArt.width / 10 + "px";
-                effect_1.style.top = currentY + "px";
-                var description_1 = this.infoText(getDescriptionForEffect(effects[i]), 20 + effectArt.width / 5 + "px", currentY + "px");
-                description_1.style.fontSize = C.CARD_INFO_EFFECT_DESCRIPTION_SIZE + "px";
+                effect_1.style.left = "".concat(10 + effectArt.width / 10, "px");
+                effect_1.style.top = "".concat(currentY, "px");
+                var description_1 = this.infoText(getDescriptionForEffect(effects[i]), "".concat(20 + effectArt.width / 5, "px"), "".concat(currentY, "px"));
+                description_1.style.fontSize = "".concat(C.CARD_INFO_EFFECT_DESCRIPTION_SIZE, "px");
                 description_1.style.marginRight = '10px';
                 box.appendChild(description_1);
                 currentY += 24;
             }
         }
         var padding = 10;
-        box.style.width = this.width - padding + "px";
-        box.style.height = currentY + "px";
-        box.style.paddingRight = padding + "px";
+        box.style.width = "".concat(this.width - padding, "px");
+        box.style.height = "".concat(currentY, "px");
+        box.style.paddingRight = "".concat(padding, "px");
         return box;
     };
     StageInfoPopup.prototype.getStageBuilt = function () {
@@ -7302,10 +7332,10 @@ var StartingEffectsInfoPopup = /** @class */ (function (_super) {
         box.style.position = 'absolute';
         var currentY = 16;
         // Name
-        box.appendChild(this.infoText('<span style="font-weight:bold">Starting Effects</span>', '10px', currentY + "px"));
+        box.appendChild(this.infoText('<span style="font-weight:bold">Starting Effects</span>', '10px', "".concat(currentY, "px")));
         currentY += 24;
         // Effects
-        box.appendChild(this.infoText('Effects:', '10px', currentY + "px"));
+        box.appendChild(this.infoText('Effects:', '10px', "".concat(currentY, "px")));
         currentY += 20;
         var effects = this.wonder.starting_effects;
         for (var i = 0; i < effects.length; i++) {
@@ -7316,18 +7346,18 @@ var StartingEffectsInfoPopup = /** @class */ (function (_super) {
             effect.appendChild(ArtCommon.domElementForArt(effectArt, 1, 10));
             effect.style.transform = 'scale(0.2)';
             effect.style.position = 'absolute';
-            effect.style.left = 10 + effectArt.width / 10 + "px";
-            effect.style.top = currentY + "px";
-            var description = this.infoText(getDescriptionForEffect(effects[i]), 20 + effectArt.width / 5 + "px", currentY + "px");
-            description.style.fontSize = C.CARD_INFO_EFFECT_DESCRIPTION_SIZE + "px";
+            effect.style.left = "".concat(10 + effectArt.width / 10, "px");
+            effect.style.top = "".concat(currentY, "px");
+            var description = this.infoText(getDescriptionForEffect(effects[i]), "".concat(20 + effectArt.width / 5, "px"), "".concat(currentY, "px"));
+            description.style.fontSize = "".concat(C.CARD_INFO_EFFECT_DESCRIPTION_SIZE, "px");
             description.style.marginRight = '10px';
             box.appendChild(description);
             currentY += 24;
         }
         var padding = 10;
-        box.style.width = this.width - padding + "px";
-        box.style.height = currentY + "px";
-        box.style.paddingRight = padding + "px";
+        box.style.width = "".concat(this.width - padding, "px");
+        box.style.height = "".concat(currentY, "px");
+        box.style.paddingRight = "".concat(padding, "px");
         return box;
     };
     return StartingEffectsInfoPopup;
@@ -7369,7 +7399,7 @@ var TokenRack = /** @class */ (function (_super) {
     };
     TokenRack.prototype.adjustTokenPositions = function () {
         for (var i = 0; i < this.tokens.length; i++) {
-            this.tokens[i].style.left = this.offsetX + this.dx * i + "px";
+            this.tokens[i].style.left = "".concat(this.offsetX + this.dx * i, "px");
         }
     };
     return TokenRack;
@@ -7452,7 +7482,7 @@ function hash(str) {
         hash = ((hash << 5) - hash) + chr;
         hash |= 0; // Convert to 32-bit integer
     }
-    return "" + hash;
+    return "".concat(hash);
 }
 function lerp(a, b, t) {
     return a + (b - a) * t;
@@ -7525,11 +7555,11 @@ var Wonder = /** @class */ (function (_super) {
         var boardDiv = this.div.appendChild(document.createElement('div'));
         boardDiv.appendChild(this.wonderResource.board);
         var payments = boardDiv.appendChild(this.drawPayments());
-        payments.style.transform = "translate(-50%, " + (C.WONDER_BOARD_HEIGHT / 2 - C.WONDER_STAGE_HEIGHT + C.WONDER_STAGE_PAYMENT_OFFSET_Y) + "px)";
+        payments.style.transform = "translate(-50%, ".concat(C.WONDER_BOARD_HEIGHT / 2 - C.WONDER_STAGE_HEIGHT + C.WONDER_STAGE_PAYMENT_OFFSET_Y, "px)");
         payments.style.zIndex = '10000';
         this.sidebar = this.div.appendChild(this.drawSidebar());
-        this.sidebar.style.left = C.WONDER_BOARD_WIDTH / 2 - C.WONDER_BOARD_WIDTH + "px";
-        this.sidebar.style.top = -C.WONDER_BOARD_HEIGHT / 2 + "px";
+        this.sidebar.style.left = "".concat(C.WONDER_BOARD_WIDTH / 2 - C.WONDER_BOARD_WIDTH, "px");
+        this.sidebar.style.top = "".concat(-C.WONDER_BOARD_HEIGHT / 2, "px");
         // Military tokens
         this.militaryTokenRack = new TokenRack(C.WONDER_MILITARY_TOKENS_OFFSET_X, C.WONDER_MILITARY_TOKENS_DX, C.Z_INDEX_WONDER_TOKENS, function () {
             return new PIXI.Point(_this.x + C.WONDER_BOARD_WIDTH / 2 + C.WONDER_SIDEBAR_TOKENS_X, _this.y - C.WONDER_BOARD_HEIGHT / 2 + C.WONDER_SIDEBAR_MILITARY_TOKENS_Y);
@@ -7608,10 +7638,10 @@ var Wonder = /** @class */ (function (_super) {
         // Starting effects popup
         var popupDiv = this.div.appendChild(document.createElement('div'));
         popupDiv.style.position = 'absolute';
-        popupDiv.style.left = -C.WONDER_BOARD_WIDTH / 2 + this.wonderResource.startingEffectsRect.left + "px";
-        popupDiv.style.top = -C.WONDER_BOARD_HEIGHT / 2 + this.wonderResource.startingEffectsRect.top + "px";
-        popupDiv.style.width = this.wonderResource.startingEffectsRect.width + "px";
-        popupDiv.style.height = this.wonderResource.startingEffectsRect.height + "px";
+        popupDiv.style.left = "".concat(-C.WONDER_BOARD_WIDTH / 2 + this.wonderResource.startingEffectsRect.left, "px");
+        popupDiv.style.top = "".concat(-C.WONDER_BOARD_HEIGHT / 2 + this.wonderResource.startingEffectsRect.top, "px");
+        popupDiv.style.width = "".concat(this.wonderResource.startingEffectsRect.width, "px");
+        popupDiv.style.height = "".concat(this.wonderResource.startingEffectsRect.height, "px");
         popupDiv.onmousemove = function () {
             if (Main.scene.isCurrentlyDragging()) {
                 Main.scene.stopPopup(_this.wonder);
@@ -7632,10 +7662,10 @@ var Wonder = /** @class */ (function (_super) {
             };
             var popupDiv_1 = this_5.div.appendChild(document.createElement('div'));
             popupDiv_1.style.position = 'absolute';
-            popupDiv_1.style.left = -C.WONDER_BOARD_WIDTH / 2 + stageX - C.WONDER_STAGE_WIDTH / 2 + "px";
-            popupDiv_1.style.top = C.WONDER_BOARD_HEIGHT / 2 - C.WONDER_STAGE_HEIGHT + "px";
-            popupDiv_1.style.width = C.WONDER_STAGE_WIDTH + "px";
-            popupDiv_1.style.height = C.WONDER_STAGE_HEIGHT + "px";
+            popupDiv_1.style.left = "".concat(-C.WONDER_BOARD_WIDTH / 2 + stageX - C.WONDER_STAGE_WIDTH / 2, "px");
+            popupDiv_1.style.top = "".concat(C.WONDER_BOARD_HEIGHT / 2 - C.WONDER_STAGE_HEIGHT, "px");
+            popupDiv_1.style.width = "".concat(C.WONDER_STAGE_WIDTH, "px");
+            popupDiv_1.style.height = "".concat(C.WONDER_STAGE_HEIGHT, "px");
             popupDiv_1.onmousemove = function () {
                 if (Main.scene.isCurrentlyDragging()) {
                     Main.scene.stopPopup(stageSource);
@@ -7841,29 +7871,29 @@ var Wonder = /** @class */ (function (_super) {
     };
     Wonder.prototype.drawSidebar = function () {
         var sidebar = document.createElement('div');
-        sidebar.style.width = C.WONDER_BOARD_WIDTH + "px";
-        sidebar.style.height = C.WONDER_BOARD_HEIGHT + "px";
+        sidebar.style.width = "".concat(C.WONDER_BOARD_WIDTH, "px");
+        sidebar.style.height = "".concat(C.WONDER_BOARD_HEIGHT, "px");
         sidebar.style.position = 'absolute';
-        var nameElo = this.player in Main.users ? this.player + "<span style=\"font-size: 12px\"> (" + Math.round(Main.users[this.player].elo) + ")</span>" : this.player;
+        var nameElo = this.player in Main.users ? "".concat(this.player, "<span style=\"font-size: 12px\"> (").concat(Math.round(Main.users[this.player].elo), ")</span>") : this.player;
         var nameText = sidebar.appendChild(this.drawSidebarText(nameElo, C.WONDER_SIDEBAR_NAME_SIZE));
-        nameText.style.left = C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_NAME_X + "px";
-        nameText.style.top = C.WONDER_SIDEBAR_NAME_Y + "px";
+        nameText.style.left = "".concat(C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_NAME_X, "px");
+        nameText.style.top = "".concat(C.WONDER_SIDEBAR_NAME_Y, "px");
         var goldCoin = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.goldCoin(), C.WONDER_SIDEBAR_GOLD_COIN_SCALE));
         goldCoin.style.position = 'absolute';
-        goldCoin.style.left = C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_GOLD_COIN_X + "px";
-        goldCoin.style.top = C.WONDER_SIDEBAR_GOLD_COIN_Y + "px";
-        var goldText = sidebar.appendChild(this.drawSidebarText("" + Main.gamestate.playerData[this.player].gold, C.WONDER_SIDEBAR_GOLD_TEXT_SIZE));
+        goldCoin.style.left = "".concat(C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_GOLD_COIN_X, "px");
+        goldCoin.style.top = "".concat(C.WONDER_SIDEBAR_GOLD_COIN_Y, "px");
+        var goldText = sidebar.appendChild(this.drawSidebarText("".concat(Main.gamestate.playerData[this.player].gold), C.WONDER_SIDEBAR_GOLD_TEXT_SIZE));
         goldText.style.color = ArtCommon.goldColorHtml;
-        goldText.style.left = C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_GOLD_TEXT_X + "px";
-        goldText.style.top = C.WONDER_SIDEBAR_GOLD_TEXT_Y + "px";
+        goldText.style.left = "".concat(C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_GOLD_TEXT_X, "px");
+        goldText.style.top = "".concat(C.WONDER_SIDEBAR_GOLD_TEXT_Y, "px");
         this.goldText = goldText.querySelector('p');
         var pointsWreath = sidebar.appendChild(ArtCommon.domElementForArt(ArtCommon.pointsWreath(), C.WONDER_SIDEBAR_POINTS_WREATH_SCALE));
         pointsWreath.style.position = 'absolute';
-        pointsWreath.style.left = C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_POINTS_WREATH_X + "px";
-        pointsWreath.style.top = C.WONDER_SIDEBAR_POINTS_WREATH_Y + "px";
-        var pointsText = sidebar.appendChild(this.drawSidebarText("" + Main.gamestate.playerData[this.player].pointsDistribution.total, C.WONDER_SIDEBAR_POINTS_TEXT_SIZE));
-        pointsText.style.left = C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_POINTS_TEXT_X + "px";
-        pointsText.style.top = C.WONDER_SIDEBAR_POINTS_TEXT_Y + "px";
+        pointsWreath.style.left = "".concat(C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_POINTS_WREATH_X, "px");
+        pointsWreath.style.top = "".concat(C.WONDER_SIDEBAR_POINTS_WREATH_Y, "px");
+        var pointsText = sidebar.appendChild(this.drawSidebarText("".concat(Main.gamestate.playerData[this.player].pointsDistribution.total), C.WONDER_SIDEBAR_POINTS_TEXT_SIZE));
+        pointsText.style.left = "".concat(C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_POINTS_TEXT_X, "px");
+        pointsText.style.top = "".concat(C.WONDER_SIDEBAR_POINTS_TEXT_Y, "px");
         this.pointsText = pointsText.querySelector('p');
         return sidebar;
     };
@@ -7875,7 +7905,7 @@ var Wonder = /** @class */ (function (_super) {
         var p = div.appendChild(document.createElement('p'));
         p.innerHTML = text;
         p.style.fontFamily = "'Courier New', Courier, monospace";
-        p.style.fontSize = size + "px";
+        p.style.fontSize = "".concat(size, "px");
         p.style.color = "#FFFFFF";
         p.style.width = '100%';
         p.style.textAlign = 'right';
@@ -7913,16 +7943,16 @@ var WonderBoardForChoose = /** @class */ (function (_super) {
         boardDiv.appendChild(this.wonderResource.board);
         if (this.side === 0) {
             var sidebar = this.div.appendChild(this.drawSidebar());
-            sidebar.style.left = C.WONDER_BOARD_WIDTH / 2 - C.WONDER_BOARD_WIDTH + "px";
-            sidebar.style.top = -C.WONDER_BOARD_HEIGHT / 2 + "px";
+            sidebar.style.left = "".concat(C.WONDER_BOARD_WIDTH / 2 - C.WONDER_BOARD_WIDTH, "px");
+            sidebar.style.top = "".concat(-C.WONDER_BOARD_HEIGHT / 2, "px");
         }
         // Starting effects popup
         var popupDiv = this.div.appendChild(document.createElement('div'));
         popupDiv.style.position = 'absolute';
-        popupDiv.style.left = -C.WONDER_BOARD_WIDTH / 2 + this.wonderResource.startingEffectsRect.left + "px";
-        popupDiv.style.top = -C.WONDER_BOARD_HEIGHT / 2 + this.wonderResource.startingEffectsRect.top + "px";
-        popupDiv.style.width = this.wonderResource.startingEffectsRect.width + "px";
-        popupDiv.style.height = this.wonderResource.startingEffectsRect.height + "px";
+        popupDiv.style.left = "".concat(-C.WONDER_BOARD_WIDTH / 2 + this.wonderResource.startingEffectsRect.left, "px");
+        popupDiv.style.top = "".concat(-C.WONDER_BOARD_HEIGHT / 2 + this.wonderResource.startingEffectsRect.top, "px");
+        popupDiv.style.width = "".concat(this.wonderResource.startingEffectsRect.width, "px");
+        popupDiv.style.height = "".concat(this.wonderResource.startingEffectsRect.height, "px");
         popupDiv.onmousemove = function () {
             if (Main.scene.isCurrentlyDragging()) {
                 Main.scene.stopPopup(_this.wonder);
@@ -7943,10 +7973,10 @@ var WonderBoardForChoose = /** @class */ (function (_super) {
             };
             var popupDiv_2 = this_6.div.appendChild(document.createElement('div'));
             popupDiv_2.style.position = 'absolute';
-            popupDiv_2.style.left = -C.WONDER_BOARD_WIDTH / 2 + stageX - C.WONDER_STAGE_WIDTH / 2 + "px";
-            popupDiv_2.style.top = C.WONDER_BOARD_HEIGHT / 2 - C.WONDER_STAGE_HEIGHT + "px";
-            popupDiv_2.style.width = C.WONDER_STAGE_WIDTH + "px";
-            popupDiv_2.style.height = C.WONDER_STAGE_HEIGHT + "px";
+            popupDiv_2.style.left = "".concat(-C.WONDER_BOARD_WIDTH / 2 + stageX - C.WONDER_STAGE_WIDTH / 2, "px");
+            popupDiv_2.style.top = "".concat(C.WONDER_BOARD_HEIGHT / 2 - C.WONDER_STAGE_HEIGHT, "px");
+            popupDiv_2.style.width = "".concat(C.WONDER_STAGE_WIDTH, "px");
+            popupDiv_2.style.height = "".concat(C.WONDER_STAGE_HEIGHT, "px");
             popupDiv_2.onmousemove = function () {
                 if (Main.scene.isCurrentlyDragging()) {
                     Main.scene.stopPopup(stageSource);
@@ -8016,13 +8046,13 @@ var WonderBoardForChoose = /** @class */ (function (_super) {
     };
     WonderBoardForChoose.prototype.drawSidebar = function () {
         var sidebar = document.createElement('div');
-        sidebar.style.width = C.WONDER_BOARD_WIDTH + "px";
-        sidebar.style.height = C.WONDER_BOARD_HEIGHT + "px";
+        sidebar.style.width = "".concat(C.WONDER_BOARD_WIDTH, "px");
+        sidebar.style.height = "".concat(C.WONDER_BOARD_HEIGHT, "px");
         sidebar.style.position = 'absolute';
-        var nameElo = this.player in Main.users ? this.player + "<span style=\"font-size: 12px\"> (" + Math.round(Main.users[this.player].elo) + ")</span>" : this.player;
+        var nameElo = this.player in Main.users ? "".concat(this.player, "<span style=\"font-size: 12px\"> (").concat(Math.round(Main.users[this.player].elo), ")</span>") : this.player;
         var nameText = sidebar.appendChild(this.drawSidebarText(nameElo, C.WONDER_SIDEBAR_NAME_SIZE));
-        nameText.style.left = C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_NAME_X + "px";
-        nameText.style.top = C.WONDER_SIDEBAR_NAME_Y_CHOOSE + "px";
+        nameText.style.left = "".concat(C.WONDER_BOARD_WIDTH + C.WONDER_SIDEBAR_NAME_X, "px");
+        nameText.style.top = "".concat(C.WONDER_SIDEBAR_NAME_Y_CHOOSE, "px");
         return sidebar;
     };
     WonderBoardForChoose.prototype.drawSidebarText = function (text, size) {
@@ -8033,7 +8063,7 @@ var WonderBoardForChoose = /** @class */ (function (_super) {
         var p = div.appendChild(document.createElement('p'));
         p.innerHTML = text;
         p.style.fontFamily = "'Courier New', Courier, monospace";
-        p.style.fontSize = size + "px";
+        p.style.fontSize = "".concat(size, "px");
         p.style.color = "#FFFFFF";
         p.style.width = '100%';
         p.style.textAlign = 'right';
@@ -8046,22 +8076,26 @@ var CreateGameSection = /** @class */ (function () {
     function CreateGameSection() {
     }
     CreateGameSection.prototype.create = function () {
-        var TOP_Y = 80;
+        var TOP_Y = 60;
         this.playersElement = document.getElementById('createsectionplayers');
         this.optionsElement = document.getElementById('createsectionoptions');
         // Players
         var players = LobbyMain.user.friends;
         for (var i = 0; i < players.length; i++) {
-            this.playersElement.appendChild(this.checkbox('player', players[i], players[i], 32, TOP_Y + 32 * i, false));
+            var preChecked = players[i] === 'Dartm' || players[i] === 'jamesn' || players[i] === 'pittmang';
+            this.playersElement.appendChild(this.checkbox('player', players[i], players[i], 32, TOP_Y + 32 * i, preChecked));
         }
-        this.playersElement.appendChild(this.botbox(32, TOP_Y + 32 * players.length));
+        this.playersElement.appendChild(this.textbox('bots', 32, TOP_Y + 32 * players.length));
         // Options
         this.optionsElement.appendChild(this.checkbox('option', 'Vanilla wonders', 'vanilla_wonders', 32, TOP_Y, false));
         this.optionsElement.appendChild(this.checkbox('option', 'Cities expansion', 'cities', 32, TOP_Y + 32, true));
         this.optionsElement.appendChild(this.checkbox('option', 'Use wonder preferences', 'respect_preferences', 32, TOP_Y + 64, true));
-        this.optionsElement.appendChild(this.checkbox('option', 'Use elo for draft', 'draft_by_elo', 32, TOP_Y + 116, true));
-        this.optionsElement.appendChild(this.checkbox('option', '7 Blunders', 'blunders', 32, TOP_Y + 232, false));
-        this.optionsElement.appendChild(this.checkbox('option', 'Randomizer', 'randomizer', 32, TOP_Y + 264, false));
+        this.optionsElement.appendChild(this.checkbox('option', 'Use elo for draft', 'draft_by_elo', 32, TOP_Y + 116, true))
+            .style.visibility = 'hidden';
+        this.optionsElement.appendChild(this.checkbox('option', 'Hide deck', 'hide_deck', 32, TOP_Y + 96, false));
+        this.optionsElement.appendChild(this.textbox('extra_cards', 32, TOP_Y + 128));
+        this.optionsElement.appendChild(this.checkbox('option', '7 Blunders', 'blunders', 32, TOP_Y + 230, false));
+        this.optionsElement.appendChild(this.checkbox('option', 'Randomizer', 'randomizer', 32, TOP_Y + 262, false));
         if (window.location.href.includes('localhost')) {
             this.optionsElement.appendChild(this.checkbox('option', 'Test game', 'test', 32, TOP_Y + 310, true));
         }
@@ -8079,7 +8113,7 @@ var CreateGameSection = /** @class */ (function () {
         var bots = document.querySelector('#bots');
         var numBots = parseInt(bots.value);
         for (var i = 1; i <= numBots; i++) {
-            players.push("BOT" + i);
+            players.push("BOT".concat(i));
         }
         document.querySelectorAll('input[id^=option_]').forEach(function (node) {
             var input = node;
@@ -8088,49 +8122,53 @@ var CreateGameSection = /** @class */ (function () {
                 flags.push(flag);
             }
         });
+        var extraCardsInput = document.querySelector('#extra_cards');
+        var extraCards = parseInt(extraCardsInput.value);
         return {
             players: players,
-            flags: flags
+            flags: flags,
+            extraCards: extraCards,
         };
     };
     CreateGameSection.prototype.checkbox = function (type, label, data, x, y, checked) {
         var element = document.createElement('div');
         element.className = 'createsectiondata';
-        element.style.left = x + "px";
-        element.style.top = y + "px";
+        element.style.left = "".concat(x, "px");
+        element.style.top = "".concat(y, "px");
         var input = document.createElement('input');
-        input.id = type + "_" + label;
+        input.id = "".concat(type, "_").concat(label);
         input.setAttribute('data', data);
         input.className = 'createsectioninput';
         input.type = 'checkbox';
         input.checked = checked;
         var labelE = document.createElement('label');
-        labelE.setAttribute('for', type + "_" + label);
+        labelE.setAttribute('for', "".concat(type, "_").concat(label));
         labelE.className = 'createsectioninputtext';
         labelE.innerText = label;
         labelE.style.left = '20px';
         labelE.style.top = '-2px';
-        labelE.style.width = '200px';
+        labelE.style.width = '400px';
         element.appendChild(input);
         element.appendChild(labelE);
         return element;
     };
-    CreateGameSection.prototype.botbox = function (x, y) {
+    CreateGameSection.prototype.textbox = function (type, x, y) {
         var element = document.createElement('div');
         element.className = 'createsectiondata';
-        element.style.left = x + "px";
-        element.style.top = y + "px";
+        element.style.left = "".concat(x, "px");
+        element.style.top = "".concat(y, "px");
         var input = document.createElement('input');
-        input.id = 'bots';
+        input.id = type;
         input.className = 'createsectiontextbox';
         input.type = 'text';
         input.value = '0';
         var labelE = document.createElement('label');
-        labelE.setAttribute('for', 'bots');
+        labelE.setAttribute('for', type);
         labelE.className = 'createsectioninputtext';
-        labelE.innerText = 'Bots';
+        labelE.innerText = { 'bots': 'Bots', 'extra_cards': 'Extra cards in starting hand' }[type];
         labelE.style.left = '20px';
         labelE.style.top = '0px';
+        labelE.style.width = '400px';
         element.appendChild(input);
         element.appendChild(labelE);
         return element;
@@ -8173,7 +8211,7 @@ var LobbyMain = /** @class */ (function () {
                 return;
             }
             if (!users[_this.username]) {
-                _this.error("User " + _this.username + " does not exist", true);
+                _this.error("User ".concat(_this.username, " does not exist"), true);
                 return;
             }
             console.log('Fetched user:', users[_this.username]);
@@ -8190,7 +8228,7 @@ var LobbyMain = /** @class */ (function () {
         });
     };
     LobbyMain.load = function () {
-        document.getElementsByClassName('userinfo')[0].innerHTML = "Logged in as " + this.user.username + " | " + Math.round(this.user.elo) + " | <a class=\"userinfolink\" href=\"\" onclick=\"Login.logout()\">Logout</a>";
+        document.getElementsByClassName('userinfo')[0].innerHTML = "Logged in as ".concat(this.user.username, " | ").concat(Math.round(this.user.elo), " | <a class=\"userinfolink\" href=\"\" onclick=\"Login.logout()\">Logout</a>");
         this.wonderPreferenceList = new WonderPreferenceList();
         this.wonderPreferenceList.create();
         this.createGameSection = new CreateGameSection();
@@ -8206,7 +8244,7 @@ var LobbyMain = /** @class */ (function () {
                 return;
             }
             console.log('Created game with id:', gameid);
-            window.location.href = "./game.html?gameid=" + gameid;
+            window.location.href = "./game.html?gameid=".concat(gameid);
         });
         // Disable button for a bit to avoid duplicate game creation
         this.scriptManager.runScript(function () {
@@ -8228,6 +8266,48 @@ var LobbyMain = /** @class */ (function () {
                 }
             });
         });
+    };
+    LobbyMain.randomize = function () {
+        var gameMode = randElement([
+            'vanilla',
+            'vanilla',
+            'vanilla',
+            'blunders',
+            'rando',
+            'rando',
+            'rando',
+            'randoblunders',
+            'randoblunders',
+            'randoblunders',
+        ]);
+        var extraCards = randElement([
+            -2,
+            -1, -1,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            1, 1,
+        ]);
+        if (gameMode.includes('rando')) {
+            extraCards = randElement([
+                -3,
+                -2,
+                -1, -1, -1,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            ]);
+        }
+        var bots = randElement([
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            3,
+        ]);
+        document.getElementById('bots').value = "".concat(bots);
+        if (gameMode === 'vanilla' || gameMode === 'blunders') {
+            document.getElementById('option_Vanilla wonders').checked = Math.random() < 0.3;
+            document.getElementById('option_Cities expansion').checked = Math.random() < 0.8;
+            document.getElementById('option_Use wonder preferences').checked = Math.random() < 0.8;
+        }
+        document.getElementById('option_Hide deck').checked = Math.random() < 0.2;
+        document.getElementById('extra_cards').value = "".concat(extraCards);
+        document.getElementById('option_7 Blunders').checked = gameMode.includes('blunders');
+        document.getElementById('option_Randomizer').checked = gameMode.includes('rando');
     };
     LobbyMain.update = function () {
         this.scriptManager.update();
@@ -8275,8 +8355,8 @@ var LobbyMain = /** @class */ (function () {
         status.style.backgroundColor = C.OK_BG_COLOR;
         status.style.color = C.OK_TEXT_COLOR;
         if (this.inviteGameids && this.inviteGameids.length > 0) {
-            var links = this.inviteGameids.map(function (gameid) { return "<a href=\"./game.html?gameid=" + gameid + "\">" + gameid + "</a>"; });
-            var text = "<span class=\"statustextactive\">Current Games:</span> " + links.join(', ');
+            var links = this.inviteGameids.map(function (gameid) { return "<a href=\"./game.html?gameid=".concat(gameid, "\">").concat(gameid, "</a>"); });
+            var text = "<span class=\"statustextactive\">Current Games:</span> ".concat(links.join(', '));
             if (statusText.innerHTML !== text)
                 statusText.innerHTML = text;
         }
@@ -8408,8 +8488,8 @@ var Login = /** @class */ (function () {
                 errorp.innerText = error;
                 return;
             }
-            document.cookie = "username=" + username + "; max-age=31536000";
-            document.cookie = "password_hash=" + password_hash + "; max-age=31536000";
+            document.cookie = "username=".concat(username, "; max-age=31536000");
+            document.cookie = "password_hash=".concat(password_hash, "; max-age=31536000");
             window.location.href = './';
         });
     };
