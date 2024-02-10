@@ -465,12 +465,12 @@ const wonderGroups = {
     '8': {
         name: 'Byzantium',
         wonders: [16, 17],
-        weight: 0.7,
+        weight: 0.8,
     },
     '9': {
         name: 'Petra',
         wonders: [18, 19],
-        weight: 0.6,
+        weight: 0.7,
     },
     '10': {
         name: 'The Great Wall',
@@ -480,32 +480,32 @@ const wonderGroups = {
     '11': {
         name: 'Manneken Pis',
         wonders: [22, 23],
-        weight: 0.7,
+        weight: 0.8,
     },
     '12': {
         name: 'New York',
         wonders: [24, 25],
-        weight: 0.7,
+        weight: 0.8,
     },
     '13': {
         name: 'Oxford',
         wonders: [26, 27],
-        weight: 0.7,
+        weight: 0.8,
     },
     '14': {
         name: 'Moscow',
         wonders: [28, 29],
-        weight: 0.6,
+        weight: 0.7,
     },
     '15': {
         name: 'Paris',
         wonders: [30, 31],
-        weight: 0.7,
+        weight: 0.8,
     },
     '16': {
         name: 'Delphoi',
         wonders: [32, 33],
-        weight: 0.7,
+        weight: 0.8,
     },
     // '16': {
     //     name: '<span style="color:gold">New Wonder</span>',
