@@ -132,6 +132,7 @@ const cards = {
     120: { age: 3, name: 'Cenotaph',   color: "black", cost: { resources: ["clay", "clay", "stone", "glass", "loom"] }, effects: [{ type: "broken_gold_for_victory_tokens", gold_per_token: 1 }, { type: "points", points: 5 }] },
     121: { age: 3, name: 'Chamber of Builders', color: "black", cost: { resources: ["wood", "clay", "glass", "press"] }, effects: [{ type: "broken_gold_for_stages", gold_per_stage: 1 }, { type: "points", points: 4 }] },
     122: { age: 3, name: 'Secret Network', color: "black", cost: { resources: ["stone", "press"] }, effects: [{ type: "gold_and_points_for_cards", color: "black", gold_per_card: 1, points_per_card: 1 }] },
+    123: { age: 3, name: 'Balcony', color: "black", cost: { gold: 2 }, effects: [{ type: "gold_for_neighbor", gold: 4, direction: "neg" }, { type: "gold", gold: 15 }, { type: "gold_for_neighbor", gold: 4, direction: "pos" }] },
 }
 
 exports.getAllCards = () => {
@@ -195,7 +196,7 @@ exports.getBonusCardsForPlayersAge = (players, age, citiesEnabled) => {
     }
     if (age === 3) {
         if (players >= 3) result.push(50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 80);
-        if (citiesEnabled) result.push(109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122);
+        if (citiesEnabled) result.push(109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123);
         
         // Remove Strategists Guild only in 4P
         if (players === 4) result.splice(result.indexOf(80), 1);
@@ -356,7 +357,7 @@ exports.getCardNameParts = () => {
     
     ofs.push(
         'Stone', 'Clay', 'Ore', 'Lumber', 'Timber', 'Trading', 'Stables', 'Press', 'Loom', 'Archery', 'Training', 'Gardens', 'Fortifications',
-        'Siege', 'Study', 'Opium', 'Customs', 'Gates', 'Cells', 'Secrets', 'Trade', 'Mercenaries', 'Gambling', 'Forging', 'Brotherhood', 'Memorial');
+        'Siege', 'Study', 'Opium', 'Customs', 'Gates', 'Cells', 'Secrets', 'Trade', 'Mercenaries', 'Gambling', 'Forging', 'Brotherhood', 'Memorial', 'Trevor');
         
     return {
         adjectives: Array.from(new Set(adjectives)),
