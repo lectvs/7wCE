@@ -64,7 +64,7 @@ const cards = {
     57: { age: 3, name: 'Builders Guild', color: "purple", cost: { resources: ["stone", "stone", "stone", "clay", "clay", "glass"] }, effects: [{ type: "points_for_stages", points_per_stage: 1 }] },
     58: { age: 3, name: 'Scientists Guild', color: "purple", cost: { resources: ["wood", "wood", "ore", "ore", "press"] }, effects: [{ type: "multi_science", symbols: "compass/tablet/gear" }] },
     59: { age: 3, name: 'Shipowners Guild', color: "purple", cost: { resources: ["wood", "wood", "wood", "glass", "press"] }, effects: [{ type: "points_for_self_cards", color: "brown", points_per_card: 1 }, { type: "points_for_self_cards", color: "grey", points_per_card: 1 }, { type: "points_for_self_cards", color: "purple", points_per_card: 1 }] },
-    60: { age: 3, name: 'Palace',      color: "blue", cost: { resources: ["wood", "stone", "ore", "clay", "glass", "press", "loom"] }, effects: [{ type: "points", points: 8 }] },
+    60: { age: 3, name: utils.randBool() ? 'Palace' : 'Trevor', color: "blue", cost: { resources: ["wood", "stone", "ore", "clay", "glass", "press", "loom"] }, effects: [{ type: "points", points: 8 }] },
     61: { age: 3, name: 'Gardens',     color: "blue", cost: { resources: ["clay", "clay", "wood"], chain: "mask" }, effects: [{ type: "points", points: 5 }] },
     62: { age: 3, name: 'Pantheon',    color: "blue", cost: { resources: ["clay", "clay", "ore", "glass", "press", "loom"], chain: "star" }, effects: [{ type: "points", points: 7 }] },
     63: { age: 3, name: 'Town Hall',   color: "blue", cost: { resources: ["stone", "stone", "ore", "glass"] }, effects: [{ type: "points", points: 6 }] },
