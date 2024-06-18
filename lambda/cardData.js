@@ -190,6 +190,7 @@ exports.getBonusCardsForPlayersAge = (players, age, citiesEnabled) => {
     let result = [];
     if (age === 1) {
         if (citiesEnabled) result.push(81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94);
+        if (players === 3) result.push(20); // Tavern
     }
     if (age === 2) {
         if (citiesEnabled) result.push(95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108);
@@ -197,6 +198,7 @@ exports.getBonusCardsForPlayersAge = (players, age, citiesEnabled) => {
     if (age === 3) {
         if (players >= 3) result.push(50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 80);
         if (citiesEnabled) result.push(109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123);
+        if (players === 3) result.push(66, 69); // CoC and Ludus
         
         // Remove Strategists Guild only in 4P
         if (players === 4) result.splice(result.indexOf(80), 1);
@@ -244,7 +246,7 @@ exports.trimBonusCardsForPlayersAge = (bonusDeck, players, age, citiesEnabled, e
     }
     
     if (citiesEnabled) {
-        let allBlackCards = bonusDeck.filter(id => cards[id].color === 'black');
+        let allBlackCards = bonusDeck.filter(id => cards[id].color === 'black' || cards[id].color === 'yellow');
         let blackCards = utils.cloneArray(allBlackCards);
         for (let i = 0; i < players; i++) {
             result.push(blackCards.splice(utils.randInt(0, blackCards.length-1), 1)[0]);
@@ -280,7 +282,7 @@ exports.newHandsForPlayersAge = (coreDeck, trimmedBonusDeck, players, age, citie
     }
     
     if (citiesEnabled) {
-        let blackCards = trimmedBonusDeck.filter(id => cards[id].color === 'black');
+        let blackCards = trimmedBonusDeck.filter(id => cards[id].color === 'black' || cards[id].color === 'yellow');
         while (blackCards.length > 0) {
             deck.push(blackCards.splice(utils.randInt(0, blackCards.length-1), 1)[0]);
         }
